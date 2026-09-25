@@ -1,0 +1,20 @@
+{
+  "name": "golink",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:restaurant": "npm run dev -w @golink/restaurant",
+    "dev:admin": "npm run dev -w @golink/admin",
+    "start:client": "npm run start -w @golink/client",
+    "start:driver": "npm run start -w @golink/driver",
+    "build:restaurant": "npm run build -w @golink/restaurant",
+    "build:admin": "npm run build -w @golink/admin",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes,storage",
+    "deploy:functions": "firebase deploy --only functions"
+  }
+}
