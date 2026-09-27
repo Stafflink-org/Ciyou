@@ -17,7 +17,20 @@ import {
   SheetHeader,
   Textarea,
 } from '@golink/ui';
-import { COLLECTIONS, MERCHANT_TYPES, MERCHANT_TYPE_LABELS, type CuisineCategory, type MerchantType, type Restaurant, type WithId, type Zone } from '@golink/shared';
+import {
+  COLLECTIONS,
+  CURRENCY_CODES,
+  CURRENCY_LABELS,
+  MERCHANT_TYPES,
+  MERCHANT_TYPE_LABELS,
+  resolveRestaurantCurrency,
+  type CurrencyCode,
+  type CuisineCategory,
+  type MerchantType,
+  type Restaurant,
+  type WithId,
+  type Zone,
+} from '@golink/shared';
 import { collectionAt, useCollection, useMutation } from '@/lib/firestore';
 import { adminUpdateRestaurant } from '../lib';
 
@@ -44,6 +57,7 @@ export function EditProfileSheet({ restaurant, open, onOpenChange }: { restauran
     line2: restaurant.address.line2 ?? '',
     postalCode: restaurant.address.postalCode,
     city: restaurant.address.city,
+    currency: resolveRestaurantCurrency(restaurant, null, restaurant.countryId) as CurrencyCode,
   }));
   const [reason, setReason] = useState('');
   const cuisines = useCollection<CuisineCategory>(useMemo(() => query(collectionAt(COLLECTIONS.cuisineCategories), orderBy('order')), []));
@@ -66,6 +80,7 @@ export function EditProfileSheet({ restaurant, open, onOpenChange }: { restauran
       fulfillmentModes: form.fulfillmentModes,
       deliveredBy: form.deliveredBy,
       address: { line1: form.line1.trim(), line2: form.line2.trim() || null, postalCode: form.postalCode.trim(), city: form.city.trim() },
+      currency: form.currency,
       reason: reason.trim(),
     });
     if (result) {
@@ -88,6 +103,9 @@ export function EditProfileSheet({ restaurant, open, onOpenChange }: { restauran
             </FormField>
             <FormField label="Gamme de prix">
               <Select value={form.priceLevel} onValueChange={set('priceLevel')} options={['1', '2', '3', '4'].map((v) => ({ value: v, label: '€'.repeat(Number(v)) }))} />
+            </FormField>
+            <FormField label="Devise du compte" required hint="Utilisée pour le formatage des montants affichés à ce commerce.">
+              <Select value={form.currency} onValueChange={set('currency')} options={CURRENCY_CODES.map((c) => ({ value: c, label: `${CURRENCY_LABELS[c]} (${c})` }))} />
             </FormField>
             <FormField label="Description" className="sm:col-span-2">
               <Textarea value={form.description} onChange={(e) => set('description')(e.target.value)} rows={3} maxLength={1000} />

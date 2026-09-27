@@ -165,7 +165,7 @@ export function PayslipSheet({ payslip, name, onClose }: { payslip: WithId<Paysl
                   <ChevronDown className={cn('size-4 text-fg-subtle transition-transform', showContributions && 'rotate-180')} />
                 </button>
                 {showContributions && (
-                  <div className="mt-2 overflow-x-auto rounded-xl border border-border">
+                  <div data-scroll-ok className="mt-2 overflow-x-auto rounded-xl border border-border">
                     <table className="w-full min-w-[440px] text-xs">
                       <thead className="bg-surface-2 text-left text-fg-subtle">
                         <tr>

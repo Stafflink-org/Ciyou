@@ -181,7 +181,7 @@ export function TasksPage() {
           />
         </div>
       ) : (
-        <div className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 xl:grid xl:grid-cols-4 xl:overflow-visible">
+        <div data-scroll-ok className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0 xl:grid xl:grid-cols-4 xl:overflow-visible">
           {columns.map(({ status, items }) => (
             <section
               key={status}

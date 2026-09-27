@@ -3,10 +3,14 @@
 // automatique des documents expirés (tâche quotidienne).
 import {
   COLLECTIONS,
+  CURRENCY_CODES,
   DOCUMENT_REMINDER_DAYS,
   PARTNER_DOCUMENT_LABELS,
   PARTNER_DOCUMENT_TYPES,
   REQUIRED_RESTAURANT_DOCUMENTS,
+  RESTAURANT_PRIVATE_DOCS,
+  SUBCOLLECTIONS,
+  type CurrencyCode,
   type PartnerDocument,
   type PartnerDocumentType,
   type PlatformAlert,
@@ -15,12 +19,16 @@ import {
 } from '@golink/shared';
 import { logger } from 'firebase-functions/v2';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { db, FieldValue, Timestamp } from '../../lib/admin';
+import { buildUserProfile, ensureUserProfile, getOrCreateAuthUser, splitDisplayName } from '../../lib/accounts';
+import { auth, db, FieldValue, Timestamp } from '../../lib/admin';
 import { SYSTEM_ACTOR, writeAudit } from '../../lib/audit';
+import { syncClaims } from '../../lib/claims';
+import { APP_URLS } from '../../lib/config';
 import { fail } from '../../lib/errors';
 import { assertAdminCovers, requireAdmin, type Caller } from '../../lib/permissions';
 import { EMAIL_SECRETS } from '../../lib/secrets';
 import { z, zId } from '../../lib/validation';
+import { ownerMemberDoc } from '../../lib/restaurants';
 import {
   ACTEURS_SCHEDULE_RUNTIME,
   TIMEZONE,
@@ -36,6 +44,7 @@ import {
 } from './common';
 import {
   applicationApprovedEmail,
+  applicationApprovedWithCredentialsEmail,
   applicationRejectedEmail,
   documentExpiredEmail,
   documentExpiringEmail,
@@ -113,12 +122,15 @@ const applicationSchema = z
     reason: z.string().trim().max(500).nullish(),
     missingDocuments: z.array(z.enum(PARTNER_DOCUMENT_TYPES)).max(10).default([]),
     goLive: z.boolean().default(true),
+    /** Devise du compte, choisie à la validation (pré-remplie selon le pays, modifiable). */
+    currency: z.enum(CURRENCY_CODES).nullish(),
   })
   .refine((d) => (d.reason?.length ?? 0) >= 3, { message: 'Indiquez le motif de la décision (transmis au commerce en cas de refus ou de pièces manquantes)', path: ['reason'] })
   .refine((d) => d.decision !== 'documents_missing' || d.missingDocuments.length > 0, {
     message: 'Sélectionnez au moins un document manquant',
     path: ['missingDocuments'],
-  });
+  })
+  .refine((d) => d.decision !== 'approve' || Boolean(d.currency), { message: 'Choisissez la devise du compte', path: ['currency'] });
 
 export const reviewRestaurantApplication = acteursCallable(
   applicationSchema,
@@ -130,31 +142,69 @@ export const reviewRestaurantApplication = acteursCallable(
       throw fail.precondition('Ce dossier est déjà validé.');
     }
 
+    let legal: RestaurantLegal | undefined;
     if (data.decision === 'approve') {
       const [docs, legalSnap] = await Promise.all([
         restaurantDocuments(restaurant.id),
-        restaurant.ref.collection('private').doc('legal').get(),
+        restaurant.ref.collection(SUBCOLLECTIONS.restaurants.private).doc(RESTAURANT_PRIVATE_DOCS.legal).get(),
       ]);
       const missing = missingRequiredGroups(docs, parisDay());
       if (missing.length > 0) {
         throw fail.precondition(`Pièces à valider avant l’approbation : ${missing.map((g) => g.label).join(', ')}.`);
       }
-      const legal = legalSnap.data() as RestaurantLegal | undefined;
+      legal = legalSnap.data() as RestaurantLegal | undefined;
       if (!legal?.partnerTermsAcceptedAt) throw fail.precondition('Le contrat partenaire n’a pas encore été accepté par le restaurant.');
     }
 
     const now = Timestamp.now();
     const update: Record<string, unknown> = { updatedAt: now, updatedBy: caller.uid };
     let after: Record<string, unknown>;
+    // Rempli seulement à l'approbation, si le propriétaire n'a pas encore de moyen d'accéder à son compte.
+    let credentialsLink: string | null = null;
     if (data.decision === 'approve') {
       const goLive = data.goLive && restaurant.data.status === 'onboarding';
+      const currency = data.currency as CurrencyCode;
       update.onboardingStatus = 'approved';
+      update.currency = currency;
       if (goLive) {
         update.status = 'active';
         update.launchedAt = now;
       }
       update.rejectionReason = null;
-      after = { onboardingStatus: 'approved', status: goLive ? 'active' : restaurant.data.status };
+      after = { onboardingStatus: 'approved', status: goLive ? 'active' : restaurant.data.status, currency };
+
+      if (restaurant.data.ownerCredentialsDelivered !== true) {
+        const email = legal?.managerEmail || restaurant.data.email;
+        if (email) {
+          const displayName = legal?.managerName || restaurant.data.name;
+          // Réaligne le compte Auth du propriétaire si le dossier a été créé sans lui (test, import manuel direct en base).
+          const { user } = await getOrCreateAuthUser({ email, displayName });
+          if (user.uid !== restaurant.data.ownerId) {
+            update.ownerId = user.uid;
+            const { firstName, lastName } = splitDisplayName(displayName);
+            await ensureUserProfile(
+              user.uid,
+              buildUserProfile({ role: 'restaurant', firstName, lastName, email, emailVerified: user.emailVerified, countryId: restaurant.data.countryId, cityId: restaurant.data.cityId }),
+            );
+            await restaurant.ref.collection(SUBCOLLECTIONS.restaurants.members).doc(user.uid).set({
+              ...ownerMemberDoc({ uid: user.uid, restaurantId: restaurant.id, displayName, email }),
+              groupId: restaurant.data.groupId ?? null,
+              invitedBy: caller.uid,
+              joinedAt: null,
+              lastAccessAt: null,
+            });
+            await syncClaims(user.uid);
+          }
+          const actionLink = await auth.generatePasswordResetLink(email);
+          const oobCode = new URL(actionLink).searchParams.get('oobCode');
+          if (oobCode) {
+            const link = new URL('/definir-mot-de-passe', APP_URLS.restaurant);
+            link.searchParams.set('oobCode', oobCode);
+            credentialsLink = link.toString();
+            update.ownerCredentialsDelivered = true;
+          }
+        }
+      }
     } else if (data.decision === 'documents_missing') {
       update.onboardingStatus = 'documents_missing';
       update.missingDocuments = data.missingDocuments;
@@ -175,14 +225,29 @@ export const reviewRestaurantApplication = acteursCallable(
     const name = restaurant.data.name;
     const delivery =
       data.decision === 'approve'
-        ? await notifyRestaurantOwner(restaurant, {
-            title: 'Dossier validé',
-            body: `${name} est validé par l’équipe Ciyou Eats.`,
-            category: 'account',
-            email: applicationApprovedEmail({ restaurantName: name, live: after.status === 'active' }),
-            templateKey: 'restaurant_approved',
-            message: { key: 'restaurant_approved', values: { restaurantName: name }, dedupeKey: `${restaurant.id}-${now.toMillis()}` },
-          })
+        ? credentialsLink
+          ? // Le propriétaire n'a pas encore de mot de passe : lien de définition au lieu du message automatique
+            // (gabarit `restaurant_approved`, qui ne porte pas de lien personnel à durée de vie courte).
+            await notifyRestaurantOwner(restaurant, {
+              title: 'Dossier validé',
+              body: `${name} est validé. Définissez votre mot de passe pour accéder à votre back-office.`,
+              category: 'account',
+              email: applicationApprovedWithCredentialsEmail({
+                restaurantName: name,
+                firstName: splitDisplayName(legal?.managerName ?? name).firstName || name,
+                link: credentialsLink,
+                live: after.status === 'active',
+              }),
+              templateKey: 'restaurant_approved_credentials',
+            })
+          : await notifyRestaurantOwner(restaurant, {
+              title: 'Dossier validé',
+              body: `${name} est validé par l’équipe Ciyou Eats.`,
+              category: 'account',
+              email: applicationApprovedEmail({ restaurantName: name, live: after.status === 'active' }),
+              templateKey: 'restaurant_approved',
+              message: { key: 'restaurant_approved', values: { restaurantName: name }, dedupeKey: `${restaurant.id}-${now.toMillis()}` },
+            })
         : data.decision === 'reject'
           ? await notifyRestaurantOwner(restaurant, {
               title: 'Dossier refusé',

@@ -119,7 +119,7 @@ export function WeekGrid({ monday, today, employees, shifts, absences, availabil
   const dayTotals = days.map((day) => shifts.filter((s) => s.date === day).reduce((total, s) => total + shiftDuration(s), 0));
 
   return (
-    <div className="overflow-x-auto">
+    <div data-scroll-ok className="overflow-x-auto">
       <div className="grid min-w-[1060px] grid-cols-[216px_repeat(7,minmax(118px,1fr))]" role="grid" aria-label="Planning de la semaine">
         {/* En-têtes */}
         <div className="sticky left-0 z-20 border-b border-r border-border bg-surface-2 px-4 py-2.5" role="columnheader">

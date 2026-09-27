@@ -5,6 +5,7 @@ import {
   BILLING_MODES,
   adminHasPermission,
   COLLECTIONS,
+  CURRENCY_CODES,
   DEFAULT_PLANS,
   DISABLED_PAYMENT_METHODS,
   MERCHANT_TYPES,
@@ -272,6 +273,8 @@ const profileSchema = z.object({
   fulfillmentModes: z.array(z.enum(['delivery', 'pickup', 'dine_in'])).min(1),
   deliveredBy: z.enum(['platform', 'restaurant', 'both']),
   address: z.object({ line1: z.string().trim().min(3).max(120), line2: z.string().trim().max(120).nullable(), postalCode: z.string().trim().min(4).max(10), city: z.string().trim().min(2).max(80) }),
+  /** Devise du compte (ISO 4217) : modifiable après la validation, avec motif et audit (cf. reviewRestaurantApplication pour la valeur initiale). */
+  currency: z.enum(CURRENCY_CODES),
   reason: zReason,
 });
 
@@ -297,6 +300,7 @@ export const adminUpdateRestaurant = acteursCallable(profileSchema, async (data,
     fulfillmentModes: r.fulfillmentModes,
     deliveredBy: r.deliveredBy,
     address: { line1: r.address.line1, line2: r.address.line2 ?? null, postalCode: r.address.postalCode, city: r.address.city },
+    currency: r.currency ?? null,
   };
   const after = {
     name: data.name,
@@ -311,6 +315,7 @@ export const adminUpdateRestaurant = acteursCallable(profileSchema, async (data,
     fulfillmentModes: data.fulfillmentModes,
     deliveredBy: data.deliveredBy,
     address: data.address,
+    currency: data.currency,
   };
   const changed = Object.fromEntries(Object.entries(after).filter(([key, value]) => JSON.stringify(value) !== JSON.stringify(before[key as keyof typeof before])));
   if (Object.keys(changed).length === 0) return { changed: [] as string[] };

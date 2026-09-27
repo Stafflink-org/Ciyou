@@ -205,7 +205,7 @@ export function ImportDialog({ open, onOpenChange, restaurantId }: { open: boole
           {step === 'review' && valid.length > 0 && (
             <div className="overflow-hidden rounded-xl border border-border">
               <p className="border-b border-border bg-surface-2 px-3 py-2 text-xs font-medium text-fg-muted">Aperçu des premières lignes</p>
-              <div className="overflow-x-auto">
+              <div data-scroll-ok className="overflow-x-auto">
                 <table className="w-full min-w-[480px] text-sm">
                   <tbody className="divide-y divide-border">
                     {valid.slice(0, 6).map((l) => (

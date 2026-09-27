@@ -138,7 +138,7 @@ export interface SubNavItem {
 /** Onglets de sous-pages (routes du même module). */
 export function SubNav({ items, className }: { items: SubNavItem[]; className?: string }) {
   return (
-    <nav aria-label="Sections" className={cn('-mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0', className)}>
+    <nav data-scroll-ok aria-label="Sections" className={cn('-mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0', className)}>
       <div className="flex min-w-max items-center gap-5 border-b border-border">
         {items.map((item) => (
           <NavLink

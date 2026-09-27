@@ -7,10 +7,13 @@ import { Clock, MapPin as MapPinIcon, Network, Store, UserRound } from 'lucide-r
 import { Badge, MapContainer, MapPin, Skeleton, formatDate } from '@golink/ui';
 import {
   COLLECTIONS,
+  CURRENCY_LABELS,
   FULFILLMENT_LABELS,
   MERCHANT_TYPE_LABELS,
   PAYMENT_METHOD_LABELS,
+  formatMoney,
   paths,
+  resolveRestaurantCurrency,
   type CuisineCategory,
   type Restaurant,
   type RestaurantGroup,
@@ -21,15 +24,19 @@ import {
 } from '@golink/shared';
 import { useRuntimeConfig } from '@golink/web';
 import { useCan } from '@/auth/AdminAccess';
+import { useGeoScope } from '@/layout/GeoScope';
 import { functions } from '@/lib/firebase';
 import { collectionAt, docAt, toDate, useCollection, useDoc } from '@/lib/firestore';
-import { Facts, Panel, eur } from '../../acteurs-commun/ui';
+import { Facts, Panel } from '../../acteurs-commun/ui';
 
 const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 
 export function OverviewTab({ restaurant, cityName }: { restaurant: WithId<Restaurant>; cityName: string }) {
   const can = useCan();
   const runtimeConfig = useRuntimeConfig(functions);
+  const scope = useGeoScope();
+  const country = scope.countries.find((c) => c.id === restaurant.countryId) ?? null;
+  const currency = resolveRestaurantCurrency(restaurant, country, restaurant.countryId);
   const cuisines = useCollection<CuisineCategory>(useMemo(() => query(collectionAt(COLLECTIONS.cuisineCategories), orderBy('order')), []));
   const zones = useCollection<Zone>(useMemo(() => query(collectionAt(COLLECTIONS.zones), where('cityId', '==', restaurant.cityId)), [restaurant.cityId]));
   const owner = useDoc<UserProfile>(docAt(paths.user(restaurant.ownerId)));
@@ -56,6 +63,7 @@ export function OverviewTab({ restaurant, cityName }: { restaurant: WithId<Resta
               { label: 'Description', value: <span className="font-normal text-fg-muted">{restaurant.description || '—'}</span> },
               { label: 'Inscrit le', value: toDate(restaurant.createdAt) ? formatDate(toDate(restaurant.createdAt)!) : '—' },
               restaurant.launchedAt && { label: 'En ligne depuis', value: formatDate(toDate(restaurant.launchedAt)!) },
+              { label: 'Devise du compte', value: `${CURRENCY_LABELS[currency]} (${currency})`, hint: 'Modifiable depuis « Modifier la fiche »' },
             ]}
           />
         </Panel>
@@ -66,7 +74,7 @@ export function OverviewTab({ restaurant, cityName }: { restaurant: WithId<Resta
               { label: 'Modes', value: restaurant.fulfillmentModes.map((m) => FULFILLMENT_LABELS[m]).join(', ') || '—' },
               { label: 'Livraison assurée par', value: restaurant.deliveredBy === 'platform' ? 'Livreurs Ciyou Eats' : restaurant.deliveredBy === 'restaurant' ? 'Livreurs du commerce' : 'Ciyou Eats et livreurs du commerce' },
               { label: 'Zones Ciyou Eats', value: zoneNames.length ? zoneNames.join(', ') : <span className="text-danger">Aucune zone</span> },
-              { label: 'Minimum de commande', value: eur(restaurant.minOrderCents), hint: 'Frais et minimum définis par le commerce sur ses zones' },
+              { label: 'Minimum de commande', value: formatMoney(restaurant.minOrderCents, currency), hint: 'Frais et minimum définis par le commerce sur ses zones' },
               { label: 'Préparation', value: `${restaurant.prepMinutes} min`, hint: `Livraison annoncée ${restaurant.etaMinutes.min}–${restaurant.etaMinutes.max} min` },
               { label: 'Paiements acceptés', value: restaurant.acceptedPaymentMethods.map((m) => PAYMENT_METHOD_LABELS[m]).join(', ') || '—' },
               { label: 'Ouverture', value: restaurant.isOpen ? <Badge tone="success">Ouvert</Badge> : <Badge tone="neutral">Fermé</Badge> },

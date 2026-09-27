@@ -239,7 +239,7 @@ export function DocumentsPage() {
 
 function HistoryTable({ docs }: { docs: Array<WithId<PartnerDocument>> }) {
   return (
-    <div className="overflow-x-auto border-t border-border">
+    <div data-scroll-ok className="overflow-x-auto border-t border-border">
       <table className="w-full min-w-[620px] text-sm">
         <thead className="bg-surface-2">
           <tr className="text-left">

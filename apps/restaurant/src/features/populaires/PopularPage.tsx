@@ -170,7 +170,7 @@ export function PopularPage() {
           {showcase.length > 0 && (
             <div className="border-t border-border p-4">
               <p className="mb-2.5 font-mono text-3xs uppercase tracking-eyebrow text-fg-subtle">Aperçu dans l’app Ciyou Eats</p>
-              <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
+              <div data-scroll-ok className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
                 {showcase.slice(0, 6).map((product) => (
                   <div key={product.id} className="w-36 shrink-0 overflow-hidden rounded-xl border border-border bg-surface-2">
                     <div className="relative aspect-[4/3] bg-surface-3">

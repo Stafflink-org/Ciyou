@@ -145,7 +145,7 @@ export function HistoryPage() {
             />
           </div>
           <div className="flex min-w-0 items-center justify-between gap-2">
-            <div className="min-w-0 overflow-x-auto [scrollbar-width:none]">
+            <div data-scroll-ok className="min-w-0 overflow-x-auto [scrollbar-width:none]">
               <SegmentedControl aria-label="Période" value={period} onValueChange={(v) => setPeriod(v as Period)} options={search.length >= 2 ? [{ value: period, label: 'Toutes périodes' }] : PERIODS} />
             </div>
             <Button variant="secondary" leftIcon={<Download />} onClick={exportCsv} disabled={rows.length === 0} className="shrink-0">

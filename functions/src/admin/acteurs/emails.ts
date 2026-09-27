@@ -29,6 +29,37 @@ export function applicationApprovedEmail(input: { restaurantName: string; live: 
   };
 }
 
+/**
+ * Dossier validé, propriétaire sans mot de passe connu (inscription sans mot de passe,
+ * ou compte créé directement par l'équipe) : même message que `applicationApprovedEmail`,
+ * avec en plus le lien de définition du mot de passe (même mécanisme que les invitations,
+ * `oobCode` Firebase valable une heure).
+ */
+export function applicationApprovedWithCredentialsEmail(input: { restaurantName: string; firstName: string; link: string; live: boolean }): EmailMessage {
+  return {
+    subject: `${input.restaurantName} est validé sur ${PLATFORM_NAME}`,
+    ...renderEmail({
+      preheader: 'Votre dossier a été validé : définissez votre mot de passe pour y accéder.',
+      eyebrow: 'Dossier validé',
+      title: 'Bienvenue parmi nos partenaires',
+      paragraphs: [
+        `Bonjour ${input.firstName},`,
+        'Bonne nouvelle : votre dossier est complet et validé.',
+        input.live
+          ? 'Votre établissement est désormais visible dans l’application Ciyou Eats. Définissez votre mot de passe pour ouvrir votre back-office dès que vous êtes prêt à recevoir des commandes.'
+          : 'Votre établissement sera mis en ligne très prochainement. Définissez votre mot de passe pour vérifier votre carte et vos horaires en attendant.',
+      ],
+      details: [
+        { label: 'Établissement', value: input.restaurantName },
+        { label: 'Statut', value: input.live ? 'En ligne' : 'Validé' },
+      ],
+      cta: { label: 'Définir mon mot de passe', url: input.link },
+      note: 'Ce lien est personnel et expire dans une heure. Passé ce délai, utilisez « Mot de passe oublié » sur la page de connexion.',
+      footerReason: `Vous recevez cet e-mail car ${input.restaurantName} est partenaire de ${PLATFORM_NAME}.`,
+    }),
+  };
+}
+
 export function applicationRejectedEmail(input: { restaurantName: string; reason: string }): EmailMessage {
   return {
     subject: `Votre demande pour ${input.restaurantName}`,
