@@ -1,0 +1,46 @@
+{
+  "groups": {
+    "pilotage": "Overview",
+    "acteurs": "Stakeholders",
+    "operations": "Operations",
+    "argent": "Money",
+    "croissance": "Growth",
+    "plateforme": "Platform & security"
+  },
+  "modules": {
+    "a-plateforme-securite": "Platform & security",
+    "abonnements": "Subscriptions & commissions",
+    "accueil": "Dashboard",
+    "affichage": "Customer app display",
+    "alertes": "Alerts",
+    "analytics": "Analytics",
+    "annonces": "Announcements",
+    "avis": "Reviews & ratings",
+    "clients": "Customers",
+    "commandes": "Orders",
+    "communication": "Notifications & campaigns",
+    "facturation": "Invoicing & VAT",
+    "fidelite": "Loyalty & referral",
+    "finance": "Finance & payouts",
+    "flotte": "Live fleet",
+    "livreurs": "Couriers",
+    "paiements": "Payments",
+    "promotions": "Promotions",
+    "prospection": "Sales prospecting",
+    "rapports": "Reports & exports",
+    "recherche": "Search",
+    "regles-commandes": "Automatic rules",
+    "restaurants": "Restaurants",
+    "support": "Support & disputes",
+    "zones": "Zones & cities"
+  },
+  "geo": {
+    "allMarkets": "All markets",
+    "myScope": "My scope",
+    "allMyScope": "My whole scope",
+    "scopeLabel": "Scope: {{name}}",
+    "shown": "Scope displayed",
+    "hint": "Filters every section by country or city.",
+    "searchCity": "Search for a city"
+  }
+}

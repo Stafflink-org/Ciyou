@@ -1,0 +1,142 @@
+{
+  "docTitle": "Tableau de bord",
+  "header": {
+    "greeting": "Bonjour {{name}}",
+    "title": "Tableau de bord",
+    "description": "Vue consolidée de la plateforme : seules les anomalies demandent votre attention."
+  },
+  "live": {
+    "badge": "En direct",
+    "updated": "Mis à jour chaque minute",
+    "ordersToday": "Commandes aujourd’hui",
+    "vsYesterday": "{{percent}} vs hier même heure",
+    "gmvToday": "Volume d’affaires du jour",
+    "ordersMonth": "Commandes ce mois-ci",
+    "gross": "{{amount}} TTC",
+    "openAlerts": "Alertes ouvertes",
+    "critical_one": "{{count}} critique",
+    "critical_other": "{{count}} critiques",
+    "noneCritical": "aucune critique"
+  },
+  "planNote": "Chiffres recalculés sur les commerces de la formule {{plan}} : les frais de service et les abonnements ne sont pas ventilés par formule.",
+  "kpi": {
+    "revenue": "CA plateforme HT",
+    "margin": "marge",
+    "fees": "frais",
+    "gmv": "Volume d’affaires TTC",
+    "refunded": "remboursés",
+    "sales": "CA des commerces",
+    "salesFooter": "Articles TTC, hors livraison et pourboires.",
+    "commission": "Commissions GoLink HT",
+    "avgRate": "taux moyen",
+    "subscriptions": "Abonnements encaissés HT",
+    "subscriptionsFooter": "Factures d’abonnement payées sur la période.",
+    "orders": "Commandes",
+    "delivered": "livrées",
+    "cancelled": "annulées",
+    "basket": "Panier moyen",
+    "basketFooter": "Montant TTC payé par commande livrée.",
+    "cancellation": "Taux d’annulation",
+    "onTime": "à l’heure",
+    "delivery": "Temps de livraison moyen",
+    "deliveredOnTime": "livrées à l’heure",
+    "deliveredOrders": "Commandes livrées",
+    "ofPlaced": "des commandes passées",
+    "minutes": "{{value}} min"
+  },
+  "evolution": {
+    "title": "Évolution",
+    "hourlyDescription": "Commandes par heure, aujourd’hui et hier.",
+    "periodDescription": "{{period}}, comparé à la période précédente.",
+    "indicator": "Indicateur",
+    "metric": {
+      "gmv": "Volume d’affaires",
+      "revenue": "CA plateforme",
+      "orders": "Commandes",
+      "customers": "Clients",
+      "restaurants": "Commerces"
+    },
+    "today": "Aujourd’hui",
+    "yesterday": "Hier",
+    "period": "Période",
+    "previousPeriod": "Période précédente",
+    "vsYesterday": "vs {{amount}} hier",
+    "vsPrevious": "vs {{amount}} sur la période précédente",
+    "hour": "{{h}} h"
+  },
+  "alerts": {
+    "title": "Alertes par exception",
+    "description": "Seules les anomalies remontent.",
+    "seeAll": "Tout voir",
+    "none": "Aucune anomalie",
+    "noneDescription": "Annulations, refus, livreurs, remboursements, commandes et services sont dans les normes.",
+    "critical_one": "{{count}} alerte critique à traiter en priorité.",
+    "critical_other": "{{count}} alertes critiques à traiter en priorité.",
+    "more_one": "{{count}} autre alerte",
+    "more_other": "{{count}} autres alertes"
+  },
+  "counters": {
+    "title": "Acteurs de la plateforme",
+    "description": "Instantané du périmètre sélectionné.",
+    "shops": "Commerces",
+    "total": "au total",
+    "active": "Actifs",
+    "paused": "En pause",
+    "suspended": "Suspendus",
+    "onboarding": "En inscription",
+    "customers": "Clients",
+    "registered": "inscrits",
+    "active30d": "Actifs 30 j",
+    "inactive": "Inactifs",
+    "couriers": "Livreurs",
+    "online": "En ligne",
+    "onDelivery": "En course",
+    "offline": "Hors ligne",
+    "toValidate": "À valider",
+    "subscriptions": "Abonnements",
+    "mrr": "MRR",
+    "running": "en cours",
+    "trialing": "En essai",
+    "pastDue": "Impayés",
+    "cancelledSubs": "Résiliés"
+  },
+  "todo": {
+    "title": "À traiter",
+    "description": "Validations, documents, tickets, avis, RGPD et reversements en attente.",
+    "seeAll": "Tout voir",
+    "none": "Rien en attente",
+    "noneDescription": "Toutes les demandes ont été traitées.",
+    "viewItems": "Voir les {{count}} éléments"
+  },
+  "activity": {
+    "title": "Activité récente",
+    "description": "Inscriptions, suspensions, formules, résiliations.",
+    "none": "Aucune activité récente",
+    "noneDescription": "Les inscriptions et changements de statut apparaîtront ici."
+  },
+  "period": {
+    "today": "Aujourd’hui",
+    "7d": "7 derniers jours",
+    "30d": "30 derniers jours",
+    "month": "Mois en cours",
+    "prev_month": "Mois précédent",
+    "90d": "90 derniers jours",
+    "12m": "12 derniers mois",
+    "vsYesterday": "vs hier",
+    "vsMonthToDate": "vs mois précédent à date",
+    "vsPrevMonth": "vs mois d’avant",
+    "vsDays": "vs {{days}} jours précédents"
+  },
+  "filter": {
+    "plan": "Formule d’abonnement",
+    "allPlans": "Toutes formules",
+    "planName": "Formule {{name}}",
+    "refresh": "Actualiser",
+    "loadError": "Chargement impossible"
+  },
+  "shell": {
+    "searchPlaceholder": "Commande, restaurant, client, facture…",
+    "palettePlaceholder": "Rechercher une rubrique, une commande, un restaurant…",
+    "geoAll": "Toute la plateforme"
+  }
+}
