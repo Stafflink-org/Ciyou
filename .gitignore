@@ -34,3 +34,17 @@ service-account*.json
 
 .vscode/
 .idea/
+
+# Tests compilés du package partagé
+packages/shared/.test-build/
+
+# Comptes de test générés par le seed (mots de passe)
+*.local.md
+
+# Captures de scripts/smoke.mjs
+.smoke/
+
+# File de travail automatique (état local)
+.autopilot/
+scripts/autopilot/
+scripts/tests/_tmp/
