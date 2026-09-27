@@ -152,13 +152,13 @@ async function searchRestaurants(ctx: Context, query: string): Promise<GlobalSea
         title: r.name,
         subtitle: [cityLabel(ctx, r.cityId), r.planCode ? `Formule ${r.planCode.charAt(0).toUpperCase()}${r.planCode.slice(1)}` : null].filter(Boolean).join(' · '),
         status: r.status,
-        matched: null,
+        matched: contactMatch(ctx, query, r.email, r.phone),
         cityId: r.cityId,
         at: null,
       });
     }
   }
-  // Recherche par e-mail de contact exacte.
+  // Recherche par e-mail de contact exacte (dépasse la limite de préfixe de 15 caractères indexée ci-dessus).
   if (query.includes('@') && hits.size < ctx.limit) {
     const snap = await db.collection(COLLECTIONS.restaurants).where('email', '==', query.trim().toLowerCase()).limit(5).get();
     for (const doc of snap.docs) {
@@ -220,7 +220,8 @@ async function searchClients(ctx: Context, query: string): Promise<GlobalSearchH
 async function searchDrivers(ctx: Context, query: string): Promise<GlobalSearchHit[]> {
   const plans = [keywordPlan(query)];
   const digits = digitsOf(query);
-  if (/^0\d{8,}$/.test(digits)) plans.push({ key: `33${digits.slice(1)}`, rest: [] });
+  // Numéro national (0…) : essai aussi au format international français et luxembourgeois (livreurs +352).
+  if (/^0\d{8,}$/.test(digits)) plans.push({ key: `33${digits.slice(1)}`, rest: [] }, { key: `352${digits.slice(1)}`, rest: [] });
   const seen = new Map<string, GlobalSearchHit>();
   for (const plan of plans) {
     if (!plan) continue;

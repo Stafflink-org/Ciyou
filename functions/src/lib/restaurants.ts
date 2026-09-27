@@ -1,11 +1,18 @@
 // Valeurs initiales d'un établissement créé par inscription ou par l'équipe interne.
 import {
+  COLLECTIONS,
   DEFAULT_STAFF_ROLE_PERMISSIONS,
+  SETTINGS_DOCS,
   buildSearchKeywords,
   encodeGeohash,
   isPointInPolygon,
+  resolveMerchantDefaults,
   slugify,
+  type City,
+  type Country,
   type LatLng,
+  type MerchantDefaults,
+  type OrderRules,
   type PostalAddress,
   type Restaurant,
   type RestaurantCommercial,
@@ -16,6 +23,25 @@ import {
   type Zone,
 } from '@golink/shared';
 import { GeoPoint, Timestamp } from 'firebase-admin/firestore';
+import { db } from './admin';
+
+/**
+ * Valeurs initiales d'un nouveau commerce (H3, préavis §2.3) : lues en base — réglages
+ * plateforme (`settings/orderRules`), puis pays, puis ville, la plus précise l'emportant
+ * (repli documenté dans `resolveMerchantDefaults`/`DEFAULT_MERCHANT_DEFAULTS` si aucun
+ * document n'existe encore). À appeler avant `newRestaurantDoc`/`newOrderSettings`.
+ */
+export async function loadMerchantDefaults(countryId: string, cityId: string): Promise<MerchantDefaults> {
+  const [platformSnap, countrySnap, citySnap] = await Promise.all([
+    db.collection(COLLECTIONS.settings).doc(SETTINGS_DOCS.orderRules).get(),
+    db.collection(COLLECTIONS.countries).doc(countryId).get(),
+    db.collection(COLLECTIONS.cities).doc(cityId).get(),
+  ]);
+  const platform = platformSnap.exists ? (platformSnap.data() as Partial<OrderRules>) : null;
+  const country = countrySnap.exists ? ((countrySnap.data() as Country).orderRules ?? null) : null;
+  const city = citySnap.exists ? ((citySnap.data() as City).orderRules ?? null) : null;
+  return resolveMerchantDefaults(platform, country, city);
+}
 
 /** Horaires par défaut : midi et soir en semaine, dimanche fermé. */
 export function defaultWeeklyHours(timezone: string): WeeklyHours {
@@ -62,10 +88,13 @@ export interface NewRestaurantInput {
   description?: string | null;
   cuisineIds?: string[];
   createdBy: string;
+  /** Valeurs initiales (préparation, minimum) — `loadMerchantDefaults(countryId, cityId)` ; repli si omises. */
+  merchantDefaults?: MerchantDefaults;
 }
 
 export function newRestaurantDoc(input: NewRestaurantInput): Restaurant {
   const now = Timestamp.now();
+  const md = input.merchantDefaults ?? resolveMerchantDefaults(null, null, null);
   return {
     name: input.name,
     slug: slugify(`${input.name}-${input.address.city}`),
@@ -97,10 +126,10 @@ export function newRestaurantDoc(input: NewRestaurantInput): Restaurant {
     busyExtraMinutes: 0,
     fulfillmentModes: ['delivery', 'pickup'],
     deliveredBy: 'platform',
-    minOrderCents: 1000,
+    minOrderCents: md.minOrderCents,
     ownDeliveryFeeCents: null,
     ownDeliveryRadiusMeters: null,
-    prepMinutes: 20,
+    prepMinutes: md.prepMinutes,
     etaMinutes: { min: 25, max: 40 },
     rating: { average: 0, count: 0 },
     hoursSummary: defaultWeeklyHours(input.timezone),
@@ -112,7 +141,7 @@ export function newRestaurantDoc(input: NewRestaurantInput): Restaurant {
     sellsAlcohol: false,
     acceptedPaymentMethods: ['card', 'apple_pay', 'google_pay'],
     ordersCount: 0,
-    searchKeywords: buildSearchKeywords(input.name, input.address.city, input.address.postalCode),
+    searchKeywords: buildSearchKeywords(input.name, input.address.city, input.address.postalCode, input.email, input.phone),
     launchedAt: null,
     suspension: null,
     deletedAt: null,
@@ -179,11 +208,13 @@ export function newLegalDoc(input: {
   };
 }
 
-export function newOrderSettings(updatedBy: string): RestaurantOrderSettings {
+/** `merchantDefaults` : `loadMerchantDefaults(countryId, cityId)` ; repli documenté si omis (nouveau marché sans réglage propre). */
+export function newOrderSettings(updatedBy: string, merchantDefaults?: MerchantDefaults): RestaurantOrderSettings {
+  const md = merchantDefaults ?? resolveMerchantDefaults(null, null, null);
   return {
-    prepMinutes: 20,
-    maxConcurrentOrders: 12,
-    minOrderCents: 1000,
+    prepMinutes: md.prepMinutes,
+    maxConcurrentOrders: md.maxConcurrentOrders,
+    minOrderCents: md.minOrderCents,
     delivery: true,
     pickup: true,
     dineIn: false,
@@ -191,6 +222,8 @@ export function newOrderSettings(updatedBy: string): RestaurantOrderSettings {
     scheduledOrders: false,
     autoPrint: false,
     pickupInstructions: null,
+    scheduledLeadMinutes: md.scheduledLeadMinutes,
+    scheduledMaxDays: md.scheduledMaxDays,
     updatedAt: Timestamp.now(),
     updatedBy,
   };

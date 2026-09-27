@@ -45,6 +45,7 @@ import {
 import { db, FieldValue, Timestamp } from '../../lib/admin';
 import { actorFromCaller, writeAudit } from '../../lib/audit';
 import { fail } from '../../lib/errors';
+import { loadLimitsSettings } from '../../lib/limits';
 import { requireAdmin } from '../../lib/permissions';
 import { z } from '../../lib/validation';
 import { loadSecurityPolicy } from '../../platform/runtime';
@@ -54,8 +55,6 @@ import { PILOTAGE_HEAVY_RUNTIME, pilotageCallable } from './runtime';
 import { chunks, cityAllowed, resolveScope, type ResolvedScope } from './scope';
 import { MIME_TYPES, render, type TableColumn, type TableDocument, type TableValue } from './tabular';
 import { listDays, parisDay, rangeBounds } from './time';
-
-const MAX_ROWS: Record<ExportFormat, number> = { csv: 20_000, xlsx: 20_000, pdf: 3_000 };
 
 const iso = (ts: { toDate(): Date } | null | undefined) => (ts ? ts.toDate().toISOString() : null);
 const label = <K extends string>(map: Record<K, string>, key: string | null | undefined) => (key ? (map[key as K] ?? key) : null);
@@ -555,12 +554,14 @@ export const exportData = pilotageCallable(
     if (data.filters.from && data.filters.to && data.filters.from > data.filters.to) throw fail.invalid('La date de début doit précéder la date de fin.');
     const scope = await resolveScope(admin, data.filters);
     const format = data.format as ExportFormat;
+    const limits = await loadLimitsSettings();
+    const maxRows: Record<ExportFormat, number> = { csv: limits.exports.csvMaxRows, xlsx: limits.exports.xlsxMaxRows, pdf: limits.exports.pdfMaxRows };
     const ctx: ExportContext = {
       admin,
       scope,
       filters: data.filters,
       showPersonal: adminHasPermission(admin, 'personal_data.view'),
-      limit: MAX_ROWS[format],
+      limit: maxRows[format],
     };
     const securityPolicy = await loadSecurityPolicy();
     const massExportRows = securityPolicy.alerts.massExportRows;

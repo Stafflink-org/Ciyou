@@ -2003,17 +2003,17 @@ Principaux trous, par priorité :
 
 **P1**
 
-- Règle Firestore `platformAlerts` update direct sans motif/audit (`admin.rules` l.45-48) : à retirer (tout passe par `handlePlatformAlert`).
-- Activité récente : ajouter suspensions/réactivations/refus de livreurs et retrait définitif de commerce (alignement des noms d'actions d'audit).
-- Abonnements impayés à remonter aussi dans la file « alertes » (ou compter dans la pastille du menu).
-- Vérifier le rendu de `getPilotageOverview` en périmètre ville (ui-metz vide).
-- Recherche par n° de facture par préfixe cassée (`searchInvoices`) et exemple d'écran/`queryKind` non alignés sur les vraies séries (`XX-ABO-2026-…`).
-- Format de commande : `SL-` du cahier non pris en charge (décision de marque à documenter).
-- Recherche par téléphone/e-mail partiel pour les restaurants ; livreurs +352.
-- Rétention restaurants « abonnés » : présenter le churn/rétention d'abonnement dans Croissance (données déjà dans `subscriptions()`).
-- Performance par zone : ajouter acceptation et annulations.
-- Motif d'export à imposer côté serveur pour clients/livreurs (`exportData`) ; règle Firestore `scheduledReports` à fermer aux écritures directes.
-- Export « finances » : décider si `payouts + subscriptions + stats` suffisent ; sinon ajouter paiements/remboursements/commissions par commerce.
+- ~~Règle Firestore `platformAlerts` update direct sans motif/audit~~ **CORRIGÉ (cdc-fix-d)** : `firebase/rules/admin.rules` interdit déjà toute écriture directe (`allow write: if false`), seule `handlePlatformAlert` écrit. Vérifié à nouveau en tâche `cdc-fix-p1`, rien à faire.
+- Activité récente : ajouter suspensions/réactivations/refus de livreurs et retrait définitif de commerce (alignement des noms d'actions d'audit). *(reste à faire — non traité par `cdc-fix-p1`, faute de temps)*
+- Abonnements impayés à remonter aussi dans la file « alertes » (ou compter dans la pastille du menu). *(reste à faire)*
+- Vérifier le rendu de `getPilotageOverview` en périmètre ville (ui-metz vide). *(reste à faire)*
+- **CORRIGÉ (cdc-fix-p1)** : `searchInvoices` (`functions/src/admin/pilotage/search.ts`) — la recherche par préfixe de série (ex. `FR-COM-2026-`) était un intervalle vide (`< upper` au lieu de `< upper + ''`), donc ne renvoyait jamais rien ; borne haute corrigée. L'exemple d'écran/`queryKind` non alignés sur les vraies séries reste à vérifier côté UI *(reste à faire)*.
+- Format de commande : `SL-` du cahier non pris en charge — **documenté (cdc-fix-p1)** dans `docs/DECISIONS_CLIENT.md` (§Organisation et marchés) : décision de marque, GoLink garde son propre préfixe `GL-` (`formatOrderNumber`), aucune trace de marque tierce.
+- **CORRIGÉ (cdc-fix-p1), déployé et vérifié en réel** : recherche par téléphone/e-mail partiel pour les restaurants — `buildSearchKeywords` ne recevait ni l'e-mail ni le téléphone du commerce (`functions/src/lib/restaurants.ts` à la création, `functions/src/restaurant/settings.ts` sections « profile » et « adresse », `functions/src/admin/acteurs/commercial.ts` à la correction équipe), donc seule une correspondance e-mail exacte fonctionnait ; les trois points d'écriture alimentent maintenant les mots-clés avec e-mail + téléphone, et `globalSearch` affiche la correspondance masquée/démasquée (`contactMatch`) sur les résultats restaurant comme pour les clients et les livreurs. Livreurs +352 (Luxembourg) : `searchDrivers` ne proposait que la variante française (+33) du numéro national ; variante luxembourgeoise ajoutée. Fonctions redéployées (`globalSearch`, `updateRestaurantSettings`, `adminUpdateRestaurant`, `restaurantSignup`, `importRestaurants`) sur `golink-9f16d` ; script `scripts/tests/a-pilotage.functions.mjs` rejoué (24/29, les 5 échecs sont préexistants et sans rapport, sur `saveScheduledReport`/`updateExperienceSettings` non touchées ici) ; rattrapage ponctuel exécuté en direct sur les 12 restaurants de démonstration existants (mots-clés recalculés, ils ne portaient pas encore e-mail/téléphone) ; recherche par fragment de téléphone (`« 72 49 »` → `Kumo Ramen`) et d'e-mail confirmée en conditions réelles. Limite assumée, commune à toute la recherche (clients/livreurs compris, même fonction `buildSearchKeywords`) : un numéro est indexé par groupes tels qu'affichés (`+352`, `26`, `72`, `49`, `36`), donc un fragment qui chevauche deux groupes sans les espaces d'origine (ex. `26724936` collé) ne matche pas — recherche par groupe(s) espacé(s) ou par mot recommandée.
+- Rétention restaurants « abonnés » : présenter le churn/rétention d'abonnement dans Croissance (données déjà dans `subscriptions()`). *(reste à faire)*
+- Performance par zone : ajouter acceptation et annulations. *(reste à faire)*
+- ~~Motif d'export à imposer côté serveur pour clients/livreurs (`exportData`)~~ **déjà en place** (`reason: z.string().min(3)` obligatoire dans le schéma de `exportData`, `functions/src/admin/pilotage/exports.ts`) : vérifié à nouveau en tâche `cdc-fix-p1`, rien à faire. ~~Règle Firestore `scheduledReports` à fermer aux écritures directes~~ **déjà fermée** (`firebase/rules/admin.rules` l.82-86, `allow write: if false` depuis `cdc-fix-d`) : vérifié à nouveau, rien à faire.
+- Export « finances » : décider si `payouts + subscriptions + stats` suffisent ; sinon ajouter paiements/remboursements/commissions par commerce. *(reste à faire — décision produit)*
 
 **P2**
 

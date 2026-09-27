@@ -7,7 +7,8 @@ export const updatePlatformSettings = callFunction<
   | { doc: 'general'; reason: string; data: Record<string, unknown> }
   | { doc: 'branding'; reason: string; data: Record<string, unknown> }
   | { doc: 'security'; reason: string; data: Record<string, unknown> }
-  | { doc: 'retention'; reason: string; data: Record<string, unknown> },
+  | { doc: 'retention'; reason: string; data: Record<string, unknown> }
+  | { doc: 'limits'; reason: string; data: Record<string, unknown> },
   { changedFields: string[] }
 >('updatePlatformSettings');
 
