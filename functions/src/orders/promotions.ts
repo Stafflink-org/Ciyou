@@ -91,11 +91,11 @@ export async function usageIssue(p: WithId<Promotion>, uid: string): Promise<str
 export async function loadPromotionByCode(code: string, ctx: PromotionContext, rules: PromotionRules): Promise<WithId<Promotion>> {
   const snap = await db.collection(COLLECTIONS.promotions).where('code', '==', code).where('status', '==', 'active').limit(5).get();
   const promo = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Promotion) })).find((p) => promotionApplies(p, ctx));
-  if (!promo) throw fail.precondition('Ce code promo n’est pas valable pour cette commande.');
+  if (!promo) throw fail.precondition('Ce code promo n’est pas valable pour cette commande.', { code: 'promo_invalid' });
   const usage = await usageIssue(promo, ctx.uid);
-  if (usage) throw fail.precondition(usage);
+  if (usage) throw fail.precondition(usage, { code: 'promo_invalid' });
   const target = targetIssue(promo, ctx, rules);
-  if (target) throw fail.precondition(target);
+  if (target) throw fail.precondition(target, { code: 'promo_invalid' });
   return promo;
 }
 

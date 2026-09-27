@@ -1,7 +1,7 @@
 import { useMemo, type ReactNode } from 'react';
 import { collection, query } from 'firebase/firestore';
-import { Croissant, Flower2, Info, Leaf, Pill, ShoppingBasket, Store, Utensils, Wheat } from 'lucide-react';
-import { Button, Checkbox, Combobox, FormField, Input, SegmentedControl, Textarea, cn } from '@golink/ui';
+import { Croissant, EyeOff, Flower2, Info, Leaf, Pill, ShoppingBasket, Store, Utensils, Wheat } from 'lucide-react';
+import { Button, Checkbox, Combobox, FormField, Input, SegmentedControl, Switch, Textarea, cn } from '@golink/ui';
 import {
   COLLECTIONS,
   MERCHANT_TYPES,
@@ -63,6 +63,7 @@ export function ProfileTab({ active }: { active: boolean }) {
       priceLevel: restaurant.priceLevel ?? 2,
       labels: restaurant.labels ?? [],
       allergenNotice: restaurant.allergenNotice ?? '',
+      visibleInApp: restaurant.visibleInApp !== false,
     }),
     [restaurant],
   );
@@ -108,6 +109,7 @@ export function ProfileTab({ active }: { active: boolean }) {
       priceLevel: draft.priceLevel,
       labels: draft.labels,
       allergenNotice: draft.allergenNotice?.trim() || null,
+      visibleInApp: draft.visibleInApp,
     });
     if (result) markSaved();
   };
@@ -137,6 +139,20 @@ export function ProfileTab({ active }: { active: boolean }) {
           </div>
         }
       >
+        <SettingsCard icon={<EyeOff />} title="Visibilité" description="Masquez temporairement votre établissement du catalogue sans changer votre statut ni vos horaires.">
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-2 p-4">
+            <div>
+              <p className="text-sm font-medium text-fg">Visible dans l’application GoLink</p>
+              <p className="mt-0.5 text-xs text-fg-muted">
+                {draft.visibleInApp
+                  ? 'Vos clients peuvent vous trouver et commander.'
+                  : 'Votre établissement est masqué : personne ne peut vous trouver ni commander, même s’il est ouvert.'}
+              </p>
+            </div>
+            <Switch aria-label="Visible dans l’application GoLink" checked={draft.visibleInApp} onCheckedChange={(checked) => setDraft({ visibleInApp: checked })} />
+          </div>
+        </SettingsCard>
+
         <SettingsCard icon={<Store />} title="Identité" description="Nom, présentation et coordonnées affichés sur votre fiche.">
           <div className="grid gap-5">
             <FormField label="Type de commerce" hint="Adapte le vocabulaire de votre carte et vos catégories dans l’app client.">

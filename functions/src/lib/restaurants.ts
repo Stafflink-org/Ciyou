@@ -128,6 +128,7 @@ export function newRestaurantDoc(input: NewRestaurantInput): Restaurant {
     onboardingStatus: 'pending',
     isOpen: false,
     acceptingOrders: false,
+    visibleInApp: true,
     busyExtraMinutes: 0,
     fulfillmentModes: ['delivery', 'pickup'],
     deliveredBy: 'platform',

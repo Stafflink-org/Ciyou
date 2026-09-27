@@ -71,6 +71,9 @@ export interface Restaurant extends Tracked, SoftDeletable, Localized {
   isOpen: boolean;
   /** Calculé : ouvert, dans ses horaires, zone non coupée, abonnement en règle. */
   acceptingOrders: boolean;
+  /** Interrupteur du commerce (distinct de `isOpen`) : masqué du catalogue et des commandes tant que
+   * désactivé, sans changer le statut ni les horaires. Par défaut visible. */
+  visibleInApp: boolean;
   /** Mode rush : minutes ajoutées au temps de préparation. */
   busyExtraMinutes: number;
   fulfillmentModes: FulfillmentMode[];

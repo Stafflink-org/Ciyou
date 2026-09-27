@@ -221,6 +221,17 @@ export const RESTAURANT_PROMOTION_RULES = {
   inactiveDaysMax: 365,
 } as const;
 
+// ------------------------------------------------------------------ Offres sur un plat
+/** Limites fixes des offres automatiques sur un plat (« 1 acheté, 1 offert », « Le 2e à -50 % »). */
+export const PRODUCT_OFFER_RULES = {
+  titleMin: 3,
+  titleMax: 70,
+  messageMin: 10,
+  messageMax: 180,
+  /** Durée maximale d'une offre programmée (un an). */
+  maxDurationDays: 366,
+} as const;
+
 // ------------------------------------------------------------------ Liens publics
 /** Site public Ciyou Eats (pages établissement partageables). */
 export const CLIENT_WEB_URL = 'https://golink.fr';

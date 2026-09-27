@@ -40,6 +40,11 @@ export interface PlaceOrderInput {
   source?: 'client_ios' | 'client_android' | 'client_web';
   /** Identifiant unique généré par l'app : un double envoi renvoie la même commande. */
   clientRequestId: string;
+  /**
+   * Total affiché au client au moment de valider (dernier devis obtenu par l'app) : revalidé à
+   * ±2 centimes avant le paiement ; au-delà, `total_changed` (§A3) sans vider le panier.
+   */
+  expectedTotalCents?: Cents | null;
   /** Empreinte de l'appareil (si l'app la fournit) : consultée sur la liste de blocage (§28). */
   deviceId?: string | null;
   /** Version de l'application appelante (§30, mise à jour forcée). */

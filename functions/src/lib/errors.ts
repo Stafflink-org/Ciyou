@@ -8,7 +8,7 @@ export const fail = {
   invalid: (message: string, details?: unknown) => new HttpsError('invalid-argument', message, details),
   notFound: (what: string) => new HttpsError('not-found', `${what} introuvable.`),
   alreadyExists: (message: string) => new HttpsError('already-exists', message),
-  precondition: (message: string) => new HttpsError('failed-precondition', message),
+  precondition: (message: string, details?: unknown) => new HttpsError('failed-precondition', message, details),
   unavailable: (message = 'Service momentanément indisponible. Réessayez dans un instant.') =>
     new HttpsError('unavailable', message),
   internal: () => new HttpsError('internal', 'Une erreur interne est survenue. Réessayez dans un instant.'),
