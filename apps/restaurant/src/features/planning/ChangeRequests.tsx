@@ -84,7 +84,7 @@ export function PendingRequestsPanel({
                   )}
                 </div>
               </div>
-              <div className="flex shrink-0 gap-2 pl-11 lg:pl-0">
+              <div className="flex shrink-0 flex-wrap gap-2 pl-11 lg:pl-0">
                 <Button size="sm" variant="ghost" leftIcon={<X />} onClick={() => setRejecting(request)}>
                   Refuser
                 </Button>
