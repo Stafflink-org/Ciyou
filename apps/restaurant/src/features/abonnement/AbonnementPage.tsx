@@ -404,7 +404,7 @@ export function AbonnementPage() {
                   );
                 })}
               </ul>
-              <div className="hidden overflow-x-auto sm:block">
+              <div data-scroll-ok className="hidden overflow-x-auto sm:block">
                 <table className="w-full min-w-[520px] text-sm">
                   <thead className="bg-surface-2">
                     <tr className="text-left">

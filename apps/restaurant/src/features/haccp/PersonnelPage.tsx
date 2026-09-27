@@ -68,7 +68,7 @@ function Row({ employee, day, existing }: { employee: WithId<StaffDirectoryEntry
         </div>
         <div className="ml-auto shrink-0 lg:hidden">{status}</div>
       </div>
-      <div className="grid min-w-0 flex-1 grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4 [&_label]:whitespace-nowrap">
+      <div className="grid min-w-0 flex-1 grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2 xl:grid-cols-4 [&_label]:min-w-0">
         {ITEMS.map(([key, label]) => (
           <Switch key={key} size="sm" label={label} checked={checks[key]} onCheckedChange={(v) => setChecks((c) => ({ ...c, [key]: v }))} className={cn(!checks[key] && '[&_span]:text-danger')} />
         ))}
