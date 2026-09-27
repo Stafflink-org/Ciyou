@@ -1,5 +1,5 @@
 // Avis clients côté restaurant : réponse publique et signalement d'un avis
-// abusif (transmis à la modération GoLink, conformément au DSA).
+// abusif (transmis à la modération Ciyou Eats, conformément au DSA).
 import {
   COLLECTIONS,
   REVIEW_REPORT_REASONS,
@@ -43,7 +43,7 @@ export const replyToReview = callable(
     const actor = await requireRestaurantAccess(request, review.restaurantId, 'reviews.reply', 'reviews.moderate');
     if (review.status === 'removed') throw fail.precondition('Cet avis a été supprimé par la modération.');
     if (review.reply?.status === 'hidden') {
-      throw fail.precondition('Votre réponse a été masquée par la modération GoLink : contactez le support pour la modifier.');
+      throw fail.precondition('Votre réponse a été masquée par la modération Ciyou Eats : contactez le support pour la modifier.');
     }
     if (data.text && containsContactDetails(data.text)) {
       throw fail.invalid('Une réponse publique ne doit contenir ni adresse e-mail ni numéro de téléphone.');
@@ -85,7 +85,7 @@ export const reportReview = callable(
   async (data, request) => {
     const review = await loadReview(data.orderId);
     const actor = await requireRestaurantAccess(request, review.restaurantId, 'reviews.reply');
-    if (review.restaurantReport) throw fail.alreadyExists('Vous avez déjà signalé cet avis : la modération GoLink l’examine.');
+    if (review.restaurantReport) throw fail.alreadyExists('Vous avez déjà signalé cet avis : la modération Ciyou Eats l’examine.');
     const reportRef = db.collection(COLLECTIONS.contentReports).doc(`avis-${data.orderId}-${review.restaurantId}`);
     const reviewRef = db.collection(COLLECTIONS.reviews).doc(data.orderId);
     const now = Timestamp.now();
@@ -111,7 +111,7 @@ export const reportReview = callable(
         });
       });
     } catch (error) {
-      if (isFirestoreAlreadyExists(error)) throw fail.alreadyExists('Vous avez déjà signalé cet avis : la modération GoLink l’examine.');
+      if (isFirestoreAlreadyExists(error)) throw fail.alreadyExists('Vous avez déjà signalé cet avis : la modération Ciyou Eats l’examine.');
       throw error;
     }
     await writeAudit({

@@ -165,7 +165,7 @@ export const updateRestaurantPayments = argentCallable(
     assertAdminCovers(admin, restaurant.cityId);
     const commercial = cSnap.exists ? (cSnap.data() as RestaurantCommercial) : null;
     const methods = [...new Set(data.allowedPaymentMethods)];
-    if (methods.some((m) => DISABLED_PAYMENT_METHODS.includes(m))) throw fail.invalid('Les titres-restaurant ne sont pas acceptés sur GoLink.');
+    if (methods.some((m) => DISABLED_PAYMENT_METHODS.includes(m))) throw fail.invalid('Les titres-restaurant ne sont pas acceptés sur Ciyou Eats.');
     if (methods.includes('cash') && restaurant.deliveredBy === 'platform') throw fail.invalid('Les espèces ne sont possibles que si le commerce livre avec ses propres livreurs salariés.');
     if (!methods.some((m) => m === 'card' || m === 'apple_pay' || m === 'google_pay')) throw fail.invalid('Autorisez au moins un moyen de paiement en ligne.');
     if (data.payoutFrequency !== (commercial?.payoutFrequency ?? null) && !adminHasPermission(admin, 'finance.payouts')) {

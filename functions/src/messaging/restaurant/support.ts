@@ -1,4 +1,4 @@
-// Tickets d'un établissement vers le support GoLink : ouverture (numérotation
+// Tickets d'un établissement vers le support Ciyou Eats : ouverture (numérotation
 // continue, délais cibles), réponses, pièces jointes, clôture et réouverture.
 import {
   COLLECTIONS,
@@ -238,7 +238,7 @@ export const updateSupportTicket = callable(
     const system: TicketMessage = {
       authorType: 'system',
       authorId: actor.caller.uid,
-      authorName: 'GoLink',
+      authorName: 'Ciyou Eats',
       body,
       internal: false,
       attachments: [],

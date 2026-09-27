@@ -444,7 +444,7 @@ async function settingsAndHistory(): Promise<void> {
     const snap = await db.collection(COLLECTIONS.drivers).doc(a.driver).get();
     if (!snap.exists) continue;
     put(`${COLLECTIONS.auditLogs}/${a.id}`, {
-      actor: a.action.includes('blocked') ? { uid: 'system', type: 'system', role: null, name: 'GoLink (automatique)' } : { uid: 'test-super-admin', type: 'admin', role: 'super_admin', name: 'Super administrateur' },
+      actor: a.action.includes('blocked') ? { uid: 'system', type: 'system', role: null, name: 'Ciyou Eats (automatique)' } : { uid: 'test-super-admin', type: 'admin', role: 'super_admin', name: 'Super administrateur' },
       action: a.action,
       target: { type: 'driver', id: a.driver, label: snap.get('displayName') },
       countryId: snap.get('countryId'),

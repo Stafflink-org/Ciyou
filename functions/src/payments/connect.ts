@@ -61,7 +61,7 @@ async function ensureConnectAccount(restaurantId: string, actor: RestaurantActor
       business_profile: {
         name: restaurant.name,
         mcc: RESTAURANT_MCC,
-        product_description: 'Vente de repas livrés et à emporter via GoLink',
+        product_description: 'Vente de repas livrés et à emporter via Ciyou Eats',
         support_phone: restaurant.phone ?? undefined,
       },
       company: legal ? { name: legal.legalName } : undefined,

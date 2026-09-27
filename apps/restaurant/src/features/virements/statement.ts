@@ -80,7 +80,7 @@ export async function downloadStatementPdf(payoutId: string): Promise<void> {
   pdf.heading('Récapitulatif');
   const recap: string[][] = [
     ['Ventes livrées (après remises financées)', eur(p.grossCents)],
-    ['Commission GoLink TTC', minus(p.commissionCents)],
+    ['Commission Ciyou Eats TTC', minus(p.commissionCents)],
     ['Remboursements imputés', minus(p.refundsChargedCents)],
   ];
   if (p.adjustmentsCents) recap.push(['Ajustements', eur(p.adjustmentsCents)]);
@@ -108,7 +108,7 @@ export async function downloadStatementPdf(payoutId: string): Promise<void> {
     foot: ['', '', 'Total des mouvements', s.totals.vatCents ? eur(s.totals.vatCents) : '', eur(s.lines.reduce((sum, line) => sum + line.amountCents, 0))],
     rightAligned: [3, 4],
   });
-  pdf.paragraph('La TVA sur commission figure sur votre facture mensuelle de commissions GoLink. Ce relevé ne constitue pas une facture.');
+  pdf.paragraph('La TVA sur commission figure sur votre facture mensuelle de commissions Ciyou Eats. Ce relevé ne constitue pas une facture.');
   if (p.status === 'paid') pdf.stamp('Payé', 'success');
   else if (p.status === 'failed' || p.status === 'on_hold') pdf.stamp(PAYOUT_STATUS_LABELS[p.status], 'danger');
   pdf.save(`releve-${s.restaurant.id}-${p.periodStart}`);

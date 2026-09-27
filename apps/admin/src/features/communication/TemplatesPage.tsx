@@ -36,7 +36,7 @@ const AUDIENCES: Array<{ id: MessageTemplate['audience']; label: string; descrip
   { id: 'client', label: 'Clients', description: 'Suivi de commande, remboursements, parrainage', icon: <UserRound /> },
   { id: 'restaurant', label: 'Restaurants', description: 'Nouvelles commandes, validation, factures, reversements', icon: <Store /> },
   { id: 'driver', label: 'Livreurs', description: 'Validation du compte, paiements', icon: <Bike /> },
-  { id: 'admin', label: 'Équipe GoLink', description: 'Invitations et alertes internes', icon: <ShieldCheck /> },
+  { id: 'admin', label: 'Équipe Ciyou Eats', description: 'Invitations et alertes internes', icon: <ShieldCheck /> },
 ];
 
 const CHANNEL_OPTIONS: Array<{ value: Channel; label: string; icon: ReactElement }> = [
@@ -247,7 +247,7 @@ function Editor({ template, canEdit, onDone }: { template: Row; canEdit: boolean
 }
 
 export function TemplatesPage() {
-  useDocumentTitle('Messages automatiques · GoLink Admin');
+  useDocumentTitle('Messages automatiques · Ciyou Eats Admin');
   const { can, admin } = useAdminAccess();
   const canEdit = can('templates.edit') && (admin.role === 'super_admin' || (admin.cityIds.length === 0 && admin.countryIds.length === 0));
   const q = useMemo(() => query(collection(db, COLLECTIONS.messageTemplates)), []);

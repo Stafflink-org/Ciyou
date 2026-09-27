@@ -1,5 +1,5 @@
 // Promotions du super admin (cahier §18) : offres plateforme, pays, ville ou
-// restaurant, financement GoLink / restaurant / partagé, ciblage ; validation
+// restaurant, financement Ciyou Eats / restaurant / partagé, ciblage ; validation
 // et cycle de vie des offres créées par les restaurants.
 import {
   COLLECTIONS,
@@ -118,7 +118,7 @@ async function assertCodeFree(code: string | null, exceptId?: string | null) {
   if (clash) throw fail.alreadyExists(`Le code ${code} est déjà utilisé par une offre en cours.`);
 }
 
-/** Création ou modification d'une offre par l'équipe GoLink. */
+/** Création ou modification d'une offre par l'équipe Ciyou Eats. */
 export const createPlatformPromotion = callable(schema, async (data, request) => {
   const { caller, admin } = await requireAdmin(request, 'promotions.edit');
   await assertFeatureOn('promotions', {}, 'Les promotions sont désactivées : réactivez la fonctionnalité pour créer une offre.');
@@ -279,7 +279,7 @@ export const setPromotionStatus = callable(statusSchema, async (data, request) =
       throw fail.precondition('La date de fin de l’offre est passée : prolongez-la avant de la remettre en ligne.');
     }
     const patch: Record<string, unknown> = { status: rule.to, updatedAt: now, updatedBy: caller.uid };
-    if (data.action === 'approve') Object.assign(patch, { approvedAt: now, reviewNote: data.reason ?? 'Validée par GoLink.' });
+    if (data.action === 'approve') Object.assign(patch, { approvedAt: now, reviewNote: data.reason ?? 'Validée par Ciyou Eats.' });
     if (data.action === 'reject') Object.assign(patch, { reviewNote: data.reason, showcase: false });
     if (data.action === 'pause') Object.assign(patch, { pausedAt: now });
     if (data.action === 'resume' && promo.status === 'draft') Object.assign(patch, { approvedAt: now });
@@ -308,8 +308,8 @@ export const setPromotionStatus = callable(statusSchema, async (data, request) =
     const messages = {
       approve: { t: 'Offre validée', b: `Votre offre « ${title} » est validée et visible des clients.` },
       reject: { t: 'Offre refusée', b: `Votre offre « ${title} » n’a pas été validée : ${data.reason}` },
-      pause: { t: 'Offre mise en pause', b: `GoLink a mis en pause votre offre « ${title} » : ${data.reason}` },
-      end: { t: 'Offre arrêtée', b: `GoLink a arrêté votre offre « ${title} » : ${data.reason}` },
+      pause: { t: 'Offre mise en pause', b: `Ciyou Eats a mis en pause votre offre « ${title} » : ${data.reason}` },
+      end: { t: 'Offre arrêtée', b: `Ciyou Eats a arrêté votre offre « ${title} » : ${data.reason}` },
     } as const;
     const m = messages[data.action as keyof typeof messages];
     if (ownerId && m) await pushInApp(ownerId, { title: m.t, body: m.b, category: 'promotion', link: { type: 'page', target: '/promotions' } });

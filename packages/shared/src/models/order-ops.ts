@@ -30,7 +30,7 @@ export interface PlaceOrderInput {
   paymentMethodId?: string | null;
   /** Code promo saisi ; sans code, l'offre automatique la plus avantageuse est appliquée. */
   promoCode?: string | null;
-  /** Régler avec le solde d'avoirs GoLink (tout ou partie de la commande). */
+  /** Régler avec le solde d'avoirs Ciyou Eats (tout ou partie de la commande). */
   useWallet?: boolean;
   tipCents?: Cents;
   customerNote?: string | null;

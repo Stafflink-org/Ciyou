@@ -1,5 +1,5 @@
 // Signalement d'un problème sur une commande par le restaurant : ouverture d'un
-// ticket au support GoLink rattaché à la commande, trace dans la chronologie.
+// ticket au support Ciyou Eats rattaché à la commande, trace dans la chronologie.
 import {
   COLLECTIONS,
   ORDER_ISSUE_CATEGORIES,

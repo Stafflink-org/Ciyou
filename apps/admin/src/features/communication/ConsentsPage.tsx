@@ -39,7 +39,7 @@ function pct(n: number, total: number): number {
 
 /** Consentement marketing des clients : seuls ceux qui ont accepté reçoivent les offres. */
 export function ConsentsPage() {
-  useDocumentTitle('Consentement marketing · GoLink Admin');
+  useDocumentTitle('Consentement marketing · Ciyou Eats Admin');
   const { can } = useAdminAccess();
   const geo = useGeoScope();
   const allowed = can('customers.view');

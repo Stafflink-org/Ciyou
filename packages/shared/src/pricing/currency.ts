@@ -1,4 +1,4 @@
-// Devises des marchés GoLink. Tous les montants du moteur restent des entiers en
+// Devises des marchés Ciyou Eats. Tous les montants du moteur restent des entiers en
 // unités mineures de la devise du marché (centimes d'euro, centimes de dirham ou
 // de dinar algérien, millimes de dinar tunisien). Le type `Cents` désigne donc
 // « unités mineures » : son nom est conservé pour la compatibilité.

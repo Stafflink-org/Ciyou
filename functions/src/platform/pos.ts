@@ -83,7 +83,7 @@ async function deliver(connectionId: string, connection: Connection, event: stri
   try {
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-golink-event': event, 'x-golink-delivery': deliveryId, 'x-golink-signature': sign(secret, body), 'user-agent': 'GoLink-POS/1.0' },
+      headers: { 'content-type': 'application/json', 'x-golink-event': event, 'x-golink-delivery': deliveryId, 'x-golink-signature': sign(secret, body), 'user-agent': 'Ciyou Eats-POS/1.0' },
       body,
       redirect: 'error',
       signal: AbortSignal.timeout(8000),
@@ -113,7 +113,7 @@ async function recordDelivery(connectionId: string, connection: Connection, even
   await ref.collection('deliveries').doc(deliveryId).set({ event, orderId, ok: result.ok, httpStatus: result.status, error: result.error, at: now });
 }
 
-// ------------------------------------------------------------------ Gestion par l'équipe GoLink
+// ------------------------------------------------------------------ Gestion par l'équipe Ciyou Eats
 
 const connectionSchema = z.object({
   connectionId: zId.nullish(),
@@ -172,7 +172,7 @@ export const testPosConnection = platformCallable(z.object({ connectionId: zId, 
   if (!snap.exists) throw fail.notFound('Connexion caisse');
   const connection = snap.data() as Connection;
   const deliveryId = `test-${Date.now().toString(36)}`;
-  const result = await deliver(ref.id, connection, 'ping', { message: 'Test de connexion GoLink', restaurantId: connection.restaurantId }, deliveryId);
+  const result = await deliver(ref.id, connection, 'ping', { message: 'Test de connexion Ciyou Eats', restaurantId: connection.restaurantId }, deliveryId);
   await recordDelivery(ref.id, connection, 'ping', null, deliveryId, result);
   await writeAudit({
     actor: actorFromCaller(caller, 'admin'),

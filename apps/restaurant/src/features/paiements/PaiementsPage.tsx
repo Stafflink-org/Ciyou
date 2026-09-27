@@ -21,9 +21,9 @@ const ONLINE: OnlineMethod[] = ['card', 'apple_pay', 'google_pay'];
 
 const FEES: Array<[string, string]> = [
   ['Frais de paiement en ligne', 'Frais bancaires de chaque paiement par carte, déduits de votre reversement.'],
-  ['Espèces', 'Encaissées par vos livreurs ; la commission GoLink correspondante est déduite du prochain versement.'],
+  ['Espèces', 'Encaissées par vos livreurs ; la commission Ciyou Eats correspondante est déduite du prochain versement.'],
   ['Remboursements clients', 'À la charge de l’établissement, déduits du prochain versement.'],
-  ['Titres-restaurant', 'Non acceptés sur GoLink.'],
+  ['Titres-restaurant', 'Non acceptés sur Ciyou Eats.'],
 ];
 
 /** Réplique de la règle serveur : moyens réellement proposés aux clients. */
@@ -36,7 +36,7 @@ function preview(draft: Draft, allowed: PaymentMethod[]): PaymentMethod[] {
 }
 
 /**
- * Moyens de paiement acceptés. Décisions GoLink : tout paiement passe par la
+ * Moyens de paiement acceptés. Décisions Ciyou Eats : tout paiement passe par la
  * plateforme (paiement en ligne toujours ouvert), espèces seulement à la livraison
  * par un livreur salarié du commerce, titres-restaurant non acceptés.
  */
@@ -66,7 +66,7 @@ export function PaiementsPage() {
     <PageHeader
       eyebrow="Configuration"
       title="Moyens de paiement"
-      description="Choisissez comment vos clients règlent leurs commandes. Les paiements sont encaissés par GoLink puis reversés sur votre compte, commission déduite."
+      description="Choisissez comment vos clients règlent leurs commandes. Les paiements sont encaissés par Ciyou Eats puis reversés sur votre compte, commission déduite."
     />
   );
   if (settings.error)
@@ -107,7 +107,7 @@ export function PaiementsPage() {
         </Link>
       </span>
     ) : (
-      'Non autorisé par GoLink pour votre établissement.'
+      'Non autorisé par Ciyou Eats pour votre établissement.'
     )
   ) : undefined;
 
@@ -150,7 +150,7 @@ export function PaiementsPage() {
         <SettingsCard
           icon={<CreditCard />}
           title="Paiement en ligne"
-          description="Réglé dans l’app avant la préparation : aucune commande impayée. Toujours proposé sur GoLink."
+          description="Réglé dans l’app avant la préparation : aucune commande impayée. Toujours proposé sur Ciyou Eats."
           actions={<Badge tone="success">Obligatoire</Badge>}
         >
           <RowList>
@@ -162,7 +162,7 @@ export function PaiementsPage() {
                   icon={ONLINE_META[method].icon}
                   label={PAYMENT_METHOD_LABELS[method]}
                   description={ONLINE_META[method].description}
-                  disabledReason={!authorised ? 'Non autorisé par GoLink pour votre établissement.' : undefined}
+                  disabledReason={!authorised ? 'Non autorisé par Ciyou Eats pour votre établissement.' : undefined}
                 >
                   <Switch
                     checked={authorised && draft.methods[method]}
@@ -173,7 +173,7 @@ export function PaiementsPage() {
                 </SettingRow>
               );
             })}
-            <SettingRow icon={<Gift />} label={PAYMENT_METHOD_LABELS.wallet} description="Avoirs et bons d’achat offerts par GoLink : toujours acceptés, sans frais pour vous.">
+            <SettingRow icon={<Gift />} label={PAYMENT_METHOD_LABELS.wallet} description="Avoirs et bons d’achat offerts par Ciyou Eats : toujours acceptés, sans frais pour vous.">
               <Badge tone={allowed.includes('wallet') ? 'success' : 'neutral'}>{allowed.includes('wallet') ? 'Toujours accepté' : 'Inactif'}</Badge>
             </SettingRow>
           </RowList>
@@ -182,7 +182,7 @@ export function PaiementsPage() {
         <SettingsCard
           icon={<Banknote />}
           title="Espèces à la livraison"
-          description="Proposées seulement quand la commande est livrée par un de vos livreurs salariés. Avec un livreur GoLink, le paiement en ligne reste obligatoire."
+          description="Proposées seulement quand la commande est livrée par un de vos livreurs salariés. Avec un livreur Ciyou Eats, le paiement en ligne reste obligatoire."
         >
           <RowList>
             <SettingRow

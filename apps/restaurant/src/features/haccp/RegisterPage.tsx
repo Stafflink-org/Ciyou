@@ -194,7 +194,7 @@ function DocumentDialog({ open, onClose }: { open: boolean; onClose: () => void 
 }
 
 export function RegisterPage() {
-  useDocumentTitle('Registre HACCP · GoLink Restaurant');
+  useDocumentTitle('Registre HACCP · Ciyou Eats Restaurant');
   const can = useCan();
   const manage = can('haccp.manage');
   const { restaurantId } = useRestaurantAccess();

@@ -37,7 +37,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       { key: 'reviews.reply', label: 'Répondre aux avis', description: 'Réponses publiques aux avis clients.' },
       { key: 'messages.use', label: 'Messagerie', description: 'Échanger avec clients et livreurs.' },
       { key: 'marketing.manage', label: 'Marketing', description: 'Codes promo, campagnes, fidélité.' },
-      { key: 'support.use', label: 'Support GoLink', description: 'Ouvrir et suivre des demandes au support.' },
+      { key: 'support.use', label: 'Support Ciyou Eats', description: 'Ouvrir et suivre des demandes au support.' },
     ],
   },
   {
@@ -45,7 +45,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     label: 'Finances',
     permissions: [
       { key: 'finance.view', label: 'Finances', description: 'Chiffre d’affaires, versements, abonnement.' },
-      { key: 'invoices.view', label: 'Factures', description: 'Télécharger les factures GoLink.' },
+      { key: 'invoices.view', label: 'Factures', description: 'Télécharger les factures Ciyou Eats.' },
     ],
   },
   {

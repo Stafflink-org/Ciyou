@@ -228,6 +228,8 @@ export const SETTINGS_DOCS = {
   translator: 'translator',
   /** Réglages publics de la cartographie (Google Maps) : jamais les clés (tâche « maps-settings »). */
   maps: 'maps',
+  /** Limites et seuils techniques (exports, imports, alerte d'ancienneté des espèces des livreurs de commerce). */
+  limits: 'limits',
 } as const;
 export type SettingsDocId = (typeof SETTINGS_DOCS)[keyof typeof SETTINGS_DOCS];
 

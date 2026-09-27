@@ -200,7 +200,7 @@ function GdprTab() {
 }
 
 export function LegalRgprPage() {
-  useDocumentTitle('Légal & RGPD · GoLink Admin');
+  useDocumentTitle('Légal & RGPD · Ciyou Eats Admin');
   const can = useCan();
   const canGdpr = can('gdpr.handle');
   const canLegal = can('legal.edit');

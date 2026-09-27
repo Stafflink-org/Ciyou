@@ -112,7 +112,7 @@ export function seedGrowth(ctx: SeedContext, orders: SeededOrder[], clients: Cli
     },
     {
       id: 'campagne-mina', scope: 'restaurant', restaurantId: 'mina-kitchen', name: 'Ce soir, on cuisine pour vous', channel: 'push',
-      title: 'Ce soir, on cuisine pour vous', body: 'Retrouvez vos plats préférés de Mina Kitchen ce soir sur GoLink.',
+      title: 'Ce soir, on cuisine pour vous', body: 'Retrouvez vos plats préférés de Mina Kitchen ce soir sur Ciyou Eats.',
       emailSubject: null, emailHtml: null, link: { type: 'restaurant', target: 'mina-kitchen' },
       audience: { userType: 'client', restaurantIds: ['mina-kitchen'], segment: 'loyal', marketing: true },
       status: 'sent', scheduledAt: ts(parisTime(addDays(ctx.today, -7), 11 * 60 + 30)), sentAt: ts(parisTime(addDays(ctx.today, -7), 11 * 60 + 30)),
@@ -129,12 +129,12 @@ export function seedGrowth(ctx: SeedContext, orders: SeededOrder[], clients: Cli
     ['order_cancelled', 'Commande annulée', 'client', ['push', 'email'], 'Commande annulée', 'Votre commande {{orderNumber}} a été annulée : {{reason}}. Vous êtes remboursé de {{amount}}.', ['orderNumber', 'reason', 'amount']],
     ['refund_issued', 'Remboursement', 'client', ['email', 'in_app'], 'Remboursement effectué', 'Nous vous avons remboursé {{amount}} pour la commande {{orderNumber}}.', ['amount', 'orderNumber']],
     ['restaurant_new_order', 'Nouvelle commande', 'restaurant', ['push', 'in_app'], 'Nouvelle commande', 'Commande {{orderNumber}} : {{itemsCount}} articles, {{total}}.', ['orderNumber', 'itemsCount', 'total']],
-    ['restaurant_approved', 'Compte validé', 'restaurant', ['email'], 'Bienvenue sur GoLink', 'Votre établissement {{restaurantName}} est validé : vous pouvez ouvrir aux commandes.', ['restaurantName']],
+    ['restaurant_approved', 'Compte validé', 'restaurant', ['email'], 'Bienvenue sur Ciyou Eats', 'Votre établissement {{restaurantName}} est validé : vous pouvez ouvrir aux commandes.', ['restaurantName']],
     ['restaurant_payout_paid', 'Reversement effectué', 'restaurant', ['email'], 'Votre reversement est en route', '{{amount}} ont été virés pour la période {{period}}.', ['amount', 'period']],
     ['restaurant_document_expiring', 'Document bientôt expiré', 'restaurant', ['email', 'in_app'], 'Document à renouveler', 'Votre {{documentType}} expire le {{date}}.', ['documentType', 'date']],
     ['driver_approved', 'Livreur validé', 'driver', ['push', 'email'], 'Vous pouvez commencer', 'Votre compte livreur est validé. Passez en ligne pour recevoir des courses.', []],
     ['driver_payout_paid', 'Paiement livreur', 'driver', ['push', 'email'], 'Paiement envoyé', '{{amount}} ont été virés pour la semaine du {{period}}.', ['amount', 'period']],
-    ['admin_invitation', 'Invitation équipe interne', 'admin', ['email'], 'Votre accès à l’administration GoLink', 'Définissez votre mot de passe pour activer votre accès.', []],
+    ['admin_invitation', 'Invitation équipe interne', 'admin', ['email'], 'Votre accès à l’administration Ciyou Eats', 'Définissez votre mot de passe pour activer votre accès.', []],
   ];
   for (const [key, event, audience, channels, title, body, variables] of templates) {
     const tpl: MessageTemplate = {
@@ -228,7 +228,7 @@ export function seedGrowth(ctx: SeedContext, orders: SeededOrder[], clients: Cli
     const id = `prospect-${i + 1}`;
     w.set(w.doc(`${COLLECTIONS.prospects}/${id}`), prospect);
     const activities: ProspectActivity[] = [{ type: 'note', summary: 'Fiche créée après repérage.', fromStage: null, toStage: 'to_contact', by: sales, at: createdAt }];
-    if (stage !== 'to_contact') activities.push({ type: 'visit', summary: 'Passage au restaurant, présentation de GoLink au gérant.', fromStage: 'to_contact', toStage: 'contacted', by: sales, at: ts(minutesDays(createdAt.toDate(), 3)) });
+    if (stage !== 'to_contact') activities.push({ type: 'visit', summary: 'Passage au restaurant, présentation de Ciyou Eats au gérant.', fromStage: 'to_contact', toStage: 'contacted', by: sales, at: ts(minutesDays(createdAt.toDate(), 3)) });
     if (['demo', 'negotiation', 'signed_up'].includes(stage)) activities.push({ type: 'demo', summary: 'Démonstration du back-office et simulation de commission.', fromStage: 'contacted', toStage: 'demo', by: sales, at: ts(minutesDays(createdAt.toDate(), 8)) });
     if (stage === 'negotiation') activities.push({ type: 'call', summary: 'Demande une commission à 25 % les trois premiers mois.', fromStage: 'demo', toStage: 'negotiation', by: sales, at: ts(minutesDays(createdAt.toDate(), 12)) });
     activities.forEach((a, j) => w.set(w.doc(`${COLLECTIONS.prospects}/${id}/${SUBCOLLECTIONS.prospects.activities}/a${j + 1}`), a));

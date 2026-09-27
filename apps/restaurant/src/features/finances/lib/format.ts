@@ -40,7 +40,7 @@ export function csvAmount(cents: number): string {
 /** Libellés des mouvements du grand livre vus par un restaurant. */
 export const LEDGER_LABELS: Record<string, string> = {
   order_revenue: 'Ventes',
-  commission: 'Commission GoLink',
+  commission: 'Commission Ciyou Eats',
   promo_funded: 'Remise financée',
   delivery_fee: 'Frais de livraison',
   payment_fee: 'Frais de paiement',

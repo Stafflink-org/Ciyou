@@ -7,7 +7,7 @@ let client: Stripe | null = null;
 
 export function getStripe(): Stripe {
   client ??= new Stripe(STRIPE_SECRET_KEY.value(), {
-    appInfo: { name: 'GoLink' },
+    appInfo: { name: 'Ciyou Eats' },
     maxNetworkRetries: 2,
     timeout: 20_000,
   });

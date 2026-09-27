@@ -97,7 +97,7 @@ export function ZoneEditor({
   };
   const feeHint =
     bounds.maxFeeCents != null
-      ? `Entre ${formatEUR(bounds.minFeeCents ?? 0, { cents: true })} et ${formatEUR(bounds.maxFeeCents, { cents: true })}, fixé par GoLink.`
+      ? `Entre ${formatEUR(bounds.minFeeCents ?? 0, { cents: true })} et ${formatEUR(bounds.maxFeeCents, { cents: true })}, fixé par Ciyou Eats.`
       : '0 € : livraison offerte.';
   const invalid = Object.values(errors).some(Boolean);
 

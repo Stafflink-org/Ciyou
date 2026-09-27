@@ -18,7 +18,7 @@ import { db } from '../../lib/admin.mjs';
 
 const DRY_RUN = process.argv.includes('--dry-run');
 const ENFORCE_MFA = process.argv.includes('--enforce-mfa');
-const SYSTEM = { uid: 'system', type: 'system', role: null, name: 'GoLink (alignement des données)' };
+const SYSTEM = { uid: 'system', type: 'system', role: null, name: 'Ciyou Eats (alignement des données)' };
 
 const log = (verb: string, path: string, detail = '') => console.log(`${verb.padEnd(11)} ${path}${detail ? ` : ${detail}` : ''}`);
 

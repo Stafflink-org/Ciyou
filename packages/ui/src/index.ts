@@ -1,4 +1,4 @@
-// @golink/ui — kit d'interface partagé des back-offices GoLink.
+// @golink/ui — kit d'interface partagé des back-offices Ciyou Eats.
 // Styles : importer une fois « @golink/ui/styles.css » dans la feuille de l'application.
 
 export { cn } from './lib/cn';

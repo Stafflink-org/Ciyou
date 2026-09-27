@@ -39,7 +39,7 @@ type Audience = HelpArticle['audience'][number];
 const AUDIENCES: Audience[] = ['client', 'restaurant', 'driver'];
 
 export function HelpCenterPage() {
-  useDocumentTitle('Centre d’aide · Support · GoLink Admin');
+  useDocumentTitle('Centre d’aide · Support · Ciyou Eats Admin');
   const { can } = useAdminAccess();
   const editable = can('support.configure');
   const q = useMemo(() => query(collection(db, COLLECTIONS.helpArticles), orderBy('order'), limit(500)), []);

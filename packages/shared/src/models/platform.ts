@@ -65,6 +65,12 @@ export interface OrderRules {
   /** Inactivité du commerce : alerte après N jours sans commande, retrait N jours après l'alerte. */
   merchantInactivity?: { enabled: boolean; alertAfterDays: number; removeAfterAlertDays: number } | null;
   defaultPrepMinutes: number;
+  /**
+   * Valeurs initiales des réglages de commande d'un nouveau commerce (préparation, capacité,
+   * minimum, préavis des commandes programmées). Copiées à la création du commerce et
+   * reprises par le bouton « Réinitialiser » du back-office restaurant.
+   */
+  merchantDefaults?: MerchantDefaults;
   /** Allongement maximal que le restaurant peut ajouter en période de rush. */
   maxPrepExtensionMinutes: number;
   customerCancellation: CustomerCancellationPolicy;
@@ -125,6 +131,20 @@ export interface OrderRules {
     /** Acceptation automatique et avoir immédiat si les contrôles sont propres et le montant sous ce plafond (0 = jamais). */
     autoAcceptMaxCents: number;
   };
+}
+
+/** Valeurs initiales des réglages de commande d'un commerce (plateforme → pays → ville). */
+export interface MerchantDefaults {
+  /** Temps de préparation annoncé (minutes). */
+  prepMinutes: number;
+  /** Commandes en cours simultanées au-delà desquelles le commerce refuse les nouvelles commandes. */
+  maxConcurrentOrders: number;
+  /** Minimum de commande (unités mineures de la devise du pays). */
+  minOrderCents: Cents;
+  /** Commandes programmées : délai minimal avant le créneau (minutes). */
+  scheduledLeadMinutes: number;
+  /** Commandes programmées : horizon maximal (jours). */
+  scheduledMaxDays: number;
 }
 
 export interface OrderRulesSettings extends OrderRules {
@@ -296,8 +316,35 @@ export interface SupportSettings {
   autoCloseResolvedAfterDays?: number;
   /** Horaires du support (décision client : 24/7). */
   alwaysOn?: boolean;
+  /** Message affiché aux commerces en tête de « Support GoLink » (ex. « assistance 24 h/24, 7 j/7 »). */
+  merchantNotice?: SupportMerchantNotice | null;
   updatedAt: Timestamp;
   updatedBy: string;
+}
+
+/** Message du support affiché dans le back-office des commerces (fr obligatoire, en / ar facultatifs). */
+export interface SupportMerchantNotice {
+  enabled: boolean;
+  title: LocalizedText;
+  body: LocalizedText;
+}
+
+/** settings/limits : limites techniques et seuils réglables (écran « Limites et seuils »). */
+export interface LimitsSettings {
+  exports: {
+    /** Lignes au plus par export CSV / Excel / PDF des rapports. */
+    csvMaxRows: number;
+    xlsxMaxRows: number;
+    pdfMaxRows: number;
+    /** Lignes au plus par export du journal d'audit. */
+    auditMaxRows: number;
+    /** Lignes au plus par import de commerces. */
+    importMaxRows: number;
+  };
+  /** Espèces des livreurs de commerce : alerte quand des espèces ne sont pas remises depuis N jours. */
+  merchantCashAlertDays: number;
+  updatedAt?: Timestamp;
+  updatedBy?: string;
 }
 
 /** settings/security : politique d'accès des administrateurs. */
@@ -472,7 +519,7 @@ export interface Country extends Tracked {
   paymentMethods: Record<PaymentMethod, boolean>;
   /** Prestataires de paiement proposés dans ce pays (paymentProviders/{id}). */
   paymentProviderIds?: string[];
-  /** Identifiant fiscal de l'entité GoLink facturant dans ce pays. */
+  /** Identifiant fiscal de l'entité Ciyou Eats facturant dans ce pays. */
   billingEntity: {
     legalName: string;
     vatNumber: string;
@@ -710,7 +757,7 @@ export interface SponsoredPlacement extends Tracked {
   offerId?: string | null;
   restaurantName?: string | null;
   countryId?: string | null;
-  /** Paiement : facture GoLink ou crédit publicitaire (parrainage). */
+  /** Paiement : facture Ciyou Eats ou crédit publicitaire (parrainage). */
   billing?: 'invoice' | 'ad_credit' | 'offered' | null;
   /** Prix catalogue HT ; `priceHtCents` = montant facturé (0 si offert ou payé en crédit publicitaire). */
   listPriceHtCents?: Cents | null;

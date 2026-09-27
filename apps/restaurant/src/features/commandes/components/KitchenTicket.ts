@@ -62,7 +62,7 @@ ${order.customerNote ? `<div class="block"><b>Note du client</b><br>${escape(ord
 ${order.containsAlcohol ? '<div class="block"><b>Contient de l’alcool : pièce d’identité à la remise</b></div>' : ''}
 ${address}
 <hr>
-<div class="center muted">GoLink · ticket cuisine</div>
+<div class="center muted">Ciyou Eats · ticket cuisine</div>
 </body></html>`;
 }
 

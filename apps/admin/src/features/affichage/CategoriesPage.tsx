@@ -29,7 +29,7 @@ import { LoadError } from '../_experience/ui';
 import { AffichageNav, CATEGORY_ICONS, CategoryIcon } from './shared';
 
 export function CategoriesPage() {
-  useDocumentTitle('Catégories · Affichage · GoLink Admin');
+  useDocumentTitle('Catégories · Affichage · Ciyou Eats Admin');
   const { admin } = useAdminAccess();
   const q = useMemo(() => query(collection(db, COLLECTIONS.cuisineCategories), orderBy('order'), limit(200)), []);
   const { data, loading, error } = useCollection<CuisineCategory>(q);

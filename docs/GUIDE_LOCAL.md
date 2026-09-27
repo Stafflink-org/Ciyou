@@ -1,6 +1,6 @@
 # Guide de revue locale (localhost)
 
-Ce guide sert à parcourir les deux back-offices GoLink **sur votre PC**, branchés sur la vraie base
+Ce guide sert à parcourir les deux back-offices Ciyou Eats **sur votre PC**, branchés sur la vraie base
 Firebase de démonstration (`golink-9f16d`), avant toute mise en ligne. Aucune donnée fictive
 locale : tout ce que vous voyez existe réellement dans la base.
 
@@ -11,7 +11,7 @@ locale : tout ce que vous voyez existe réellement dans la base.
 - Un fichier `.env.local` à la racine du dépôt, avec ces variables (déjà présentes en local,
   ne pas les recopier ni les partager) :
   - `VITE_STRIPE_PUBLISHABLE_KEY` — clé publique Stripe (mode test).
-  - `VITE_GOOGLE_MAPS_API_KEY` — clé Google Maps restreinte aux domaines GoLink et à `localhost`.
+  - `VITE_GOOGLE_MAPS_API_KEY` — clé Google Maps restreinte aux domaines Ciyou Eats et à `localhost`.
 - Google Chrome installé (utilisé par l'outil de capture `npm run smoke`, facultatif).
 
 ## 2. Démarrer les deux back-offices

@@ -103,7 +103,7 @@ export function TicketPage() {
   const { admin, can } = useAdminAccess();
   const ticketState = useDoc<SupportTicket>(docAt(`${COLLECTIONS.supportTickets}/${ticketId}`));
   const ticket = ticketState.data ? ({ ...ticketState.data, id: ticketId } as WithId<SupportTicket>) : null;
-  useDocumentTitle(`${ticket?.number ?? 'Ticket'} · Support · GoLink Admin`);
+  useDocumentTitle(`${ticket?.number ?? 'Ticket'} · Support · Ciyou Eats Admin`);
 
   const messagesQuery = useMemo(() => query(collection(db, paths.ticketMessages(ticketId)), orderBy('createdAt', 'asc'), limit(500)), [ticketId]);
   const messages = useCollection<TicketMessage>(messagesQuery);
@@ -524,7 +524,7 @@ function Composer({ ticket, order }: { ticket: WithId<SupportTicket>; order: Wit
           }}
           rows={5}
           maxLength={5000}
-          placeholder={mode === 'note' ? 'Note visible uniquement par l’équipe GoLink…' : `Répondre à ${ticket.requesterName}…`}
+          placeholder={mode === 'note' ? 'Note visible uniquement par l’équipe Ciyou Eats…' : `Répondre à ${ticket.requesterName}…`}
           className={cn('rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0', mode === 'note' && 'bg-(--tone-bg)')}
           aria-label="Message"
         />

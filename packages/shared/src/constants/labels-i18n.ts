@@ -108,7 +108,7 @@ const EN: TableTranslation = {
     commercial_gesture: 'Goodwill gesture', platform_error: 'Platform error', payment_issue: 'Payment incident',
   },
   PAYMENT_METHOD_LABELS: {
-    card: 'Bank card', apple_pay: 'Apple Pay', google_pay: 'Google Pay', cash: 'Cash', meal_voucher: 'Meal vouchers', wallet: 'GoLink credit',
+    card: 'Bank card', apple_pay: 'Apple Pay', google_pay: 'Google Pay', cash: 'Cash', meal_voucher: 'Meal vouchers', wallet: 'Ciyou Eats credit',
   },
   PAYMENT_STATUS_LABELS: {
     pending: 'Pending', requires_action: 'Action required', authorized: 'Authorized', paid: 'Paid',
@@ -129,7 +129,7 @@ const EN: TableTranslation = {
   RESTAURANT_STATUS_LABELS: { onboarding: 'Signing up', active: 'Active', paused: 'Paused', suspended: 'Suspended', closed: 'Permanently closed' },
   DRIVER_STATUS_LABELS: { onboarding: 'Signing up', active: 'Active', suspended: 'Suspended', deactivated: 'Deactivated' },
   DRIVER_AVAILABILITY_LABELS: { offline: 'Offline', online: 'Available', on_delivery: 'On a delivery', paused: 'Paused' },
-  DRIVER_TYPE_LABELS: { platform: 'GoLink courier', restaurant: 'Business employee courier' },
+  DRIVER_TYPE_LABELS: { platform: 'Ciyou Eats courier', restaurant: 'Business employee courier' },
   RESTAURANT_COURIER_STATUS_LABELS: { active: 'Available', inactive: 'Unavailable', blocked: 'Blocked' },
   VEHICLE_LABELS: {
     bike: 'Bike', e_bike: 'Electric bike', cargo_bike: 'Cargo bike', scooter: 'Scooter', motorbike: 'Motorbike', car: 'Car', on_foot: 'On foot',
@@ -146,7 +146,7 @@ const EN: TableTranslation = {
     trialing: 'Trial period', active: 'Active', past_due: 'Past due', restricted: 'Restricted', suspended: 'Suspended', cancelled: 'Cancelled',
   },
   PROMOTION_KIND_LABELS: { percentage: 'Percentage', fixed: 'Fixed amount', free_delivery: 'Free delivery' },
-  PROMOTION_FUNDING_LABELS: { platform: 'GoLink', restaurant: 'Restaurant', shared: 'Shared' },
+  PROMOTION_FUNDING_LABELS: { platform: 'Ciyou Eats', restaurant: 'Restaurant', shared: 'Shared' },
   PROMOTION_STATUS_LABELS: { draft: 'Draft', pending_review: 'To approve', active: 'Active', paused: 'Paused', rejected: 'Rejected', ended: 'Ended' },
   CAMPAIGN_CHANNEL_LABELS: { push: 'Push notification', email: 'Email', sms: 'SMS', in_app: 'In-app message' },
   CAMPAIGN_STATUS_LABELS: { draft: 'Draft', scheduled: 'Scheduled', sending: 'Sending', sent: 'Sent', cancelled: 'Cancelled', failed: 'Failed' },
@@ -245,7 +245,7 @@ const AR: TableTranslation = {
     commercial_gesture: 'لفتة تجارية', platform_error: 'خطأ من المنصة', payment_issue: 'حادث دفع',
   },
   PAYMENT_METHOD_LABELS: {
-    card: 'بطاقة مصرفية', apple_pay: 'Apple Pay', google_pay: 'Google Pay', cash: 'نقداً', meal_voucher: 'قسائم الوجبات', wallet: 'رصيد GoLink',
+    card: 'بطاقة مصرفية', apple_pay: 'Apple Pay', google_pay: 'Google Pay', cash: 'نقداً', meal_voucher: 'قسائم الوجبات', wallet: 'رصيد Ciyou Eats',
   },
   PAYMENT_STATUS_LABELS: {
     pending: 'قيد الانتظار', requires_action: 'يتطلب إجراءً', authorized: 'مصرّح به', paid: 'مدفوع',
@@ -266,7 +266,7 @@ const AR: TableTranslation = {
   RESTAURANT_STATUS_LABELS: { onboarding: 'قيد التسجيل', active: 'نشط', paused: 'متوقف مؤقتاً', suspended: 'معلّق', closed: 'مغلق نهائياً' },
   DRIVER_STATUS_LABELS: { onboarding: 'قيد التسجيل', active: 'نشط', suspended: 'معلّق', deactivated: 'معطّل' },
   DRIVER_AVAILABILITY_LABELS: { offline: 'غير متصل', online: 'متاح', on_delivery: 'في مهمة توصيل', paused: 'متوقف مؤقتاً' },
-  DRIVER_TYPE_LABELS: { platform: 'موصّل GoLink', restaurant: 'موصّل موظف لدى المتجر' },
+  DRIVER_TYPE_LABELS: { platform: 'موصّل Ciyou Eats', restaurant: 'موصّل موظف لدى المتجر' },
   RESTAURANT_COURIER_STATUS_LABELS: { active: 'متاح', inactive: 'غير متاح', blocked: 'محظور' },
   VEHICLE_LABELS: {
     bike: 'دراجة', e_bike: 'دراجة كهربائية', cargo_bike: 'دراجة شحن', scooter: 'سكوتر', motorbike: 'دراجة نارية', car: 'سيارة', on_foot: 'سيراً على الأقدام',
@@ -283,7 +283,7 @@ const AR: TableTranslation = {
     trialing: 'فترة تجريبية', active: 'نشط', past_due: 'متأخر السداد', restricted: 'مقيّد', suspended: 'معلّق', cancelled: 'ملغى',
   },
   PROMOTION_KIND_LABELS: { percentage: 'نسبة مئوية', fixed: 'مبلغ ثابت', free_delivery: 'توصيل مجاني' },
-  PROMOTION_FUNDING_LABELS: { platform: 'GoLink', restaurant: 'المطعم', shared: 'مشترك' },
+  PROMOTION_FUNDING_LABELS: { platform: 'Ciyou Eats', restaurant: 'المطعم', shared: 'مشترك' },
   PROMOTION_STATUS_LABELS: { draft: 'مسودة', pending_review: 'للموافقة', active: 'نشط', paused: 'متوقف مؤقتاً', rejected: 'مرفوض', ended: 'منتهٍ' },
   CAMPAIGN_CHANNEL_LABELS: { push: 'إشعار فوري', email: 'بريد إلكتروني', sms: 'رسالة نصية', in_app: 'رسالة داخل التطبيق' },
   CAMPAIGN_STATUS_LABELS: { draft: 'مسودة', scheduled: 'مجدولة', sending: 'قيد الإرسال', sent: 'مرسلة', cancelled: 'ملغاة', failed: 'فشل' },

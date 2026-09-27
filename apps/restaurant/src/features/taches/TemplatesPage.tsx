@@ -266,7 +266,7 @@ function ChecklistDialog({ template, open, onClose, nextOrder }: { template: Wit
 }
 
 export function TemplatesPage() {
-  useDocumentTitle('Modèles de tâches · GoLink Restaurant');
+  useDocumentTitle('Modèles de tâches · Ciyou Eats Restaurant');
   const can = useCan();
   const manager = can('tasks.manage');
   const { restaurantId } = useRestaurantAccess();

@@ -82,7 +82,7 @@ export function RefundDialog({ open, onOpenChange, ticket, order, refundableCent
           >
             <Input className="w-36" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="12,50" trailing="€" />
           </FormField>
-          <FormField label="Cause" hint="Détermine l’imputation : par décision de GoLink, le commerce supporte les remboursements (règle paramétrable).">
+          <FormField label="Cause" hint="Détermine l’imputation : par décision de Ciyou Eats, le commerce supporte les remboursements (règle paramétrable).">
             <Select value={cause} onValueChange={(v) => setCause(v as RefundCause)} options={REFUND_CAUSES.map((c) => ({ value: c, label: REFUND_CAUSE_LABELS[c] }))} />
           </FormField>
           <FormField label="Motif" required hint="Conservé dans le journal d’audit.">
@@ -130,7 +130,7 @@ export function CreditDialog({ open, onOpenChange, ticket, limitCents, defaultVa
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader icon={<Wallet />} title="Créditer un avoir" description={`Crédit sur le compte GoLink de ${ticket.requesterName}, déduit automatiquement de ses prochaines commandes.`} />
+        <DialogHeader icon={<Wallet />} title="Créditer un avoir" description={`Crédit sur le compte Ciyou Eats de ${ticket.requesterName}, déduit automatiquement de ses prochaines commandes.`} />
         <DialogBody className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <FormField label="Montant" required hint={`${limitCents !== null && limitCents < 1e9 ? `Plafond : ${euros(limitCents)}. ` : ''}Avoir maximal : ${euros(maxCredit)}.`}>
@@ -147,7 +147,7 @@ export function CreditDialog({ open, onOpenChange, ticket, limitCents, defaultVa
               onValueChange={(v) => setChargedTo(v as 'restaurant' | 'platform')}
               options={[
                 { value: 'restaurant', label: 'Commerce', description: 'Déduit du prochain reversement (règle par défaut).', disabled: !ticket.restaurantId },
-                { value: 'platform', label: 'Geste commercial GoLink', description: 'Supporté par la plateforme.' },
+                { value: 'platform', label: 'Geste commercial Ciyou Eats', description: 'Supporté par la plateforme.' },
               ]}
             />
           </FormField>
@@ -259,7 +259,7 @@ export function LiveChatDialog({ open, onOpenChange, ticket }: Props) {
   const navigate = useNavigate();
   const [withDriver, setWithDriver] = useState(false);
   const [withRestaurant, setWithRestaurant] = useState(false);
-  const [message, setMessage] = useState('Bonjour, ici le support GoLink. Je prends en charge votre commande, pouvez-vous me préciser la situation ?');
+  const [message, setMessage] = useState('Bonjour, ici le support Ciyou Eats. Je prends en charge votre commande, pouvez-vous me préciser la situation ?');
   const { mutate, loading } = useMutation(openSupportChat, { success: 'Chat ouvert' });
 
   async function submit() {

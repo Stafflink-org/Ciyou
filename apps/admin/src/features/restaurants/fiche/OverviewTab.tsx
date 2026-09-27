@@ -64,8 +64,8 @@ export function OverviewTab({ restaurant, cityName }: { restaurant: WithId<Resta
           <Facts
             items={[
               { label: 'Modes', value: restaurant.fulfillmentModes.map((m) => FULFILLMENT_LABELS[m]).join(', ') || '—' },
-              { label: 'Livraison assurée par', value: restaurant.deliveredBy === 'platform' ? 'Livreurs GoLink' : restaurant.deliveredBy === 'restaurant' ? 'Livreurs du commerce' : 'GoLink et livreurs du commerce' },
-              { label: 'Zones GoLink', value: zoneNames.length ? zoneNames.join(', ') : <span className="text-danger">Aucune zone</span> },
+              { label: 'Livraison assurée par', value: restaurant.deliveredBy === 'platform' ? 'Livreurs Ciyou Eats' : restaurant.deliveredBy === 'restaurant' ? 'Livreurs du commerce' : 'Ciyou Eats et livreurs du commerce' },
+              { label: 'Zones Ciyou Eats', value: zoneNames.length ? zoneNames.join(', ') : <span className="text-danger">Aucune zone</span> },
               { label: 'Minimum de commande', value: eur(restaurant.minOrderCents), hint: 'Frais et minimum définis par le commerce sur ses zones' },
               { label: 'Préparation', value: `${restaurant.prepMinutes} min`, hint: `Livraison annoncée ${restaurant.etaMinutes.min}–${restaurant.etaMinutes.max} min` },
               { label: 'Paiements acceptés', value: restaurant.acceptedPaymentMethods.map((m) => PAYMENT_METHOD_LABELS[m]).join(', ') || '—' },

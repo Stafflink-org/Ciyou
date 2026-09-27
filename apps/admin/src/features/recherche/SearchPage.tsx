@@ -16,7 +16,7 @@ export function SearchPage() {
   const initial = params.get('q') ?? '';
   const [query, setQuery] = useState(initial);
   const [expanded, setExpanded] = useState<string[]>([]);
-  useDocumentTitle(query.trim() ? `« ${query.trim()} » · Recherche · GoLink Admin` : 'Recherche · GoLink Admin');
+  useDocumentTitle(query.trim() ? `« ${query.trim()} » · Recherche · Ciyou Eats Admin` : 'Recherche · Ciyou Eats Admin');
   const { result, loading, error, settled } = useGlobalSearch(query, 20);
   const groups = sortGroups(result?.groups ?? [], query);
   const total = groups.reduce((s, g) => s + g.hits.length, 0);

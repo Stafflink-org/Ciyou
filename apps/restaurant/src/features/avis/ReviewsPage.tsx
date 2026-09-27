@@ -122,7 +122,7 @@ export function ReviewsPage() {
       <PageHeader
         eyebrow="Réputation"
         title="Avis clients"
-        description="Répondez publiquement à vos clients, repérez ce qu’ils aiment et signalez les avis abusifs à la modération GoLink."
+        description="Répondez publiquement à vos clients, repérez ce qu’ils aiment et signalez les avis abusifs à la modération Ciyou Eats."
       />
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
@@ -328,7 +328,7 @@ function ReviewCard({
           </div>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {r.status === 'pending_moderation' && <Badge tone="info" size="sm">En modération</Badge>}
-            {r.status === 'hidden' && <Badge tone="neutral" size="sm">Masqué par GoLink</Badge>}
+            {r.status === 'hidden' && <Badge tone="neutral" size="sm">Masqué par Ciyou Eats</Badge>}
             {r.restaurantReport && (
               <Badge tone="amber" size="sm" icon={<Flag />}>
                 Signalé le {formatDate(toDate(r.restaurantReport.at) ?? new Date())}
@@ -415,7 +415,7 @@ function ReviewCard({
                   </Button>
                 </div>
               </div>
-              <p className="text-xs text-fg-subtle">Restez courtois : pas de coordonnées personnelles, la réponse est visible de tous les clients GoLink.</p>
+              <p className="text-xs text-fg-subtle">Restez courtois : pas de coordonnées personnelles, la réponse est visible de tous les clients Ciyou Eats.</p>
             </div>
           )}
 
@@ -453,14 +453,14 @@ function ReviewCard({
 function ReportDialog({ review, onClose }: { review: ReviewRow | null; onClose: () => void }) {
   const [reason, setReason] = useState<ReviewReportReason>('fake');
   const [details, setDetails] = useState('');
-  const report = useMutation(reportReview, { success: 'Signalement transmis à la modération GoLink.' });
+  const report = useMutation(reportReview, { success: 'Signalement transmis à la modération Ciyou Eats.' });
   return (
     <Dialog open={review !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent size="md">
         <DialogHeader
           icon={<Flag />}
           title="Signaler cet avis"
-          description="La modération GoLink examine chaque signalement et masque les avis contraires à la charte. Un avis négatif mais sincère reste publié."
+          description="La modération Ciyou Eats examine chaque signalement et masque les avis contraires à la charte. Un avis négatif mais sincère reste publié."
         />
         <DialogBody className="space-y-4">
           {review && (

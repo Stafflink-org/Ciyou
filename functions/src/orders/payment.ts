@@ -132,7 +132,7 @@ export async function authorizePayment(input: {
         payment_method: input.paymentMethodId,
         confirm: true,
         automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
-        description: `Commande GoLink · ${input.restaurantName}`,
+        description: `Commande Ciyou Eats · ${input.restaurantName}`,
         metadata: { customerId: input.customerId, restaurantId: input.restaurantId, requestId: input.requestId, platform: 'golink' },
         expand: ['payment_method'],
       },

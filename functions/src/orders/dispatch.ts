@@ -1,4 +1,4 @@
-// Attribution des livreurs. Version simple : le livreur GoLink disponible le plus
+// Attribution des livreurs. Version simple : le livreur Ciyou Eats disponible le plus
 // proche du restaurant est attribué directement (proposition acceptée tracée dans
 // dispatchOffers). Le dispatch avancé (propositions, élargissement du rayon) peut
 // remplacer `dispatchOrder` en conservant la même signature.
@@ -132,7 +132,7 @@ export async function readDriver(tx: Transaction, driverId: string): Promise<{ d
 }
 
 /**
- * Recherche et attribue le livreur GoLink disponible le plus proche. Interface
+ * Recherche et attribue le livreur Ciyou Eats disponible le plus proche. Interface
  * stable pour le module de dispatch avancé. Ne lève pas d'erreur si personne
  * n'est disponible : la commande passe en « aucun livreur disponible ».
  */
@@ -230,7 +230,7 @@ export async function dispatchOrder(orderId: string, actor: EventActor = SYSTEM_
   return { assigned: false, driverName: null, distanceMeters: null };
 }
 
-/** Demande manuelle d'un livreur GoLink depuis le back-office. */
+/** Demande manuelle d'un livreur Ciyou Eats depuis le back-office. */
 export const requestCourier = callable(z.object({ orderId: zId }), async (data, request): Promise<RequestCourierResult> => {
   const order = await loadOrder(data.orderId);
   const actor = await requireOrderStaff(request, order, 'orders.manage');
@@ -242,7 +242,7 @@ export const assignOwnCourier = callable(z.object({ orderId: zId, driverId: zId 
   const order = await loadOrder(data.orderId);
   const actor = await requireOrderStaff(request, order, 'orders.manage');
   if (order.fulfillment !== 'delivery' || order.delivery?.deliveredBy !== 'restaurant') {
-    throw fail.precondition('Cette commande est livrée par un livreur GoLink.');
+    throw fail.precondition('Cette commande est livrée par un livreur Ciyou Eats.');
   }
   const [courierSnap, driverSnap] = await Promise.all([
     db.collection(COLLECTIONS.restaurants).doc(order.restaurantId).collection(SUBCOLLECTIONS.restaurants.couriers).doc(data.driverId).get(),

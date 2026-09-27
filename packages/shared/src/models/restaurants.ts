@@ -73,7 +73,7 @@ export interface Restaurant extends Tracked, SoftDeletable, Localized {
   /** Mode rush : minutes ajoutées au temps de préparation. */
   busyExtraMinutes: number;
   fulfillmentModes: FulfillmentMode[];
-  /** Qui livre : flotte GoLink, livreurs propres ou les deux. */
+  /** Qui livre : flotte Ciyou Eats, livreurs propres ou les deux. */
   deliveredBy: 'platform' | 'restaurant' | 'both';
   minOrderCents: Cents;
   /** Frais de livraison fixes (livreurs du restaurant). */
@@ -240,7 +240,7 @@ export interface RestaurantHours extends WeeklyHours {
   updatedBy: string;
 }
 
-/** restaurants/{rid}/settings/payments : moyens acceptés (dans la limite autorisée par GoLink). */
+/** restaurants/{rid}/settings/payments : moyens acceptés (dans la limite autorisée par Ciyou Eats). */
 export interface RestaurantPaymentSettings {
   online: boolean;
   onDelivery: boolean;
@@ -365,7 +365,7 @@ export interface CustomerNote {
 export interface RestaurantCourier {
   driverId: string;
   displayName: string;
-  /** Livreur propre du restaurant ou livreur GoLink ayant déjà livré. */
+  /** Livreur propre du restaurant ou livreur Ciyou Eats ayant déjà livré. */
   relation: 'own' | 'platform';
   status: RestaurantCourierStatus;
   note?: string | null;

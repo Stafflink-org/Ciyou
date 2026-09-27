@@ -7,10 +7,10 @@ Réponses du client aux questions de l'annexe du cahier super admin et au questi
 
 | Sujet | Décision | Conséquence technique |
 |---|---|---|
-| Encaissement | Tout passe par GoLink (Stripe) puis reversement au commerce **commission déduite**. | Stripe Connect : paiement sur le compte plateforme, transferts vers les comptes connectés. |
+| Encaissement | Tout passe par Ciyou Eats (Stripe) puis reversement au commerce **commission déduite**. | Stripe Connect : paiement sur le compte plateforme, transferts vers les comptes connectés. |
 | Assiette de la commission | Prix des articles payé par le client, **TTC**, **hors frais de livraison et hors pourboires**. | `commissionBase` = sous-total articles TTC (après remise financée par le commerce). |
 | Modèle économique | **Commission OU abonnement**, à définir plus tard. | Mode de facturation paramétrable par formule et par commerce : `commission`, `subscription`, `hybrid`. |
-| Commission réduite | Oui : réduite si le commerce livre lui-même, encore plus basse en retrait. Taux définis dans le super admin. | 3 taux : livraison GoLink / livreur propre / retrait. |
+| Commission réduite | Oui : réduite si le commerce livre lui-même, encore plus basse en retrait. Taux définis dans le super admin. | 3 taux : livraison Ciyou Eats / livreur propre / retrait. |
 | Frais de service client | À définir dans le super admin. | Paramètre (valeur par défaut 0). |
 | Frais d'inscription commerce | **Gratuit.** | Aucun frais d'inscription. |
 | Frais bancaires (carte) | **Déduits du reversement** du commerce. | Ligne « frais de paiement » dans la répartition et le relevé. |
@@ -26,7 +26,7 @@ Réponses du client aux questions de l'annexe du cahier super admin et au questi
 | Sujet | Décision | Conséquence technique |
 |---|---|---|
 | Types de commerces | **Tous** : restaurants, épiceries, boulangeries, fleuristes, pharmacies… | Type de commerce ; produits à l'unité, au poids, à prix variable ; catégories adaptées. Le « back-office restaurant » est le back-office de tout commerce. |
-| Boutique propre | **Non**, uniquement l'app GoLink. | — |
+| Boutique propre | **Non**, uniquement l'app Ciyou Eats. | — |
 | Validation des commerces | **Automatique si possible**, pilotée par le super admin. | Mise en ligne automatique quand les documents sont complets et valides (règle activable), sinon file de validation manuelle. |
 | Frais de livraison et minimum | Fixés par **le commerce dans son back-office, sur sa zone de livraison**. | Zones du commerce : frais, minimum, rayon/polygone. La plateforme définit les villes et zones de service. |
 | Prix différents de la salle | **Autorisé.** | Aucune contrainte. |

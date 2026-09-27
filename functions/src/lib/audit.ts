@@ -8,7 +8,7 @@ import type { Caller } from './permissions';
 
 export type AuditActor = AuditLog['actor'];
 
-export const SYSTEM_ACTOR: AuditActor = { uid: 'system', type: 'system', role: null, name: 'GoLink (automatique)' };
+export const SYSTEM_ACTOR: AuditActor = { uid: 'system', type: 'system', role: null, name: 'Ciyou Eats (automatique)' };
 
 const ACTOR_TYPES: Record<string, AuditActor['type']> = {
   admin: 'admin',

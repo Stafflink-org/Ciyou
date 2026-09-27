@@ -209,7 +209,7 @@ export async function courierActor(request: CallableRequest<unknown>, order: Ord
   if (order.driverId && caller.uid === order.driverId) return { type: 'driver', uid: caller.uid, name: order.delivery?.driverName ?? caller.name };
   const actor = await requireOrderStaff(request, order, 'orders.manage');
   if (actor.kind === 'member' && order.delivery?.deliveredBy !== 'restaurant') {
-    throw fail.precondition('Cette étape est validée par le livreur GoLink.');
+    throw fail.precondition('Cette étape est validée par le livreur Ciyou Eats.');
   }
   return eventActorOf(actor);
 }

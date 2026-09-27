@@ -28,8 +28,8 @@ export const dispatchOrder = opsCallable(
   async (data, request): Promise<AdminDispatchOrderResult> => {
     const { caller, admin } = await requireAdmin(request, 'orders.intervene');
     const order = await loadOrderFor(data.orderId, admin);
-    if (order.fulfillment !== 'delivery' || order.delivery?.deliveredBy !== 'platform') throw fail.precondition('Cette commande n’est pas livrée par la flotte GoLink.');
-    const actor: EventActor = { type: 'admin', uid: caller.uid, name: 'Support GoLink' };
+    if (order.fulfillment !== 'delivery' || order.delivery?.deliveredBy !== 'platform') throw fail.precondition('Cette commande n’est pas livrée par la flotte Ciyou Eats.');
+    const actor: EventActor = { type: 'admin', uid: caller.uid, name: 'Support Ciyou Eats' };
     const previousDriver = order.driverId ?? null;
 
     if (data.unassign || (data.driverId && order.driverId && order.driverId !== data.driverId)) {
@@ -71,7 +71,7 @@ export const dispatchOrder = opsCallable(
       const driver = driverSnap.data() as Driver | undefined;
       if (!driver) throw fail.notFound('Livreur');
       if (driver.cityId !== order.cityId) throw fail.precondition('Ce livreur n’opère pas dans la ville de la commande.');
-      if (driver.type !== 'platform') throw fail.precondition('Seuls les livreurs GoLink peuvent être imposés.');
+      if (driver.type !== 'platform') throw fail.precondition('Seuls les livreurs Ciyou Eats peuvent être imposés.');
       const viewers = await orderViewerUids(order.restaurantId);
       const assigned = await db.runTransaction((tx) =>
         assignDriverInTransaction(tx, { orderId: data.orderId, driverId: data.driverId!, actor, viewers, distanceMeters: null, round: order.delivery?.dispatchRound ?? 1, allowBusy: true }),
@@ -105,7 +105,7 @@ export const previewDispatch = opsCallable(
   async (data, request): Promise<{ rules: DispatchRules; candidates: DispatchCandidate[] }> => {
     const { admin } = await requireAdmin(request, 'orders.view');
     const order = await loadOrderFor(data.orderId, admin);
-    if (order.fulfillment !== 'delivery' || order.delivery?.deliveredBy !== 'platform') throw fail.precondition('Cette commande n’est pas livrée par la flotte GoLink.');
+    if (order.fulfillment !== 'delivery' || order.delivery?.deliveredBy !== 'platform') throw fail.precondition('Cette commande n’est pas livrée par la flotte Ciyou Eats.');
     return previewCandidates(data.orderId);
   },
 );

@@ -120,7 +120,7 @@ function TaskDialog({ open, onClose, task, employees }: { open: boolean; onClose
 }
 
 export function CleaningPage() {
-  useDocumentTitle('Nettoyage · HACCP · GoLink Restaurant');
+  useDocumentTitle('Nettoyage · HACCP · Ciyou Eats Restaurant');
   const can = useCan();
   const manage = can('haccp.manage');
   const { restaurantId } = useRestaurantAccess();

@@ -99,7 +99,7 @@ const schema = z.object({
   paymentMethod: z.enum(PAYMENT_METHODS),
   paymentMethodId: z.string().trim().max(120).nullish(),
   promoCode: z.string().trim().toUpperCase().max(24).nullish(),
-  /** Régler tout ou partie de la commande avec le solde d'avoirs GoLink du client. */
+  /** Régler tout ou partie de la commande avec le solde d'avoirs Ciyou Eats du client. */
   useWallet: z.boolean().optional(),
   tipCents: z.number().int().min(0).max(1_000_000).optional(),
   customerNote: z.string().trim().max(300).nullish(),
@@ -193,7 +193,7 @@ export const placeOrder = callable(
     if (!restaurantSnap.exists) throw fail.notFound('Restaurant');
     const restaurant = { id: restaurantSnap.id, ...(restaurantSnap.data() as Restaurant) };
     const profile = userSnap.exists ? (userSnap.data() as UserProfile & { test?: boolean }) : null;
-    if (profile && profile.status !== 'active') throw fail.forbidden('Votre compte ne permet pas de passer commande. Contactez le support GoLink.');
+    if (profile && profile.status !== 'active') throw fail.forbidden('Votre compte ne permet pas de passer commande. Contactez le support Ciyou Eats.');
     if (crmSnap.exists && (crmSnap.data() as RestaurantCustomer).blocked) {
       throw fail.forbidden('Ce restaurant n’accepte pas vos commandes pour le moment.');
     }
@@ -203,7 +203,7 @@ export const placeOrder = callable(
       profile?.phone ? isBlocked('phone', profile.phone) : Promise.resolve(false),
       data.deviceId ? isBlocked('device', data.deviceId) : Promise.resolve(false),
     ]);
-    if (blockChecks.some(Boolean)) throw fail.forbidden('Votre compte ne permet pas de passer commande. Contactez le support GoLink.');
+    if (blockChecks.some(Boolean)) throw fail.forbidden('Votre compte ne permet pas de passer commande. Contactez le support Ciyou Eats.');
     // Réacceptation forcée des CGU/CGV (§29) : bloque seulement si une version plus récente exige une réacceptation.
     await assertLegalReaccepted(profile, 'terms_client', restaurant.countryId);
     const isTest = profile?.test === true;
@@ -219,7 +219,7 @@ export const placeOrder = callable(
     if (restaurant.status !== 'active' || restaurant.deletedAt) throw fail.precondition('Ce restaurant ne prend pas de commandes.');
     if (!restaurant.isOpen) throw fail.precondition(`${restaurant.name} a mis ses commandes en pause. Réessayez un peu plus tard.`);
     // Lancement ville par ville : seules les villes actives sont opérables (décision client).
-    if (market.city && !market.city.active) throw fail.precondition('Le service GoLink n’est pas encore ouvert dans cette ville.');
+    if (market.city && !market.city.active) throw fail.precondition('Le service Ciyou Eats n’est pas encore ouvert dans cette ville.');
     if (market.city?.emergencyClosure?.active) throw fail.precondition(closureText(market.city.emergencyClosure, profile?.locale) ?? 'La livraison est momentanément suspendue dans votre ville.');
     if (!restaurant.fulfillmentModes.includes(data.fulfillment)) throw fail.precondition('Ce mode de commande n’est pas proposé par le restaurant.');
     // Interrupteurs de fonctionnalités (§24) : lus à chaque commande, sans nouvelle version des applications.
@@ -302,7 +302,7 @@ export const placeOrder = callable(
       const product = products.get(line.productId);
       if (!product) throw fail.precondition('Un article de votre panier n’existe plus. Mettez votre panier à jour.');
       if (!product.available) throw fail.precondition(`« ${product.name} » n’est plus disponible.`);
-      // Vente d'alcool interdite sur GoLink (décision client), quel que soit le paramétrage.
+      // Vente d'alcool interdite sur Ciyou Eats (décision client), quel que soit le paramétrage.
       const alcohol = checkProductAlcohol(product);
       if (alcohol.blocked) {
         const reason = alcohol.reasons[0];
@@ -423,7 +423,7 @@ export const placeOrder = callable(
     // Avoirs, gestes commerciaux et récompenses : dépensables à la commande, en tout ou partie.
     const walletAllowed = paymentSettings?.methods?.wallet !== false && (market.country?.paymentMethods?.wallet ?? true);
     const walletBalanceCents = Math.max(0, profile?.walletBalanceCents ?? 0);
-    if (data.useWallet && walletBalanceCents === 0) throw fail.precondition('Votre solde d’avoirs GoLink est vide.');
+    if (data.useWallet && walletBalanceCents === 0) throw fail.precondition('Votre solde d’avoirs Ciyou Eats est vide.');
     const walletAppliedCents = data.useWallet && walletAllowed ? Math.min(walletBalanceCents, quote.totalCents) : 0;
     const chargedCents = quote.totalCents - walletAppliedCents;
     // Le solde couvre toute la commande : aucun autre moyen de paiement n'est nécessaire.
@@ -475,12 +475,12 @@ export const placeOrder = callable(
       const retryLimit = paymentSettings?.failedPaymentRetry?.maxAttempts ?? 0;
       const failuresRef = db.collection('rateLimits').doc(`payfail_${uid}_${now.toISOString().slice(0, 13)}`);
       if (retryLimit > 0 && ((await failuresRef.get()).get('count') as number | undefined ?? 0) >= retryLimit) {
-        throw fail.precondition('Trop de paiements refusés récemment. Réessayez dans une heure ou contactez le support GoLink.');
+        throw fail.precondition('Trop de paiements refusés récemment. Réessayez dans une heure ou contactez le support Ciyou Eats.');
       }
       if (data.paymentMethodId) {
         const fingerprint = await retrieveCardFingerprint(data.paymentMethodId);
         if (fingerprint && (await isBlocked('card_fingerprint', fingerprint))) {
-          throw fail.forbidden('Ce moyen de paiement ne peut pas être utilisé. Contactez le support GoLink.');
+          throw fail.forbidden('Ce moyen de paiement ne peut pas être utilisé. Contactez le support Ciyou Eats.');
         }
       }
       try {

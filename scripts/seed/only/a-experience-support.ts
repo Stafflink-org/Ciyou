@@ -170,7 +170,7 @@ function pages(): void {
   const faq: FaqItem[] = [
     { id: 'q1', category: 'Commandes', question: 'Comment suivre ma commande ?', answer: 'Depuis l’onglet **Commandes**, suivez chaque étape : acceptation, préparation, puis la position du livreur en temps réel.' },
     { id: 'q2', category: 'Commandes', question: 'Puis-je annuler ma commande ?', answer: 'Oui, tant que le restaurant ne l’a pas acceptée : le remboursement est intégral. Ensuite, contactez le support depuis le détail de la commande.' },
-    { id: 'q3', category: 'Réclamations', question: 'Il manque un article, que faire ?', answer: 'Signalez-le depuis le détail de la commande dans les **48 heures**, avec une photo du sac :\n\n- remboursement sur votre moyen de paiement,\n- ou avoir immédiat sur votre compte GoLink.' },
+    { id: 'q3', category: 'Réclamations', question: 'Il manque un article, que faire ?', answer: 'Signalez-le depuis le détail de la commande dans les **48 heures**, avec une photo du sac :\n\n- remboursement sur votre moyen de paiement,\n- ou avoir immédiat sur votre compte Ciyou Eats.' },
     { id: 'q4', category: 'Paiement', question: 'Quels moyens de paiement sont acceptés ?', answer: 'Carte bancaire, Apple Pay et Google Pay. Les espèces ne sont possibles qu’avec les livreurs salariés du commerce.' },
     { id: 'q5', category: 'Livraison', question: 'Que se passe-t-il si je suis absent ?', answer: 'Le livreur vous appelle et patiente **10 minutes**. Sans réponse, la commande est clôturée sans remboursement.' },
     { id: 'q6', category: 'Compte', question: 'Comment supprimer mon compte ?', answer: 'Dans **Profil > Confidentialité > Supprimer mon compte**. Vos factures sont conservées pendant la durée légale.' },
@@ -186,7 +186,7 @@ function pages(): void {
   put(`${COLLECTIONS.pages}/faq/${SUBCOLLECTIONS.pages.versions}/1`, v1);
   put(`${COLLECTIONS.pages}/faq/${SUBCOLLECTIONS.pages.versions}/2`, v2);
 
-  const body = '## Qui sommes-nous ?\n\nGoLink relie les commerces indépendants de la Grande Région à leurs clients.\n\n## Nos engagements\n\n- des commissions transparentes,\n- **100 %** des pourboires reversés aux livreurs,\n- un support disponible 24 h/24, 7 j/7.\n\n> Une question ? Écrivez-nous depuis l’application, rubrique Aide.';
+  const body = '## Qui sommes-nous ?\n\nCiyou Eats relie les commerces indépendants de la Grande Région à leurs clients.\n\n## Nos engagements\n\n- des commissions transparentes,\n- **100 %** des pourboires reversés aux livreurs,\n- un support disponible 24 h/24, 7 j/7.\n\n> Une question ? Écrivez-nous depuis l’application, rubrique Aide.';
   const draft: ContentPage = {
     slug: 'nos-engagements', kind: 'page', title: { fr: 'Nos engagements' }, body: { fr: '' }, faqItems: null, audience: ['public'], published: false, order: 4, version: 0,
     publishedAt: null, publishedBy: null, archivedAt: null,
@@ -211,10 +211,10 @@ function content(): void {
     put(`${COLLECTIONS.cannedResponses}/${id}`, doc);
   });
   const articles: Array<[string, string, string, string, HelpArticle['audience'], number]> = [
-    ['aide-remboursement-delai', 'Sous quel délai suis-je remboursé ?', 'Réclamations', 'Le remboursement est lancé immédiatement. Selon votre banque, il apparaît **sous 5 à 10 jours ouvrés**. Un avoir GoLink est, lui, disponible tout de suite.', ['client'], 640],
+    ['aide-remboursement-delai', 'Sous quel délai suis-je remboursé ?', 'Réclamations', 'Le remboursement est lancé immédiatement. Selon votre banque, il apparaît **sous 5 à 10 jours ouvrés**. Un avoir Ciyou Eats est, lui, disponible tout de suite.', ['client'], 640],
     ['aide-livreur-annulation', 'Annuler une course acceptée', 'Courses', 'Depuis la course en cours, touchez **Signaler un problème > Annuler**. Les annulations répétées font baisser votre taux de fiabilité.', ['driver'], 210],
     ['aide-restaurant-mise-en-avant', 'Être mis en avant dans l’application', 'Visibilité', 'Plusieurs emplacements sont proposés : sélection de l’accueil, tête des recherches, tête de catégorie.\n\n- durée de 7 à 30 jours,\n- mention « Sponsorisé » affichée aux clients,\n- payable par facture ou crédit publicitaire (parrainage).', ['restaurant'], 185],
-    ['aide-restaurant-avis', 'Répondre aux avis et signaler un avis abusif', 'Avis', 'Répondez publiquement depuis **Clients > Avis**. Un avis insultant ou mensonger peut être signalé : la modération GoLink l’examine sous 48 heures.', ['restaurant'], 320],
+    ['aide-restaurant-avis', 'Répondre aux avis et signaler un avis abusif', 'Avis', 'Répondez publiquement depuis **Clients > Avis**. Un avis insultant ou mensonger peut être signalé : la modération Ciyou Eats l’examine sous 48 heures.', ['restaurant'], 320],
   ];
   articles.forEach(([id, title, category, body, audience, views], i) => {
     const doc: HelpArticle = { title: { fr: title }, body: { fr: body }, category, audience, tags: [], published: true, order: 20 + i, archivedAt: null, views, helpfulYes: Math.round(views * 0.2), helpfulNo: Math.round(views * 0.03), ...tracked(NOW - 30 * DAY) };
@@ -268,8 +268,8 @@ function tickets(orders: Array<Order & { id: string }>, counter: number, owners:
     put(`${COLLECTIONS.supportTickets}/${id}`, ticket);
     const messages: TicketMessage[] = [
       { authorType: 'requester', authorId: requesterId, authorName: requesterName, body, internal: false, attachments: [], action: null, createdAt: ts(created) },
-      { authorType: 'agent', authorId: ticket.assigneeId!, authorName: 'Malik (support GoLink)', body: refund ? `Nous sommes désolés. Nous avons procédé au remboursement de ${(refund / 100).toFixed(2).replace('.', ',')} €.` : credit ? 'Toutes nos excuses : un avoir de 5,00 € a été ajouté à votre compte.' : 'Merci pour votre message, voici la marche à suivre.', internal: false, attachments: [], action: refund ? { type: 'refund', detail: `${(refund / 100).toFixed(2).replace('.', ',')} €` } : credit ? { type: 'credit', detail: '5,00 €' } : null, createdAt: ts(first) },
-      { authorType: 'system', authorId: 'system', authorName: 'GoLink', body: 'Votre demande a été marquée comme résolue.', internal: false, attachments: [], action: { type: 'status_change', detail: 'resolved' }, createdAt: ts(resolved) },
+      { authorType: 'agent', authorId: ticket.assigneeId!, authorName: 'Malik (support Ciyou Eats)', body: refund ? `Nous sommes désolés. Nous avons procédé au remboursement de ${(refund / 100).toFixed(2).replace('.', ',')} €.` : credit ? 'Toutes nos excuses : un avoir de 5,00 € a été ajouté à votre compte.' : 'Merci pour votre message, voici la marche à suivre.', internal: false, attachments: [], action: refund ? { type: 'refund', detail: `${(refund / 100).toFixed(2).replace('.', ',')} €` } : credit ? { type: 'credit', detail: '5,00 €' } : null, createdAt: ts(first) },
+      { authorType: 'system', authorId: 'system', authorName: 'Ciyou Eats', body: 'Votre demande a été marquée comme résolue.', internal: false, attachments: [], action: { type: 'status_change', detail: 'resolved' }, createdAt: ts(resolved) },
     ];
     messages.forEach((m, j) => put(`${COLLECTIONS.supportTickets}/${id}/${SUBCOLLECTIONS.supportTickets.messages}/m${j + 1}`, m));
     n += 1;
@@ -295,7 +295,7 @@ function liveCases(orders: Array<Order & { id: string }>, counter: number): void
     put(`${COLLECTIONS.supportTickets}/exp-ticket-attente-validation`, ticket);
     const msgs: TicketMessage[] = [
       { authorType: 'requester', authorId: a.customerId, authorName: a.customerName, body: 'Tout le sac est arrivé renversé, les plats sont immangeables. Je souhaite être remboursé.', internal: false, attachments: [], action: null, createdAt: ts(created) },
-      { authorType: 'agent', authorId: support, authorName: 'Malik (support GoLink)', body: 'Toutes nos excuses. Pouvez-vous nous envoyer une photo du sac ?', internal: false, attachments: [], action: null, createdAt: ts(created + 8 * MIN) },
+      { authorType: 'agent', authorId: support, authorName: 'Malik (support Ciyou Eats)', body: 'Toutes nos excuses. Pouvez-vous nous envoyer une photo du sac ?', internal: false, attachments: [], action: null, createdAt: ts(created + 8 * MIN) },
       { authorType: 'requester', authorId: a.customerId, authorName: a.customerName, body: 'Voici la photo du sac.', internal: false, attachments: [], action: null, createdAt: ts(created + 12 * MIN) },
       { authorType: 'system', authorId: support, authorName: 'Malik Benyahia', body: `Remboursement de ${(a.amounts.chargedCents / 100).toFixed(2).replace('.', ',')} € demandé : au-delà du plafond, validation d’un responsable requise.`, internal: true, attachments: [], action: { type: 'refund', detail: 'en attente' }, createdAt: ts(created + 18 * MIN) },
     ];
@@ -315,15 +315,15 @@ function liveCases(orders: Array<Order & { id: string }>, counter: number): void
     const at = NOW - (i + 1) * 25 * MIN;
     const conv: Conversation & { countryId: string; cityId: string | null; orderNumber: string } = {
       type: 'support_chat', restaurantId: o.restaurantId, orderId: o.id, ticketId: null,
-      participantIds: [support, o.customerId], participants: { [support]: { name: 'Malik (support GoLink)', role: 'admin' }, [o.customerId]: { name: o.customerName, role: 'client' } },
+      participantIds: [support, o.customerId], participants: { [support]: { name: 'Malik (support Ciyou Eats)', role: 'admin' }, [o.customerId]: { name: o.customerName, role: 'client' } },
       lastMessage: i === 0 ? 'Le livreur arrive dans 5 minutes.' : 'D’accord, merci beaucoup !', lastMessageAt: ts(at + 6 * MIN), unread: { [support]: i === 1 ? 1 : 0 }, closed: false,
       createdAt: ts(at), countryId: o.countryId, cityId: o.cityId ?? null, orderNumber: o.number,
     };
     put(`${COLLECTIONS.conversations}/exp-chat-${o.id}`, conv);
     const msgs: ConversationMessage[] = [
       { senderId: o.customerId, senderRole: 'client', senderName: o.customerName, text: 'Bonjour, ma commande indique « en livraison » depuis 20 minutes.', attachments: [], readBy: [o.customerId, support], createdAt: ts(at) },
-      { senderId: support, senderRole: 'admin', senderName: 'Malik (support GoLink)', text: 'Bonjour, je regarde tout de suite avec le livreur.', attachments: [], readBy: [support, o.customerId], createdAt: ts(at + 2 * MIN) },
-      { senderId: i === 0 ? support : o.customerId, senderRole: i === 0 ? 'admin' : 'client', senderName: i === 0 ? 'Malik (support GoLink)' : o.customerName, text: i === 0 ? 'Le livreur arrive dans 5 minutes.' : 'D’accord, merci beaucoup !', attachments: [], readBy: [i === 0 ? support : o.customerId], createdAt: ts(at + 6 * MIN) },
+      { senderId: support, senderRole: 'admin', senderName: 'Malik (support Ciyou Eats)', text: 'Bonjour, je regarde tout de suite avec le livreur.', attachments: [], readBy: [support, o.customerId], createdAt: ts(at + 2 * MIN) },
+      { senderId: i === 0 ? support : o.customerId, senderRole: i === 0 ? 'admin' : 'client', senderName: i === 0 ? 'Malik (support Ciyou Eats)' : o.customerName, text: i === 0 ? 'Le livreur arrive dans 5 minutes.' : 'D’accord, merci beaucoup !', attachments: [], readBy: [i === 0 ? support : o.customerId], createdAt: ts(at + 6 * MIN) },
     ];
     msgs.forEach((m, j) => put(`${COLLECTIONS.conversations}/exp-chat-${o.id}/${SUBCOLLECTIONS.conversations.messages}/m${j + 1}`, { ...m, processedAt: ts(m.createdAt.toMillis()) }));
   });

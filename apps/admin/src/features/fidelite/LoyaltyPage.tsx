@@ -63,7 +63,7 @@ function useLoyaltyTotals(enabled: boolean) {
 }
 
 export function LoyaltyPage() {
-  useDocumentTitle('Programme de fidélité · GoLink Admin');
+  useDocumentTitle('Programme de fidélité · Ciyou Eats Admin');
   const { can, admin } = useAdminAccess();
   const central = admin.role === 'super_admin' || (admin.cityIds.length === 0 && admin.countryIds.length === 0);
   const canEdit = can('loyalty.edit') && central;
@@ -149,7 +149,7 @@ export function LoyaltyPage() {
     >
       {canSeeCustomers && (
         <div className="mb-6 grid gap-4 sm:grid-cols-3">
-          <StatCard label="Comptes fidélité GoLink" value={totals ? formatNumber(totals.platformAccounts) : '—'} loading={!totals && !totalsError} icon={<Users />} tone="brand" footer={totalsError ? 'Indicateur momentanément indisponible' : undefined} />
+          <StatCard label="Comptes fidélité Ciyou Eats" value={totals ? formatNumber(totals.platformAccounts) : '—'} loading={!totals && !totalsError} icon={<Users />} tone="brand" footer={totalsError ? 'Indicateur momentanément indisponible' : undefined} />
           <StatCard label="Comptes des programmes commerces" value={totals ? formatNumber(totals.restaurantAccounts) : '—'} loading={!totals && !totalsError} icon={<Store />} tone="teal" footer={totalsError ? 'Indicateur momentanément indisponible' : undefined} />
           <StatCard label="Points en circulation" value={totals ? formatNumber(totals.points) : '—'} loading={!totals && !totalsError} icon={<Coins />} tone="amber" footer={totalsError ? 'Indicateur momentanément indisponible' : 'Tous programmes confondus'} />
         </div>
@@ -159,7 +159,7 @@ export function LoyaltyPage() {
         <div className="min-w-0 space-y-6">
           <SettingsBlock
             icon={<Sparkles />}
-            title="Programme GoLink"
+            title="Programme Ciyou Eats"
             description="Points gagnés sur toutes les commandes livrées, échangeables contre des remises."
             aside={
               <div className="flex items-center gap-3">
@@ -262,11 +262,11 @@ export function LoyaltyPage() {
           <SettingsBlock
             icon={<Store />}
             title="Programmes des commerces"
-            description="Chaque commerce peut proposer sa propre carte de fidélité, en plus du programme GoLink."
+            description="Chaque commerce peut proposer sa propre carte de fidélité, en plus du programme Ciyou Eats."
             aside={<Switch checked={draft.allowRestaurantPrograms} onCheckedChange={(v) => set('allowRestaurantPrograms', v)} disabled={!canEdit} aria-label="Autoriser les programmes des commerces" />}
           >
             <p className="text-sm text-fg-muted">
-              {draft.allowRestaurantPrograms ? 'Autorisés : les commerces configurent leur programme depuis leur back-office.' : 'Désactivés : seuls les points GoLink sont proposés.'}
+              {draft.allowRestaurantPrograms ? 'Autorisés : les commerces configurent leur programme depuis leur back-office.' : 'Désactivés : seuls les points Ciyou Eats sont proposés.'}
             </p>
             {draft.allowRestaurantPrograms && (
               <FormField
@@ -310,7 +310,7 @@ export function LoyaltyPage() {
                 <dd className="num font-medium text-fg">{(cashback * 100).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} %</dd>
               </div>
             </dl>
-            <p className="border-t border-border px-5 py-3 text-xs text-fg-subtle">Le coût des points échangés est supporté par GoLink.</p>
+            <p className="border-t border-border px-5 py-3 text-xs text-fg-subtle">Le coût des points échangés est supporté par Ciyou Eats.</p>
           </Card>
 
           {canSeeCustomers && (

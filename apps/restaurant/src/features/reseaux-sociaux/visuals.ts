@@ -1,5 +1,5 @@
 // Génération des visuels du kit de partage (canvas) : établissement, plat, offre.
-// Les couleurs sont celles de la charte GoLink (le visuel sort de l'application).
+// Les couleurs sont celles de la charte Ciyou Eats (le visuel sort de l'application).
 import QRCode from 'qrcode';
 
 export type VisualFormat = 'square' | 'story';
@@ -135,7 +135,7 @@ export async function renderVisual(input: VisualInput): Promise<HTMLCanvasElemen
   let y = photoH + (story ? 40 : 10);
   ctx.textBaseline = 'alphabetic';
   const subject = input.subject;
-  const headline = subject.kind === 'offer' ? subject.discount : subject.kind === 'product' ? subject.price : (subject.rating ?? 'Sur GoLink');
+  const headline = subject.kind === 'offer' ? subject.discount : subject.kind === 'product' ? subject.price : (subject.rating ?? 'Sur Ciyou Eats');
   ctx.fillStyle = ORANGE;
   ctx.font = `600 ${story ? 120 : 96}px "Space Grotesk", sans-serif`;
   ctx.fillText(headline, pad, y + (story ? 110 : 90), width - pad * 2);
@@ -181,7 +181,7 @@ export async function renderVisual(input: VisualInput): Promise<HTMLCanvasElemen
   ctx.fillStyle = CREAM;
   ctx.font = `600 ${story ? 44 : 34}px "DM Sans", sans-serif`;
   const ctaY = story ? height - pad - 40 : height - pad - 8;
-  ctx.fillText('Commandez sur GoLink', pad, ctaY);
+  ctx.fillText('Commandez sur Ciyou Eats', pad, ctaY);
   if (story) {
     ctx.fillStyle = MUTED;
     ctx.font = '400 34px "DM Sans", sans-serif';
@@ -246,6 +246,6 @@ export async function downloadPoster(input: { restaurantName: string; url: strin
   pdf.setTextColor(232, 120, 75);
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(12);
-  pdf.text('GoLink', w / 2, h - 10, { align: 'center' });
+  pdf.text('Ciyou Eats', w / 2, h - 10, { align: 'center' });
   pdf.save(input.fileName);
 }

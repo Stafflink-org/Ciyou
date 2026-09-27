@@ -21,7 +21,7 @@ interface Draft {
   placeId: string | null;
 }
 
-/** Adresse de l'établissement, position sur la carte et couverture des zones GoLink de la ville. */
+/** Adresse de l'établissement, position sur la carte et couverture des zones Ciyou Eats de la ville. */
 export function AddressTab({ active }: { active: boolean }) {
   const { restaurant, restaurantId } = useRestaurantAccess();
   const zones = useCollection<Zone>(query(collection(db, COLLECTIONS.zones), where('cityId', '==', restaurant.cityId)));
@@ -121,7 +121,7 @@ export function AddressTab({ active }: { active: boolean }) {
           actions={
             draft.location ? (
               outside ? (
-                <Badge tone="danger" icon={<TriangleAlert />}>Hors zone GoLink</Badge>
+                <Badge tone="danger" icon={<TriangleAlert />}>Hors zone Ciyou Eats</Badge>
               ) : covering.length > 0 ? (
                 <Badge tone="success" icon={<CircleCheck />}>{covering.map((z) => z.name).join(', ')}</Badge>
               ) : null
@@ -152,7 +152,7 @@ export function AddressTab({ active }: { active: boolean }) {
           )}
           {outside && (
             <Notice tone="danger" className="mt-4" title="Adresse en dehors des zones desservies">
-              GoLink ne livre pas encore ce secteur de {restaurant.address.city}. Contactez le support si vous déménagez.
+              Ciyou Eats ne livre pas encore ce secteur de {restaurant.address.city}. Contactez le support si vous déménagez.
             </Notice>
           )}
         </SettingsCard>
@@ -183,7 +183,7 @@ function GeocodingBridge({ onReady }: { onReady: (lib: google.maps.GeocodingLibr
   return null;
 }
 
-/** Géocodage de l'adresse saisie (API Geocoding du navigateur, clé GoLink). */
+/** Géocodage de l'adresse saisie (API Geocoding du navigateur, clé Ciyou Eats). */
 function Geocoder({
   lib: geocoding,
   address,

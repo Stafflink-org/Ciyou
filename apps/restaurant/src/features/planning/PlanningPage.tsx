@@ -70,7 +70,7 @@ import {
 } from './data';
 
 export function PlanningPage() {
-  useDocumentTitle('Planning · GoLink Restaurant');
+  useDocumentTitle('Planning · Ciyou Eats Restaurant');
   const can = useCan();
   const canEdit = can('planning.manage');
   const { restaurantId, restaurant } = useRestaurantAccess();

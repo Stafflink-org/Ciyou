@@ -135,7 +135,7 @@ export async function buildReport(report: ScheduledReport, owner: AdminUser, per
         { label: 'Frais de service et livraison HT', value: eur(k.feesHtCents) },
         { label: 'Abonnements HT', value: eur(k.subscriptionsHtCents) },
         { label: 'Remboursements', value: eur(k.refundsCents) },
-        { label: 'Marge GoLink', value: `${eur(k.marginCents)}${delta(k.marginCents, p.marginCents)}` },
+        { label: 'Marge Ciyou Eats', value: `${eur(k.marginCents)}${delta(k.marginCents, p.marginCents)}` },
       ];
       break;
     case 'orders':
@@ -205,7 +205,7 @@ export async function buildReport(report: ScheduledReport, owner: AdminUser, per
   const buffer = render(table, report.format);
   paragraphs.push(`Le détail figure dans la pièce jointe (${report.format.toUpperCase()}).`);
 
-  const subject = `GoLink · ${report.name} · ${period.from === period.to ? frDay(period.from) : `${frDay(period.from)} – ${frDay(period.to)}`}`;
+  const subject = `Ciyou Eats · ${report.name} · ${period.from === period.to ? frDay(period.from) : `${frDay(period.from)} – ${frDay(period.to)}`}`;
   const message: EmailMessage = {
     subject,
     ...renderEmail({
@@ -215,7 +215,7 @@ export async function buildReport(report: ScheduledReport, owner: AdminUser, per
       paragraphs,
       details,
       cta: { label: 'Ouvrir le tableau de bord', url: `${APP_URLS.admin}/` },
-      footerReason: 'Vous recevez ce rapport car votre adresse figure parmi ses destinataires dans l’administration GoLink.',
+      footerReason: 'Vous recevez ce rapport car votre adresse figure parmi ses destinataires dans l’administration Ciyou Eats.',
     }),
   };
   const stamp = period.from === period.to ? period.from : `${period.from}_${period.to}`;

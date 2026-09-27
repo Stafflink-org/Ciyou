@@ -83,7 +83,7 @@ const ACTOR_LABELS: Record<OrderEvent['actor'], string> = {
   customer: 'Client',
   restaurant: 'Restaurant',
   driver: 'Livreur',
-  admin: 'Support GoLink',
+  admin: 'Support Ciyou Eats',
   system: 'Automatique',
 };
 
@@ -383,7 +383,7 @@ export function OrderDetail({ order, compactHeader }: { order: OrderRow; compact
               {d.address.instructions && <p className="mt-1 text-xs italic text-fg-muted">« {d.address.instructions} »</p>}
               <div className="mt-3 space-y-0.5 border-t border-border pt-2.5">
                 <Line label="Distance" value={formatDistance(d.distanceMeters)} />
-                <Line label="Livré par" text value={d.deliveredBy === 'platform' ? 'Livreur GoLink' : 'Vos livreurs'} />
+                <Line label="Livré par" text value={d.deliveredBy === 'platform' ? 'Livreur Ciyou Eats' : 'Vos livreurs'} />
                 {d.promisedTo && !closed && <Line label="Promise au client" text value={`avant ${formatTime(toDate(d.promisedTo) ?? new Date())}`} />}
                 {d.estimatedArrivalAt && order.status === 'picked_up' && <Line label="Arrivée estimée" value={formatTime(toDate(d.estimatedArrivalAt) ?? new Date())} />}
               </div>
@@ -424,7 +424,7 @@ export function OrderDetail({ order, compactHeader }: { order: OrderRow; compact
             <Block title="Votre part" icon={<Receipt />} action={<span className="text-2xs text-fg-subtle">{order.status === 'delivered' ? 'Définitive' : 'Estimation'}</span>}>
               <Line label="Ventes" value={eur(settlement.grossCents)} />
               {settlement.discountFundedCents > 0 && <Line label="Remises financées par vous" value={`−${eur(settlement.discountFundedCents)}`} />}
-              <Line label={`Commission GoLink (${formatBps(settlement.commissionBps)} HT)`} value={`−${eur(settlement.commissionTtcCents)}`} />
+              <Line label={`Commission Ciyou Eats (${formatBps(settlement.commissionBps)} HT)`} value={`−${eur(settlement.commissionTtcCents)}`} />
               <p className="-mt-0.5 pb-1 text-right text-2xs text-fg-subtle">dont TVA {eur(settlement.commissionVatCents)}</p>
               {settlement.deliveryFeeCents > 0 && <Line label="Frais de livraison conservés" value={eur(settlement.deliveryFeeCents)} />}
               {settlement.paymentFeeCents > 0 && <Line label="Frais de paiement" value={`−${eur(settlement.paymentFeeCents)}`} />}

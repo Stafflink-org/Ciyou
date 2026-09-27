@@ -12,9 +12,9 @@ import { change, eur, eurCompact, periodLabel, plural, ratio, shortDay } from '.
 import { useCallableQuery, useFinancePeriod } from '../argent-commun/hooks';
 import { FinanceNav } from './nav';
 
-/** Vue d'ensemble financière (cahier §15) : du montant payé par les clients à la marge GoLink. */
+/** Vue d'ensemble financière (cahier §15) : du montant payé par les clients à la marge Ciyou Eats. */
 export function FinanceOverviewPage() {
-  useDocumentTitle('Finance · GoLink Admin');
+  useDocumentTitle('Finance · Ciyou Eats Admin');
   const geo = useGeoScope();
   const { period, setPreset, setCustom } = useFinancePeriod('overview');
   const input = useMemo<FinanceScopeInput>(
@@ -40,7 +40,7 @@ export function FinanceOverviewPage() {
         { header: 'Jour', kind: 'date', width: 12 },
         { header: 'Commandes', kind: 'number' },
         { header: 'Encaissé TTC', kind: 'money', width: 16 },
-        { header: 'Revenu GoLink HT', kind: 'money', width: 18 },
+        { header: 'Revenu Ciyou Eats HT', kind: 'money', width: 18 },
         { header: 'Marge nette', kind: 'money', width: 14 },
         { header: 'Remboursements', kind: 'money', width: 16 },
       ],
@@ -55,21 +55,21 @@ export function FinanceOverviewPage() {
         ['Frais clients HT (service, livraison)', data.totals.customerFeesHtCents, data.previous.customerFeesHtCents],
         ['Abonnements HT', data.totals.subscriptionsHtCents, data.previous.subscriptionsHtCents],
         ['Mises en avant HT', data.totals.sponsoredHtCents, data.previous.sponsoredHtCents],
-        ['Revenu net GoLink HT', data.totals.netRevenueCents, data.previous.netRevenueCents],
+        ['Revenu net Ciyou Eats HT', data.totals.netRevenueCents, data.previous.netRevenueCents],
         ['Part des commerces', data.totals.restaurantsPayoutCents, data.previous.restaurantsPayoutCents],
         ['Rémunération des livreurs', data.totals.courierCostCents, data.previous.courierCostCents],
         ['Pourboires reversés', data.totals.tipsCents, data.previous.tipsCents],
         ['Frais de paiement', data.totals.paymentFeesCents, data.previous.paymentFeesCents],
-        ['Promotions financées par GoLink', data.totals.promoPlatformCents, data.previous.promoPlatformCents],
+        ['Promotions financées par Ciyou Eats', data.totals.promoPlatformCents, data.previous.promoPlatformCents],
         ['Promotions financées par les commerces', data.totals.promoRestaurantCents, data.previous.promoRestaurantCents],
         ['Remboursements', data.totals.refundsCents, data.previous.refundsCents],
-        ['TVA due par GoLink', data.totals.vatDueCents, data.previous.vatDueCents],
-        ['Marge nette GoLink', data.totals.marginCents, data.previous.marginCents],
+        ['TVA due par Ciyou Eats', data.totals.vatDueCents, data.previous.vatDueCents],
+        ['Marge nette Ciyou Eats', data.totals.marginCents, data.previous.marginCents],
       ],
     };
     const name = `golink-finance-${period.from}-${period.to}`;
     if (format === 'csv') downloadCsv(daily, name);
-    else await downloadXlsx([totals, daily], name, { title: 'GoLink · Vue d’ensemble financière', subtitle: `${geo.label} · ${periodLabel(period.from, period.to)}` });
+    else await downloadXlsx([totals, daily], name, { title: 'Ciyou Eats · Vue d’ensemble financière', subtitle: `${geo.label} · ${periodLabel(period.from, period.to)}` });
   }
 
   const revenueParts = t
@@ -86,7 +86,7 @@ export function FinanceOverviewPage() {
       <PageHeader
         eyebrow={`Argent · ${geo.label}`}
         title="Finance et reversements"
-        description="Tout l’argent qui circule : ce que paient les clients, ce que garde GoLink, ce que reçoivent commerces et livreurs."
+        description="Tout l’argent qui circule : ce que paient les clients, ce que garde Ciyou Eats, ce que reçoivent commerces et livreurs."
         actions={
           <>
             <PeriodBar period={period} onPreset={setPreset} onCustom={setCustom} />
@@ -108,20 +108,20 @@ export function FinanceOverviewPage() {
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard label="Encaissé auprès des clients" icon={<CreditCard />} tone="brand" loading={loading} value={t ? eur(t.grossCents) : '—'} delta={t && p ? change(t.grossCents, p.grossCents) : undefined} deltaLabel="vs période précédente" footer={t ? `${plural(t.ordersCount, 'commande')} livrée${t.ordersCount > 1 ? 's' : ''}` : undefined} />
-            <StatCard label="Revenu net GoLink (HT)" icon={<CircleDollarSign />} tone="success" loading={loading} value={t ? eur(t.netRevenueCents) : '—'} delta={t && p ? change(t.netRevenueCents, p.netRevenueCents) : undefined} deltaLabel="vs période précédente" footer={t && t.grossCents ? `Taux de prélèvement ${ratio(t.netRevenueCents / t.grossCents)}` : undefined} />
+            <StatCard label="Revenu net Ciyou Eats (HT)" icon={<CircleDollarSign />} tone="success" loading={loading} value={t ? eur(t.netRevenueCents) : '—'} delta={t && p ? change(t.netRevenueCents, p.netRevenueCents) : undefined} deltaLabel="vs période précédente" footer={t && t.grossCents ? `Taux de prélèvement ${ratio(t.netRevenueCents / t.grossCents)}` : undefined} />
             <StatCard label="Commissions (HT)" icon={<HandCoins />} tone="info" loading={loading} value={t ? eur(t.commissionHtCents) : '—'} delta={t && p ? change(t.commissionHtCents, p.commissionHtCents) : undefined} deltaLabel="vs période précédente" footer={t ? `Abonnements ${eur(t.subscriptionsHtCents)} · Frais ${eur(t.customerFeesHtCents)}` : undefined} />
-            <StatCard label="Marge nette GoLink" icon={<PiggyBank />} tone={t && t.marginCents < 0 ? 'danger' : 'teal'} loading={loading} value={t ? eur(t.marginCents) : '—'} delta={t && p ? change(t.marginCents, p.marginCents) : undefined} deltaLabel="après livreurs, frais et promotions" />
+            <StatCard label="Marge nette Ciyou Eats" icon={<PiggyBank />} tone={t && t.marginCents < 0 ? 'danger' : 'teal'} loading={loading} value={t ? eur(t.marginCents) : '—'} delta={t && p ? change(t.marginCents, p.marginCents) : undefined} deltaLabel="après livreurs, frais et promotions" />
           </div>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard label="Remboursements" icon={<Undo2 />} tone="danger" invertDelta loading={loading} value={t ? eur(t.refundsCents) : '—'} delta={t && p ? change(t.refundsCents, p.refundsCents) : undefined} footer={t ? `Imputés aux commerces : ${eur(t.refundsRestaurantCents)}` : undefined} />
-            <StatCard label="Promotions financées par GoLink" icon={<BadgePercent />} tone="plum" invertDelta loading={loading} value={t ? eur(t.promoPlatformCents) : '—'} delta={t && p ? change(t.promoPlatformCents, p.promoPlatformCents) : undefined} footer={t ? `Financées par les commerces : ${eur(t.promoRestaurantCents)}` : undefined} />
+            <StatCard label="Promotions financées par Ciyou Eats" icon={<BadgePercent />} tone="plum" invertDelta loading={loading} value={t ? eur(t.promoPlatformCents) : '—'} delta={t && p ? change(t.promoPlatformCents, p.promoPlatformCents) : undefined} footer={t ? `Financées par les commerces : ${eur(t.promoRestaurantCents)}` : undefined} />
             <StatCard label="Frais de paiement" icon={<Banknote />} tone="amber" invertDelta loading={loading} value={t ? eur(t.paymentFeesCents) : '—'} delta={t && p ? change(t.paymentFeesCents, p.paymentFeesCents) : undefined} footer="Déduits des reversements des commerces" />
             <StatCard label="Part reversée aux commerces" icon={<Wallet />} tone="neutral" loading={loading} value={t ? eur(t.restaurantsPayoutCents) : '—'} delta={t && p ? change(t.restaurantsPayoutCents, p.restaurantsPayoutCents) : undefined} footer={t ? `Livreurs : ${eur(t.courierCostCents + t.tipsCents)} (pourboires inclus)` : undefined} />
           </div>
 
           <div className="grid gap-4 xl:grid-cols-3">
             <Card className="xl:col-span-2">
-              <CardHeader title="Évolution" description={`Encaissements, revenu GoLink et marge · ${periodLabel(period.from, period.to)}`} divided />
+              <CardHeader title="Évolution" description={`Encaissements, revenu Ciyou Eats et marge · ${periodLabel(period.from, period.to)}`} divided />
               <CardContent>
                 {loading ? (
                   <Skeleton className="h-[280px] w-full" />
@@ -133,7 +133,7 @@ export function FinanceOverviewPage() {
                     xKey="day"
                     series={[
                       { key: 'encaisse', label: 'Encaissé TTC' },
-                      { key: 'revenu', label: 'Revenu GoLink HT' },
+                      { key: 'revenu', label: 'Revenu Ciyou Eats HT' },
                       { key: 'marge', label: 'Marge nette' },
                     ]}
                     valueFormatter={eur}
@@ -148,7 +148,7 @@ export function FinanceOverviewPage() {
           <div className="grid gap-4 lg:grid-cols-3">
             <BalancesCard overview={data} loading={loading} />
             <Card>
-              <CardHeader title="Composition du revenu" description="Revenu net GoLink hors taxes" divided />
+              <CardHeader title="Composition du revenu" description="Revenu net Ciyou Eats hors taxes" divided />
               <CardContent>
                 {loading ? (
                   <Skeleton className="h-48 w-full" />
@@ -204,7 +204,7 @@ export function FinanceOverviewPage() {
                         <tr className="border-b border-border bg-surface-2 text-left">
                           <th className="eyebrow px-5 py-2.5 font-normal">Offre</th>
                           <th className="eyebrow px-3 py-2.5 text-right font-normal">Utilisations</th>
-                          <th className="eyebrow px-3 py-2.5 text-right font-normal">GoLink</th>
+                          <th className="eyebrow px-3 py-2.5 text-right font-normal">Ciyou Eats</th>
                           <th className="eyebrow px-5 py-2.5 text-right font-normal">Commerces</th>
                         </tr>
                       </thead>
@@ -270,8 +270,8 @@ function MoneyFlowCard({ overview, loading }: { overview: FinanceOverview | null
         { label: 'Commerces', value: t.restaurantsPayoutCents, className: 'bg-chart-2' },
         { label: 'Livreurs (pourboires inclus)', value: t.courierCostCents + t.tipsCents, className: 'bg-chart-5' },
         { label: 'Frais de paiement', value: t.paymentFeesCents, className: 'bg-chart-3' },
-        { label: 'TVA due par GoLink', value: t.vatDueCents, className: 'bg-chart-6' },
-        { label: 'Marge GoLink', value: Math.max(0, t.marginCents), className: 'bg-chart-1' },
+        { label: 'TVA due par Ciyou Eats', value: t.vatDueCents, className: 'bg-chart-6' },
+        { label: 'Marge Ciyou Eats', value: Math.max(0, t.marginCents), className: 'bg-chart-1' },
       ]
     : [];
   const total = parts.reduce((s, x) => s + x.value, 0);
@@ -305,7 +305,7 @@ function MoneyFlowCard({ overview, loading }: { overview: FinanceOverview | null
             </ul>
             {t.marginCents < 0 && (
               <Callout tone="danger" title="Marge négative">
-                Les coûts dépassent le revenu GoLink sur la période ({eur(t.marginCents)}).
+                Les coûts dépassent le revenu Ciyou Eats sur la période ({eur(t.marginCents)}).
               </Callout>
             )}
           </div>
@@ -323,7 +323,7 @@ function BalancesCard({ overview, loading }: { overview: FinanceOverview | null;
         { label: 'À reverser aux livreurs', hint: 'Gains, pourboires et bonus', value: b.driversPendingCents, to: '/finance/reversements?type=driver' },
         { label: 'Reversements bloqués', hint: plural(b.onHoldCount, 'reversement'), value: b.onHoldCents, to: '/finance/blocages' },
         { label: 'Reversements en échec', hint: plural(b.failedCount, 'reversement'), value: b.failedCents, to: '/finance/reversements?statut=failed', tone: b.failedCount ? 'text-danger' : undefined },
-        { label: 'Espèces détenues par les livreurs', hint: 'À reverser à GoLink', value: b.driverCashHeldCents, to: '/paiements/especes' },
+        { label: 'Espèces détenues par les livreurs', hint: 'À reverser à Ciyou Eats', value: b.driverCashHeldCents, to: '/paiements/especes' },
       ]
     : [];
   return (

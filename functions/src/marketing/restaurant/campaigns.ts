@@ -318,7 +318,7 @@ function campaignEmail(campaign: Campaign, restaurant: RestaurantDoc) {
       title: campaign.title,
       paragraphs: campaign.body.split(/\n+/).filter(Boolean),
       cta: { label: `Commander chez ${restaurant.name}`, url },
-      footerReason: `Vous recevez cet e-mail car vous avez commandé chez ${restaurant.name} sur GoLink et accepté de recevoir ses offres. Vous pouvez retirer ce consentement à tout moment dans les réglages de votre compte GoLink.`,
+      footerReason: `Vous recevez cet e-mail car vous avez commandé chez ${restaurant.name} sur Ciyou Eats et accepté de recevoir ses offres. Vous pouvez retirer ce consentement à tout moment dans les réglages de votre compte Ciyou Eats.`,
     }),
   };
 }
@@ -381,7 +381,7 @@ async function deliverCampaign(campaignId: string, restaurant: RestaurantDoc, pr
         campaignId,
         recipientType: 'client',
         recipientId: r.uid,
-        destinationMasked: 'Centre de notifications GoLink',
+        destinationMasked: 'Centre de notifications Ciyou Eats',
         status: 'delivered',
         provider: 'fcm',
         providerMessageId: null,

@@ -301,7 +301,7 @@ function AuditExportCard() {
 }
 
 export function SecuritePage() {
-  useDocumentTitle('Sécurité · GoLink Admin');
+  useDocumentTitle('Sécurité · Ciyou Eats Admin');
   return (
     <PageContainer wide>
       <PageHeader eyebrow="Plateforme & sécurité" title="Sécurité et journal d'audit" description="Double authentification obligatoire, sessions et appareils, alertes de sécurité et journal d'audit non modifiable.">

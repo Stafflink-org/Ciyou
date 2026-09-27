@@ -43,7 +43,7 @@ export function EtablissementPage() {
       <PageHeader
         eyebrow="Configuration"
         title="Établissement"
-        description="Les informations que vos clients voient sur GoLink, et celles dont nous avons besoin pour facturer et vous reverser vos ventes."
+        description="Les informations que vos clients voient sur Ciyou Eats, et celles dont nous avons besoin pour facturer et vous reverser vos ventes."
         actions={
           <StatusPill tone={STATUS_TONES[restaurant.status]} pulse={restaurant.status === 'active'}>
             {RESTAURANT_STATUS_LABELS[restaurant.status]}

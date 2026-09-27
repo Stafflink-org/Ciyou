@@ -35,7 +35,7 @@ type Target = 'restaurant' | 'driver';
 const DAY = 86_400_000;
 
 export function ReviewsPage() {
-  useDocumentTitle('Avis et notes · GoLink Admin');
+  useDocumentTitle('Avis et notes · Ciyou Eats Admin');
   const { orderId } = useParams();
   const navigate = useNavigate();
   const { can } = useAdminAccess();

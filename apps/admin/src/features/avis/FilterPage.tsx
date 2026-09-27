@@ -36,7 +36,7 @@ import { AvisNav } from './components';
 const CATEGORIES = Object.keys(MODERATION_CATEGORY_LABELS) as ModerationCategory[];
 
 export function FilterPage() {
-  useDocumentTitle('Filtre automatique · Avis · GoLink Admin');
+  useDocumentTitle('Filtre automatique · Avis · Ciyou Eats Admin');
   const { admin, can } = useAdminAccess();
   const editable = can('reviews.moderate');
   const q = useMemo(() => query(collection(db, COLLECTIONS.moderationTerms), orderBy('term'), limit(500)), []);
@@ -143,7 +143,7 @@ export function FilterPage() {
             )}
           </Panel>
 
-          <Panel title="Liste de base" description="Maintenue par GoLink, appliquée à tous les marchés (déjoue les contournements courants : chiffres pour lettres, lettres répétées).">
+          <Panel title="Liste de base" description="Maintenue par Ciyou Eats, appliquée à tous les marchés (déjoue les contournements courants : chiffres pour lettres, lettres répétées).">
             <div className="space-y-4">
               {defaults.map(([cat, list]) => (
                 <div key={cat}>

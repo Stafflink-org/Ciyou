@@ -68,7 +68,7 @@ export function PromotionsPage() {
   const actions = usePromotionActions();
   const [filter, setFilter] = useState<Filter>('all');
   const [editor, setEditor] = useState<{ promotion: PromotionRow | null; template: PromotionRow | null } | null>(null);
-  const submitLabel = limits.restaurantRequiresReview ? 'Soumettre à GoLink' : 'Mettre en ligne';
+  const submitLabel = limits.restaurantRequiresReview ? 'Soumettre à Ciyou Eats' : 'Mettre en ligne';
 
   const stats = useMemo(() => {
     const live = data.filter((p) => p.status === 'active' || p.status === 'pending_review').length;
@@ -189,7 +189,7 @@ export function PromotionsPage() {
       <PageHeader
         eyebrow="Marketing"
         title="Codes promo et offres"
-        description="Des remises bien pensées pour attirer de nouveaux clients et faire revenir les habitués, dans les règles fixées par GoLink."
+        description="Des remises bien pensées pour attirer de nouveaux clients et faire revenir les habitués, dans les règles fixées par Ciyou Eats."
         actions={createButton}
       />
 
@@ -218,7 +218,7 @@ export function PromotionsPage() {
           <ShieldCheck className="size-4" />
         </span>
         <p className="text-sm text-fg-muted">
-          <span className="font-medium text-fg">Règles GoLink pour vos offres :</span> {promotionRulesText(limits).charAt(0).toLowerCase()}
+          <span className="font-medium text-fg">Règles Ciyou Eats pour vos offres :</span> {promotionRulesText(limits).charAt(0).toLowerCase()}
           {promotionRulesText(limits).slice(1)}
         </p>
       </Card>

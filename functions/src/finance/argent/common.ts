@@ -174,7 +174,7 @@ export function platformParty(countryId: string, country: Country | null): Invoi
   return {
     type: 'platform',
     id: `golink-${countryId.toLowerCase()}`,
-    name: entity?.legalName ?? 'GoLink',
+    name: entity?.legalName ?? 'Ciyou Eats',
     address: entity?.address ?? '',
     vatNumber: entity?.vatNumber || null,
     registrationNumber: entity?.registrationNumber || null,

@@ -67,7 +67,7 @@ async function releaseScheduled(now: Timestamp): Promise<number> {
   return count;
 }
 
-/** Demande automatique d'un livreur GoLink quand la fin de préparation approche. */
+/** Demande automatique d'un livreur Ciyou Eats quand la fin de préparation approche. */
 async function autoDispatch(now: Timestamp): Promise<number> {
   const snap = await db
     .collection(COLLECTIONS.orders)

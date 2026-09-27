@@ -45,7 +45,7 @@ const TARGET_LABELS: Record<ContentReport['targetType'], string> = {
 };
 
 export function ReportsPage() {
-  useDocumentTitle('Signalements · Avis · GoLink Admin');
+  useDocumentTitle('Signalements · Avis · Ciyou Eats Admin');
   const { can } = useAdminAccess();
   const allowed = can('reviews.moderate');
   const q = useMemo(() => (allowed ? query(collection(db, COLLECTIONS.contentReports), orderBy('createdAt', 'desc'), limit(300)) : null), [allowed]);

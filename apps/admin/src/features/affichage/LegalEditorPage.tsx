@@ -32,7 +32,7 @@ export function LegalEditorPage() {
   const navigate = useNavigate();
   const { admin, can } = useAdminAccess();
   const legal = useDoc<LegalDocument>(docAt(`${COLLECTIONS.legalDocuments}/${documentId}`));
-  useDocumentTitle(`${legal.data ? LEGAL_DOCUMENT_LABELS[legal.data.type] : 'Document légal'} · GoLink Admin`);
+  useDocumentTitle(`${legal.data ? LEGAL_DOCUMENT_LABELS[legal.data.type] : 'Document légal'} · Ciyou Eats Admin`);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [summary, setSummary] = useState('');

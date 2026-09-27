@@ -1,4 +1,4 @@
-// Facture ou avoir GoLink au format PDF, à partir du document `invoices/{id}`
+// Facture ou avoir Ciyou Eats au format PDF, à partir du document `invoices/{id}`
 // (immuable après émission : le PDF reproduit exactement la facture enregistrée).
 import { INVOICE_KIND_LABELS, INVOICE_STATUS_LABELS, type Invoice, type WithId } from '@golink/shared';
 import { formatDate } from '@golink/ui';

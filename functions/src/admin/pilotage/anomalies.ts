@@ -45,7 +45,7 @@ async function notifySuperAdmins(alerts: PlatformAlert[]): Promise<void> {
   if (alerts.length === 0) return;
   const admins = await db.collection(COLLECTIONS.admins).where('role', '==', 'super_admin').where('active', '==', true).get();
   if (admins.empty) return;
-  const subject = alerts.length === 1 ? `Alerte critique GoLink : ${alerts[0]!.title}` : `${alerts.length} alertes critiques GoLink`;
+  const subject = alerts.length === 1 ? `Alerte critique Ciyou Eats : ${alerts[0]!.title}` : `${alerts.length} alertes critiques Ciyou Eats`;
   const html = `<p>Signalé automatiquement par la surveillance de la plateforme :</p><ul>${alerts.map((a) => `<li><strong>${a.title}</strong> — ${a.message}</li>`).join('')}</ul>`;
   const text = alerts.map((a) => `${a.title} — ${a.message}`).join('\n');
   for (const doc of admins.docs) {

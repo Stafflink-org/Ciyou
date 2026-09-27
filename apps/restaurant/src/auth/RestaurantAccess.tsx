@@ -83,7 +83,7 @@ export function RestaurantAccessGate({ children }: { children?: ReactNode }) {
       <AccessDeniedScreen
         caption={CAPTION}
         title="Aucun établissement rattaché"
-        description="Ce compte n’est membre d’aucun restaurant GoLink. Demandez au responsable de votre établissement de vous inviter depuis la rubrique Équipe."
+        description="Ce compte n’est membre d’aucun restaurant Ciyou Eats. Demandez au responsable de votre établissement de vous inviter depuis la rubrique Équipe."
         email={user?.email}
         onSignOut={signOutAction}
       />

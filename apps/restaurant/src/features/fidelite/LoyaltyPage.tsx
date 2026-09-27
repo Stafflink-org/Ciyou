@@ -243,7 +243,7 @@ function LoyaltyEditor({
       {loadError && <p className="mb-4 text-sm text-danger-soft-fg">{loadError}</p>}
       {!platformAllowed && (
         <div className="tone-amber mb-6 rounded-xl border border-(--tone-border) bg-(--tone-bg) p-4 text-sm text-(--tone-fg)">
-          Les programmes de fidélité des établissements sont momentanément suspendus par GoLink. Vos réglages sont conservés.
+          Les programmes de fidélité des établissements sont momentanément suspendus par Ciyou Eats. Vos réglages sont conservés.
         </div>
       )}
 
@@ -366,7 +366,7 @@ function LoyaltyEditor({
               })}
               {errors.rewards && <p className="text-xs text-danger-soft-fg">{errors.rewards}</p>}
               <p className="text-xs text-fg-subtle">
-                Estimation basée sur votre panier moyen de {formatEUR(averageBasket, { cents: true })}. GoLink plafonne le retour client à {RULES.maxReturnBps / 100} % des dépenses.
+                Estimation basée sur votre panier moyen de {formatEUR(averageBasket, { cents: true })}. Ciyou Eats plafonne le retour client à {RULES.maxReturnBps / 100} % des dépenses.
               </p>
             </CardContent>
           </Card>
@@ -384,7 +384,7 @@ function LoyaltyEditor({
                   <EmptyState compact icon={<Heart />} title="Aucun membre pour l’instant" description="Les points s’accumulent dès la prochaine commande livrée." />
                 ) : (
                   members.data.slice(0, 6).map((m) => {
-                    const name = topCustomers.data.find((c) => c.id === m.userId)?.displayName ?? 'Client GoLink';
+                    const name = topCustomers.data.find((c) => c.id === m.userId)?.displayName ?? 'Client Ciyou Eats';
                     return (
                       <div key={m.userId} className="flex items-center gap-3">
                         <Avatar name={name} size="sm" />

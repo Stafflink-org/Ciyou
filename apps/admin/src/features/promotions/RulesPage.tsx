@@ -27,7 +27,7 @@ function ToggleRow({ title, description, checked, onChange, disabled }: { title:
 
 /** Règles encadrant les offres créées par les restaurants (settings/promotions). */
 export function RulesPage() {
-  useDocumentTitle('Règles des promotions · GoLink Admin');
+  useDocumentTitle('Règles des promotions · Ciyou Eats Admin');
   const { can, admin } = useAdminAccess();
   const central = admin.role === 'super_admin' || (admin.cityIds.length === 0 && admin.countryIds.length === 0);
   const canEdit = can('promotions.edit') && central;
@@ -83,7 +83,7 @@ export function RulesPage() {
     >
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="min-w-0 space-y-6">
-          <SettingsBlock icon={<ClipboardCheck />} title="Validation" description="Les offres des restaurants peuvent être publiées directement ou passer par l’équipe GoLink.">
+          <SettingsBlock icon={<ClipboardCheck />} title="Validation" description="Les offres des restaurants peuvent être publiées directement ou passer par l’équipe Ciyou Eats.">
             <ToggleRow
               title="Valider chaque offre avant publication"
               description="Les nouvelles offres des restaurants arrivent dans la file « À valider » et restent invisibles jusqu’à votre décision."
@@ -133,7 +133,7 @@ export function RulesPage() {
               En résumé
             </div>
             <ul className="space-y-2 text-sm text-fg-muted">
-              <li>{draft.restaurantRequiresReview ? 'Chaque offre est validée par GoLink.' : 'Les offres sont publiées sans validation.'}</li>
+              <li>{draft.restaurantRequiresReview ? 'Chaque offre est validée par Ciyou Eats.' : 'Les offres sont publiées sans validation.'}</li>
               <li>
                 {draft.capsEnabled
                   ? `Remise plafonnée à ${percent ?? 0} % ou ${formatPrice(draft.restaurantMaxFixedCents)}, ${draft.maxActivePerRestaurant} offres actives au plus.`

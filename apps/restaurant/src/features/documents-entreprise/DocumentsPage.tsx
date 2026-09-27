@@ -155,7 +155,7 @@ function DocumentDialog({ open, onClose, document }: { open: boolean; onClose: (
 }
 
 export function DocumentsPage() {
-  useDocumentTitle('Documents · GoLink Restaurant');
+  useDocumentTitle('Documents · Ciyou Eats Restaurant');
   const can = useCan();
   const manage = can('documents.manage');
   const { restaurantId, member } = useRestaurantAccess();

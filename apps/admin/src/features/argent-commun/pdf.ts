@@ -1,5 +1,5 @@
 // Mise en page PDF des documents financiers (factures, avoirs, relevés de
-// reversement, déclarations) : en-tête GoLink, blocs, tableaux, pied numéroté.
+// reversement, déclarations) : en-tête Ciyou Eats, blocs, tableaux, pied numéroté.
 // jsPDF est chargé à la demande pour ne pas alourdir les écrans.
 import type { jsPDF as JsPdf } from 'jspdf';
 import type { UserOptions } from 'jspdf-autotable';
@@ -240,16 +240,16 @@ export class PdfWriter {
   }
 }
 
-/** Crée un document A4 avec l'en-tête GoLink. */
+/** Crée un document A4 avec l'en-tête Ciyou Eats. */
 export async function createPdf(meta: PdfMeta): Promise<PdfWriter> {
   const [{ jsPDF }, autoTableModule] = await Promise.all([import('jspdf'), import('jspdf-autotable')]);
   const doc = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
-  doc.setProperties({ title: meta.title, creator: 'GoLink', author: 'GoLink' });
+  doc.setProperties({ title: meta.title, creator: 'Ciyou Eats', author: 'Ciyou Eats' });
   return new PdfWriter(doc, autoTableModule.autoTable, meta);
 }
 
 /** Pied de page standard : date de génération. */
 export function generatedFooter(label: string): string {
   const now = new Date();
-  return `${label} · Document généré par GoLink le ${now.toLocaleDateString('fr-FR')} à ${now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+  return `${label} · Document généré par Ciyou Eats le ${now.toLocaleDateString('fr-FR')} à ${now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
 }

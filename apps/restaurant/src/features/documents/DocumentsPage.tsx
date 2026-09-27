@@ -104,7 +104,7 @@ export function DocumentsPage() {
       <PageHeader
         eyebrow="Configuration"
         title="Documents et contrat"
-        description="Les justificatifs exigés par la réglementation et notre prestataire de paiement, et votre contrat partenaire GoLink."
+        description="Les justificatifs exigés par la réglementation et notre prestataire de paiement, et votre contrat partenaire Ciyou Eats."
         actions={
           <StatusPill tone={restaurant.onboardingStatus === 'approved' ? 'success' : restaurant.onboardingStatus === 'rejected' ? 'danger' : 'info'}>
             Dossier : {ONBOARDING_STATUS_LABELS[restaurant.onboardingStatus].toLowerCase()}
@@ -123,7 +123,7 @@ export function DocumentsPage() {
               </div>
               <div>
                 <h2 className="font-display text-md font-semibold tracking-tight text-fg">Justificatifs</h2>
-                <p className="mt-0.5 text-sm text-fg-muted">Vérifiés par l’équipe GoLink. Une pièce expirée suspend les versements.</p>
+                <p className="mt-0.5 text-sm text-fg-muted">Vérifiés par l’équipe Ciyou Eats. Une pièce expirée suspend les versements.</p>
               </div>
             </div>
             {!docs.loading && (

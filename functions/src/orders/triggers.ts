@@ -215,7 +215,7 @@ export const onOrderWritten = onDocumentWritten({ document: 'orders/{orderId}', 
   if (after?.status === 'delivered' && before?.status !== 'delivered') {
     await safely('loyalty', event.params.orderId, () => earnLoyaltyPoints(event.params.orderId, after));
   }
-  // Commande annulée : l'offre utilisée est libérée et les avoirs GoLink sont rendus au client.
+  // Commande annulée : l'offre utilisée est libérée et les avoirs Ciyou Eats sont rendus au client.
   if (after?.status === 'cancelled' && before?.status !== 'cancelled') {
     await safely('cancelEffects', event.params.orderId, () => applyCancellationEffects(event.params.orderId, after));
   }

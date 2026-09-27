@@ -147,7 +147,7 @@ export interface Review {
     by: string;
     at: Timestamp;
     status: 'published' | 'hidden';
-    /** Décision de la modération GoLink sur la réponse. */
+    /** Décision de la modération Ciyou Eats sur la réponse. */
     moderation?: { action: 'hidden' | 'restored'; reason: string; by: string; at: Timestamp } | null;
   } | null;
   reportsCount: number;

@@ -154,7 +154,7 @@ export function checkProductAlcohol(product: AlcoholCheckInput): AlcoholCheck {
 }
 
 export const ALCOHOL_BLOCK_MESSAGES: Readonly<Record<AlcoholBlockReason, string>> = {
-  vat_category_alcohol: 'La vente de boissons alcoolisées est interdite sur GoLink.',
-  contains_alcohol: 'Les produits contenant de l’alcool ne peuvent pas être vendus sur GoLink.',
-  alcohol_percent: 'Un produit avec un degré d’alcool ne peut pas être vendu sur GoLink.',
+  vat_category_alcohol: 'La vente de boissons alcoolisées est interdite sur Ciyou Eats.',
+  contains_alcohol: 'Les produits contenant de l’alcool ne peuvent pas être vendus sur Ciyou Eats.',
+  alcohol_percent: 'Un produit avec un degré d’alcool ne peut pas être vendu sur Ciyou Eats.',
 };

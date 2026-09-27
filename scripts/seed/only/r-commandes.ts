@@ -3,7 +3,7 @@
 // - motif de ticket « Problème sur une commande » (signalements du restaurant) ;
 // - clients de démonstration (comptes Auth sans mot de passe, profils, adresses)
 //   utilisés par le simulateur `npm run simulate:orders` ;
-// - livreurs GoLink de démonstration (profil actif, hors ligne, position).
+// - livreurs Ciyou Eats de démonstration (profil actif, hors ligne, position).
 // Tous ces documents portent `seed: true` et `test: true` (le simulateur peut
 // ainsi commander hors des horaires d'ouverture). Aucun mot de passe n'est stocké.
 import {

@@ -367,11 +367,11 @@ function PickupDialog({ order, onClose }: DialogProps) {
 function ReportDialog({ order, onClose }: DialogProps) {
   const [category, setCategory] = useState<OrderIssueCategory>(order.fulfillment === 'delivery' ? 'courier_late' : 'other');
   const [message, setMessage] = useState('');
-  const { mutate, loading } = useMutation(ordersApi.reportIssue, { success: (r) => `Signalement ${r.ticketNumber} transmis au support GoLink.` });
+  const { mutate, loading } = useMutation(ordersApi.reportIssue, { success: (r) => `Signalement ${r.ticketNumber} transmis au support Ciyou Eats.` });
 
   return (
     <Shell onClose={onClose} size="md">
-      <DialogHeader icon={<LifeBuoy />} title="Signaler un problème" description={`Le support GoLink reçoit votre message avec la fiche de ${order.number} et vous répond dans la messagerie.`} />
+      <DialogHeader icon={<LifeBuoy />} title="Signaler un problème" description={`Le support Ciyou Eats reçoit votre message avec la fiche de ${order.number} et vous répond dans la messagerie.`} />
       <DialogBody className="space-y-4">
         <FormField label="Nature du problème">
           <Select

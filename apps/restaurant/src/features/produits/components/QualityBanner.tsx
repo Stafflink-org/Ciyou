@@ -12,7 +12,7 @@ const HINTS: Partial<Record<MenuIssueType, string>> = {
   allergens_missing: 'Information obligatoire pour vos clients (règlement UE 1169/2011).',
   price_outlier: 'Prix nul ou très éloigné des autres produits de la section.',
   missing_description: 'Quelques mots sur les ingrédients rassurent le client.',
-  alcohol_suspected: 'La vente d’alcool est interdite sur GoLink : vérifiez le nom et la description.',
+  alcohol_suspected: 'La vente d’alcool est interdite sur Ciyou Eats : vérifiez le nom et la description.',
 };
 
 export function QualityBanner({

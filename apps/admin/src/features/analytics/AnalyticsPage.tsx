@@ -73,7 +73,7 @@ export function AnalyticsPage() {
   const { section: slug } = useParams();
   const navigate = useNavigate();
   const current = SECTIONS.find((s) => s.slug === slug) ?? SECTIONS[0]!;
-  useDocumentTitle(`${current.label} · Analytics · GoLink Admin`);
+  useDocumentTitle(`${current.label} · Analytics · Ciyou Eats Admin`);
   const { can } = useAdminAccess();
   const geo = useGeoScope();
   const state = usePilotageFilters('30d');

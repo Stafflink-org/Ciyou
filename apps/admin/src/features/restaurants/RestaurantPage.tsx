@@ -53,7 +53,7 @@ export function RestaurantPage() {
   const restaurant = state.data;
   const [dialog, setDialog] = useState<'suspend' | 'reactivate' | 'impersonate' | 'edit' | null>(null);
   const refresh = useMutation(refreshRestaurantScores, { success: 'Score de qualité recalculé' });
-  useDocumentTitle(`${restaurant?.name ?? 'Restaurant'} · GoLink Admin`);
+  useDocumentTitle(`${restaurant?.name ?? 'Restaurant'} · Ciyou Eats Admin`);
 
   const requested = params.get('onglet') as Tab | null;
   const tab: Tab = requested && TABS.includes(requested) ? requested : restaurant && restaurant.onboardingStatus !== 'approved' ? 'dossier' : 'apercu';
@@ -226,7 +226,7 @@ export function RestaurantPage() {
         </TabsContent>
         <TabsContent value="notes">
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <Panel title="Notes internes" icon={<NotebookPen />} description="Visibles uniquement par l’équipe GoLink.">
+            <Panel title="Notes internes" icon={<NotebookPen />} description="Visibles uniquement par l’équipe Ciyou Eats.">
               <NotesPanel target={{ type: 'restaurant', id: restaurant.id, label: restaurant.name }} />
             </Panel>
             <Panel title="Historique des modifications" icon={<RefreshCw />} description="Qui a fait quoi, quand et pourquoi.">

@@ -258,7 +258,7 @@ export function isMerchantCourier(type: string | null | undefined): boolean {
 
 /**
  * Décision client : les espèces ne sont proposées que si la livraison est faite par
- * un livreur salarié du commerce ; avec un livreur indépendant GoLink, le paiement
+ * un livreur salarié du commerce ; avec un livreur indépendant Ciyou Eats, le paiement
  * en ligne est obligatoire.
  */
 export function isCashAllowed(ctx: CashContext): boolean {

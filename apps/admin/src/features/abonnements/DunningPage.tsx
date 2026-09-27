@@ -48,7 +48,7 @@ type Draft = Omit<DunningSettings, 'updatedAt' | 'updatedBy'>;
 
 /** Impayés d'abonnement (cahier §17) : relances automatiques, puis restriction, puis suspension. */
 export function DunningPage() {
-  useDocumentTitle('Impayés et relances · GoLink Admin');
+  useDocumentTitle('Impayés et relances · Ciyou Eats Admin');
   const can = useCan();
   const geo = useGeoScope();
   const directory = useDirectory();

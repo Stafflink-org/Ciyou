@@ -1,6 +1,6 @@
 // Déclarations et exports réglementaires : récapitulatif annuel DAC7 des revenus des
 // vendeurs (commerces) et prestataires (livreurs), récapitulatif mensuel de la TVA
-// collectée par GoLink, export comptable mensuel (écritures au format proche du FEC).
+// collectée par Ciyou Eats, export comptable mensuel (écritures au format proche du FEC).
 // Les résultats sont enregistrés dans taxReports (historique) ; les fichiers sont
 // produits par le back-office à partir des lignes renvoyées.
 import {
@@ -157,7 +157,7 @@ async function runVat(countryId: string, month: string): Promise<{ lines: VatRep
       if (inv.kind === 'credit_note') credits += vat;
     }
   }
-  // Frais facturés aux clients (service, petite commande, livraison GoLink) : TVA incluse dans la répartition.
+  // Frais facturés aux clients (service, petite commande, livraison Ciyou Eats) : TVA incluse dans la répartition.
   const fin = await db.collection(COLLECTIONS.orderFinancials).where('deliveredAt', '>=', Timestamp.fromDate(start)).where('deliveredAt', '<', Timestamp.fromDate(end)).get();
   const standard = (await db.collection(COLLECTIONS.countries).doc(countryId).get()).get('pricing.vat.standardBps') as number | undefined;
   for (const doc of fin.docs) {
@@ -283,7 +283,7 @@ export const exportAccounting = argentCallable(
       lines.push({ journal, date, piece, account, accountLabel: ACCOUNTS[account] ?? account, thirdParty, label, debitCents: debit, creditCents: credit });
     };
 
-    // Ventes : factures émises par GoLink (commissions, abonnements, mises en avant, avoirs).
+    // Ventes : factures émises par Ciyou Eats (commissions, abonnements, mises en avant, avoirs).
     const invoices = await db.collection(COLLECTIONS.invoices).where('issuedAt', '>=', Timestamp.fromDate(start)).where('issuedAt', '<', Timestamp.fromDate(end)).get();
     let invoicesCount = 0;
     for (const doc of invoices.docs) {

@@ -39,7 +39,7 @@ function isoIn(days: number): string {
 }
 
 export function ValidationPage() {
-  useDocumentTitle('Validation des commerces · GoLink Admin');
+  useDocumentTitle('Validation des commerces · Ciyou Eats Admin');
   const navigate = useNavigate();
   const can = useCan();
   const scope = useGeoScope();

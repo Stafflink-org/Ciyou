@@ -211,8 +211,8 @@ async function settleOrder(orderId: string, order: Order): Promise<'created' | '
 // ------------------------------------------------------------------ Justificatif client
 
 /**
- * Justificatif d'une commande : facture émise par GoLink au nom et pour le compte du
- * commerce (articles, par taux de TVA) et facture des frais de GoLink au client.
+ * Justificatif d'une commande : facture émise par Ciyou Eats au nom et pour le compte du
+ * commerce (articles, par taux de TVA) et facture des frais de Ciyou Eats au client.
  */
 export async function issueReceipt(orderId: string, order: Order, countryHint?: Country | null): Promise<string> {
   const invoiceRef = db.collection(COLLECTIONS.invoices).doc(`rec-${orderId}`);
@@ -238,9 +238,9 @@ export async function issueReceipt(orderId: string, order: Order, countryHint?: 
     lines.push({ label, quantity: 1, unitHtCents: ht, vatRateBps: standard, htCents: ht, vatCents: ttc - ht, ttcCents: ttc });
   };
   const platformDelivers = order.fulfillment === 'delivery' && order.delivery?.deliveredBy === 'platform';
-  fee('Frais de service GoLink', a.serviceFeeCents);
+  fee('Frais de service Ciyou Eats', a.serviceFeeCents);
   fee('Frais de petite commande', a.smallOrderFeeCents);
-  fee(platformDelivers ? 'Livraison GoLink' : 'Livraison par le commerce', Math.max(0, a.deliveryFeeCents - (a.discount.onDeliveryCents ?? 0)));
+  fee(platformDelivers ? 'Livraison Ciyou Eats' : 'Livraison par le commerce', Math.max(0, a.deliveryFeeCents - (a.discount.onDeliveryCents ?? 0)));
   if (a.tipCents > 0) lines.push({ label: 'Pourboire (reversé intégralement au livreur, hors TVA)', quantity: 1, unitHtCents: a.tipCents, vatRateBps: 0, htCents: a.tipCents, vatCents: 0, ttcCents: a.tipCents });
 
   const totals = invoiceTotals(lines);
@@ -278,7 +278,7 @@ export async function issueReceipt(orderId: string, order: Order, countryHint?: 
       paidAt: issuedAt,
       legalMentions: [
         `Facture émise par ${platform.name} au nom et pour le compte de ${seller.name} (mandat de facturation).`,
-        a.discount.platformFundedCents > 0 ? `Remise de ${(a.discount.platformFundedCents / 100).toFixed(2).replace('.', ',')} € financée par GoLink.` : '',
+        a.discount.platformFundedCents > 0 ? `Remise de ${(a.discount.platformFundedCents / 100).toFixed(2).replace('.', ',')} € financée par Ciyou Eats.` : '',
         'Montant réglé à la commande.',
       ].filter(Boolean),
       retainUntil: retainUntil(year),

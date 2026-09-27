@@ -1,4 +1,4 @@
-# GoLink — Design system des back-offices
+# Ciyou Eats — Design system des back-offices
 
 Référence visuelle et technique partagée par `apps/restaurant` (back-office restaurant) et `apps/admin` (super admin).
 Tout est implémenté dans le package **`@golink/ui`** (`packages/ui`) : jetons CSS, thème Tailwind v4 et bibliothèque de composants React accessibles (Radix UI).
@@ -20,7 +20,7 @@ Vitrine vivante : `npm run dev:admin` puis <http://localhost:5174/_ui> (`?theme=
 |---|---|---|---|
 | Restaurant (défaut) | `data-theme="restaurant"` | Back-office restaurant | Clair, crème chaleureux, sidebar pétrole |
 | Restaurant sombre | `data-theme="restaurant" data-mode="dark"` | Service du soir, préférence utilisateur | Pétrole profond, orange lumineux |
-| Admin | `data-theme="admin"` | Super admin | Sombre premium quasi noir-pétrole, accent orange GoLink |
+| Admin | `data-theme="admin"` | Super admin | Sombre premium quasi noir-pétrole, accent orange Ciyou Eats |
 
 ```ts
 import { applyTheme, useColorMode } from '@golink/ui';
@@ -38,7 +38,7 @@ Les couleurs par défaut de Tailwind sont **retirées** (`--color-*: initial`) :
 
 | Échelle | 500 | Rôle |
 |---|---|---|
-| `brand` | `#e8784b` | Orange GoLink : action principale, élément actif, focus |
+| `brand` | `#e8784b` | Orange Ciyou Eats : action principale, élément actif, focus |
 | `petrol` | `#497478` (900 `#19343b`) | Encre de la marque : texte, sidebar restaurant |
 | `cream` | `#b6a78e` (100 `#f8f4ec`) | Neutres chauds : fonds, bordures |
 | `ink` | `#58696c` (950 `#0a1012`) | Neutres sombres du thème admin |

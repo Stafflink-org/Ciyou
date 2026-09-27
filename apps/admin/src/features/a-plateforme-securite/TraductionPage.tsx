@@ -26,7 +26,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export function TraductionPage() {
-  useDocumentTitle('Traduction · GoLink Admin');
+  useDocumentTitle('Traduction · Ciyou Eats Admin');
   const can = useCan();
   const settings = useTranslatorSettings();
   const [reason, setReason] = useState('');

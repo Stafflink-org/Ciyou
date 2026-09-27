@@ -4,7 +4,7 @@ import type { CommissionScope, LedgerAccountType, LedgerEntryType, PayoutFrequen
 
 export const LEDGER_ENTRY_TYPE_LABELS: Record<LedgerEntryType, string> = {
   order_revenue: 'Ventes',
-  commission: 'Commission GoLink',
+  commission: 'Commission Ciyou Eats',
   promo_funded: 'Remise financée',
   delivery_fee: 'Frais de livraison',
   payment_fee: 'Frais de paiement',

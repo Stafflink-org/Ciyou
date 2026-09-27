@@ -80,7 +80,7 @@ function CrmSettingsCard() {
         <FormField label="Prime par restaurant inscrit">
           <MoneyInput value={d.signupBonusCents} onChange={(v) => setD({ ...d, signupBonusCents: v ?? 0 })} />
         </FormField>
-        <FormField label="Part des commissions GoLink" hint="0 = aucune part variable." error={share !== null && (share < 0 || share > 50) ? 'Entre 0 et 50 %.' : undefined}>
+        <FormField label="Part des commissions Ciyou Eats" hint="0 = aucune part variable." error={share !== null && (share < 0 || share > 50) ? 'Entre 0 et 50 %.' : undefined}>
           <NumberInput value={share} onChange={setShare} unit="%" decimals={1} />
         </FormField>
         <FormField label="Durée de l’intéressement" hint="Après l’inscription.">
@@ -113,7 +113,7 @@ function CrmSettingsCard() {
 }
 
 export function SalesTeamPage() {
-  useDocumentTitle('Commerciaux · Prospection · GoLink Admin');
+  useDocumentTitle('Commerciaux · Prospection · Ciyou Eats Admin');
   const { can } = useAdminAccess();
   const manage = can('crm.manage_team');
   const team = useSalesTeam();

@@ -60,7 +60,7 @@ export async function applySuspension(
   });
   if (options.notify !== false) {
     await notifyRestaurantOwner(restaurant, {
-      title: input.kind === 'permanent' ? 'Établissement retiré de GoLink' : 'Établissement suspendu',
+      title: input.kind === 'permanent' ? 'Établissement retiré de Ciyou Eats' : 'Établissement suspendu',
       body: `Motif : ${input.reason}`,
       category: 'account',
       email: suspensionEmail({

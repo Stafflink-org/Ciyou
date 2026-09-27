@@ -23,11 +23,11 @@ const STATUS: Record<NotificationLog['status'], { label: string; tone: Tone }> =
   failed: { label: 'Échec', tone: 'danger' },
 };
 const CHANNEL: Record<NotificationLog['channel'], string> = { push: 'Push', email: 'E-mail', sms: 'SMS' };
-const RECIPIENT: Record<NotificationLog['recipientType'], string> = { ...USER_TYPE_LABELS, admin: 'Équipe GoLink' };
+const RECIPIENT: Record<NotificationLog['recipientType'], string> = { ...USER_TYPE_LABELS, admin: 'Équipe Ciyou Eats' };
 
 /** Journal de chaque message envoyé (preuve d'envoi, support, consentement). */
 export function LogsPage() {
-  useDocumentTitle('Journal des envois · GoLink Admin');
+  useDocumentTitle('Journal des envois · Ciyou Eats Admin');
   const q = useMemo(() => query(collection(db, COLLECTIONS.notificationLogs), orderBy('createdAt', 'desc'), limit(400)), []);
   const { data, loading, error } = useCollection<NotificationLog>(q);
   const templatesQuery = useMemo(() => query(collection(db, COLLECTIONS.messageTemplates)), []);
@@ -99,7 +99,7 @@ export function LogsPage() {
             { id: 'status', label: 'Statut', options: Object.entries(STATUS).map(([value, s]) => ({ value, label: s.label })), getValue: (l) => l.status },
             { id: 'recipient', label: 'Destinataire', options: Object.entries(RECIPIENT).map(([value, label]) => ({ value, label })), getValue: (l) => l.recipientType },
           ]}
-          emptyState={<EmptyState compact icon={<History />} title="Aucun message envoyé" description="Chaque e-mail, push ou SMS envoyé par GoLink est tracé ici, adresse masquée." />}
+          emptyState={<EmptyState compact icon={<History />} title="Aucun message envoyé" description="Chaque e-mail, push ou SMS envoyé par Ciyou Eats est tracé ici, adresse masquée." />}
         />
       )}
       <p className="mt-4 text-xs text-fg-subtle">Les 400 derniers messages. Les adresses sont masquées ; le contenu n’est pas conservé.</p>

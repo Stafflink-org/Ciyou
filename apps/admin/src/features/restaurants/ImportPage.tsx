@@ -353,7 +353,7 @@ function MenuImport() {
 }
 
 export function ImportPage() {
-  useDocumentTitle('Import · GoLink Admin');
+  useDocumentTitle('Import · Ciyou Eats Admin');
   const can = useCan();
   const canRestaurants = can('restaurants.import');
   const canMenu = can('restaurants.edit');

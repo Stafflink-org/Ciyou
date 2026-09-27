@@ -42,7 +42,7 @@ const col = createColumnHelper<Row>();
 
 /** Reversements des commerces et des livreurs (cahier §15) : calendrier, statuts, virements. */
 export function PayoutsPage() {
-  useDocumentTitle('Reversements · GoLink Admin');
+  useDocumentTitle('Reversements · Ciyou Eats Admin');
   const can = useCan();
   const geo = useGeoScope();
   const navigate = useNavigate();
@@ -229,7 +229,7 @@ export function PayoutsPage() {
     };
     const name = `golink-reversements-${type === 'restaurant' ? 'commerces' : 'livreurs'}`;
     if (format === 'csv') downloadCsv(sheet, name);
-    else await downloadXlsx([sheet], name, { title: 'GoLink · Reversements', subtitle: geo.label });
+    else await downloadXlsx([sheet], name, { title: 'Ciyou Eats · Reversements', subtitle: geo.label });
   }
 
   return (

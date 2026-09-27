@@ -51,7 +51,7 @@ const col = createColumnHelper<WithId<RatingWatch>>();
 const fmt = (n: number | null | undefined) => (n === null || n === undefined ? '—' : n.toFixed(2).replace('.', ','));
 
 export function QualityPage() {
-  useDocumentTitle('Suivi qualité · Avis · GoLink Admin');
+  useDocumentTitle('Suivi qualité · Avis · Ciyou Eats Admin');
   const { admin, can } = useAdminAccess();
   const scope = useScopeFilter();
   const [entity, setEntity] = useState<'restaurant' | 'driver'>('restaurant');

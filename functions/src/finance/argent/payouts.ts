@@ -321,7 +321,7 @@ export async function executeOne(payoutId: string, actor: AuditActor, request?: 
           currency: stripeCurrency(payout.currency ?? (await currencyOfCountry(payout.countryId))),
           destination: account.accountId,
           transfer_group: payoutId,
-          description: `Reversement GoLink ${payout.periodStart} → ${payout.periodEnd}`,
+          description: `Reversement Ciyou Eats ${payout.periodStart} → ${payout.periodEnd}`,
           metadata: { payoutId, beneficiaryType: payout.beneficiaryType, beneficiaryId: payout.beneficiaryId, platform: 'golink' },
         },
         { idempotencyKey: `payout-${payoutId}-${attempt}` },
@@ -661,7 +661,7 @@ export const recordCashRemittance = argentCallable(
         vatCents: null,
         // Repris au prochain reversement : compense la retenue des espèces encaissées.
         payoutId: null,
-        description: 'Espèces remises à GoLink',
+        description: 'Espèces remises à Ciyou Eats',
         reason: data.reason,
         bookingDate: parisDay(now.toDate()),
         createdAt: now,

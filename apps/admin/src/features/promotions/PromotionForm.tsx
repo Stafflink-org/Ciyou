@@ -1,4 +1,4 @@
-// Création et modification d'une offre GoLink (tiroir latéral).
+// Création et modification d'une offre Ciyou Eats (tiroir latéral).
 import { useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { Bike, Gift, Percent, ShoppingBag, Store, Utensils } from 'lucide-react';
@@ -383,7 +383,7 @@ export function PromotionFormSheet({ promotion, onDone }: { promotion?: Promotio
             className="grid gap-2 sm:grid-cols-2"
             options={[
               { value: 'everyone', label: TARGET_LABELS.everyone, description: 'Sans condition' },
-              { value: 'new_customers', label: TARGET_LABELS.new_customers, description: 'Première commande sur GoLink' },
+              { value: 'new_customers', label: TARGET_LABELS.new_customers, description: 'Première commande sur Ciyou Eats' },
               { value: 'inactive_customers', label: TARGET_LABELS.inactive_customers, description: 'Sans commande depuis X jours' },
               { value: 'loyal_customers', label: TARGET_LABELS.loyal_customers, description: '5 commandes livrées et plus' },
             ]}
@@ -405,7 +405,7 @@ export function PromotionFormSheet({ promotion, onDone }: { promotion?: Promotio
             options={(['platform', 'restaurant', 'shared'] as const).map((f) => ({
               value: f,
               label: PROMOTION_FUNDING_LABELS[f],
-              description: f === 'platform' ? '100 % GoLink' : f === 'restaurant' ? 'Déduit du reversement' : 'Réparti selon la part choisie',
+              description: f === 'platform' ? '100 % Ciyou Eats' : f === 'restaurant' ? 'Déduit du reversement' : 'Réparti selon la part choisie',
             }))}
           />
           {draft.funding === 'shared' && (
@@ -416,7 +416,7 @@ export function PromotionFormSheet({ promotion, onDone }: { promotion?: Promotio
                   Restaurants <strong className="num text-fg">{draft.restaurantSharePct} %</strong>
                 </span>
                 <span className="text-fg-muted">
-                  GoLink <strong className="num text-fg">{100 - draft.restaurantSharePct} %</strong>
+                  Ciyou Eats <strong className="num text-fg">{100 - draft.restaurantSharePct} %</strong>
                 </span>
               </div>
               <Slider value={[draft.restaurantSharePct]} min={5} max={95} step={5} onValueChange={(v) => set('restaurantSharePct', v[0] ?? 50)} aria-label="Part des restaurants" />
