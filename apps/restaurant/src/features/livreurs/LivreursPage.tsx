@@ -26,6 +26,7 @@ import {
   Textarea,
   createColumnHelper,
   formatDateTime,
+  formatEUR,
   formatNumber,
   formatRelative,
   type DataTableFilter,
@@ -37,6 +38,7 @@ import {
   SETTINGS_DOCS,
   VEHICLE_LABELS,
   paths,
+  type CashMovement,
   type Order,
   type PaymentSettings,
   type RestaurantCourier,
@@ -334,6 +336,11 @@ function CourierDetail({
   const missions = useCollection<Order>(
     query(collectionAt(COLLECTIONS.orders), where('restaurantId', '==', restaurantId), where('driverId', '==', courier.id), orderBy('createdAt', 'desc'), limit(20)),
   );
+  const cashHistory = useCollection<CashMovement>(
+    courier.relation === 'own'
+      ? query(collectionAt(COLLECTIONS.cashMovements), where('driverId', '==', courier.id), orderBy('createdAt', 'desc'), limit(20))
+      : null,
+  );
   const save = useMutation(
     (input: { status?: RestaurantCourierStatus; note?: string | null; zoneIds?: string[] }) => updateCourier({ restaurantId, driverIds: [courier.id], ...input }),
     { success: 'Livreur mis à jour.' },
@@ -476,6 +483,38 @@ function CourierDetail({
             </ul>
           )}
         </section>
+
+        {courier.relation === 'own' && (
+          <section>
+            <p className="eyebrow mb-2">Espèces : historique</p>
+            {cashHistory.loading ? (
+              <Skeleton className="h-24 w-full" />
+            ) : cashHistory.error ? (
+              <ErrorPanel compact error={cashHistory.error} />
+            ) : cashHistory.data.length === 0 ? (
+              <EmptyState compact title="Aucun mouvement" description="Rien encaissé ni remis en espèces pour l’instant." />
+            ) : (
+              <ul className="divide-y divide-border rounded-xl border border-border">
+                {cashHistory.data.map((m) => (
+                  <li key={m.id} className="flex items-center justify-between gap-3 px-3 py-2.5 text-sm">
+                    <div className="min-w-0">
+                      <p className="font-medium text-fg">{m.type === 'collected' ? 'Encaissement' : 'Remise de caisse'}</p>
+                      <p className="truncate text-xs text-fg-subtle">
+                        {toDate(m.createdAt) ? formatDateTime(toDate(m.createdAt) as Date) : ''}
+                        {m.orderNumber ? ` · ${m.orderNumber}` : ''}
+                        {m.note ? ` · ${m.note}` : ''}
+                      </p>
+                    </div>
+                    <span className={`shrink-0 font-mono text-sm num ${m.amountCents >= 0 ? 'text-fg' : 'text-fg-muted'}`}>
+                      {m.amountCents >= 0 ? '+' : ''}
+                      {formatEUR(m.amountCents)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
       </SheetBody>
       <SheetFooter>
         {courier.status === 'blocked' ? (

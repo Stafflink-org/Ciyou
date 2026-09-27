@@ -2,6 +2,7 @@
 // contrôlé côté serveur (prix, options, stock, promotion, zone, horaires,
 // minimum), puis la commande est numérotée et le paiement autorisé.
 import {
+  ACTIVE_ORDER_STATUSES,
   ALCOHOL_BLOCK_MESSAGES,
   COLLECTIONS,
   DEFAULT_PLANS,
@@ -111,7 +112,12 @@ const schema = z.object({
   deviceId: z.string().trim().min(4).max(200).nullish(),
   /** Version de l'application appelante (§30, mise à jour forcée). */
   appVersion: z.string().trim().regex(/^\d+\.\d+\.\d+$/).nullish(),
+  /** Total du dernier devis affiché au client : revalidé à ±2 centimes avant le paiement (§A3). */
+  expectedTotalCents: z.number().int().min(0).nullish(),
 });
+
+/** Tolérance de revalidation du total avant paiement (§A3) : arrondis, ne bloque jamais pour rien. */
+const TOTAL_TOLERANCE_CENTS = 2;
 
 const QUOTE_MESSAGES: Partial<Record<QuoteIssueCode, string>> = {
   empty_cart: 'Votre panier est vide.',
@@ -217,6 +223,7 @@ export const placeOrder = callable(
 
     // ---------------------------------------------------------------- Ouverture
     if (restaurant.status !== 'active' || restaurant.deletedAt) throw fail.precondition('Ce restaurant ne prend pas de commandes.');
+    if (restaurant.visibleInApp === false) throw fail.precondition('Ce restaurant ne prend pas de commandes.', { code: 'restaurant_hidden' });
     if (!restaurant.isOpen) throw fail.precondition(`${restaurant.name} a mis ses commandes en pause. Réessayez un peu plus tard.`);
     // Lancement ville par ville : seules les villes actives sont opérables (décision client).
     if (market.city && !market.city.active) throw fail.precondition('Le service Ciyou Eats n’est pas encore ouvert dans cette ville.');
@@ -300,8 +307,8 @@ export const placeOrder = callable(
 
     const items: OrderItem[] = data.lines.map((line, index) => {
       const product = products.get(line.productId);
-      if (!product) throw fail.precondition('Un article de votre panier n’existe plus. Mettez votre panier à jour.');
-      if (!product.available) throw fail.precondition(`« ${product.name} » n’est plus disponible.`);
+      if (!product) throw fail.precondition('Un article de votre panier n’existe plus. Mettez votre panier à jour.', { code: 'cart_changed' });
+      if (!product.available) throw fail.precondition(`« ${product.name} » n’est plus disponible.`, { code: 'cart_changed' });
       // Vente d'alcool interdite sur Ciyou Eats (décision client), quel que soit le paramétrage.
       const alcohol = checkProductAlcohol(product);
       if (alcohol.blocked) {
@@ -416,7 +423,17 @@ export const placeOrder = callable(
       throw fail.precondition((blocking && QUOTE_MESSAGES[blocking]) ?? 'Votre commande ne peut pas être validée.');
     }
     if (promotion && quote.issues.includes('promo_minimum_not_reached')) {
-      throw fail.precondition(`Ce code promo s’applique dès ${formatPrice(promotion.minSubtotalCents)} d’achat.`);
+      throw fail.precondition(`Ce code promo s’applique dès ${formatPrice(promotion.minSubtotalCents)} d’achat.`, { code: 'promo_invalid' });
+    }
+    // Revalidation avant paiement (§A3) : le total recalculé doit correspondre au devis affiché au
+    // client, à ±2 centimes (arrondis) ; sinon la commande n'est pas créée mais le panier reste intact
+    // côté client (aucune donnée n'est modifiée ici, l'app doit simplement rafraîchir son devis).
+    if (data.expectedTotalCents != null && Math.abs(quote.totalCents - data.expectedTotalCents) > TOTAL_TOLERANCE_CENTS) {
+      throw fail.precondition('Le total de votre commande a changé. Vérifiez votre panier avant de valider.', {
+        code: 'total_changed',
+        expectedTotalCents: data.expectedTotalCents,
+        totalCents: quote.totalCents,
+      });
     }
 
     // ---------------------------------------------------------------- Portefeuille
@@ -517,6 +534,20 @@ export const placeOrder = callable(
       result = await db.runTransaction(async (tx) => {
         const counterRef = db.collection(COLLECTIONS.counters).doc('orders');
         const counterSnap = await tx.get(counterRef);
+        // Plafond de commandes simultanées (§A1) : comptées dans la transaction pour éviter que deux
+        // commandes concurrentes ne dépassent toutes les deux le plafond au même instant.
+        const maxConcurrentOrders = orderSettings?.maxConcurrentOrders ?? rules.merchantDefaults?.maxConcurrentOrders ?? 12;
+        if (maxConcurrentOrders > 0) {
+          const activeSnap = await tx.get(
+            db.collection(COLLECTIONS.orders).where('restaurantId', '==', restaurant.id).where('status', 'in', [...ACTIVE_ORDER_STATUSES]).limit(maxConcurrentOrders),
+          );
+          if (activeSnap.size >= maxConcurrentOrders) {
+            throw fail.precondition(
+              `${restaurant.name} a déjà ${activeSnap.size} commande${activeSnap.size > 1 ? 's' : ''} en cours et ne peut pas en accepter de nouvelle pour le moment. Réessayez dans quelques minutes.`,
+              { code: 'max_concurrent_orders' },
+            );
+          }
+        }
         const stockSnaps = await tx.getAll(...productRefs);
         // Portefeuille et offre : relus dans la transaction (deux commandes simultanées ne doivent pas dépasser le solde ni les limites).
         const userRef = db.collection(COLLECTIONS.users).doc(uid);
@@ -533,9 +564,9 @@ export const placeOrder = callable(
         }
         if (promotion && promotionSnap && usesSnap) {
           const fresh = promotionSnap.data() as Promotion | undefined;
-          if (!fresh || fresh.status !== 'active') throw fail.precondition('Cette offre n’est plus disponible.');
-          if (fresh.totalUsageLimit && fresh.stats.redemptions >= fresh.totalUsageLimit) throw fail.precondition('Cette offre a atteint sa limite d’utilisation.');
-          if (usesSnap.size >= Math.max(1, fresh.perCustomerLimit)) throw fail.precondition('Vous avez déjà utilisé cette offre.');
+          if (!fresh || fresh.status !== 'active') throw fail.precondition('Cette offre n’est plus disponible.', { code: 'promo_invalid' });
+          if (fresh.totalUsageLimit && fresh.stats.redemptions >= fresh.totalUsageLimit) throw fail.precondition('Cette offre a atteint sa limite d’utilisation.', { code: 'promo_invalid' });
+          if (usesSnap.size >= Math.max(1, fresh.perCustomerLimit)) throw fail.precondition('Vous avez déjà utilisé cette offre.', { code: 'promo_invalid' });
         }
         const sequence = ((counterSnap.data() as Counter | undefined)?.value ?? 10000) + 1;
         const number = formatOrderNumber(sequence);
@@ -553,7 +584,7 @@ export const placeOrder = callable(
           // Suivi de stock désactivé (§24) : les quantités ne bloquent plus la commande.
           if (!stockTracked || !product || qty === 0 || product.stock === null || product.stock === undefined) continue;
           if (product.stock < qty) {
-            throw fail.precondition(product.stock === 0 ? `« ${product.name} » est en rupture de stock.` : `Il ne reste que ${product.stock} « ${product.name} ».`);
+            throw fail.precondition(product.stock === 0 ? `« ${product.name} » est en rupture de stock.` : `Il ne reste que ${product.stock} « ${product.name} ».`, { code: 'stock_changed' });
           }
           movements.push({ ref: snap.ref, stock: product.stock - qty, product, qty });
         }

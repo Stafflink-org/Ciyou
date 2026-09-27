@@ -116,6 +116,7 @@ export interface EntityRef {
     | 'ticket'
     | 'review'
     | 'promotion'
+    | 'productOffer'
     | 'zone'
     | 'city'
     | 'country'

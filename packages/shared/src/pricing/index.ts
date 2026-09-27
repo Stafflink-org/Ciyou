@@ -8,3 +8,4 @@ export * from './plans';
 export * from './payroll';
 export * from './currency';
 export * from './decisions';
+export * from './product-offers';

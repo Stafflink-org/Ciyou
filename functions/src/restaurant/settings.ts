@@ -64,6 +64,8 @@ const profileSchema = z.object({
   priceLevel: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
   labels: z.array(z.enum(Object.keys(RESTAURANT_LABELS) as [keyof typeof RESTAURANT_LABELS])).max(9),
   allergenNotice: optionalText(400),
+  /** Interrupteur « Visible dans l'application GoLink » : masque le commerce sans changer son statut. */
+  visibleInApp: z.boolean().default(true),
 });
 
 const addressSchema = z.object({
@@ -310,6 +312,7 @@ async function applySection(data: Input, actor: RestaurantActor, ctx: ConfigCont
         priceLevel: data.priceLevel,
         labels: [...new Set(data.labels)],
         allergenNotice: data.allergenNotice,
+        visibleInApp: data.visibleInApp,
       };
       const changes = diff(restaurant as unknown as Record<string, unknown>, next);
       if (changes.changed.length === 0) return changes;

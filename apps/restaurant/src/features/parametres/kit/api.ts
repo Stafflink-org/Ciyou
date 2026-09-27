@@ -25,6 +25,7 @@ export interface ProfileInput {
   priceLevel: 1 | 2 | 3 | 4;
   labels: string[];
   allergenNotice: string | null;
+  visibleInApp: boolean;
 }
 
 export interface AddressInput {
