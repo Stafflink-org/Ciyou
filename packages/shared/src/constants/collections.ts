@@ -146,6 +146,8 @@ export const SUBCOLLECTIONS = {
     couriers: 'couriers',
     dailyStats: 'dailyStats',
     announcementReads: 'announcementReads',
+    /** Offres automatiques sur un plat (« 1 acheté, 1 offert », « Le 2e à -50 % »), distinctes des campagnes. */
+    productOffers: 'productOffers',
     // Gestion d'entreprise
     employees: 'employees',
     employeeDocuments: 'employeeDocuments',

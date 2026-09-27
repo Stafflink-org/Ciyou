@@ -1,9 +1,17 @@
 /**
- * Repose l'invoker public (roles/run.invoker pour allUsers) sur les services Cloud Run
- * des fonctions appelables déjà déployées. Utile si un déploiement a laissé des
- * services en 403 (Google Frontend). Les fonctions de type webhook ou planifiées sont
- * ignorées : on ne touche que les services dont le nom figure dans la liste retournée
- * par l'API Cloud Functions comme déclencheur HTTPS appelable.
+ * Repose l'invoker public sur les fonctions appelables déjà déployées, aux DEUX niveaux
+ * IAM que Cloud Functions gen2 expose (constaté sur une fonction toute neuve créée par un
+ * déploiement ciblé `--only functions:x,y,z` : le niveau Cloud Run était public mais pas le
+ * niveau Cloud Functions, avec pour symptôme un 401 « The access token could not be verified »
+ * malgré un appel authentifié) :
+ * - `roles/run.invoker` sur le service Cloud Run sous-jacent (déjà géré ici de longue date) ;
+ * - `roles/cloudfunctions.invoker` sur la ressource Cloud Functions elle-même, requis par la
+ *   porte d'entrée `https://<region>-<projet>.cloudfunctions.net/<nom>` utilisée par le SDK
+ *   client Firebase — normalement posé par `firebase deploy`, mais pas toujours propagé sur
+ *   un déploiement ciblé, d'où ce script de rattrapage.
+ * Utile si un déploiement a laissé des fonctions en 401/403 (Google Frontend). Les fonctions
+ * de type webhook ou planifiées sont ignorées : on ne touche que celles dont le nom figure
+ * dans la liste retournée par l'API Cloud Functions comme déclencheur HTTPS appelable.
  *
  * Usage : npm run functions:invoker [-- nom1 nom2 ...]   (sans argument : tous les callables)
  */
@@ -61,7 +69,24 @@ for (const fn of callables) {
     });
     done += 1;
   } catch (error) {
-    failed.push(`${short}: ${error.message}`);
+    failed.push(`${short} (run.invoker): ${error.message}`);
+  }
+  // Second niveau : la ressource Cloud Functions elle-même (porte d'entrée .cloudfunctions.net).
+  try {
+    const cfPolicy = await api(`https://cloudfunctions.googleapis.com/v2/${fn.name}:getIamPolicy`);
+    const cfBindings = cfPolicy.bindings ?? [];
+    const cfHas = cfBindings.some((b) => b.role === 'roles/cloudfunctions.invoker' && (b.members ?? []).includes('allUsers'));
+    if (!cfHas) {
+      const cfInvoker = cfBindings.find((b) => b.role === 'roles/cloudfunctions.invoker');
+      if (cfInvoker) cfInvoker.members = [...(cfInvoker.members ?? []), 'allUsers'];
+      else cfBindings.push({ role: 'roles/cloudfunctions.invoker', members: ['allUsers'] });
+      await api(`https://cloudfunctions.googleapis.com/v2/${fn.name}:setIamPolicy`, {
+        method: 'POST',
+        body: JSON.stringify({ policy: { ...cfPolicy, bindings: cfBindings } }),
+      });
+    }
+  } catch (error) {
+    failed.push(`${short} (cloudfunctions.invoker): ${error.message}`);
   }
 }
 let revoked = 0;
