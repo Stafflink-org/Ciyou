@@ -22,9 +22,11 @@ import { fail } from '../../lib/errors';
 import { sendEmail } from '../../lib/brevo';
 import { syncClaims } from '../../lib/claims';
 import { APP_URLS } from '../../lib/config';
+import { loadLimitsSettings } from '../../lib/limits';
 import { requireAdmin } from '../../lib/permissions';
 import {
   defaultWeeklyHours,
+  loadMerchantDefaults,
   newCommercialDoc,
   newLegalDoc,
   newOrderSettings,
@@ -37,7 +39,8 @@ import { z, zPhone, zReason } from '../../lib/validation';
 import { ACTEURS_HEAVY_RUNTIME, acteursCallable, adminActor, isReservedAddress } from './common';
 import { ownerAccessEmail } from './emails';
 
-const MAX_ROWS = 500;
+/** Plafond technique absolu (protection du payload) ; la limite réelle est `LimitsSettings.exports.importMaxRows` (paramètre modifiable, voir loadLimitsSettings). */
+const HARD_MAX_ROWS = 2000;
 
 const rowSchema = z.object({
   name: z.string().trim().min(2, 'Nom trop court').max(80),
@@ -66,7 +69,7 @@ const rowSchema = z.object({
 });
 
 const schema = z.object({
-  rows: z.array(z.unknown()).min(1).max(MAX_ROWS),
+  rows: z.array(z.unknown()).min(1).max(HARD_MAX_ROWS),
   dryRun: z.boolean().default(true),
   /** Envoi du lien d'accès aux propriétaires créés. */
   inviteOwners: z.boolean().default(true),
@@ -83,6 +86,8 @@ export const importRestaurants = acteursCallable(
   async (data, request): Promise<RestaurantImportReport> => {
     const { caller, admin } = await requireAdmin(request, data.rows.length > 1 ? 'restaurants.import' : 'restaurants.edit');
     if (!data.dryRun && !data.reason) throw fail.invalid('Indiquez le motif de la création (import) des commerces.');
+    const importMaxRows = (await loadLimitsSettings()).exports.importMaxRows;
+    if (data.rows.length > importMaxRows) throw fail.invalid(`Un import est limité à ${importMaxRows} lignes à la fois.`);
     const report: RestaurantImportReport = { dryRun: data.dryRun, jobId: null, created: 0, skipped: 0, errors: [], warnings: [], restaurantIds: [] };
 
     // Référentiels : villes, zones, restaurants existants (doublons), groupes.
@@ -151,11 +156,16 @@ export const importRestaurants = acteursCallable(
     await jobRef.set(job);
     report.jobId = jobRef.id;
 
+    // Valeurs initiales des réglages de commande (H3) : une lecture par ville distincte du lot.
+    const merchantDefaultsByCity = new Map<string, Awaited<ReturnType<typeof loadMerchantDefaults>>>();
+
     for (const { line, row, city } of valid) {
       try {
         const displayName = `${row.ownerFirstName} ${row.ownerLastName}`;
         const { user, created } = await getOrCreateAuthUser({ email: row.ownerEmail, displayName });
         const uid = user.uid;
+        if (!merchantDefaultsByCity.has(city.id)) merchantDefaultsByCity.set(city.id, await loadMerchantDefaults(city.countryId, city.id));
+        const merchantDefaults = merchantDefaultsByCity.get(city.id)!;
         if (!zonesByCity.has(city.id)) {
           const zs = await db.collection(COLLECTIONS.zones).where('cityId', '==', city.id).get();
           zonesByCity.set(city.id, zs.docs.map((d) => ({ ...(d.data() as Zone), id: d.id })));
@@ -176,6 +186,7 @@ export const importRestaurants = acteursCallable(
           email: row.email,
           cuisineIds: row.cuisineIds ?? [],
           createdBy: caller.uid,
+          merchantDefaults,
         });
         const legal = newLegalDoc({
           legalName: row.legalName || row.name,
@@ -207,7 +218,7 @@ export const importRestaurants = acteursCallable(
           partnerTermsAcceptedAt: null,
           ...marker,
         });
-        batch.set(ref.collection(SUBCOLLECTIONS.restaurants.settings).doc(RESTAURANT_SETTINGS_DOCS.orders), { ...newOrderSettings(caller.uid), ...marker });
+        batch.set(ref.collection(SUBCOLLECTIONS.restaurants.settings).doc(RESTAURANT_SETTINGS_DOCS.orders), { ...newOrderSettings(caller.uid, merchantDefaults), ...marker });
         batch.set(ref.collection(SUBCOLLECTIONS.restaurants.settings).doc(RESTAURANT_SETTINGS_DOCS.hours), { ...hours, ...marker });
         batch.set(ref.collection(SUBCOLLECTIONS.restaurants.members).doc(uid), {
           ...ownerMemberDoc({ uid, restaurantId: ref.id, displayName, email: row.ownerEmail }),

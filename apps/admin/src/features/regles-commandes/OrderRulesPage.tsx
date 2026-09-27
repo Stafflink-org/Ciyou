@@ -79,6 +79,7 @@ const FIELD_LABELS: Record<string, string> = {
   autoPause: 'Pause automatique',
   merchantInactivity: 'Inactivité des commerces',
   defaultPrepMinutes: 'Préparation par défaut',
+  merchantDefaults: 'Valeurs initiales d’un nouveau commerce',
   maxPrepExtensionMinutes: 'Allongement maximal',
   customerCancellation: 'Annulation par le client',
   refundLiability: 'Imputation des remboursements',
@@ -98,6 +99,7 @@ const EDITABLE: Key[] = [
   'autoPause',
   'merchantInactivity',
   'defaultPrepMinutes',
+  'merchantDefaults',
   'maxPrepExtensionMinutes',
   'customerCancellation',
   'refundLiability',
@@ -226,6 +228,31 @@ export function OrderRulesPage() {
                 </FormField>
                 <FormField label="Allongement maximal">
                   <UnitInput value={draft.maxPrepExtensionMinutes} onChange={(v) => v !== null && set('maxPrepExtensionMinutes', v)} unit="min" min={0} max={120} disabled={!editable} />
+                </FormField>
+              </div>
+            </Section>
+
+            <Section
+              icon={<Store />}
+              title="Valeurs initiales d’un nouveau commerce"
+              description="Reprises à l’inscription d’un commerce et par le bouton « Réinitialiser » de son back-office ; il peut ensuite les ajuster lui-même."
+              badge={badge(['merchantDefaults'])}
+            >
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <FormField label="Préparation">
+                  <UnitInput value={draft.merchantDefaults?.prepMinutes ?? DEFAULT_ORDER_RULES.merchantDefaults!.prepMinutes} onChange={(v) => v !== null && set('merchantDefaults', { ...(draft.merchantDefaults ?? DEFAULT_ORDER_RULES.merchantDefaults!), prepMinutes: v })} unit="min" min={5} max={120} disabled={!editable} />
+                </FormField>
+                <FormField label="Capacité simultanée">
+                  <UnitInput value={draft.merchantDefaults?.maxConcurrentOrders ?? DEFAULT_ORDER_RULES.merchantDefaults!.maxConcurrentOrders} onChange={(v) => v !== null && set('merchantDefaults', { ...(draft.merchantDefaults ?? DEFAULT_ORDER_RULES.merchantDefaults!), maxConcurrentOrders: v })} unit="cmd" min={1} max={999} disabled={!editable} />
+                </FormField>
+                <FormField label="Minimum de commande">
+                  <EuroInput value={draft.merchantDefaults?.minOrderCents ?? DEFAULT_ORDER_RULES.merchantDefaults!.minOrderCents} onChange={(v) => v !== null && set('merchantDefaults', { ...(draft.merchantDefaults ?? DEFAULT_ORDER_RULES.merchantDefaults!), minOrderCents: v })} disabled={!editable} />
+                </FormField>
+                <FormField label="Préavis programmé minimum">
+                  <UnitInput value={draft.merchantDefaults?.scheduledLeadMinutes ?? DEFAULT_ORDER_RULES.merchantDefaults!.scheduledLeadMinutes} onChange={(v) => v !== null && set('merchantDefaults', { ...(draft.merchantDefaults ?? DEFAULT_ORDER_RULES.merchantDefaults!), scheduledLeadMinutes: v })} unit="min" min={10} max={1440} disabled={!editable} />
+                </FormField>
+                <FormField label="Horizon programmé maximum">
+                  <UnitInput value={draft.merchantDefaults?.scheduledMaxDays ?? DEFAULT_ORDER_RULES.merchantDefaults!.scheduledMaxDays} onChange={(v) => v !== null && set('merchantDefaults', { ...(draft.merchantDefaults ?? DEFAULT_ORDER_RULES.merchantDefaults!), scheduledMaxDays: v })} unit="jours" min={1} max={60} disabled={!editable} />
                 </FormField>
               </div>
             </Section>

@@ -29,6 +29,7 @@ import { fail } from '../lib/errors';
 import { getCaller } from '../lib/permissions';
 import {
   defaultWeeklyHours,
+  loadMerchantDefaults,
   newCommercialDoc,
   newLegalDoc,
   newOrderSettings,
@@ -201,6 +202,7 @@ export const restaurantSignup = callable(
     };
     const terms = await currentTermsVersion(countryId);
     const managerName = `${data.owner.firstName} ${data.owner.lastName}`;
+    const merchantDefaults = await loadMerchantDefaults(countryId, city.id);
 
     const restaurantRef = db.collection(COLLECTIONS.restaurants).doc();
     const restaurant = newRestaurantDoc({
@@ -217,6 +219,7 @@ export const restaurantSignup = callable(
       description: data.restaurant.description ?? null,
       cuisineIds: data.restaurant.cuisineIds,
       createdBy: uid,
+      merchantDefaults,
     });
     const hours: RestaurantHours = { ...defaultWeeklyHours(city.timezone), updatedAt: Timestamp.now(), updatedBy: uid };
     const now = Timestamp.now();
@@ -263,7 +266,7 @@ export const restaurantSignup = callable(
         termsVersion: terms.version,
       }),
     );
-    batch.set(restaurantRef.collection(SUBCOLLECTIONS.restaurants.settings).doc(RESTAURANT_SETTINGS_DOCS.orders), newOrderSettings(uid));
+    batch.set(restaurantRef.collection(SUBCOLLECTIONS.restaurants.settings).doc(RESTAURANT_SETTINGS_DOCS.orders), newOrderSettings(uid, merchantDefaults));
     batch.set(restaurantRef.collection(SUBCOLLECTIONS.restaurants.settings).doc(RESTAURANT_SETTINGS_DOCS.hours), hours);
     batch.set(
       restaurantRef.collection(SUBCOLLECTIONS.restaurants.members).doc(uid),

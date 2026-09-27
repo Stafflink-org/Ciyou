@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router';
-import { Bike, CalendarClock, Clock3, Gauge, Package, Printer, Settings2, Utensils, Zap } from 'lucide-react';
+import { Bike, CalendarClock, Clock3, Gauge, Package, Printer, RotateCcw, Settings2, Utensils, Zap } from 'lucide-react';
 import {
   Button,
   FormField,
@@ -13,9 +13,20 @@ import {
   Textarea,
   formatEUR,
 } from '@golink/ui';
-import { FULFILLMENT_LABELS, formatBps, type RestaurantOrderSettings } from '@golink/shared';
+import {
+  COLLECTIONS,
+  FULFILLMENT_LABELS,
+  SETTINGS_DOCS,
+  formatBps,
+  resolveMerchantDefaults,
+  type City,
+  type Country,
+  type OrderRules,
+  type OrderRulesSettings,
+  type RestaurantOrderSettings,
+} from '@golink/shared';
 import { useRestaurantAccess } from '@/auth/RestaurantAccess';
-import { errorMessage, useMutation } from '@/lib/firestore';
+import { docAt, errorMessage, useDoc, useMutation } from '@/lib/firestore';
 import { updateRestaurantSettings, type OrdersInput } from '../parametres/kit/api';
 import { useConfigLimits, useDraft, useRestaurantSettings, useUnsavedGuard } from '../parametres/kit/hooks';
 import { IntegerInput, MoneyInput } from '../parametres/kit/inputs';
@@ -55,6 +66,15 @@ export function ReglagesCommandesPage() {
   const { restaurant, restaurantId } = useRestaurantAccess();
   const settings = useRestaurantSettings<RestaurantOrderSettings>('orders');
   const limits = useConfigLimits();
+
+  // Valeurs initiales (H3) : plateforme, puis pays, puis ville — pour le bouton « Réinitialiser ».
+  const platformRules = useDoc<OrderRulesSettings>(docAt(`${COLLECTIONS.settings}/${SETTINGS_DOCS.orderRules}`));
+  const countryRules = useDoc<Country>(docAt(`${COLLECTIONS.countries}/${restaurant.countryId}`));
+  const cityRules = useDoc<City>(docAt(`${COLLECTIONS.cities}/${restaurant.cityId}`));
+  const merchantDefaults = useMemo(
+    () => resolveMerchantDefaults(platformRules.data as Partial<OrderRules> | undefined, countryRules.data?.orderRules, cityRules.data?.orderRules),
+    [platformRules.data, countryRules.data, cityRules.data],
+  );
 
   const source = useMemo<Draft | null>(() => {
     if (settings.loading) return null;
@@ -242,7 +262,29 @@ export function ReglagesCommandesPage() {
           </RowList>
         </SettingsCard>
 
-        <SettingsCard icon={<Gauge />} title="Capacité et limites" description="Des garde-fous pour une cuisine sereine.">
+        <SettingsCard
+          icon={<Gauge />}
+          title="Capacité et limites"
+          description="Des garde-fous pour une cuisine sereine."
+          actions={
+            <Button
+              variant="ghost"
+              size="sm"
+              leftIcon={<RotateCcw />}
+              onClick={() =>
+                setDraft({
+                  prepMinutes: merchantDefaults.prepMinutes,
+                  maxConcurrentOrders: merchantDefaults.maxConcurrentOrders,
+                  minOrderCents: merchantDefaults.minOrderCents,
+                  scheduledLeadMinutes: merchantDefaults.scheduledLeadMinutes,
+                  scheduledMaxDays: merchantDefaults.scheduledMaxDays,
+                })
+              }
+            >
+              Réinitialiser aux valeurs Ciyou Eats
+            </Button>
+          }
+        >
           <div className="grid gap-5 sm:grid-cols-2">
             <FormField label="Commandes simultanées au maximum" hint="Au-delà, les nouvelles commandes sont mises en attente d’acceptation.">
               <IntegerInput value={draft.maxConcurrentOrders} min={1} max={100} unit="cmd" onChange={(v) => v !== null && setDraft({ maxConcurrentOrders: v })} />

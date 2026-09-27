@@ -245,7 +245,19 @@ export const SETTINGS_DOC_LABELS: Record<string, string> = {
   monitoring: 'Surveillance',
   dunning: 'Relances des impayés',
   crm: 'Prospection',
+  limits: 'Limites et seuils',
 };
+
+/**
+ * Limites et seuils techniques par défaut (repli documenté quand `settings/limits`
+ * n'existe pas encore) : mêmes chiffres qu'historiquement codés en dur dans les
+ * exports (`functions/src/admin/pilotage/exports.ts`, `functions/src/platform/audit-export.ts`)
+ * et l'import de commerces (`functions/src/admin/acteurs/import.ts`).
+ */
+export const DEFAULT_LIMITS_SETTINGS = {
+  exports: { csvMaxRows: 20_000, xlsxMaxRows: 20_000, pdfMaxRows: 3_000, auditMaxRows: 20_000, importMaxRows: 500 },
+  merchantCashAlertDays: 3,
+} as const;
 
 /** Politique de sécurité par défaut (double authentification obligatoire). */
 export const DEFAULT_SECURITY_POLICY = {

@@ -113,6 +113,13 @@ const orderRulesSchema = z
     autoPause: z.object({ enabled: z.boolean(), missedOrdersInARow: z.number().int().min(1).max(20) }),
     merchantInactivity: z.object({ enabled: z.boolean(), alertAfterDays: z.number().int().min(1).max(120), removeAfterAlertDays: z.number().int().min(1).max(365) }),
     defaultPrepMinutes: z.number().int().min(5).max(120),
+    merchantDefaults: z.object({
+      prepMinutes: z.number().int().min(5).max(120),
+      maxConcurrentOrders: z.number().int().min(1).max(999),
+      minOrderCents: cents,
+      scheduledLeadMinutes: z.number().int().min(10).max(1440),
+      scheduledMaxDays: z.number().int().min(1).max(60),
+    }),
     maxPrepExtensionMinutes: z.number().int().min(0).max(120),
     customerCancellation: z.object({ pending: stage, accepted: stage, preparing: stage, ready: stage, picked_up: stage }),
     refundLiability: z.record(
