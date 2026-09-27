@@ -1,0 +1,500 @@
+/*
+ * GoLink — thème partagé des back-offices (Tailwind CSS v4).
+ * Import unique côté application : @import "@golink/ui/styles.css";
+ * Thème piloté par attributs sur <html> :
+ *   data-theme="restaurant" (défaut, clair) | data-theme="admin" (sombre)
+ *   data-mode="dark" (mode sombre du thème restaurant)
+ * Référence complète : docs/DESIGN_SYSTEM.md
+ */
+@import "tailwindcss";
+@import "@fontsource-variable/dm-sans";
+@import "@fontsource-variable/space-grotesk";
+@import "@fontsource/dm-mono/400.css";
+@import "@fontsource/dm-mono/500.css";
+@import "./tokens.css";
+
+/* Composants du kit : Tailwind doit analyser leurs classes. */
+@source "../";
+
+@custom-variant dark (&:where([data-theme="admin"], [data-theme="admin"] *, [data-mode="dark"], [data-mode="dark"] *));
+
+@theme {
+  /* Palette resserrée : on retire les couleurs par défaut de Tailwind. */
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --color-cream-50: #fdfbf7;
+  --color-cream-100: #f8f4ec;
+  --color-cream-200: #f1eadd;
+  --color-cream-300: #e6dccb;
+  --color-cream-400: #d4c7b1;
+  --color-cream-500: #b6a78e;
+  --color-cream-600: #938670;
+  --color-cream-700: #6f6655;
+  --color-cream-800: #4d473c;
+  --color-cream-900: #312e28;
+  --color-cream-950: #1d1b18;
+
+  --color-petrol-50: #f0f6f6;
+  --color-petrol-100: #dbe8e8;
+  --color-petrol-200: #b9d1d2;
+  --color-petrol-300: #8eb2b4;
+  --color-petrol-400: #648f92;
+  --color-petrol-500: #497478;
+  --color-petrol-600: #3a5d62;
+  --color-petrol-700: #2e4b50;
+  --color-petrol-800: #243f44;
+  --color-petrol-900: #19343b;
+  --color-petrol-950: #0f2227;
+
+  --color-brand-50: #fef5f0;
+  --color-brand-100: #fde6da;
+  --color-brand-200: #fac9b2;
+  --color-brand-300: #f5a684;
+  --color-brand-400: #ef8b5f;
+  --color-brand-500: #e8784b;
+  --color-brand-600: #d45e30;
+  --color-brand-700: #b04824;
+  --color-brand-800: #8c3b22;
+  --color-brand-900: #72331f;
+  --color-brand-950: #3e170d;
+
+  --color-amber-50: #fef9ec;
+  --color-amber-100: #fcefcc;
+  --color-amber-200: #f8dd95;
+  --color-amber-300: #f3c75f;
+  --color-amber-400: #edb33d;
+  --color-amber-500: #e09b24;
+  --color-amber-600: #c47a1b;
+  --color-amber-700: #a2591a;
+  --color-amber-800: #84461c;
+  --color-amber-900: #6c3a1b;
+  --color-amber-950: #3e1d0a;
+
+  --color-sage-50: #f1f7f4;
+  --color-sage-100: #dcede4;
+  --color-sage-200: #bcdacb;
+  --color-sage-300: #92bfaa;
+  --color-sage-400: #67a087;
+  --color-sage-500: #4a846c;
+  --color-sage-600: #39705f;
+  --color-sage-700: #2f5a4c;
+  --color-sage-800: #28493f;
+  --color-sage-900: #223c35;
+  --color-sage-950: #11221d;
+
+  --color-ruby-50: #fdf2f1;
+  --color-ruby-100: #fbe2df;
+  --color-ruby-200: #f7c7c1;
+  --color-ruby-300: #f0a096;
+  --color-ruby-400: #e57465;
+  --color-ruby-500: #d6533f;
+  --color-ruby-600: #bf3f2e;
+  --color-ruby-700: #9f3226;
+  --color-ruby-800: #842d25;
+  --color-ruby-900: #6e2a24;
+  --color-ruby-950: #3c120f;
+
+  --color-azure-50: #f1f6fb;
+  --color-azure-100: #dfeaf5;
+  --color-azure-200: #c3d8ec;
+  --color-azure-300: #98bddf;
+  --color-azure-400: #6a9bcd;
+  --color-azure-500: #4a7fbb;
+  --color-azure-600: #3a66a0;
+  --color-azure-700: #315283;
+  --color-azure-800: #2d466b;
+  --color-azure-900: #293c59;
+  --color-azure-950: #1b263a;
+
+  --color-plum-50: #f8f4fa;
+  --color-plum-100: #efe6f3;
+  --color-plum-200: #e0cfe7;
+  --color-plum-300: #c9acd5;
+  --color-plum-400: #ae85bd;
+  --color-plum-500: #9467a5;
+  --color-plum-600: #7c5189;
+  --color-plum-700: #664270;
+  --color-plum-800: #55385d;
+  --color-plum-900: #48314e;
+  --color-plum-950: #2b1a2f;
+
+  --color-teal-50: #eefaf8;
+  --color-teal-100: #d5f2ed;
+  --color-teal-200: #aee4db;
+  --color-teal-300: #7ccfc3;
+  --color-teal-400: #4bb3a7;
+  --color-teal-500: #31968b;
+  --color-teal-600: #267970;
+  --color-teal-700: #22615b;
+  --color-teal-800: #1f4f4b;
+  --color-teal-900: #1d423f;
+  --color-teal-950: #0b2625;
+
+  --color-ink-50: #f4f6f6;
+  --color-ink-100: #e3e8e8;
+  --color-ink-200: #c6cfd0;
+  --color-ink-300: #9eacae;
+  --color-ink-400: #758689;
+  --color-ink-500: #58696c;
+  --color-ink-600: #445255;
+  --color-ink-700: #334043;
+  --color-ink-800: #243033;
+  --color-ink-900: #131c1f;
+  --color-ink-950: #0a1012;
+
+  /* Typographie */
+  --font-sans: "DM Sans Variable", "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk Variable", "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  --text-*: initial;
+  --text-3xs: 0.625rem;
+  --text-3xs--line-height: 0.875rem;
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.875rem;
+  --text-base--line-height: 1.375rem;
+  --text-md: 0.9375rem;
+  --text-md--line-height: 1.5rem;
+  --text-lg: 1.0625rem;
+  --text-lg--line-height: 1.625rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 2.375rem;
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: 2.75rem;
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 3.5rem;
+
+  --tracking-display: -0.035em;
+  --tracking-tight: -0.02em;
+  --tracking-eyebrow: 0.14em;
+
+  /* Rayons */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --radius-2xl: 18px;
+  --radius-3xl: 24px;
+
+  /* Largeurs utiles */
+  --container-page: 1440px;
+
+  /* Animations */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-fade-in: gl-fade-in 160ms var(--ease-out-soft);
+  --animate-fade-out: gl-fade-out 120ms ease-in;
+  --animate-pop-in: gl-pop-in 160ms var(--ease-out-soft);
+  --animate-pop-out: gl-pop-out 110ms ease-in;
+  --animate-dialog-in: gl-dialog-in 220ms var(--ease-out-soft);
+  --animate-dialog-out: gl-dialog-out 140ms ease-in;
+  --animate-sheet-right-in: gl-sheet-right-in 280ms var(--ease-out-soft);
+  --animate-sheet-right-out: gl-sheet-right-out 200ms ease-in;
+  --animate-sheet-left-in: gl-sheet-left-in 280ms var(--ease-out-soft);
+  --animate-sheet-left-out: gl-sheet-left-out 200ms ease-in;
+  --animate-sheet-bottom-in: gl-sheet-bottom-in 280ms var(--ease-out-soft);
+  --animate-sheet-bottom-out: gl-sheet-bottom-out 200ms ease-in;
+  --animate-shimmer: gl-shimmer 1.6s ease-in-out infinite;
+  --animate-rise: gl-rise 420ms var(--ease-out-soft) both;
+
+  @keyframes gl-fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes gl-fade-out { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes gl-pop-in { from { opacity: 0; transform: translateY(-4px) scale(0.98); } to { opacity: 1; transform: none; } }
+  @keyframes gl-pop-out { from { opacity: 1; } to { opacity: 0; transform: scale(0.98); } }
+  @keyframes gl-dialog-in { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: none; } }
+  @keyframes gl-dialog-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(4px) scale(0.98); } }
+  @keyframes gl-sheet-right-in { from { transform: translateX(calc(100% * var(--gl-dir, 1))); } to { transform: none; } }
+  @keyframes gl-sheet-right-out { from { transform: none; } to { transform: translateX(calc(100% * var(--gl-dir, 1))); } }
+  @keyframes gl-sheet-left-in { from { transform: translateX(calc(-100% * var(--gl-dir, 1))); } to { transform: none; } }
+  @keyframes gl-sheet-left-out { from { transform: none; } to { transform: translateX(calc(-100% * var(--gl-dir, 1))); } }
+  @keyframes gl-sheet-bottom-in { from { transform: translateY(100%); } to { transform: none; } }
+  @keyframes gl-sheet-bottom-out { from { transform: none; } to { transform: translateY(100%); } }
+  @keyframes gl-shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+  @keyframes gl-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+}
+
+/* Couleurs sémantiques : valeurs définies par thème dans tokens.css. */
+@theme inline {
+  --color-canvas: var(--gl-canvas);
+  --color-surface: var(--gl-surface);
+  --color-surface-2: var(--gl-surface-2);
+  --color-surface-3: var(--gl-surface-3);
+  --color-elevated: var(--gl-elevated);
+  --color-border: var(--gl-border);
+  --color-border-strong: var(--gl-border-strong);
+  --color-fg: var(--gl-fg);
+  --color-fg-muted: var(--gl-fg-muted);
+  --color-fg-subtle: var(--gl-fg-subtle);
+  --color-primary: var(--gl-primary);
+  --color-primary-hover: var(--gl-primary-hover);
+  --color-primary-fg: var(--gl-primary-fg);
+  --color-primary-soft: var(--gl-primary-soft);
+  --color-primary-soft-fg: var(--gl-primary-soft-fg);
+  --color-contrast: var(--gl-contrast);
+  --color-contrast-hover: var(--gl-contrast-hover);
+  --color-contrast-fg: var(--gl-contrast-fg);
+  --color-danger: var(--gl-danger);
+  --color-danger-hover: var(--gl-danger-hover);
+  --color-danger-fg: var(--gl-danger-fg);
+  --color-danger-soft: var(--gl-danger-soft);
+  --color-danger-soft-fg: var(--gl-danger-soft-fg);
+  --color-success: var(--gl-success);
+  --color-warning: var(--gl-warning);
+  --color-info: var(--gl-info);
+  --color-ring: var(--gl-ring);
+  --color-overlay: var(--gl-overlay);
+  --color-sidebar: var(--gl-sidebar);
+  --color-sidebar-fg: var(--gl-sidebar-fg);
+  --color-sidebar-muted: var(--gl-sidebar-muted);
+  --color-sidebar-hover: var(--gl-sidebar-hover);
+  --color-sidebar-active: var(--gl-sidebar-active);
+  --color-sidebar-border: var(--gl-sidebar-border);
+  --color-chart-1: var(--gl-chart-1);
+  --color-chart-2: var(--gl-chart-2);
+  --color-chart-3: var(--gl-chart-3);
+  --color-chart-4: var(--gl-chart-4);
+  --color-chart-5: var(--gl-chart-5);
+  --color-chart-6: var(--gl-chart-6);
+
+  --shadow-xs: var(--gl-shadow-xs);
+  --shadow-sm: var(--gl-shadow-sm);
+  --shadow-card: var(--gl-shadow-card);
+  --shadow-md: var(--gl-shadow-md);
+  --shadow-lg: var(--gl-shadow-lg);
+  --shadow-xl: var(--gl-shadow-xl);
+}
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--gl-border);
+  }
+
+  /* Zéro débordement : un enfant de grille ou de flex ne doit jamais imposer sa largeur
+     intrinsèque (tableau, mot long, image) à son conteneur. Les utilitaires min-w-* l'emportent. */
+  .grid > *,
+  .inline-grid > * {
+    min-width: 0;
+  }
+  /* Tableau empilé en cartes (posé par le composant Table quand il déborderait). */
+  [data-stacked] table,
+  [data-stacked] tbody,
+  [data-stacked] tfoot {
+    display: block;
+    width: 100%;
+    min-width: 0 !important;
+  }
+  [data-stacked] thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  [data-stacked] tr {
+    display: block;
+    border-bottom: 1px solid var(--gl-border);
+    padding: 0.5rem 1rem;
+  }
+  [data-stacked] tbody tr:last-child {
+    border-bottom: 0;
+  }
+  [data-stacked] td,
+  [data-stacked] th {
+    display: flex;
+    min-width: 0;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    height: auto;
+    padding: 0.25rem 0 !important;
+    text-align: end !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    min-width: 0 !important;
+  }
+  [data-stacked] td[data-label]:not([data-label=''])::before {
+    content: attr(data-label);
+    flex: none;
+    max-width: 45%;
+    text-align: start;
+    font-size: 0.75rem;
+    color: var(--gl-fg-subtle, currentColor);
+    opacity: 0.75;
+  }
+  [data-stacked] td * {
+    white-space: normal !important;
+  }
+  [data-stacked] td > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+  [data-stacked] td[colspan] {
+    display: block;
+    text-align: center !important;
+  }
+  .inline-flex {
+    max-width: 100%;
+  }
+  .flex-wrap > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+  /* Liste à défilement vertical : jamais de barre horizontale parasite. */
+  .overflow-y-auto:not(.overflow-x-auto):not(.overflow-auto) {
+    overflow-x: clip;
+  }
+  [class*='line-clamp-'] {
+    overflow-wrap: anywhere;
+  }
+  img,
+  video,
+  canvas,
+  svg:not([width]) {
+    max-width: 100%;
+  }
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  li,
+  dd,
+  dt,
+  td,
+  th,
+  label {
+    overflow-wrap: break-word;
+  }
+
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  html[data-theme="admin"],
+  html[data-mode="dark"] {
+    color-scheme: dark;
+  }
+
+  body {
+    min-height: 100dvh;
+    background: var(--gl-canvas);
+    color: var(--gl-fg);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Direction : --gl-dir inverse les animations de panneaux latéraux en arabe (RTL). */
+  :root { --gl-dir: 1; }
+  :root[dir="rtl"] { --gl-dir: -1; }
+
+  /* Arabe : police système lisible et aucun espacement de lettres (il casserait la liaison des lettres). */
+  html[lang="ar"] body,
+  html[lang="ar"] h1,
+  html[lang="ar"] h2,
+  html[lang="ar"] h3,
+  html[lang="ar"] h4 {
+    font-family: "Segoe UI", Tahoma, "Noto Sans Arabic", "Noto Naskh Arabic", "Geeza Pro", system-ui, sans-serif;
+    letter-spacing: 0;
+    font-feature-settings: normal;
+  }
+  html[lang="ar"] .tracking-eyebrow { letter-spacing: 0; text-transform: none; }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: var(--tracking-tight);
+    font-weight: 600;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--gl-ring);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--gl-selection);
+  }
+
+  /* Barres de défilement discrètes */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--gl-border-strong) transparent;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 1ms !important;
+      transition-duration: 1ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Tons sémantiques : fixent --tone-fg / --tone-bg / --tone-border / --tone-solid,
+     consommés par Badge, StatusPill, StatCard, Timeline… */
+  .tone-neutral { --tone-fg: var(--gl-fg-muted); --tone-bg: var(--gl-surface-3); --tone-border: var(--gl-border); --tone-solid: var(--color-petrol-400); }
+  .tone-brand { --tone-fg: var(--color-brand-700); --tone-bg: var(--color-brand-50); --tone-border: var(--color-brand-200); --tone-solid: var(--color-brand-500); }
+  .tone-amber { --tone-fg: var(--color-amber-800); --tone-bg: var(--color-amber-50); --tone-border: var(--color-amber-200); --tone-solid: var(--color-amber-500); }
+  .tone-success { --tone-fg: var(--color-sage-700); --tone-bg: var(--color-sage-50); --tone-border: var(--color-sage-200); --tone-solid: var(--color-sage-500); }
+  .tone-danger { --tone-fg: var(--color-ruby-700); --tone-bg: var(--color-ruby-50); --tone-border: var(--color-ruby-200); --tone-solid: var(--color-ruby-500); }
+  .tone-info { --tone-fg: var(--color-azure-700); --tone-bg: var(--color-azure-50); --tone-border: var(--color-azure-200); --tone-solid: var(--color-azure-500); }
+  .tone-plum { --tone-fg: var(--color-plum-700); --tone-bg: var(--color-plum-50); --tone-border: var(--color-plum-200); --tone-solid: var(--color-plum-500); }
+  .tone-teal { --tone-fg: var(--color-teal-700); --tone-bg: var(--color-teal-50); --tone-border: var(--color-teal-200); --tone-solid: var(--color-teal-500); }
+
+  :where([data-theme="admin"], [data-mode="dark"]) .tone-brand { --tone-fg: var(--color-brand-300); --tone-bg: color-mix(in oklab, var(--color-brand-500) 15%, transparent); --tone-border: color-mix(in oklab, var(--color-brand-400) 30%, transparent); --tone-solid: var(--color-brand-400); }
+  :where([data-theme="admin"], [data-mode="dark"]) .tone-amber { --tone-fg: var(--color-amber-300); --tone-bg: color-mix(in oklab, var(--color-amber-500) 14%, transparent); --tone-border: color-mix(in oklab, var(--color-amber-400) 28%, transparent); --tone-solid: var(--color-amber-400); }
+  :where([data-theme="admin"], [data-mode="dark"]) .tone-success { --tone-fg: var(--color-sage-300); --tone-bg: color-mix(in oklab, var(--color-sage-500) 18%, transparent); --tone-border: color-mix(in oklab, var(--color-sage-400) 30%, transparent); --tone-solid: var(--color-sage-400); }
+  :where([data-theme="admin"], [data-mode="dark"]) .tone-danger { --tone-fg: var(--color-ruby-300); --tone-bg: color-mix(in oklab, var(--color-ruby-500) 16%, transparent); --tone-border: color-mix(in oklab, var(--color-ruby-400) 30%, transparent); --tone-solid: var(--color-ruby-400); }
+  :where([data-theme="admin"], [data-mode="dark"]) .tone-info { --tone-fg: var(--color-azure-300); --tone-bg: color-mix(in oklab, var(--color-azure-500) 18%, transparent); --tone-border: color-mix(in oklab, var(--color-azure-400) 30%, transparent); --tone-solid: var(--color-azure-400); }
+  :where([data-theme="admin"], [data-mode="dark"]) .tone-plum { --tone-fg: var(--color-plum-300); --tone-bg: color-mix(in oklab, var(--color-plum-500) 18%, transparent); --tone-border: color-mix(in oklab, var(--color-plum-400) 30%, transparent); --tone-solid: var(--color-plum-400); }
+  :where([data-theme="admin"], [data-mode="dark"]) .tone-teal { --tone-fg: var(--color-teal-300); --tone-bg: color-mix(in oklab, var(--color-teal-500) 16%, transparent); --tone-border: color-mix(in oklab, var(--color-teal-400) 30%, transparent); --tone-solid: var(--color-teal-400); }
+  :where([data-theme="admin"], [data-mode="dark"]) .tone-neutral { --tone-solid: var(--color-ink-400); }
+}
+
+/* Sur-titre typographique (eyebrow) */
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-3xs);
+  line-height: var(--text-3xs--line-height);
+  font-weight: 500;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--gl-fg-subtle);
+}
+
+/* Chiffres alignés */
+@utility num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Recharts : on neutralise le contour de focus des surfaces SVG. */
+.recharts-wrapper *:focus {
+  outline: none;
+}
