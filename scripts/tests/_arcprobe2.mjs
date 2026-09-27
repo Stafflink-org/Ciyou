@@ -1,0 +1,15 @@
+import { readFileSync } from 'node:fs';
+import puppeteer from 'puppeteer-core';
+const accounts = readFileSync('.test-accounts.local.md', 'utf8');
+const [email, path, js] = process.argv.slice(2);
+const password = [...accounts.matchAll(/\|\s*`([^`]+)`\s*\|\s*`([^`]+)`\s*\|/g)].find((m) => m[1] === email)?.[2];
+const b = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
+const p = await b.newPage();
+await p.setViewport({ width: Number(process.env.W ?? 1440), height: 900 });
+await p.goto('http://localhost:5402/connexion', { waitUntil: 'networkidle0' });
+await p.type('input[type=email]', email); await p.type('input[autocomplete=current-password]', password);
+await p.click('button[type=submit]'); await p.waitForFunction(() => location.pathname !== '/connexion');
+await p.goto('http://localhost:5402' + path, { waitUntil: 'networkidle2' });
+await new Promise((r) => setTimeout(r, 5000));
+console.log(JSON.stringify(await p.evaluate(js), null, 1));
+await b.close();

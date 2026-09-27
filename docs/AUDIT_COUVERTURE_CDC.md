@@ -1,0 +1,2297 @@
+# Audit de couverture du cahier super admin (31 rubriques)
+
+Date : 26/09/2026. Cartographie seule : aucun correctif n'a été appliqué pendant cet audit.
+
+**Recomptage du 27/09/2026 (tâche `final-control-admin`)** : entre le 26/09 et le 27/09, quatre tâches (`cdc-fix-b`, `cdc-fix-c`, `cdc-fix-d`, `cdc-fix-e`) ont corrigé une grande partie des trous listés ci-dessous et l'ont documenté ligne à ligne dans les annexes B à M (statuts « corrigé » directement dans les lignes du tableau, tests réels à l'appui). Le tableau du §3 ci-dessous a été recompté à partir de ces lignes corrigées (et, pour §28 à §31, à partir des corrections `cdc-fix-e` §5 qui n'avaient pas encore été reportées dans l'annexe H). **Limite connue** : les phrases « Bilan §X » à la fin de chaque annexe et les totaux « Bilan global » (G1, G3, G4) n'ont, eux, pas tous été resynchronisés avec les lignes corrigées qu'ils suivent (plusieurs sont restés à leur valeur d'avant correctif) ; le tableau du §3 ci-dessous est la source à jour, pas ces phrases de bilan. Une passe de nettoyage de ces phrases (et de l'annexe H) est notée en dette dans `docs/ETAT_AVANCEMENT.md`.
+
+Sources auditées : `golink-maquette/specs/super-admin/cahier-fonctionnalites-client.txt` (31 rubriques, 166 lignes de fonctionnalités, plusieurs éléments par cellule), `questions-reponses-client.txt` (36 réponses), `docs/DECISIONS_CLIENT.md` (fait foi), et les 7 choix de l'annexe du cahier (8 questions en réalité). Code lu : `apps/admin/src/features/*`, `apps/restaurant`, `apps/client`, `apps/driver`, `functions/src/**`, `firebase/rules`, `packages/shared`. Données lues en lecture seule sur `golink-9f16d`.
+
+## 1. Méthode et niveau de preuve
+
+- **Statuts.** COMPLET : atteignable depuis le menu, lit des données réelles, écrit via une Cloud Function qui vérifie le droit et journalise l'audit avec motif quand l'action est sensible, valeurs chiffrées réglables, automatisme réellement présent côté serveur. PARTIEL : existe mais un élément nommé du cahier manque ou n'est pas branché. ABSENT : rien. FAUX : l'écran ou le réglage existe mais est trompeur, sans effet, ou cassé.
+- **Code** : chaque ligne du cahier a été lue dans le code (composant, hook, callable exportée, trigger, règles Firestore). La colonne « Où » et « Preuve » de chaque matrice cite fichiers et fonctions.
+- **Interface réelle** : navigateur Chrome (puppeteer, headless, 1440 px) sur un serveur de développement local branché sur la vraie base `golink-9f16d`, 80 routes de l'admin visitées avec 4 comptes de test (finance, metz, support, commercial), onglets cliqués, console et réponses HTTP relevées. Résultats en annexe A.
+- **Limite importante (2FA)** : le compte `superadmin@golink.test` a la double authentification TOTP activée (enrôlé pendant une recette précédente) ; le code TOTP n'est pas accessible et la double authentification n'a volontairement pas été contournée ni désactivée. Conséquence : les pages réservées au super admin (`/plateforme/*`, `/alertes/seuils`, écrans d'édition, `/affichage/*`, `/zones` en édition, `/fidelite`…) ne sont pas vérifiées en interface dans ce rapport. Elles sont marquées « UI non vérifiée en superadmin » et s'appuient sur le code, les données et les recettes antérieures.
+- Aucune écriture n'a été faite : ni action métier réelle dans l'interface (parcours de lecture seulement), ni écriture Firestore.
+
+## 2. Verdict
+
+Le back-office super admin est **largement construit côté écrans et côté serveur** (31 rubriques atteignables, 138+ fonctions d'administration, 29+ tâches planifiées, audit sur la quasi-totalité des fonctions sensibles), et **après les quatre lots de correctifs `cdc-fix-b/c/d/e` (26-27/09/2026), le cahier est couvert à 101/166 lignes en COMPLET, 65 en PARTIEL, 0 en ABSENT et 0 en FAUX** (voir la synthèse chiffrée recomptée). Les trous qui restent (65 lignes PARTIEL) sont presque tous liés à une seule cause structurelle :
+
+1. **Les apps client et livreur n'existent toujours pas** (`apps/client` et `apps/driver` = coquilles vides). C'est désormais la cause dominante des lignes encore PARTIEL : inscription livreur autonome, contestation de sanction, position en direct, chat et tickets côté client, classement et mention « Sponsorisé » réellement affichés, fermeture d'urgence de zone reçue par le client, capture de consentements/cookies, saisie d'un code de parrainage. Les contrats attendus de ces apps sont documentés dans `docs/CONTRATS_APPS_MOBILES.md`.
+2. **Résiduel des correctifs `cdc-fix-b/c/d/e`** : quelques réglages ciblés restent enregistrés sans être pleinement appliqués (limites de formule d'abonnement, prestataire de paiement local Algérie/Maroc/Tunisie, mention légale des relevés livreurs par pays, quelques constantes métier non réglables listées en fin de chaque annexe) — voir le détail P1/P2 de l'annexe J.
+3. **Légal/RGPD (§29)** reste la rubrique la plus faible (6 lignes, toutes encore PARTIEL) : réacceptation forcée des CGU limitée au client (pas au restaurant/livreur), pas de bandeau cookies, effacement RGPD encore partiel pour restaurant/livreur.
+
+## 3. Synthèse chiffrée par rubrique (niveau ligne du cahier)
+
+Une ligne du cahier = une ligne de tableau « Fonctionnalité » du PDF. Le statut d'une ligne est le plus défavorable de ses éléments ; le détail élément par élément est dans les matrices (annexes B à H).
+
+| § | Rubrique | Lignes | COMPLET | PARTIEL | ABSENT | FAUX |
+|---|---|---:|---:|---:|---:|---:|
+| 1 | Tableau de bord global | 6 | 2 | 4 | 0 | 0 |
+| 2 | Recherche globale | 2 | 1 | 1 | 0 | 0 |
+| 3 | Analytics | 6 | 3 | 3 | 0 | 0 |
+| 4 | Rapports et exports | 2 | 0 | 2 | 0 | 0 |
+| 5 | Gestion des restaurants | 17 | 10 | 7 | 0 | 0 |
+| 6 | Gestion des livreurs | 11 | 5 | 6 | 0 | 0 |
+| 7 | Gestion des clients | 6 | 5 | 1 | 0 | 0 |
+| 8 | Commandes, vision globale | 4 | 2 | 2 | 0 | 0 |
+| 9 | Règles automatiques des commandes | 9 | 8 | 1 | 0 | 0 |
+| 10 | Zones et villes | 6 | 4 | 2 | 0 | 0 |
+| 11 | Affichage dans l'app client | 5 | 3 | 2 | 0 | 0 |
+| 12 | Avis et notes | 4 | 2 | 2 | 0 | 0 |
+| 13 | Support et litiges | 8 | 4 | 4 | 0 | 0 |
+| 14 | Paiements | 6 | 4 | 2 | 0 | 0 |
+| 15 | Finance et reversements | 8 | 4 | 4 | 0 | 0 |
+| 16 | Facturation et TVA | 8 | 4 | 4 | 0 | 0 |
+| 17 | Abonnements et commissions | 5 | 3 | 2 | 0 | 0 |
+| 18 | Promotions | 7 | 6 | 1 | 0 | 0 |
+| 19 | Fidélité et parrainage | 3 | 1 | 2 | 0 | 0 |
+| 20 | Notifications et communication | 5 | 4 | 1 | 0 | 0 |
+| 21 | Acquisition commerciale (CRM) | 2 | 1 | 1 | 0 | 0 |
+| 22 | Paramètres plateforme | 4 | 2 | 2 | 0 | 0 |
+| 23 | Multi-pays | 1 | 1 | 0 | 0 | 0 |
+| 24 | Activation des fonctionnalités | 2 | 2 | 0 | 0 | 0 |
+| 25 | Connexions logiciels externes | 2 | 2 | 0 | 0 | 0 |
+| 26 | Administrateurs internes | 5 | 4 | 1 | 0 | 0 |
+| 27 | Sécurité et journal d'audit | 4 | 4 | 0 | 0 | 0 |
+| 28 | Lutte contre la fraude | 5 | 5 | 0 | 0 | 0 |
+| 29 | Légal, RGPD et conformité | 6 | 0 | 6 | 0 | 0 |
+| 30 | Santé et maintenance | 4 | 3 | 1 | 0 | 0 |
+| 31 | Données et sauvegardes | 3 | 2 | 1 | 0 | 0 |
+| | **TOTAL** | **166** | **101** | **65** | **0** | **0** |
+
+**Comment ce recomptage a été fait (27/09/2026)** : chaque annexe (B à H) contient déjà, ligne par ligne, l'ancien statut et le nouveau statut « corrigé » avec le nom du correctif (`cdc-fix-b/c/d/e`) et la preuve de test réel. Ce tableau reprend le statut **le plus défavorable des éléments d'une ligne, après correctif** (même règle que l'audit initial). Pour §28-31, les correctifs `cdc-fix-e` (listés en section 5 ci-dessous, P0 n° 26 à 34) n'avaient pas encore été reportés dans l'annexe H : c'est fait ici. Detail des lignes encore PARTIEL : voir chaque annexe, colonne « Statut », et les listes « Trous » en fin de chaque rubrique (P1/P2 essentiellement liés à l'absence des apps client/livreur). Les 3 anciennes lignes FAUX (§14 espèces, §17 commissions et impayés) et l'ABSENT (§25) ont tous été refermés par `cdc-fix-c`/`cdc-fix-d`.
+
+Notes : (1) §5 compte en plus une ligne hors cahier mais décidée par le client, la validation automatique des commerces : était ABSENTE (question n° 18 du questionnaire), **CORRIGÉE (cdc-fix-b)** → COMPLET (`restaurant/auto-validation.ts`, test réel `validation`). (2) §9 compte hors cahier deux règles décidées par le client (inactivité 15 j/30 j, fenêtre de réclamation), étaient FAUSSES, **CORRIGÉES (cdc-fix-b)** → COMPLET (`restaurant/lifecycle.ts`, `orders/claims.ts`, tests réels `inactivity`/`claims`). (3) Au niveau des éléments détaillés (sous-lignes), les matrices comptent encore plus de PARTIEL que ce tableau (le statut de ligne retient le plus défavorable), et les réserves P1/P2 listées dans chaque annexe restent valables même sur une ligne devenue COMPLET.
+
+**Réponses du questionnaire (36)** : à l'audit initial, 12 COMPLET, 19 PARTIEL, 2 ABSENT (n° 14 validation automatique, n° 31 photo de réclamation), 3 FAUX (n° 11 impayés, n° 18 inactivité, n° 25 client absent). Les 3 FAUX et les 2 ABSENT ont depuis été corrigés (`cdc-fix-b` pour validation automatique/inactivité/photo de réclamation, `cdc-fix-c` pour les impayés — voir §17) : en l'état, ces 5 réponses sont COMPLET ou PARTIEL selon le même détail que les lignes correspondantes du tableau ci-dessus. Détail original à l'annexe I, volet 1 (non retotalisé ligne à ligne dans cette passe, par manque de temps : voir dette en fin de document).
+
+## 4. Principes transverses (détail annexe I, volet 2)
+
+| Principe du cahier | Constat |
+|---|---|
+| Tout est automatique par défaut | 29 tâches planifiées, 21 déclencheurs et 1 webhook Stripe, tous exportés. Sur 35 automatismes attendus, 14 fonctionnent réellement et 14 sont absents ou inopérants (validation des commerces, inactivité, client absent, avoir de retard, produit indisponible, impayés, notifications clients, DAC7). |
+| Alerté, pas de surveillance | Détection par exception réelle (`detectAnomalies`, 1 min à 10 min), mais les alertes ne sont visibles que dans la console : jamais envoyées par e-mail, notification ou SMS. `unusual_login` et `failed_logins` sont du code mort. |
+| Tout se fait aussi en masse | Actions groupées réelles sur 5 listes seulement (restaurants, livreurs, clients, tickets, reversements), dont 3 côté serveur. Absentes sur commandes, avis, promotions, prospects, factures, annonces, etc. |
+| Action sensible tracée avec motif | 114 fonctions d'administration sur 138 écrivent un audit ; 5 sensibles n'en écrivent pas (`closeSupportChat`, `respondToTicket`, `logProspectActivity`, `respondToOffer`, `generateStatement`) ; 33 n'ont aucun champ de motif, 24 un motif seulement facultatif. Les règles Firestore autorisent en outre un administrateur à écrire directement dans une quarantaine de collections (`settings`, `featureFlags`, `adminRoles`, `plans`, `commissionRules`, `countries`, `restaurants`…) sans audit ni motif : contournement du principe et de la 2FA (P0). |
+| Règles réglables sans développeur | La grande majorité des chiffres est un paramètre, mais une vingtaine de familles restent codées en dur (devise `EUR`, plafonds et fenêtres de campagne, seuils de tension livreurs, planchers d'alertes, « 30 jours » d'activité, délais de relance des pièces, commissions d'amorçage 30/15/12 % non décidées par le client…). |
+
+## 5. Trous prioritaires
+
+Légende : P0 = central pour le lancement ou bloque un principe du cahier (argent, automatisme, audit, obligation légale) ; P1 = important ; P2 = confort. Le détail chiffré, fichier par fichier, est dans les matrices ; les listes P1 et P2 exhaustives sont à l'annexe J.
+
+### P0 — Central (regroupés par thème)
+
+**A. Apps consommatrices absentes (bloque une trentaine de lignes)**
+1. App livreur (`apps/driver`) : inscription autonome, dépôt de documents et selfie, contestation de sanction, acceptation de course, position, encaissement espèces, compte de paiement Stripe. Sans elle, §6 (validation, blocage documentaire, sanctions, attribution, flotte), §14 espèces, §15 reversements livreurs et §28 fraude livreurs n'ont pas de source de données réelle.
+2. App client (`apps/client`) : classement et mention « Sponsorisé » (obligation légale, §11), fermeture d'urgence de zone, tickets et chat, consentements et cookies, réacceptation des CGU, parrainage, maintenance et version minimale, tunnel de commande (événements) (§3).
+3. Inscription autonome des commerces : `restaurantSignup` existe côté serveur mais aucun écran ne l'appelle ; limité à FR/LU (les 6 pays attendus : FR, BE, LU, DZ, MA, TN).
+
+**B. Automatismes décidés par le client, absents ou inopérants**
+4. Validation automatique des commerces (n° 14) : absente.
+5. Inactivité 15 j -> e-mail, 30 j -> retrait (n° 18) : aucun job.
+6. Client absent (n° 25) : aucun flux livreur, `closedAs` jamais écrit, personne n'est payé.
+7. Avoir automatique de retard (§9 « gestes automatiques ») : `computeLateCredit` n'est appelé nulle part.
+8. Produit indisponible (§9) : aucun flux de remplacement/retrait, `item.adjustment` jamais écrit.
+9. Photo obligatoire pour une réclamation avec détection automatique (n° 31) : absente.
+10. Messages automatiques (§20) : 18 gabarits éditables mais un seul est lu par le code ; `functions/src/notifications/index.ts` est vide ; aucune confirmation de commande ni « livreur en route » n'est envoyée. Écran trompeur.
+
+**C. Argent**
+11. Priorité de commission fausse (§17, questions 2-3) : le taux de formule masque les barèmes pays et ville ; le mode `subscription`/`hybrid` n'est pas pris en compte à la commande (« commission OU abonnement » inopérant).
+12. Impayés (§17, n° 11) : `attemptCharge` est un simulacre ; rien ne passe un abonnement en impayé ; restrictions jamais appliquées ; ni renouvellement ni conversion d'essai.
+13. Espèces (§14) : `cashBalanceCents` jamais alimenté, plafond jamais appliqué, modèle de suivi contraire à la décision (espèces = livreur salarié du commerce uniquement).
+14. Reversements livreurs impossibles en réel (pas de compte Stripe Connect livreur) ; reversements et paiements en `eur` uniquement, pas de prestataire local DZ/MA/TN ni de devises DZD/MAD/TND.
+15. Facture mensuelle jamais envoyée aux restaurants ; mention « réglé par compensation » fausse (l'abonnement et les mises en avant ne sont jamais retenus) ; remise d'offre spéciale sans date de fin.
+16. Tableau de bord : « Abonnements encaissés » additionne toutes les factures d'abonnement émises (aucun filtre payé), sur J-1/J-2 seulement, alors que l'écran indique « payées » ; reversements en échec absents de la file « à traiter ».
+17. Promotions sans code (12 sur 17 en base) jamais appliquées à une commande ; ciblage « inactifs » et « fidèles » non appliqué ; utilisation de promo non libérée à l'annulation.
+18. Portefeuille non dépensable à la commande (`walletAppliedCents` codé à 0) : avoirs et récompenses de parrainage invisibles pour le client.
+19. Parrainage : aucun parcours de création (lien/code, `referrals`) ; les 100 € de budget publicitaire (décision) sont inatteignables. Fidélité : aucun moteur de crédit/échange/expiration des points.
+
+**D. Sécurité et audit**
+20. Écritures directes autorisées par les règles Firestore aux administrateurs (`settings`, `featureFlags` y compris le verrou `alcohol_sales`, `adminRoles` = escalade de droits possible, `countries`, `integrations`, `plans`, `commissionRules`, `restaurants`…) : sans motif, sans audit, sans 2FA. Idem `platformAlerts` et `scheduledReports`.
+21. 2FA non obligatoire en pratique : `requireMfaForAdmins=false` en base, 1 administrateur sur 5 enrôlé, contrôle serveur limité aux fonctions `platform/*` (remboursements, exports, « voir comme » passent par `requireAdmin` sans test).
+22. Masquage des données personnelles seulement dans les écrans ; `maskPersonalData` du rôle non lu.
+23. Plafond de remboursement incohérent : `approvalThresholdCents` jamais lu ; `creditCustomer` ignore le plafond du rôle ; `creditFromTicket` permet l'auto-validation.
+24. `inviteAdmin` n'interdit pas un responsable de ville sans ville (liste vide = accès à tout).
+25. Interrupteurs de fonctionnalités (§24) sans effet réel : lus uniquement à la sauvegarde des réglages d'un commerce ; fidélité, promotions, suivi livreur, stock, multi-boutiques n'ont aucun lecteur ; pas de trigger de resynchronisation.
+
+**E. Fraude, RGPD, conformité, résilience**
+26. ✅ **CORRIGÉ (cdc-fix-e)** Liste de blocage (§28) : la fonction de contrôle n'est appelée ni à l'inscription ni à la commande ; les décisions (blocage, suspension, gel de reversement) sont seulement consignées. — `isBlocked` branché sur `onUserCreate` (client), `restaurantSignup` (commerce) et `placeOrder` (téléphone, e-mail, appareil, empreinte carte avant autorisation Stripe) ; `decideFraudCase` applique réellement `blocked`/`suspended`/`payout_hold` au compte (`functions/src/platform/fraud.ts applyFraudDecision`, `functions/src/core/users.ts`, `functions/src/core/signup.ts`, `functions/src/orders/place.ts`). Testé : `scripts/tests/cdc-fix-e.flow.mjs` (blocklist.*).
+27. ✅ **CORRIGÉ (cdc-fix-e)** Détecteurs de fraude : 3 lisent des champs inexistants (`disputeReason`, `redemptions`, `refunds.createdAt`) ; aucun détecteur livreurs, comptes liés, réclamations répétées, commandes fictives. — Réécrits sur données réelles : `orderClaims` (nouveau type `not_received`, `repeated_claims`), `promotionRedemptions` (abus de promo réel), `refunds.requestedAt` + taux réel, `fake_orders` (annulation rapide par le commerce), `off_address_delivery` (position de preuve de livraison, nouveau champ `delivery.proof.geo`), `shared_account` (téléphone livreur partagé), `linked_accounts` (empreintes appareil/carte/téléphone dans `userPrivate`). Seuils déplacés dans `settings/fraud` (réglable, UI Fraude > Seuils). `functions/src/platform/fraud.ts`, `functions/src/orders/transitions.ts`, `functions/src/orders/claims.ts`.
+28. ✅ **CORRIGÉ (cdc-fix-e)** Réacceptation forcée des CGU/CGV, acceptations client/livreur, consentements et cookies (§29) : champ stocké mais jamais appliqué. — `acceptLegalDocument` et `setConsent` (nouvelles fonctions, `functions/src/platform/gdpr.ts`), `assertLegalReaccepted` branché sur `placeOrder` (bloque si une version publiée exige réacceptation et que le client a accepté une version antérieure), version publiée désormais figée (`saveLegalDocument` refuse la modification après publication). Contrat app dans `docs/CONTRATS_APPS_MOBILES.md` §17-19. Cookies : consentement `analytics_cookies` via `setConsent` (pas de bandeau dédié, à faire par l'app). Testé : `cdc-fix-e.flow.mjs` (legal.*, consent.*).
+29. ✅ **CORRIGÉ (cdc-fix-e, partiel)** Anonymisation automatique (`autoAnonymize`) désactivée en base ; effacement RGPD limité aux clients et laissant commandes, adresses et avis en clair ; purge de corbeille au double du délai. — `autoAnonymize` actif par défaut (seul `false` explicite désactive) ; moteur d'effacement unifié `eraseCustomerAccount` (anonymise aussi commandes/avis/tickets conservés) réutilisé par `deleteCustomerAccount` ET `handleGdprRequest` ; érasure restaurant/livreur ajoutée (dossier légal / fiche livreur anonymisés + Auth désactivé) ; bug de purge corbeille corrigé (comparait à `now - trashRetentionDays` au lieu de `now`, alors que `purgeAt` est déjà l'échéance) ; `previewRetentionRun` corrigé (`lastOrderAt` → `stats.lastOrderAt`) ; purge des journaux d'audit selon `keepAuditLogsYears` ajoutée. `functions/src/platform/gdpr.ts`, `functions/src/admin/acteurs/customers.ts`. Reste : `keepInvoicesYears` non appliqué (arbitrage client nécessaire avant toute purge de factures), historique `driverLocations` toujours absent (compteur à 0, documenté).
+30. ✅ **CORRIGÉ (cdc-fix-e)** Mode maintenance et mise à jour forcée (§30) : aucune app ne les lit, l'écran annonce un blocage inexistant. — `lib/platform-status.ts` (`assertNotInMaintenance`, `assertMinimumVersion`), branché sur `placeOrder` et `restaurantSignup` ; `apps/restaurant` bloque réellement l'accès (`MaintenanceGate`, lecture temps réel de `settings/maintenance`). Contrat pour les apps client/livreur dans `docs/CONTRATS_APPS_MOBILES.md` §18. Testé : `cdc-fix-e.flow.mjs` (maintenance.*).
+31. ✅ **CORRIGÉ (cdc-fix-e, partiel)** Sauvegardes : aucune restauration outillée ni alerte d'échec ; la corbeille générique (`moveToTrash`) n'est appelée nulle part et « Chargement impossible » s'affiche sur l'onglet Corbeille pour le compte support. — `startBackupRestore`/`checkBackupRestoreStatus` (restauration réelle par `importDocuments`, double confirmation + motif + audit), alerte e-mail aux super administrateurs sur tout échec de sauvegarde ; **bug d'index Firestore identifié et corrigé** (requête corbeille `restoredAt==null orderBy deletedAt` n'avait pas d'index composite → c'est la vraie cause du « Chargement impossible », pas un problème de rôle ; index ajouté et déployé) ; `moveToTrash` câblé sur une vraie suppression (`updatePromotion`, action `delete`). `functions/src/platform/backups.ts`, `firebase/firestore.indexes.json`. Reste : restaurants/comptes/livreurs toujours hors corbeille (hors décision produit : suppression de restaurant = désactivation, pas de suppression réelle). Restauration non testée en conditions réelles (bucket de sauvegarde à vérifier avant un premier essai réel, risque jugé trop élevé pour la base partagée).
+32. ✅ **CORRIGÉ (cdc-fix-e)** Performance livreurs (§6) : `drivers.stats` jamais calculé ; bonus de pointe (`isPeak`) jamais appliqué ; gains (`driverEarnings`) non alimentés ; similarité du selfie jamais calculée. — `computeDriverStats` (nouvelle tâche nocturne 03:15, recalcule deliveries/acceptanceRate/cancellationRate/onTimeRate/averageDeliveryMinutes sur 30 j glissants à partir des commandes et `dispatchOffers` réels) ; bonus de pointe réellement appliqué (`courier.peakHours` réglable par pays/ville, UI `PayRulesPage`, `isPeak` calculé à la commande selon l'heure locale, rejoué au règlement via `order.delivery.courierIsPeak`) ; `driverEarnings` alimenté à la livraison (`onOrderSettled` écrit désormais `driverEarnings/{orderId}` en plus des `ledgerEntries`) ; selfie : `submitIdentitySelfie` (dépôt réel par le livreur) ajoutée, mais **aucune similarité automatique n'est calculée** (pas de service de reconnaissance faciale dans ce projet ; l'écran `IdentityPage.tsx` était déjà conditionné sur `matchScore` non nul, donc n'affiche plus rien de trompeur) ; contrôle d'identité expiré 48 h sans réponse → suspension automatique (nouveau). `functions/src/admin/operations/driver-stats.ts`, `functions/src/orders/place.ts`, `functions/src/finance/argent/settlement.ts`, `functions/src/admin/operations/drivers.ts`, `functions/src/admin/operations/live.ts`. Testé : `cdc-fix-e.flow.mjs` (reglement.*).
+33. ✅ **CORRIGÉ (cdc-fix-e, partiel)** Tunnel de commande (§3) : aucune collecte, le seed masque le trou. — `checkoutStarted` et `paid` désormais dérivés réellement des commandes (`stats-compute.ts`) ; `trackFunnelEvent` (nouvelle fonction) pour les 3 étapes qui exigent une application (`appOpens`, `restaurantViews`, `addToCart`), contrat documenté (`docs/CONTRATS_APPS_MOBILES.md` §20) ; écran `FunnelSection.tsx` corrigé pour afficher un état honnête (`estimated`, dérivé des commandes, sans application) au lieu de rien ou d'un mensonge. Testé : `cdc-fix-e.flow.mjs` (tunnel.*). Reste : `appOpens`/`restaurantViews`/`addToCart` resteront à 0 tant que l'app cliente n'existe pas et n'appelle pas `trackFunnelEvent`.
+34. ✅ **CORRIGÉ (cdc-fix-e)** Rapports programmés (§4) : statut `sent` posé même sans e-mail émis ; destinataires `.test` ignorés ; aucun envoi réel démontré. — Statut honnête `skipped` quand aucun destinataire réel n'a reçu l'e-mail (`outcomeStatus`, `lastRunSentCount` ajouté) ; alertes critiques du pilotage désormais envoyées par e-mail aux super administrateurs (`detectAnomalies`/`notifySuperAdmins`), pas seulement visibles dans l'interface ; sondes santé « notifications » (FCM réel) et « géolocalisation » (fraîcheur des positions livreur) remplacent les proxys de la base. `functions/src/admin/pilotage/reports.ts`, `functions/src/admin/pilotage/anomalies.ts`, `functions/src/platform/health.ts`. Testé : `cdc-fix-e.flow.mjs` (rapports.statut_coherent).
+35. Déploiement : 4 fonctions §16 (`updateCountryVat`, `generateTaxReport`, `markTaxReportSubmitted`, `exportAccounting`) en échec de déploiement (quota CPU) ; `estimatePlatformAudience` en 403 (CORS) ; `getSalesTeam` idem d'après l'état d'avancement. À redéployer et revérifier.
+36. Anomalie visible : `hourOf` renvoie `NaN` (« NaN h » sur Anomalies) ; 3 requêtes d'agrégat en HTTP 400 sous `/avis` pour un compte de ville (« 0 avis publiés » affiché à tort) ; page Attribution des livreurs en erreur pour un compte de ville (`settings/dispatch` exige `settings.view`).
+
+### P1 et P2
+
+Voir l'annexe J : 88 constats P1 et 37 P2 issus des matrices, classés par rubrique. Exemples P1 marquants : `onDocumentUploaded` exige un Kbis alors qu'un avis SIRET est accepté ailleurs (dossiers bloqués en « documents manquants ») ; `bulkRestaurantAction` `set_feature` laisse le job « running » sans audit quand le drapeau est verrouillé (3 orphelins en base) ; exports restaurants, livreurs, clients faits dans le navigateur sans contrôle de droit serveur ni audit ; « Voir comme » : lecture seule et expiration uniquement dans l'interface ; recherche facture par préfixe toujours vide, numéros `SL-` non reconnus ; indicateurs de risque client jamais alimentés ; limites de campagne et plafond fidélité codés en dur ; bulk livreurs message ne demande que `drivers.view`.
+
+## 6. Points du dossier `ETAT_AVANCEMENT.md` recoupés
+
+Confirmés par l'audit : Storage 403 (uploads), 403 sur certaines fonctions, limites codées en dur, rapport quotidien vers `direction@golink.test`, Google Maps refusé en local (`RefererNotAllowedMapError` vu sur `/flotte` et `/zones`), KPI « Nouveaux clients » dépendant de `flags.firstOrder`, données de test résiduelles. Non signalés dans l'état d'avancement et découverts ici : les points P0 des blocs B à E ci-dessus.
+
+## 7. Comment lire les annexes
+
+- Annexe A : parcours d'interface réel (80 routes x 4 comptes) et anomalies de console/réseau.
+- Annexes B à H : matrices ligne à ligne (rubrique, ligne, statut, où, preuve) produites par lot : B = §1-4, C = §5-7, D = §8-13, E = §14-17, F = §18-21, G = §22-27, H = §28-31.
+- Annexe I : les 36 réponses du questionnaire et les principes transverses (automatismes, alertes, actions en masse, audit des 138 fonctions, valeurs codées en dur, état des apps client et livreur).
+- Annexe J : listes P1 et P2 par rubrique.
+
+Reprise de l'audit : `.autopilot/progress/cdc-audit.md` ; sorties brutes : `.autopilot/audit/` (crawl JSON et captures par compte, partiels G1 à G8).
+
+
+# Annexe A — Parcours d'interface réel (crawl 1440 px, 4 comptes)
+
+Chaque cellule : titre de la page, nombre de lignes de tableau visibles, onglets, erreurs de console et réponses HTTP >= 400. « refusée/vide » = accès refusé par le rôle (ou page sans titre). Le compte superadmin n'est pas dans ce tableau (2FA active, non contournée).
+
+| Route | finance | metz | support | commercial |
+|---|---|---|---|---|
+| /abonnements | « Abonnements et commissions » 7 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Abonnements et commissions » 7 lignes |
+| /abonnements/commissions | « Commissions » 12 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Commissions » 12 lignes |
+| /abonnements/formules | « Formules » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Formules » 0 lignes |
+| /abonnements/relances | « Impayés et relances » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Impayés et relances » 0 lignes |
+| /accueil | « Bonjour Hélène » 0 lignes | « Bonjour Nadia » 0 lignes | « Bonjour Malik » 0 lignes | « Bonjour Julien » 0 lignes |
+| /affichage | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Affichage app client » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /affichage/bannieres | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Affichage app client » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /affichage/categories | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Affichage app client » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /affichage/classement | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Affichage app client » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /affichage/pages | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Affichage app client » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /affichage/sponsorise | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Affichage app client » 2 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /alertes | « Alertes » 0 lignes, 2 onglets | « Alertes » 0 lignes, 2 onglets | « Alertes » 0 lignes, 2 onglets | « Alertes » 0 lignes, 2 onglets |
+| /alertes/seuils | refusée/vide (« Accès réservé La consultation des réglages de ») | refusée/vide (« Accès réservé La consultation des réglages de ») | refusée/vide (« Accès réservé La consultation des réglages de ») | refusée/vide (« Accès réservé La consultation des réglages de ») |
+| /analytics | « Croissance » 0 lignes, 6 onglets | « Croissance » 0 lignes, 6 onglets | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Croissance » 0 lignes, 6 onglets |
+| /annonces | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Annonces » 0 lignes |
+| /avis | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Avis et notes » 0 lignes, 3 err. console, 3 HTTP>=400 | « Avis et notes » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /avis/filtre | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Avis et notes » 0 lignes | « Avis et notes » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /avis/qualite | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Avis et notes » 1 lignes | « Avis et notes » 2 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /avis/signalements | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Avis et notes » 0 lignes | « Avis et notes » 2 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /clients | « Clients » 25 lignes | « Clients » 25 lignes | « Clients » 25 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /commandes | « Commandes » 8 lignes | « Commandes » 8 lignes | « Commandes » 30 lignes | « Commandes » 30 lignes |
+| /commandes/anomalies | « Anomalies » 0 lignes | « Anomalies » 0 lignes | « Anomalies » 10 lignes | « Anomalies » 10 lignes |
+| /commandes/direct | « En direct » 5 lignes | « En direct » 1 lignes | « En direct » 5 lignes | « En direct » 5 lignes |
+| /communication | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Notifications et envois » 2 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /communication/consentements | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Notifications et envois » 1 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /communication/journal | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Notifications et envois » 25 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /communication/messages-automatiques | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Notifications et envois » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /communication/nouveau | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Nouvel envoi » 0 lignes, 2 err. console, 1 HTTP>=400 | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /communication/regles | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Notifications et envois » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /facturation | « Facturation et TVA » 15 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /facturation/declarations | « Déclarations et exports » 4 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /facturation/tva | « TVA et numérotation » 8 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /fidelite | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /fidelite/parrainage | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /finance | « Finance et reversements » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /finance/blocages | « Blocages de reversement » 1 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /finance/grand-livre | « Grand livre » 25 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /finance/repartition | « Répartition par commande » 20 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /finance/reversements | « Reversements » 15 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /flotte | « Flotte en direct » 13 lignes | « Flotte en direct » 4 lignes, 1 err. console | « Flotte en direct » 13 lignes, 1 err. console | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /livreurs | « Livreurs » 15 lignes | « Livreurs » 15 lignes | « Livreurs » 15 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /livreurs/attribution | « Attribution des courses » 0 lignes | « Attribution des courses » 0 lignes | « Attribution des courses » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /livreurs/documents | « Documents » 0 lignes | « Documents » 7 lignes | « Documents » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /livreurs/identite | « Vérification d’identité » 0 lignes | « Vérification d’identité » 0 lignes | « Vérification d’identité » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /livreurs/remuneration | « Rémunération » 0 lignes | « Rémunération » 0 lignes | « Rémunération » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /livreurs/sanctions | « Sanctions » 0 lignes | « Sanctions » 0 lignes | « Sanctions » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /livreurs/validation | « Inscriptions » 0 lignes | « Inscriptions » 0 lignes | « Inscriptions » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /paiements | « Paiements » 15 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Paiements » 15 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /paiements/especes | « Espèces » 10 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Espèces » 10 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /paiements/moyens | « Moyens de paiement et pourboires » 16 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Moyens de paiement et pourboires » 16 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /paiements/regles | « Frais et remboursements » 14 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Frais et remboursements » 14 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /plateforme | « Paramètres plateforme » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Paramètres plateforme » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /plateforme/administrateurs | « Administrateurs internes » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Administrateurs internes » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /plateforme/connexions | « Connexions externes » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Connexions externes » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /plateforme/donnees | « Données et sauvegardes » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Données et sauvegardes » 0 lignes, 1 onglets | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /plateforme/fonctionnalites | « Activation des fonctionnalités » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Activation des fonctionnalités » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /plateforme/fraude | « Fraude » 1 lignes, 2 onglets | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Fraude » 1 lignes, 2 onglets | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /plateforme/legal-rgpd | « Légal et RGPD » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Légal et RGPD » 4 lignes, 1 onglets | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /plateforme/marches | « Multi-pays » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Multi-pays » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /plateforme/parametres | « Paramètres plateforme » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Paramètres plateforme » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /plateforme/sante | « Santé et maintenance » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Santé et maintenance » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /plateforme/securite | « Sécurité et journal d'audit » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Sécurité et journal d'audit » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /promotions | « Promotions » 10 lignes | « Promotions » 5 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Promotions » 10 lignes |
+| /promotions/regles | « Promotions » 0 lignes | « Promotions » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Promotions » 0 lignes |
+| /prospection | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Prospection » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Prospection » 0 lignes |
+| /prospection/commerciaux | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Prospection » 4 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Prospection » 6 lignes |
+| /rapports | « Rapports et exports » 0 lignes, 2 onglets | « Rapports et exports » 0 lignes, 2 onglets | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /rapports/programmes | « Rapports et exports » 0 lignes, 2 onglets | « Rapports et exports » 0 lignes, 2 onglets | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /recherche | « Recherche » 0 lignes | « Recherche » 0 lignes | « Recherche » 0 lignes | « Recherche » 0 lignes |
+| /regles-commandes | « Règles automatiques des commandes » 14 lignes | « Règles automatiques des commandes » 14 lignes | « Règles automatiques des commandes » 14 lignes | « Règles automatiques des commandes » 14 lignes |
+| /restaurants | « Restaurants » 12 lignes | « Restaurants » 4 lignes | « Restaurants » 12 lignes | « Restaurants » 12 lignes |
+| /restaurants/groupes | « Groupes & chaînes » 0 lignes | « Groupes & chaînes » 0 lignes | « Groupes & chaînes » 0 lignes | « Groupes & chaînes » 0 lignes |
+| /restaurants/import | « Import en masse » 0 lignes | « Import en masse » 0 lignes | « Import en masse » 0 lignes | « Import en masse » 0 lignes |
+| /restaurants/qualite | « Qualité & allergènes » 0 lignes, 3 onglets | « Qualité & allergènes » 0 lignes, 3 onglets | « Qualité & allergènes » 0 lignes, 3 onglets | « Qualité & allergènes » 0 lignes, 3 onglets |
+| /restaurants/validation | « Validation des commerces » 0 lignes | « Validation des commerces » 0 lignes | « Validation des commerces » 0 lignes | « Validation des commerces » 0 lignes |
+| /support | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Support et litiges » 12 lignes | « Support et litiges » 25 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /support/aide | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Support et litiges » 0 lignes | « Support et litiges » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /support/chat | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Support et litiges » 0 lignes | « Support et litiges » 0 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /support/configuration | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Support et litiges » 4 lignes | « Support et litiges » 4 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /support/statistiques | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Support et litiges » 2 lignes | « Support et litiges » 3 lignes | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+| /zones | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | « Zones et villes » 0 lignes, 4 onglets, 1 err. console | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») | refusée/vide (« Rubrique non accessible Votre rôle ne donne p ») |
+
+### Anomalies relevées par le crawl
+
+- metz /avis : Failed to load resource: the server responded with a status of 400 () | Failed to load resource: the server responded with a status of 400 () 400 https://firestore.googleapis.com/v1/projects/golink-9f16d/databases/(default)/documents:runAggregationQuery?key=AIzaSyAY | 400 https://firestore.googleapis. 
+- metz /communication/nouveau : Access to fetch at 'https://europe-west1-golink-9f16d.cloudfunctions.net/estimatePlatformAudience' from origin 'http://localhost:5190' has been blocked by CORS policy: Response to preflight request do 403 https://europe-west1-golink-9f16d.cloudfunctions.net/estimatePlatformAudience 
+- metz /flotte : Google Maps JavaScript API error: RefererNotAllowedMapError https://developers.google.com/maps/documentation/javascript/error-messages#referer-not-allowed-map-error Your site URL to be authorized: htt  
+- support /flotte : Google Maps JavaScript API error: RefererNotAllowedMapError https://developers.google.com/maps/documentation/javascript/error-messages#referer-not-allowed-map-error Your site URL to be authorized: htt  
+- metz /zones : Google Maps JavaScript API error: RefererNotAllowedMapError https://developers.google.com/maps/documentation/javascript/error-messages#referer-not-allowed-map-error Your site URL to be authorized: htt  
+
+
+
+# Annexe B — Matrice §1 à §4 (Pilotage)
+
+
+Périmètre lu : `apps/admin/src/features/{accueil,alertes,recherche,analytics,rapports,pilotage-commun}`, `functions/src/admin/pilotage/*`, `packages/shared/src/models/pilotage.ts`, `firebase/rules/{admin,compliance}.rules`, `firebase/firestore.indexes.json`. Fonctions exportées : `functions/src/admin/pilotage/index.ts` (via `functions/src/admin/index.ts` puis `functions/src/index.ts`) : `aggregatePlatformStats`, `onOrderWrittenPlatformStats`, `refreshPlatformStats`, `detectAnomalies`, `handlePlatformAlert`, `runMonitoringNow`, `updateMonitoringSettings`, `globalSearch`, `getPilotageOverview`, `getPilotageAnalytics`, `exportData`, `deleteScheduledReport`, `runReportNow`, `runScheduledReports`, `saveScheduledReport`. Tous les noms appelés côté front (`callFunction('...')`) correspondent à ces exports.
+
+Preuve d'interface : seul `accueil` a été crawlé (`ui-finance/accueil.json`, `ui-metz/accueil.json`, 0 erreur console, 0 réponse HTTP >= 400). Aucun JSON pour `/alertes`, `/recherche`, `/analytics`, `/rapports` : « UI non vérifiée » pour ces écrans (compte superadmin non automatisé de toute façon).
+
+Données réelles lues (lecture seule, golink-9f16d) : `statsDaily` (110 docs plateforme, tous seed:true), `platformAlerts` (nombreuses, dont des non-seed produites par `detectAnomalies`), `scheduledReports` (4, seed), `bulkJobs` type export (5), `serviceStatus` (11), `zones` (14/14 avec `live`).
+
+---
+
+## §1 — Tableau de bord global
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Filtres (période, pays, ville, formule) | période | COMPLET | `pilotage-commun/components.tsx` `PilotageFilterBar` (DateRangePicker + raccourcis), `hooks.ts` `usePilotageFilters` (mémorisé par admin), `period.ts` | Période + comparaison précédente (`compareFrom/compareTo`). ui-finance/accueil.json : « 28 août – 26 sept. 2026 », « vs 30 jours précédents ». |
+| idem | pays, ville | COMPLET | `layout/GeoScope.tsx` `GeoScopeSelector`, `useGeoScope` ; côté serveur `pilotage/scope.ts` `resolveScope` (recoupe avec `admins/{uid}.countryIds/cityIds`, refuse le hors-périmètre) | ui-metz/accueil.json : « SAMEDI 26 SEPTEMBRE · METZ », chiffres différents de finance (12 029 € vs 31 823 € de volume d'affaires). Le sélecteur pays/ville est dans l'en-tête global, pas dans la barre de la page. |
+| idem | formule | COMPLET (avec réserve) | `usePilotageFilters().planCode`, `getPilotageOverview` → `planKpis` (recalcul sur `restaurants/{id}/dailyStats` via `data.ts` `kpisFromRestaurants`) | Sous filtre formule : la tuile « abonnements » est masquée et l'évolution est limitée à CA/commandes (`components.tsx` l.311, l.374) — honnête. Mais bandeau « En direct », alertes et compteurs clients/livreurs ne se filtrent pas par formule (seuls commerces et abonnements le sont : `overview.ts counters`). |
+| Chiffres clés | CA plateforme, CA restaurants, commissions, abonnements encaissés, nb commandes (jour, mois), panier moyen, taux d'annulation | PARTIEL | `accueil/components.tsx` `KpiGrid`, `LiveStrip` ; `accueil/data.ts` `useDashboardData`, `useLiveFigures` ; `pilotage-commun/hooks.ts` `useDailyStats` (lecture temps réel `statsDaily`) ; agrégation `pilotage/platform-stats.ts` + `stats-compute.ts` | ui-finance/accueil.json affiche les 8 éléments : CA plateforme HT 10 108,12 €, volume d'affaires TTC, CA des commerces 26 940,40 €, commissions 5 995,97 €, abonnements encaissés 454,00 €, commandes 1 171 (jour 28, mois 1 032), panier moyen 29,74 €, annulation 8,2 %. Lecture réelle, agrégats maintenus par `onOrderWrittenPlatformStats` (file `statsQueue`) + `aggregatePlatformStats` (toutes les minutes) + `refreshPlatformStats` (03:30). **Défaut** : « Abonnements encaissés » = `externalFields()` (`platform-stats.ts` l.~68-90) somme `totalHtCents` de toutes les factures `kind == subscription_invoice` émises dans le jour, **sans filtre sur le statut « payée »** (l'écran écrit « Factures d'abonnement payées ») ; et ce champ n'est calculé que par la passe de nuit sur J-1/J-2 : jamais de valeur pour aujourd'hui, pas de rattrapage au-delà de 2 jours. Le compteur du jour et du mois est réel via `useLiveFigures`. |
+| Compteurs d'acteurs | restaurants actifs / en pause / suspendus / en cours d'inscription | COMPLET | `overview.ts counters()` (`restaurantsInScope`), `components.tsx CountersRow` | ui-finance : Commerces 12 (Actifs 10, En pause 0, Suspendus 0, En inscription 2). |
+| idem | clients inscrits et actifs | COMPLET | `overview.ts` (count `users role==client`, actifs = `stats.lastOrderAt` sur 30 j) | ui-finance : 150 inscrits, actifs 30 j 129. « 30 jours » codé en dur (voir fin). Index `role,cityId,stats.lastOrderAt` présent. |
+| idem | livreurs inscrits et en ligne | COMPLET | `overview.ts` (`availability` online/on_delivery) | ui-finance : 48 inscrits, 10 en ligne, 6 en course, 8 à valider. **À revérifier** : ui-metz/accueil.json montre les blocs « Acteurs » et « Activité récente » **vides** (« · » à la place des valeurs) alors que finance les remplit : soit appel `getPilotageOverview` non terminé à la capture, soit échec silencieux en périmètre ville. Aucune erreur console ni HTTP >= 400 relevée. |
+| Alertes par exception | restaurant à taux d'annulation anormal | COMPLET | `anomalies.ts restaurantRates` (`restaurant_cancellation_rate`, seuil `settings/monitoring.restaurantCancellationRate`, mini commandes `restaurantMinOrders`, 7 j) | Déclencheur `detectAnomalies` (onSchedule 15 min, exporté). Données : 7 alertes ouvertes non-seed (ex. « Taux d'annulation élevé : Rue 12 Bakery 22,2 %, seuil 6 % » dans ui-finance). Lien vers `/restaurants/:id` (`links.ts`). |
+| idem | restaurant qui refuse beaucoup | COMPLET | `restaurantRates` (`restaurant_rejection_rate`, `restaurantRejectionRate`) | 4 alertes ouvertes non-seed ; UI : « Commandes refusées : Mina Kitchen 19,6 % ». |
+| idem | zone en manque de livreurs | COMPLET | `anomalies.ts zoneShortages` (`zone_driver_shortage`, `zoneDriverRatio`) ; alimenté par `operations/live.ts computeZoneLive` (onSchedule 1 min, écrit `zones/{id}.live`) | 14 zones sur 14 ont `live`. Aucune alerte ouverte au moment de l'audit (une résolue seed) : aucune preuve de déclenchement réel autre que la chaîne de code. Garde-fous codés : `ordersWaiting >= 2`, donnée vieille de plus de 30 min ignorée. |
+| idem | hausse des remboursements | COMPLET | `anomalies.ts cityTrends` (`refund_spike`, `refundSpike`) | 1 alerte ouverte non-seed (« Hausse des remboursements : Longwy »). Planchers codés en dur (5 000 c / 1 000 c). |
+| idem | chute des commandes dans une ville | COMPLET | `cityTrends` (`city_order_drop`, `cityOrderDrop`, `cityMinOrders`) | 2 alertes ouvertes (Luxembourg, Metz) dans ui-finance. Ne s'évalue qu'à partir de 12 h (codé). |
+| idem | service en panne | COMPLET | `anomalies.ts servicesDown` (`service_down`), source `serviceStatus` alimentée par `platform/health.ts healthCheck` (onSchedule 10 min) | 11 services, dont SMS en `maintenance` (non alerté : seules `partial_outage`/`major_outage` remontent). Lien `/sante`. Aucune alerte de ce type ouverte : non observée en situation. |
+| idem | abonnements impayés | PARTIEL | `anomalies.ts todoQueue` (`subscription_unpaid`, **queue 'todo'**) | Le cahier le range dans les alertes ; le code le met dans la file « à traiter » (ui-finance : « Abonnement impayé 1 » sous « À traiter », absent du bloc « Alertes par exception »). Le compte est visible mais pas classé comme alerte et ne compte pas dans la pastille critique du menu (`alertes/module.tsx` filtre `queue == 'alert'`). |
+| idem | chaque alerte ouvre directement l'élément | COMPLET | `pilotage-commun/links.ts alertHref` + `alerts.tsx AlertItem`/`AlertActions` | Routes cibles vérifiées existantes pour restaurant, livreur, ticket (`support/:ticketId`), avis, zone (`zones/:zoneId`), ville (`villes/:cityId`), `/sante`. **À vérifier** (non trouvées dans les `module.tsx` listés) : `/reversements/:id`, `/remboursements/:id`, `/rgpd/:id`, `/factures/:id`, `/fraude`, `/qualite-cartes` (ces modules relèvent d'autres rubriques ; à croiser avec les audits G-argent/G-conformité). |
+| idem | traitement des alertes (prendre en charge, résoudre, écarter avec motif, rouvrir) et seuils réglables | COMPLET (avec réserve règles) | `alerts.ts handlePlatformAlert` (`requireAdmin('dashboard.view')`, transaction, motif obligatoire pour « écarter », `writeAudit` `alert.*`), `updateMonitoringSettings` (`settings.edit`, motif, `settingsHistory` + audit), `runMonitoringNow` ; `alertes/ThresholdsPage.tsx`, `AlertsPage.tsx` | **Réserve** : `firebase/rules/admin.rules` l.42-49 autorise `update` direct de `platformAlerts` (`status` acknowledged/resolved/dismissed) par tout admin `dashboard.view` : contourne la fonction, donc pas de motif, pas d'audit. Le front n'utilise pas ce chemin mais la règle l'autorise. |
+| File « à traiter » | restaurants à valider | COMPLET | `todoQueue` (`restaurant_to_validate`, `onboardingStatus in [pending, documents_missing]`) | ui-finance : « Restaurant à valider 2 ». Lien `/restaurants/:id`. |
+| idem | livreurs à valider | COMPLET | `todoQueue` (`driver_to_validate`) | « Livreur à valider 7 ». |
+| idem | documents expirés | COMPLET | `todoQueue` (`document_expired` : `partnerDocuments status == expired` ou `approved` avec `expiresAt < today`) | « Document expiré 2 ». |
+| idem | tickets escaladés | COMPLET | `todoQueue` (`ticket_escalated`, `escalated == true`), champ posé par `admin/experience/tickets.ts` et `sla.ts enforceSla` | « Ticket escaladé 21 ». |
+| idem | avis signalés | COMPLET | `todoQueue` (`review_reported`, `contentReports open/under_review`) | « Avis signalé 2 ». |
+| idem | demandes RGPD | COMPLET | `todoQueue` (`gdpr_request`, échéance légale, `gdprDueWarningDays`) | « Demande RGPD 2 ». |
+| idem | reversements en échec | PARTIEL / FAUX | `anomalies.ts` l.~377-391 : `payout_failed` créé avec `queue: 'alert'` ; `accueil/components.tsx` `TodoCard` (`useAlerts('todo', …)`, `TODO_ORDER` contient `payout_failed`) | **Incohérence** : l'élément est bien détecté mais atterrit dans la file « alertes » ; la carte « À traiter » lit la file `todo` : il n'y apparaît jamais. Preuve : ui-finance montre « Reversement en échec : Santo Smash / Beldi Bowls » dans « Alertes par exception » et **aucune** ligne « Reversement en échec » sous « À traiter ». Base : `payout_failed/alert/open` = 2 ; `payout_failed/todo/resolved` = 1 (résidu de seed). Le sous-titre de la carte annonce pourtant « reversements en attente ». |
+| Évolution | courbes CA, commandes, restaurants, utilisateurs vs période précédente | COMPLET | `accueil/components.tsx EvolutionCard`, `data.ts evolutionSeries` (regroupement hebdo > 120 j) | 5 courbes (Volume d'affaires, CA plateforme, Commandes, Clients, Commerces) avec « Période » / « Période précédente » (ui-finance). Sous filtre formule limitée à CA/commandes (voir filtres). Courbe « Commerces » = `restaurantsNew` alimenté uniquement par la passe de nuit. |
+| Activité récente | inscriptions, suspensions, changements de formule, résiliations | PARTIEL | `overview.ts activity()` + table `AUDIT_ACTIVITY` ; `components.tsx ActivityCard` | Inscriptions restaurants et livreurs : COMPLET (lecture `createdAt`). Changements de formule / résiliations : COMPLET (historique `subscriptions.history` + `subscription.plan_changed`, `subscription.cancelled` bien émis par `restaurant/plan.ts`, `finance/argent/subscriptions.ts`). Suspensions de commerce : COMPLET (`restaurant.suspended`, `restaurant.reactivated`, ui-finance : « Commerce suspendu »). **Manquent** : (a) suspensions/réactivations/refus de **livreurs** : la table attend `driver.suspended`/`driver.reactivated`/`driver.rejected` que le code n'émet jamais (`operations/drivers.ts` écrit `driver.sanction_*`, `driver.bulk_*`, `driver.document_*`) ; (b) `restaurant.closed` (retrait définitif) et `restaurant.paused` non mappés (l'action émise est `restaurant.auto_paused`). Liste plafonnée à 14 éléments. |
+
+**Bilan §1** (24 lignes contrôlées, dont 6 lignes du cahier) : 17 COMPLET / 5 PARTIEL / 0 ABSENT / 1 FAUX (reversements en échec absent de la file « à traiter »), 1 « à revérifier » (compteurs vides sous ui-metz).
+Répartition par ligne de cahier (6) : Chiffres clés PARTIEL ; Compteurs COMPLET (à revérifier en périmètre ville) ; Alertes PARTIEL (abonnements impayés hors file alertes ; règles) ; File « à traiter » PARTIEL (reversements) ; Évolution COMPLET ; Activité récente PARTIEL.
+
+**Trous §1**
+- P0 — Reversements en échec absents de « À traiter » : passer `queue` à `'todo'` dans `anomalies.ts` (ou dupliquer) ; sinon la promesse du cahier (6 éléments) n'est tenue qu'à 5/6. Argent.
+- P0 — « Abonnements encaissés » non fiable : pas de filtre `status == paid`, calcul J-1/J-2 seulement (`platform-stats.ts externalFields`). Argent affiché au client.
+- P1 — Règle Firestore `platformAlerts` update direct sans motif/audit (`admin.rules` l.45-48) : à retirer (tout passe par `handlePlatformAlert`).
+- P1 — Activité récente : ajouter suspensions/réactivations/refus de livreurs et retrait définitif de commerce (alignement des noms d'actions d'audit).
+- P1 — Abonnements impayés à remonter aussi dans la file « alertes » (ou compter dans la pastille du menu).
+- P1 — Vérifier le rendu de `getPilotageOverview` en périmètre ville (ui-metz vide).
+- P2 — Filtre formule non appliqué à « En direct », clients, livreurs, alertes.
+
+---
+
+## §2 — Recherche globale
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Recherche universelle | barre unique toujours visible, accès immédiat à la fiche | COMPLET | `layout/Shell.tsx` (bouton de recherche de l'en-tête `onSearch`, palette `CommandPalette`, raccourci Ctrl+K, `PaletteSearchResults`), page `recherche/SearchPage.tsx` (route `recherche`, permission `search.use`, entrée de menu), `recherche/search.tsx useGlobalSearch` (anti-rebond 250 ms) | Chaque résultat mène à la fiche via `links.ts entityHref` (`commandes/:id`, `restaurants/:id`, `clients/:id`, `livreurs/:id`, `factures/:id`, `support/:id`). Le champ d'en-tête ouvre la palette : c'est un bouton, pas un champ de saisie permanent. UI non vérifiée (pas de crawl). |
+| idem | par numéro de commande (ex. SL-10482) | PARTIEL | `pilotage/search.ts searchOrders`, `packages/shared/src/utils/ids.ts parseOrderNumber` | Fonctionne pour `GL-10482`, `#GL 10482`, `gl10482` (regex `^#?GL[\s-]?(\d{1,10})$`) ; le format de la base est `GL-10001` (vérifié en lecture). **`SL-` (exemple du cahier) n'est pas reconnu** : « SL-10482 » retombe sur la recherche par mots-clés et ne renvoie rien. Marque GoLink = GL : à acter avec le client ou accepter aussi `SL-`. Aussi : `queryKind` ne reconnaît que `gl-`. |
+| idem | par nom | COMPLET | `searchRestaurants`, `searchClients`, `searchDrivers`, `searchOrders` (client / commerce), via `searchKeywords` (préfixes, `buildSearchKeywords`) | Mots-clés présents sur les 4 collections en base ; index `orders searchKeywords[],createdAt-` et `drivers searchKeywords[],displayName` présents. Limite 40 documents par type avant filtrage périmètre. |
+| idem | par e-mail | PARTIEL | `contactMatch`, `keywordPlan` (forme compacte, 30 car.), `searchRestaurants` (égalité exacte sur `email`) | Clients et livreurs : OK (le mot-clé compact `marcmichel@exempletest` est en base). Restaurants : les mots-clés ne contiennent que nom, ville, code postal (`lib/restaurants.ts` l.115) ; e-mail trouvé seulement par égalité exacte complète, pas en partiel. |
+| idem | par téléphone | PARTIEL | `searchClients`, `searchDrivers` (formes 06…/+33/+352 pour clients ; 06…→33 seulement pour livreurs) | Clients : OK (mot-clé `33689912579`). Livreurs : `+352` non essayé. **Restaurants : aucune recherche par téléphone** (ni mot-clé, ni requête `phone ==`) : ABSENT pour ce type. |
+| idem | par SIRET | PARTIEL | `searchRestaurants` (branche 14/9 chiffres) | Fonctionnel mais coûteux : lit jusqu'à 3 000 restaurants puis 1 doc `private/legal` par restaurant (`getAll` par 200). Correspondance par préfixe. Non vérifié en base (nécessite un SIRET réel). Passe à l'échelle « centaines de restaurants » mais pas au-delà. |
+| idem | par numéro de facture | FAUX | `searchInvoices` l.~239-251, `search.tsx queryKind` | Egalité exacte OK (ex. `LU-ABO-2026-000002`). La branche « préfixe » est cassée : `where('number','>=',upper).where('number','<',\`${upper}\`)` borne haute = borne basse → toujours vide (il manquerait un suffixe ``). Les numéros réels ont la forme `SERIE-2026-000002` (`formatInvoiceNumber`) mais `queryKind` et l'exemple de l'écran (« FA-2026 ») visent `FA/AV/FAC/INV` : l'exemple proposé ne renvoie rien. |
+| idem | par numéro de ticket | PARTIEL | `searchTickets` | Seul `T-000123`, `#T 123`, `T123` (`^#?T[\s-]?(\d{1,8})$`) : exact. Numéro tapé partiellement ou sans « T » : rien. Format base `T-004604` vérifié. |
+| Résultats groupés | classés par type : restaurants, clients, livreurs, commandes, factures, tickets | COMPLET | `search.ts globalSearch` (6 chercheurs en parallèle, échec partiel toléré), `SEARCH_HIT_TYPE_LABELS`, `SearchPage.tsx` (une carte par type, « Afficher les N résultats », badge de statut) ; `sortGroups` place le type visé par un numéro en tête | Permission par groupe (`GROUP_PERMISSIONS`), périmètre ville/pays imposé, e-mail/téléphone masqués sans `personal_data.view` (`maskEmail/maskPhone`). Pas d'audit des recherches (`writeAudit` absent) — acceptable en lecture mais les résultats exposent des données personnelles. |
+
+**Bilan §2** (2 lignes du cahier ; 9 éléments détaillés) : lignes du cahier : 1 COMPLET (résultats groupés) / 1 PARTIEL (recherche universelle). Éléments : 3 COMPLET / 4 PARTIEL / 0 ABSENT / 1 FAUX (facture) — le téléphone restaurant est ABSENT.
+
+**Trous §2**
+- P1 — Recherche par n° de facture par préfixe cassée (`searchInvoices`) et exemple d'écran/`queryKind` non alignés sur les vraies séries (`XX-ABO-2026-…`).
+- P1 — Format de commande : `SL-` du cahier non pris en charge (décision de marque à documenter).
+- P1 — Recherche par téléphone/e-mail partiel pour les restaurants ; livreurs +352.
+- P2 — SIRET : scan de 3 000 restaurants ; indexer le SIRET (mot-clé ou champ `siretNormalized` au niveau racine).
+- P2 — Ticket : accepter un numéro partiel / sujet.
+
+---
+
+## §3 — Analytics
+
+Fonction unique `getPilotageAnalytics` (`analytics.ts`, `requireAdmin('analytics.view')`, périmètre `resolveScope`, calcul à la demande par section, 512 Mio). Écran : `analytics/AnalyticsPage.tsx` (6 onglets, route `analytics/:section`, filtres période + formule, bouton « Exporter » vers `/rapports`). Aucun crawl UI sur ces écrans.
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Croissance | nouveaux restaurants, clients, livreurs | COMPLET | `analytics.ts growth()` (comptage `createdAt` par ville, période vs période précédente, série journalière), `GrowthSection.tsx` | Lecture directe des collections `restaurants`, `drivers`, `users`. |
+| idem | rétention des clients (qui recommandent) | COMPLET | `growth()` : `cohorts` mensuelles (6 mois) + `repeatRate` (clients à ≥ 2 commandes sur la période) | Calculé sur commandes livrées (`flags.firstOrder`). Dépend du drapeau `firstOrder` posé à la commande. Plafond `MAX_ORDERS = 25 000` par requête (codé). |
+| idem | rétention des restaurants (qui restent abonnés) | PARTIEL | `growth()` `restaurantRetention` | Mesure les restaurants qui **commandent** aux deux périodes, pas ceux qui **restent abonnés**. La résiliation/churn d'abonnement est traitée dans l'onglet Abonnements (`churnRate`), mais la « rétention abonnés » n'est pas présentée en tant que telle dans Croissance. |
+| Classements restaurants | top et flop par CA, commandes, note, taux d'annulation, temps de préparation | COMPLET | `analytics.ts rankings()`, `RestaurantsSection.tsx` (sélecteur de critère, Top/Flop, 10 lignes ; filtres d'éligibilité pour note/annulation/prépa) | 5 critères présents ; note cachée si 0 avis, prépa si aucune donnée. `averagePrepMinutes` lu de `restaurants/{id}/dailyStats`. |
+| idem | restaurants en baisse d'activité (risque de départ) | COMPLET | `rankings()` `atRisk` (ventes ≤ −30 % ou plus aucune commande sur 7 j), tableau dédié dans `RestaurantsSection` | Seuils −30 % / 7 jours **codés en dur**, non réglables. |
+| Performance livreurs | livraisons, taux d'acceptation, temps moyen, retards, annulations | COMPLET | `analytics.ts driverPerformance()` (`Driver.stats.acceptanceRate/cancellationRate/onTimeRate/averageDeliveryMinutes`, `deliveriesInPeriod`, `lateInPeriod`), `DriversSection.tsx` | Taux d'acceptation/annulation/ponctualité = compteurs cumulés du livreur (pas restreints à la période) ; livraisons/retards de la période OK. |
+| idem | par zone | PARTIEL | `driverPerformance().byZone` | Par zone : livraisons, taux de retard, temps moyen. **Pas de taux d'acceptation ni d'annulations par zone** (uniquement par livreur, avec filtre par zones du livreur). |
+| Par ville / zone | CA, commandes, temps de livraison moyen | COMPLET | `analytics.ts cities()` (lecture `statsDaily` scope city), `CitiesSection.tsx` | `gmvCents`, `orders`, `averageDeliveryMinutes` (pondéré), taux de ponctualité, annulation, panier. |
+| idem | heures de pointe | COMPLET | `cities()` `byHour` (commandes par heure) | Alimenté par `orders.byHour` dans `statsDaily`. |
+| idem | rapport offre / demande de livreurs | COMPLET | `cities()` `driversOnlineByHour`, `demandPerDriver`, `zones[].driversAvailable/pendingOrders` ; échantillon toutes les 15 min par `detectAnomalies → sampleDriversOnline` ; seuils `zoneDriverRatio`/`driverTensionRatio` lus dans `settings/monitoring` | Réel et réglable. Sans crawl UI. |
+| Abonnements | répartition par formule | COMPLET | `subscriptions()` `byPlan` (actifs, essai, impayés, MRR par formule), `SubscriptionsSection.tsx` | Noms des formules lus dans `plans`. |
+| idem | revenu mensuel récurrent | COMPLET | `subscriptions()` `mrrCents`, `arrCents`, série `monthly` sur 6 mois | MRR = prix HT/mois (annuel/12, remise `specialOffer.discountBps`). Cohérent avec ui-finance (« 454,00 € MRR »). |
+| idem | résiliations | COMPLET | `cancellations`, `churnRate`, `monthly[].cancelledCount`, `recentChanges` | Basé sur `subscriptions.history`. |
+| idem | passages à une formule supérieure | COMPLET | `upgrades`, `downgrades`, `monthly[].upgrades` | idem. |
+| Tunnel de commande | ouverture app → panier → paiement, où ils abandonnent | ABSENT (collecte) | `analytics.ts funnel()`, `FunnelSection.tsx`, `DailyStats.funnel` ; alimentation : **aucune** | L'écran et l'agrégation existent, mais **rien ne produit** `appOpens`, `restaurantViews`, `addToCart`, `checkoutStarted` : recherche dans `apps/{client,restaurant,driver}`, `functions/src`, `packages/*/src` → occurrences uniquement dans l'admin, dans `stats-compute.ts` (qui recopie `previous.funnel`) et dans le **seed** (`scripts/seed/orders.ts` l.823 : `appOpens = placed × 11`, `addToCart = placed × 2,1`, etc., valeurs synthétiques). Base : 90 des 110 documents plateforme ont un tunnel non nul, tous `seed:true`. Le texte de l'écran prétend « Mesures remontées par l'application client » et une branche « valeurs estimées à partir des commandes » qui **n'existe pas** dans `funnel()` (`source` ne prend que `'analytics'` ou `'none'`). Avec des vraies données de production l'écran affichera « Pas encore de mesure du tunnel ». Les étapes `paid` ne sont même pas dérivées des commandes. |
+
+**Bilan §3** (6 lignes du cahier ; 15 éléments) : lignes du cahier : Croissance PARTIEL (rétention abonnés) / Classements COMPLET / Performance livreurs PARTIEL (par zone) / Par ville COMPLET / Abonnements COMPLET / Tunnel ABSENT (collecte) = 3 COMPLET / 2 PARTIEL / 1 ABSENT / 0 FAUX. Éléments : 12 COMPLET / 2 PARTIEL / 1 ABSENT.
+
+**Trous §3**
+- P0 — Tunnel : aucun émetteur d'événements (app client) ni collecteur serveur ; à créer (`trackFunnel` callable ou écriture agrégée) et à alimenter `statsDaily.funnel` (étape « paid » dérivable des commandes dès maintenant). Le seed masque le trou en démo.
+- P1 — Rétention restaurants « abonnés » : présenter le churn/rétention d'abonnement dans Croissance (données déjà dans `subscriptions()`).
+- P1 — Performance par zone : ajouter acceptation et annulations.
+- P2 — Seuil de risque de départ (−30 %/7 j) et fenêtres de cohortes non réglables.
+
+---
+
+## §4 — Rapports et exports
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Exports | fonction d'export : droit, périmètre, audit | COMPLET | `exports.ts exportData` (`requireAdmin('exports.run')` + droit de consultation de l'entité `EXPORT_ENTITY_PERMISSIONS`, `resolveScope`, coordonnées masquées sans `personal_data.view`, `bulkJobs` type `export`, `writeAudit` `export.generated` avec `sensitive` pour clients/livreurs/volumineux, alerte `securityAlerts mass_export` au-delà du seuil de la politique de sécurité) | Front : `rapports/ExportDialog.tsx` (appel `exportData`, téléchargement `downloadBase64`), `ExportsPage.tsx` (historique `bulkJobs`, 5 jobs export en base). Chaque export écrit une ligne d'audit. **Réserve** : le motif n'est obligatoire que côté écran (`reasonRequired = config.personal` dans `ExportDialog`), le serveur l'accepte vide (`reason: nullish`). |
+| idem | restaurants | COMPLET | `BUILDERS.restaurants` (12 colonnes, filtres statut + formule) | |
+| idem | clients | COMPLET | `BUILDERS.clients` (motif demandé à l'écran, données perso masquées selon droit) | |
+| idem | livreurs | COMPLET | `BUILDERS.drivers` | |
+| idem | commandes | COMPLET | `BUILDERS.orders` (période sur `createdAt`, statut) | |
+| idem | finances | PARTIEL | `BUILDERS.payouts` (reversements), `BUILDERS.subscriptions`, `BUILDERS.stats` (CA, commissions, frais, abonnements, remboursements, marge par jour) ; permission `finance.view` | Le cahier attend un export « finances » (comptabilité) : couvert par trois entités séparées. **Pas d'export des paiements/transactions ni des remboursements ligne à ligne ni des commissions par commerce** ; pas d'entité unique « finances ». À arbitrer avec l'audit finance. |
+| idem | factures | COMPLET | `BUILDERS.invoices` (HT, TVA, TTC, type, statut), `invoices.view` | |
+| idem | statistiques | COMPLET | `BUILDERS.stats` (14 colonnes jour par jour) | |
+| idem | formats CSV / Excel / PDF | COMPLET | `tabular.ts render` (CSV `;` UTF-8, XLSX écrit à la main via `zip()`, PDF paysage via `hr/pdf.ts PdfDocument`), plafonds `MAX_ROWS` CSV/XLSX 20 000, PDF 3 000, refus au-delà de 9 Mo | 3 formats × 10 entités (les 7 du cahier + reversements, tickets, avis, abonnements). Non testé par exécution (pas de fichier généré vérifié) ; le fichier n'est pas conservé côté serveur (téléchargé une fois, l'historique ne le rouvre pas). Entités × format constatées dans le code : aucune restriction par format. |
+| idem | avec filtres | COMPLET | `zExportFilters` (période, pays, villes, statut, formule) ; dialogue avec période/statuts/formule par entité (`rapports/config.tsx ENTITY_CONFIG`) | Périmètre géographique = sélecteur global de l'en-tête. |
+| Rapports automatiques | récapitulatif par e-mail chaque jour | COMPLET (code) / NON PROUVÉ (envoi réel) | `reports.ts runScheduledReports` (onSchedule `5 * * * *`, exporté ; secrets `EMAIL_SECRETS`), `nextReportRun`, `reportPeriod`, `buildReport`, `deliver` → `lib/brevo.sendEmail` avec pièce jointe CSV/XLSX/PDF ; création/édition/suppression/aperçu/envoi manuel par `saveScheduledReport`, `deleteScheduledReport` (motif requis), `runReportNow` (`dryRun`), tous audités (`report.scheduled/updated/deleted/sent`) | Front : `ScheduledReportsPage.tsx`, `ReportFormDialog.tsx` (via callables, jamais d'écriture directe). Base : `rapport-quotidien` : `runsCount 39`, `lastRunAt` récent (26/09 05:05 UTC, donc la tâche tourne bien), `nextRunAt` 27/09 05:00 UTC. **Mais** `deliver()` ignore tous les destinataires en `.test/.example/.invalid/.localhost` (données seed) et le statut est posé à `sent` dès que `failed === 0`, y compris si **zéro** e-mail est parti : les 3 rapports seed indiquent `sent` sans qu'aucun mail réel n'ait été émis (`sent=0`). Aucune preuve d'un envoi Brevo réel. |
+| idem | chaque semaine | COMPLET (code) | `nextReportRun` (lundi), `reportPeriod` (semaine précédente lundi–dimanche) | Base : `rapport-classement-metz` weekly, `nextRunAt` lundi 28/09 07:00 Paris. |
+| idem | chaque mois | COMPLET (code) | `nextReportRun` (1er du mois), `reportPeriod` (mois précédent) | Base : `rapport-finance` monthly, `nextRunAt` 01/10. |
+| idem | contenu du récapitulatif | PARTIEL | `buildReport` : 6 types (`daily_summary`, `finance`, `orders`, `restaurants`, `drivers`, `support`), KPI + variation vs période précédente + pièce jointe | Le rapport `restaurants`/`drivers` reprend le bloc générique par défaut (CA, commandes, panier…) sans KPI propre livreurs. Le périmètre est borné par celui de l'auteur ; si l'auteur perd `reports.view` le rapport passe en `failed` (traité). Pas de rapport « statistiques associés/investisseurs » dédié. |
+| Règles Firestore | `scheduledReports` | FAUX (réserve) | `firebase/rules/admin.rules` l.91-96 | `create/update/delete` autorisés en direct à `reports.schedule` (sans passer par `saveScheduledReport`) : contourne l'audit et la vérification de périmètre `resolveScope`. Le front n'utilise pas ce chemin. |
+
+**Bilan §4** (2 lignes du cahier ; 14 éléments contrôlés) : lignes du cahier : Exports PARTIEL (finances agrégées en 3 entités, motif non imposé côté serveur) ; Rapports automatiques PARTIEL (envoi réel non prouvé, statut « sent » trompeur). Éléments : 10 COMPLET / 3 PARTIEL / 0 ABSENT / 1 FAUX (règle `scheduledReports`).
+
+**Trous §4**
+- P0 — Statut `sent` posé même si aucun e-mail émis (`reports.ts` : `outcome.failed === 0 ? 'sent'`) ; à distinguer `skipped` ; tant que les destinataires sont `.test`, l'envoi automatique n'est pas démontré : faire un envoi test réel Brevo avant lancement.
+- P1 — Motif d'export à imposer côté serveur pour clients/livreurs (`exportData`) ; règle Firestore `scheduledReports` à fermer aux écritures directes.
+- P1 — Export « finances » : décider si `payouts + subscriptions + stats` suffisent ; sinon ajouter paiements/remboursements/commissions par commerce.
+- P2 — Conserver le fichier généré (Storage) pour le réafficher depuis l'historique ; KPI dédiés aux rapports livreurs/commerces.
+
+---
+
+## Écarts avec DECISIONS_CLIENT / questionnaire
+
+- `docs/DECISIONS_CLIENT.md` et `questions-reponses-client.txt` ne contiennent aucune décision spécifique aux rubriques §1 à §4 (recherche « inactivité 15/30 jours » est hors périmètre de ce lot). Point non tranché : préfixe de commande `SL-` (cahier) contre `GL-` (code, base) ; aucune décision écrite trouvée.
+- Le cahier parle de « restaurants » ; l'écran dit « commerces » : cohérence de vocabulaire à valider (décision de marque GoLink).
+
+## Valeurs codées en dur (constantes métier non réglables)
+
+- `overview.ts` : « clients actifs » = commande dans les 30 derniers jours.
+- `anomalies.ts` : fenêtre de 7 jours pour les taux restaurant ; 4 semaines de référence pour la chute de commandes ; heure minimale 12 h ; plancher de remboursements 5 000 c et base 1 000 c ; `ordersWaiting >= 2` et ancienneté 30 min pour la pénurie de livreurs ; seuil « critique » = 2× le seuil ; fréquence de détection 15 min.
+- `analytics.ts` : risque de départ −30 % / 7 jours ; `MAX_ORDERS = 25 000` ; cohortes sur 6 mois ; limite 400 jours.
+- `exports.ts` : `MAX_ROWS` 20 000 (CSV/XLSX) et 3 000 (PDF) ; 9 Mo ; seuil 200 lignes pour l'alerte clients/livreurs (le seuil `massExportRows` est lui paramétré via `loadSecurityPolicy`).
+- `reports.ts` : heure d'envoi par défaut 7 h (réglable par rapport), `limit 50` rapports par passe, domaines de démonstration exclus de l'envoi.
+- `search.ts` : limite 40 documents par type, 6 résultats par défaut, 3 000 restaurants pour le SIRET.
+- Réglables (bonne pratique) : `settings/monitoring` (taux d'annulation/refus, mini commandes, chute des commandes, hausse des remboursements, ratio livreurs/zone, tension, jours RGPD, réouverture des alertes) via `updateMonitoringSettings` avec motif et historique.
+
+---
+
+## Compte rendu global G1
+
+Lignes de cahier (16 : 6 + 2 + 6 + 2) : §1 : 2 COMPLET / 4 PARTIEL ; §2 : 1 COMPLET / 1 PARTIEL ; §3 : 3 COMPLET / 2 PARTIEL / 1 ABSENT à l'audit initial. Total d'origine : 6 COMPLET / 9 PARTIEL / 1 ABSENT / 0 FAUX ; au niveau élément détaillé : 42 COMPLET / 15 PARTIEL / 2 ABSENT / 4 FAUX.
+
+**Après `cdc-fix-e` (27/09)** : §3 « Tunnel de commande » (`checkoutStarted`/`paid` dérivés des commandes, `trackFunnelEvent` créée, écran honnête) passe ABSENT → PARTIEL. §3 devient 3 COMPLET / 3 PARTIEL / 0 ABSENT. Nouveau total §1-4 : **6 COMPLET / 10 PARTIEL / 0 ABSENT / 0 FAUX** (repris dans le tableau du §3 du corps du document).
+
+
+# Annexe C — Matrice §5 à §7 (Acteurs)
+
+
+Périmètre : lignes 154 à 272 du cahier. Audit en lecture seule (code + Firestore golink-9f16d + crawl UI `ui-finance`, `ui-metz` et `ui-support` ; `ui-commercial` ne contenait aucune page de ces rubriques au moment de l'audit ; le crawl support est cohérent avec le crawl finance : accès réservé sur la validation et l'import, listes et flotte lisibles).
+Conventions de lecture : chemins relatifs à `golink/`. « exporté » = présent dans un `index.ts` remonté par `functions/src/index.ts`. Les fiches (`/restaurants/:id`, `/livreurs/:id`, `/clients/:id`) sont des routes paramétrées non couvertes par le crawl : UI de fiche non vérifiée. Compte superadmin (2FA) non crawlé : « UI non vérifiée en superadmin » pour toute ligne sans preuve UI.
+
+Vérifications transverses faites : toutes les fonctions appelées par le front de ces rubriques existent, sont exportées et portent le même nom (reviewRestaurantApplication, reviewDocument, sendDocumentReminder, runDocumentExpiryNow, suspendRestaurant, reactivateRestaurant, updateCommercialTerms, adminUpdateRestaurant, saveRestaurantGroup, bulkRestaurantAction, importRestaurants, importMenu, startImpersonation, endImpersonation, refreshRestaurantScores, blockCustomer, creditCustomer, deleteCustomerAccount ; côté livreurs : reviewDriverApplication, reviewDriverDocument, reviewIdentityCheck, requestIdentityChecks, sanctionDriver, decideSanctionContest, getDriverFile, bulkUpdateDrivers, updateCourierPay, updateDispatchRules, dispatchOrder, previewDispatch). Automatismes exportés : checkDocumentExpiry (06:30), liftExpiredSuspensions (60 min), computeRestaurantScores (04:15), onDocumentUploaded, onProductWritten, runDriverCompliance (06:10), computeZoneLive (1 min, inclut la levée des sanctions échues), advanceDispatchOffers (1 min), enforceAcceptanceTimeout, detectAnomalies (15 min).
+
+---
+
+## §5 — Gestion des restaurants
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Inscription autonome | Le restaurant s'inscrit seul, remplit ses infos, dépose ses documents ; l'admin ne fait que valider | **COMPLET (corrigé)** | Serveur : `functions/src/core/signup.ts` (`restaurantSignup`, exporté par `core/index.ts`), `lib/emails.ts` (`restaurantSignupReceivedEmail`). Front : `apps/restaurant/src/app/router.tsx`, `auth/pages.tsx`, `features/documents/*` | Serveur complet : crée le compte Auth (ou utilise la session), la fiche `restaurants` (`onboardingStatus: pending`, `status: onboarding`), `private/commercial` + `private/legal`, réglages, membre propriétaire, alerte `restaurant_to_validate`, `legalAcceptances` (version des CGV partenaires, nom du signataire), e-mail de réception, audit `restaurant.signup`. Ville non desservie : création d'un prospect (`registerProspect`). **Mais aucun écran d'inscription** : le routeur restaurant n'a que `connexion`, `mot-de-passe-oublie`, `definir-mot-de-passe`, `acces-refuse`, `invitation` ; `grep restaurantSignup` dans `apps/` = 0 résultat (seul `functions/` la référence). De fait un restaurant ne peut pas s'inscrire seul. Autres limites : pays limités à `FR`/`LU` (`signup.ts:52`) alors que la décision client vise 6 pays ; pas de vérification d'e-mail ni de limitation d'abus visible sur une fonction publique ; le dossier naît en `pending` (« complet à examiner ») alors qu'aucun document n'est déposé. Dépôt des pièces après inscription : présent (`features/documents`, `uploadDocument`, `acceptPartnerContract`). UI non vérifiée en superadmin. **Correction cdc-fix-b :** écran `/inscription` dans `apps/restaurant` (`auth/SignupPage.tsx`, lien depuis la connexion, fr/en/ar) qui appelle `restaurantSignup` ; six pays FR, BE, LU, DZ, MA, TN ; contrôle en direct du numéro (`checkRegistrationNumber`) ; anti-abus 5 inscriptions/heure/IP ; ville non ouverte = prospect (vérifié par appel sans création de compte). Bug `onDocumentUploaded` (Kbis seul) corrigé : Kbis OU avis SIRET. |
+| Validation | Statuts En attente → Documents manquants → Validé → Refusé, avec motif envoyé ; liste des dossiers à valider | COMPLET | `functions/src/admin/acteurs/applications.ts` (`reviewRestaurantApplication`, permission `restaurants.validate`, périmètre ville via `loadRestaurantFor`) ; `apps/admin/src/features/restaurants/ValidationPage.tsx`, `fiche/DossierTab.tsx`, `components/RestaurantDialogs.tsx` (`DecisionDialog`), `hooks.ts` (pastille menu) | Approbation refusée tant qu'une pièce obligatoire n'est pas validée et que le contrat n'est pas accepté ; refus/documents manquants : motif obligatoire (≥ 3 car.), notification + e-mail au propriétaire (`notifyRestaurantOwner`), alerte fermée, audit `restaurant.approved / rejected / documents_requested` (refus = sensible). Mise en ligne immédiate optionnelle (`goLive`). Crawl : `ui-metz/restaurants_validation.json` = 1 dossier « Documents manquants », 2 pièces à vérifier avec boutons Ouvrir/Refuser/Valider ; `ui-finance/restaurants_validation.json` = « Accès réservé » (attendu pour la finance). Données : 12 restaurants (10 active/approved, 1 onboarding/documents_missing, 1 onboarding/pending). Voir la ligne complémentaire « Validation automatique » ci-dessous. |
+| Documents obligatoires | Kbis ou avis SIRET, pièce d'identité du gérant, RIB, licence si alcool ; dates d'expiration, relance automatique, blocage si expiré | PARTIEL | `packages/shared/src/models/admin-actors.ts:88` (`REQUIRED_RESTAURANT_DOCUMENTS`, `DOCUMENT_REMINDER_DAYS`) ; `functions/src/admin/acteurs/applications.ts` (`reviewDocument`, `sendDocumentReminder`, `runDocumentExpiryCheck`, `checkDocumentExpiry`, `runDocumentExpiryNow`) ; `functions/src/restaurant/documents.ts` (`uploadDocument`, `onDocumentUploaded`) | Détail des éléments dans les 6 sous-lignes ci-dessous. Bilan : validation, expiration, relance J-30/J-7 et blocage automatique **fonctionnent** ; défauts : (1) `onDocumentUploaded` exige le type `kbis` (`REQUIRED_TYPES`, `documents.ts:27`) alors que l'avis SIRET est accepté partout ailleurs : un restaurant qui dépose avis SIRET + identité + RIB ne repasse jamais de « Documents manquants » à « En attente » ; (2) les délais de relance sont une constante ; (3) aucune relance automatique des pièces jamais déposées (relance manuelle seulement). |
+| ↳ Kbis ou avis SIRET | Pièce d'immatriculation | PARTIEL | idem + `apps/restaurant/src/features/documents/hooks.ts` (`requirementsFor`) | `missingRequiredGroups` accepte `kbis` OU `siret_notice` ; l'app restaurant présente l'avis SIRET comme « facultatif » et le trigger d'auto-passage en « En attente » ne regarde que `kbis` (incohérence entre deux listes de pièces obligatoires). |
+| ↳ Pièce d'identité du gérant | `manager_id` | COMPLET | idem | Obligatoire, expiration demandée au dépôt (`expires: true`), contrôlée par `reviewDocument` (date passée refusée). Données : 10 approuvées, 2 en attente. |
+| ↳ RIB | `bank_details` | COMPLET | idem | Obligatoire, sans expiration. |
+| ↳ Licence si vente d'alcool | `alcohol_license` | Sans objet (décision client) | `restaurant/documents.ts:24` (commentaire « aucune licence demandée »), `menu/quality.ts` | La vente d'alcool est interdite et détectée/bloquée (décision client) : aucune licence n'est demandée. Le type `alcohol_license` subsiste dans `PARTNER_DOCUMENT_TYPES` et 2 documents de démonstration l'utilisent (données seed). Écart assumé avec le cahier. |
+| ↳ Dates d'expiration + relance automatique | J-30 puis J-7 | PARTIEL | `checkDocumentExpiry` (`onSchedule` 06:30 Europe/Paris, exporté), `DOCUMENT_REMINDER_DAYS = [30, 7]` | Relance e-mail + notification (`documentExpiringEmail`), compteur `remindersSent`. Délais **codés en dur** (pas paramétrables, contraire au principe « tout chiffre est un paramètre »). Bouton « Contrôler les expirations » (`runDocumentExpiryNow`, audité `documents.expiry_checked`). |
+| ↳ Blocage si document expiré | Suspension automatique | COMPLET | `runDocumentExpiryCheck` | Document `approved` échu → `expired` ; si aucune autre version valide du groupe obligatoire : restaurant `suspended` + `isOpen/acceptingOrders: false` + `suspension.kind = 'documents'`, alerte `document_expired`, audit système `restaurant.documents_blocked`, e-mail. Déblocage automatique à la validation d'une nouvelle pièce (`liftDocumentBlockIfComplete`, audit). `place.ts:225` refuse les commandes d'un restaurant non `active`. Données : 1 document `hygiene_certificate` expiré en base. |
+| Contrat | Acceptation des conditions partenaires en ligne ; version signée et date conservées | COMPLET | `functions/src/restaurant/documents.ts` (`acceptPartnerContract`), `core/signup.ts` (acceptation à l'inscription), `apps/restaurant/src/features/documents/ContractSection.tsx`, `fiche/DossierTab.tsx` | Propriétaire seul, version publiée du pays, transaction anti-doublon, `legalAcceptances` (version, date, nom du signataire, hachage IP, user-agent), `private/legal.partnerTerms*`, audit sensible. Affiché dans l'onglet Dossier (version, date, signataire). Les commerces importés par l'équipe signent à la première connexion (`partnerTermsAcceptedAt: null`). Contrats publiés : FR et LU seulement. |
+| Fiche restaurant | Créer, modifier, suspendre, supprimer ; logo, photos, coordonnées, horaires, zones, catégories de cuisine, statut | PARTIEL | `apps/admin/src/features/restaurants/RestaurantPage.tsx`, `components/CreateRestaurantDialog.tsx`, `components/EditProfileSheet.tsx`, `fiche/OverviewTab.tsx` ; `functions/src/admin/acteurs/commercial.ts` (`adminUpdateRestaurant`), `import.ts` (création à l'unité = `importRestaurants` 1 ligne) | Créer ✓ (permission `restaurants.edit`, audit `restaurant.created`). Modifier ✓ : nom, type de commerce, description, téléphone, e-mail, adresse, catégories de cuisine, étiquettes, gamme de prix, zones (contrôle même ville), modes de service, qui livre ; motif obligatoire, diff avant/après dans l'audit. Suspendre ✓ (ligne Suspension). Manquants : **suppression** (aucune fonction `deleteRestaurant` ; seule la fermeture définitive `status: closed` existe ; la décision client parle de « désactivation + corbeille » ; `deletedAt` est filtré à l'affichage mais jamais posé par une fonction) ; **logo et photos** : logo affiché en vignette seulement, photos absentes de la fiche admin, non modifiables ; **horaires** : lecture seule (`hoursSummary`) ; **coordonnées GPS** non modifiables (adresse texte seulement, la géolocalisation n'est pas recalculée quand l'adresse change). Le bandeau du panneau indique que visuels et horaires « restent gérés par le restaurant ». |
+| Conditions commerciales | Commission (défaut ou négociée), formule d'abonnement, frais de livraison, minimum de commande, moyens de paiement | COMPLET | `functions/src/admin/acteurs/commercial.ts` (`updateCommercialTerms`, `recordCommissionRule`), `fiche/CommercialTab.tsx` ; consommation : `functions/src/orders/place.ts:362-380` (minimum/frais imposés, commission négociée/offre), `finance/argent/invoices.ts` (mode de facturation) | Commission par défaut de la formule (`plans`) ou négociée sur 3 taux (livraison GoLink / livreurs propres / retrait) avec échéance, offre spéciale datée, mode de facturation (`commission/subscription/hybrid`), frais et minimum imposés, moyens de paiement (titres-restaurant et avoirs refusés, espèces seulement si livreurs propres — décisions client respectées), fréquence de reversement. Motif obligatoire, historique versionné `commissionRules` (7 documents), audit sensible avec avant/après. |
+| Liste et filtres | Filtrer par ville, statut, formule, date d'inscription, note, CA, taux d'annulation ; enregistrer des filtres | COMPLET | `apps/admin/.../restaurants/RestaurantsPage.tsx`, `acteurs-commun/SavedFilters.tsx` (collection `savedFilters`, règles `admin.rules`) | Tous les critères présents (ville, onglets de statut, formule, type, note, CA 30 j, taux d'annulation, fenêtre d'inscription 7/30/90/365 j, score, allergènes) + recherche. Filtres enregistrés propres ou partagés. Crawl : `ui-finance/restaurants.json` = 12 lignes, « Filtres enregistrés 3 », KPI ; `ui-metz/restaurants.json` = 4 lignes (périmètre ville respecté). Remarques : chargement plafonné à 1 000 commerces en mémoire (`limit(1000)`) et filtrage côté navigateur ; « date d'inscription » = fenêtres glissantes, pas d'intervalle libre. |
+| Actions groupées | Sur une sélection : commission/formule, fonctionnalité, message, suspendre, exporter | PARTIEL | `functions/src/admin/acteurs/bulk.ts` (`bulkRestaurantAction`, tâche `bulkJobs`), `bulk-helpers.ts`, `components/BulkActionDialog.tsx` | Les 5 actions sont branchées (détail ci-dessous). Motif obligatoire, droits combinés (`restaurants.bulk` + droit propre), audit `restaurants.bulk_*`, suivi `bulkJobs`, sélection ≤ 300. Défauts : fonctionnalité (job orphelin) et export (non contrôlé côté serveur). |
+| ↳ Changer la commission | `set_commission` | COMPLET | `applyCommercialPatch` (`commercial.ts`) | Écrit `negotiatedCommission`, crée une version `commissionRules`, audit par commerce (sensible). Réserve : remplace la négociation existante (échéance perdue). |
+| ↳ Changer la formule | `set_plan` | COMPLET | idem | Met à jour `planCode` (fiche + `private/commercial`) et le barème. |
+| ↳ Activer/désactiver une fonctionnalité | `set_feature` | FAUX (cas d'échec) | `bulk.ts:113-134` | Écrit des surcharges `featureFlags.overrides` (consommées par `restaurant/config-context.ts:64`). Mais le `throw` du drapeau introuvable/verrouillé est hors du `try` : le job reste `running` à jamais et **aucun audit** n'est écrit. Constat en base : 3 `bulkJobs` `bulk_update_restaurants / running / set_feature` (feature `alcohol_sales`, verrouillée), `processed: 0`. |
+| ↳ Envoyer un message | `send_message` | COMPLET | `notifyRestaurantOwner` + `partnerMessageEmail` | Notification (catégorie annonce) + e-mail Brevo (simulé pour données de démonstration), audit non sensible. |
+| ↳ Suspendre | `suspend` | COMPLET | `applySuspension` (`status.ts`) | Suspension temporaire (durée ou sans terme), motif, message, e-mail, audit sensible par commerce. Action inverse `reactivate` fournie. |
+| ↳ Exporter | `export` | PARTIEL | `RestaurantsPage.tsx:301-308`, `acteurs-commun/export.ts` | Export CSV/Excel généré dans le navigateur. La trace d'audit n'est envoyée que si `can('exports.run')` et pour les 300 premiers identifiants ; sans ce droit l'export part quand même, sans contrôle serveur ni audit. Le job `export` ne produit aucun fichier (`output: null`). 4 jobs `export` en base. |
+| Import en masse | Liste de restaurants ou menu complet depuis un fichier (arrivée d'une chaîne) | COMPLET | `functions/src/admin/acteurs/import.ts` (`importRestaurants`, `restaurants.import`) ; `functions/src/menu/import.ts` (`importMenu`, audit `menu.imported`) ; `apps/admin/.../ImportPage.tsx` | Fichier CSV/Excel + modèle, simulation obligatoire (`dryRun`) avec erreurs/avertissements par ligne, détection de doublons (nom + code postal), périmètre ville, création fiche + compte propriétaire + réglages + accès + e-mail d'accès, `groupId` en colonne (chaîne), tâche `bulkJobs`, audit. Import de carte : sections créées à la volée, rapprochement par référence puis nom, alcool importé hors vente. Crawl : `ui-metz/restaurants_import.json` = section « Importer une carte complète » ; `ui-finance` = « Accès réservé ». Réserve : 500 lignes traitées en séquence (création d'utilisateur + e-mail par ligne) dans une fonction limitée à 300 s : risque de dépassement, la tâche resterait `running`. |
+| Contrôle qualité des menus | Signalement automatique (plat sans photo, prix aberrant, allergènes non renseignés) et correction si besoin | PARTIEL | `functions/src/menu/quality.ts` (`onProductWritten`, exporté par `menu/index.ts`) ; `apps/admin/.../QualityPage.tsx`, `components/MenuIssues.tsx` ; collection `menuIssues` | Détection automatique à chaque écriture de produit : sans photo, sans description, allergènes non déclarés, prix inhabituel (nul, > 200 €, écart ×4 avec la section), alcool suspecté (produit retiré de la vente). Crawl : `ui-finance/restaurants_qualite.json` = 54 anomalies ouvertes ; `ui-metz` : boutons Corriger / Résolue / Ignorer. Défauts : (1) la **correction admin** (`ProductFixSheet`) et la clôture d'anomalie sont des `updateDoc` directs autorisés par les règles (`restaurants.rules:82,231`), sans Cloud Function, sans `writeAudit`, sans motif, et la sauvegarde force `allergensDeclared: true` (l'équipe peut déclarer « aucun allergène » à la place du restaurant) ; (2) `empty_section` déclaré mais aucun producteur ; (3) contrôle déclenché seulement à l'écriture d'un produit (rien ne se recalcule si les seuils changent) ; (4) seuils en dur. |
+| Allergènes | Obligation légale : liste des restaurants dont les allergènes sont incomplets | COMPLET | `menu/quality.ts` (`syncAllergensComplete` → `restaurants.allergensComplete`) ; `QualityPage.tsx` (onglet Allergènes), `RestaurantsPage.tsx` (filtre, icône) | Indicateur tenu automatiquement par trigger, liste dédiée, filtre et KPI. Réserve : incohérence d'affichage entre `ui-finance/restaurants.json` (« 0 allergènes incomplets », commerces en ligne seulement) et `restaurants_qualite.json` (« Allergènes incomplets 2 », inclut les commerces en inscription) ; pas d'action « relancer » depuis la liste. |
+| Score de qualité | Note globale (annulations, refus, retards, avis) pour repérer ceux à accompagner ou à suspendre | COMPLET | `functions/src/admin/acteurs/quality.ts` (`computeRestaurantScore`, `computeRestaurantScores` 04:15, `refreshRestaurantScores`) ; `packages/shared/src/models/admin-actors.ts` (`computeQualityScore`, `QUALITY_THRESHOLDS`) ; `fiche/QualityTab.tsx`, `QualityPage.tsx` | Agrégats glissants 30 j depuis `restaurants/{id}/dailyStats` (alimentés par `orders/triggers.ts`), pénalités annulations/refus/retards/avis/anomalies de carte avec décomposition, seuils « à surveiller » (< 80) et « à accompagner » (< 65). Crawl : moyenne 52/100 et 9 commerces à accompagner (`ui-finance/restaurants.json`). Pondérations et seuils **codés en dur** (voir section dédiée). Aucune suspension automatique (le cahier demande seulement de « repérer »). |
+| Suspension | Temporaire ou définitive, motif, message, réactivation | COMPLET | `functions/src/admin/acteurs/status.ts` (`suspendRestaurant`, `reactivateRestaurant`, `liftExpiredSuspensions` toutes les heures) ; `RestaurantDialogs.tsx` | Temporaire (fin obligatoire, ≤ 365 j) ou définitive (`closed`), motif obligatoire, message, e-mail, audit sensible ; réactivation manuelle ou automatique à l'échéance ; blocage effectif des commandes. Données : 6 audits `restaurant.suspended`. |
+| Statistiques et finances | Commandes, CA, commissions, reversements, factures, abonnement | COMPLET | `apps/admin/.../fiche/StatsTab.tsx` | Lit `dailyStats` (commandes, CA, panier, commissions, net), `payouts`, `invoices`, `subscriptions`, selon `finance.view` / `subscriptions.manage`. UI de la fiche non vérifiée (route paramétrée). |
+| « Voir comme le restaurant » | Accès à l'interface du restaurant pour dépannage, lecture seule, toute action enregistrée au journal d'audit | PARTIEL | `functions/src/admin/acteurs/impersonation.ts` (`startImpersonation`, `endImpersonation`) ; `apps/restaurant/src/auth/Impersonation.tsx` ; `RestaurantDialogs.tsx` (`ImpersonateDialog`) ; règles `admin.rules:74` | Ouverture avec motif obligatoire, durée 5-120 min, session `impersonationSessions` (mode `read_only`), audit sensible à l'ouverture et à la fin, bandeau « Lecture seule » dans l'app restaurant, permissions de consultation uniquement. Limites : (1) lecture seule et expiration ne sont appliquées **que par l'interface** (`READ_ONLY_PERMISSIONS`, horloge locale) : les lectures Firestore dépendent des droits admin (`restaurants.view`…) et non de la session ; rien ne coupe l'accès à l'échéance ; (2) « toute action enregistrée » : `actionsCount` est créé à 0 et jamais incrémenté, aucune consultation n'est tracée, seuls début/fin sont audités ; (3) le schéma prévoit un « jeton personnalisé limité » qui n'existe pas ; (4) pas de tâche qui clôt les sessions expirées (`endedAt` reste nul). Données : 2 sessions (terminées), 5 audits `impersonation_started`. |
+| Notes internes et historique | Notes visibles seulement par l'équipe ; historique de toutes les modifications | PARTIEL | `acteurs-commun/NotesPanel.tsx` (collection `internalNotes`, `admin.rules:52`), `HistoryPanel.tsx` (lit `auditLogs`), `audit-labels.ts` | Notes : écriture directe Firestore, lecture réservée aux administrateurs, modification/suppression par l'auteur seulement. Historique : journal d'audit filtré sur le restaurant, réservé à `audit.view` (`admin.rules:29` ; message « Historique réservé » sinon). « Toutes les modifications » n'est pas garanti : les modifications faites directement par le restaurant sur sa fiche (règle `restaurants.rules:38`) et les corrections de produits faites par l'admin (voir Contrôle qualité) ne passent pas par une fonction et ne sont pas auditées. Données : 6 notes en base. |
+| Groupes et chaînes | Propriétaire avec plusieurs établissements : compte groupe, conditions communes, stats consolidées | PARTIEL | `functions/src/admin/acteurs/commercial.ts` (`saveRestaurantGroup`) ; `apps/admin/.../GroupsPage.tsx` ; collection `restaurantGroups` | Création/modification d'un groupe (propriétaire par e-mail, établissements du même pays, commission et formule communes appliquées à chaque établissement via `applyCommercialPatch`, audit avec motif), statistiques consolidées (CA, commandes, commissions, qualité sur 30 j — somme côté navigateur). Crawl : « Maison Haddad — 3 établissements — CA 30 j 8 262,30 € » (`ui-finance`), 1 établissement en périmètre Metz. Manquants : **compte groupe** (le propriétaire n'est qu'une référence `ownerId` : aucun accès multi-établissements créé, aucune vue groupe côté app restaurant) ; **facturation consolidée** (`consolidatedBilling` stocké et affiché, aucune fonction de facturation ne le lit) ; conditions communes appliquées **une seule fois** à l'enregistrement et seulement si elles changent (un établissement ajouté ensuite n'en hérite pas) ; la « commission commune » ne renseigne que le taux livraison GoLink ; aucune suppression/dissolution de groupe. |
+
+### Lignes complémentaires §5
+
+| Ligne du cahier / décision | Élément | Statut | Où | Preuve et remarques |
+|---|---|---|---|---|
+| Décision client (questionnaire n° 14) | Validation automatique des commerces dès que les documents sont complets et valides, règle activable dans le super admin | **COMPLET (corrigé)** | `applications.ts`, `restaurant/documents.ts` | Aucune règle, aucun paramètre, aucune fonction ne valide automatiquement : `onDocumentUploaded` fait seulement passer un dossier de « documents manquants » à « en attente » ; `reviewRestaurantApplication` est manuel. `grep` « validation automatique / auto-approve » = 0 résultat. Décision non réalisée. **Correction cdc-fix-b :** `restaurant/auto-validation.ts` + réglage `settings/merchantValidation` (modes off/suggestion/auto, contrôles pièces, dates, numéro, contrat, ville, plafond) modifiable sur `/restaurants/validation` ; déclenché au dépôt de pièce, à l'acceptation du contrat et chaque heure. Test réel `scripts/tests/cdc-fix-b.flow.mjs validation`. |
+
+**Bilan §5** (17 lignes du cahier) : 9 COMPLET / 8 PARTIEL / 0 ABSENT / 0 FAUX ; plus 1 ligne complémentaire ABSENT (validation automatique) et, en sous-éléments, 1 FAUX (action groupée « fonctionnalité » en cas d'échec) et 1 PARTIEL (export groupé). Le brief annonce 18 lignes : le cahier en contient 17 (lignes 160-211) ; la 18e est comptée ici comme la validation automatique de la décision client.
+
+**Trous §5 (priorité proposée)**
+- P0 — Aucun écran d'inscription autonome (app restaurant) alors que `restaurantSignup` est prête ; étendre aux 6 pays (FR/LU seulement aujourd'hui).
+- P0 — Validation automatique des commerces (décision client) absente.
+- P1 — `onDocumentUploaded` : accepter `siret_notice` comme équivalent du Kbis (aligner sur `REQUIRED_RESTAURANT_DOCUMENTS`), sinon dossiers coincés en « Documents manquants ».
+- P1 — `bulkRestaurantAction` : encapsuler dans un `try/finally` pour clore le job (`failed`) et auditer l'échec ; nettoyer les 3 jobs `running` orphelins.
+- P1 — « Voir comme » : appliquer la lecture seule et l'échéance côté serveur (règles ou jeton), incrémenter/journaliser les consultations, clôturer les sessions expirées.
+- P1 — Export groupé : passer par une fonction (contrôle `exports.run`, audit, plafond) au lieu de l'export navigateur non tracé.
+- P1 — Corrections de produits par l'équipe : passer par une Cloud Function auditée avec motif ; ne pas forcer `allergensDeclared`.
+- P1 — Groupes : compte groupe réel (accès multi-établissements), facturation consolidée branchée, héritage des conditions pour les nouveaux membres, dissolution.
+- P1 — Fiche : suppression (désactivation + corbeille, décision client), photos/logo et horaires modifiables ou au moins visibles.
+- P2 — Délais de relance des documents, seuils/pondérations du score et du prix aberrant paramétrables ; producteur `empty_section` ; incohérence du compteur « allergènes incomplets » ; import de 500 lignes vs limite de 300 s.
+
+
+---
+
+## §6 — Gestion des livreurs
+
+Constat structurant : `apps/driver/App.tsx` est un écran provisoire (« Interface en attente des maquettes »). Toute la chaîne côté livreur (inscription autonome, dépôt de pièces, selfie, contestation, acceptation des courses, position en direct) n'a donc aucun client ; les règles Firestore et Storage (`drivers.rules`, `storage/files.rules`) l'anticipent (création de `partnerDocuments`, mise à jour `identityChecks` et `driverSanctions` par le livreur, écriture de `driverLocations`), mais rien ne les exerce. Les 48 livreurs en base sont des données de démonstration (`seed: true`) ; la seule création réelle de fiche livreur est `inviteOwnCourier` (livreurs propres d'un commerce).
+
+Le cahier compte 11 lignes pour cette rubrique (lignes 224-252), non 10.
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Inscription et validation | Inscription autonome ; statuts En attente → Documents manquants → Validé → Refusé → Suspendu, avec motif | PARTIEL | `functions/src/admin/operations/drivers.ts` (`reviewDriverApplication`, `drivers.validate`, exporté par `operations/index.ts`) ; `apps/admin/src/features/livreurs/ApplicationsPage.tsx`, `dialogs.tsx` ; `lib.ts` (pastille du menu) | Validation à la main (décision client) : approbation bloquée si pièces obligatoires manquantes ou expirées, demande de pièces et refus avec motif obligatoire transmis (notification + e-mail), refus impossible avec course en cours, audit `driver.application_*`. Statuts modélisés (`onboarding/pending/documents_missing/approved/rejected` et `status` active/suspended/deactivated ; « Refusé » = `deactivated`). Crawl : `ui-metz/livreurs_validation.json` = 2 inscriptions à examiner (pièces validées 3/6 et 0/4) ; `ui-finance` = « Accès réservé » (attendu). **Inscription autonome ABSENTE** : aucune fonction de création de livreur plateforme, aucun écran (`apps/driver` = placeholder). |
+| Documents | Identité, titre de séjour / autorisation de travail si concerné, SIRET, attestation URSSAF, assurance, permis et carte grise si motorisé ; expiration surveillée, blocage automatique | PARTIEL | `packages/shared/src/models/operations.ts:38` (`driverDocumentRequirements`) ; `drivers.ts` (`reviewDriverDocument`, `getDriverFile`) ; `admin/operations/compliance.ts` (`evaluateDriverDocuments`, `applyDocumentState`) ; `live.ts` (`documentExpiry`, `runDriverCompliance` 06:10, exporté) ; `livreurs/DocumentsPage.tsx` | Éléments : identité ✓ (obligatoire, expire) ; SIRET ✓, attestation de vigilance URSSAF ✓, assurance ✓ (livreurs plateforme) ; permis et carte grise ✓ si véhicule motorisé ; titre de séjour et autorisation de travail déclarés `required: false` sans mécanisme « si concerné » (jamais exigés). Contrôle : date d'expiration exigée pour les pièces qui expirent, pièce déjà échue refusée, motif de refus. Surveillance : relances à J-30 et J-7, passage en `expired`, **blocage automatique** (`status: suspended`, `blocked.reason: documents_expired`), audit système `driver.blocked_documents_expired`, e-mail, **déblocage automatique** à la validation d'une pièce à jour. Crawl : `ui-metz/livreurs_documents.json` = 7 documents « À vérifier » avec boutons Vérifier. Manquants ou limites : dépôt par le livreur impossible faute d'application ; liste de pièces figée dans le code et propre à la France (URSSAF, SIRET) alors que le périmètre inclut Algérie, Maroc, Tunisie ; délais de relance en dur ; relance de pièce expirante = notification seule (pas d'e-mail). |
+| Vérification d'identité | Contrôle ponctuel par selfie pour vérifier que la personne est bien le titulaire | PARTIEL | `drivers.ts` (`requestIdentityChecks`, `reviewIdentityCheck`) ; `live.ts` (`identityChecks`, contrôles aléatoires) ; `livreurs/IdentityPage.tsx` ; `drivers.rules:52` | Demande manuelle par lot (audit + notification), contrôle aléatoire quotidien (5 % des livreurs plateforme actifs non contrôlés depuis 30 j), décision « conforme / non conforme » : un échec suspend le compte (`blocked.reason: identity_check_failed`, audit sensible). Crawl `ui-metz/livreurs_identite.json` : 3 contrôles, « Clara Blanc — À examiner », boutons Non conforme / C'est bien le titulaire. Défauts : (1) l'écran affiche « Ressemblance estimée 88 % — Indication automatique » alors que `matchScore` n'est **jamais calculé** (toujours `null` dans le code ; valeur présente seulement dans les données seed) : information trompeuse ; (2) selfie à envoyer par le livreur : aucune application ; (3) une demande sans réponse passe `expired` après 48 h sans aucune conséquence (ni relance, ni blocage) ; (4) le déclencheur `fraud_signal` observé en base n'est créé par aucune fonction de ce périmètre. Fréquence, part et délais codés en dur. |
+| Type de livreur | Livreur de la plateforme ou livreur propre à un restaurant | COMPLET | `packages/shared/src/models/drivers.ts` (`type: platform \| restaurant`) ; `functions/src/restaurant/couriers.ts` (`inviteOwnCourier`) ; `livreurs/DriversPage.tsx`, `DriverPage.tsx` ; `orders/dispatch*.ts` | Filtre « Type », badges « GoLink » et « Salarié commerce », employeur affiché sur la fiche ; règles distinctes appliquées : pas de pièces SIRET/URSSAF/assurance pour les salariés, espèces réservées au type `restaurant` (`bulkUpdateDrivers set_cash`), exclus de l'attribution plateforme (`evaluateCandidates` : « Livreur salarié d'un commerce »). Données : 34 plateforme actifs, 3 restaurant actifs, 1 restaurant en inscription. Lien avec la fiche employé RH (décision client) non vérifié. |
+| Fiche livreur | Identité, téléphone, véhicule, zone, statut, historique, note, notes internes | COMPLET | `apps/admin/src/features/livreurs/DriverPage.tsx` (onglets Vue d'ensemble, Courses, Gains, Documents, Sanctions, Historique) ; règles `drivers.rules` ; `admin/experience/reviews.ts` (`recomputeRatings`) | Identité et coordonnées (masquées selon le rôle, `useContactMask`), identité légale privée, véhicule, ville et zones (modifiables via `bulkUpdateDrivers set_zones`), statut et blocage, distance maximale choisie, position, courses (40 dernières), sanctions, historique (`auditLogs`), contrôles d'identité, notes internes (`internalNotes`). La note est réelle (recalculée à chaque avis). UI de fiche non vérifiée (route paramétrée) ; l'onglet « Gains » relève de la ligne Rémunération. |
+| Vue par zone | Nombre de livreurs en ligne, disponibles, en course par zone ; alerte en cas de manque | PARTIEL | `apps/admin/src/features/flotte/FleetPage.tsx` (module `flotte`, permission `drivers.view`) ; `admin/operations/live.ts` (`computeZoneLive`, `onDriverLocationWritten`) ; `admin/pilotage/anomalies.ts` (`zoneShortages`, `detectAnomalies`) | Comptages par zone (en ligne, disponibles, en course, commandes sans livreur, ratio) lus sur `driverLocations` et `orders` ; zone du livreur tenue par trigger. Crawl : `ui-finance/flotte.json` = 16 livreurs en ligne, 13 lignes de zones ; `ui-metz/flotte.json` = 4 livreurs, zone Metz Centre 4/3/1. Défauts : (1) deux paramètres différents pour la même alerte : la page utilise `dispatch.shortageRatioAlert` (surchargeable ville et zone), l'alerte serveur (`anomalies.ts`) utilise `settings/monitoring.zoneDriverRatio` et exige au moins 2 commandes en attente ; (2) `settings/dispatch` n'est pas lisible pour un compte ville sans `settings.view` (`platform.rules:11`) : la page retombe sans le dire sur les valeurs par défaut ; (3) les positions dépendent de l'application livreur absente ; (4) carte : erreur console `RefererNotAllowedMapError` dans `ui-metz/flotte.json` (configuration de la clé Google Maps pour l'adresse de test, pas un défaut de code). |
+| Performance | Livraisons, taux d'acceptation, annulations, temps moyen, note clients | FAUX | `apps/admin/src/features/livreurs/DriverPage.tsx:312-314`, `DriversPage.tsx` (colonnes Livraisons et Acceptation), `lib.ts` (export CSV) ; modèle `drivers.stats` | Les écrans lisent `driver.stats.{deliveries, acceptanceRate, cancellationRate, onTimeRate, averageDeliveryMinutes}`. **Aucune fonction n'écrit ces champs** (recherche dans `functions/src` : lectures seulement dans `pilotage/analytics.ts` et `exports.ts`) : ils valent 0 pour tout livreur réel et ne contiennent que les valeurs de démonstration pour les livreurs seed (ex. 94 % d'acceptation, 180 livraisons). Seule la note client est réelle (`recomputeRatings`). Seul le panneau d'attribution calcule un taux d'acceptation, à partir de `dispatchOffers` sur 30 j. |
+| Rémunération | Règles (par course, par distance, bonus heures de pointe), gains, pourboires reversés intégralement | PARTIEL | `functions/src/admin/operations/rules.ts` (`updateCourierPay`, `drivers.pay_rules`) ; `packages/shared/src/pricing/settlement.ts` (`computeCourierPay`) ; consommation `orders/place.ts:424`, `finance/argent/settlement.ts:95-104` ; `livreurs/PayRulesPage.tsx` | Règles : forfait sous le seuil (2 km par défaut), puis au kilomètre au-delà (ou distance totale), attente rémunérée, garantie horaire, ancien barème conservé ; réglables par pays et par ville, motif obligatoire, historique `settingsHistory`, audit sensible ; simulateur de course ; crawl `ui-metz/livreurs_remuneration.json` = barème de Metz hérité de la France, champs seuil, forfait, prix au km, bonus. Pourboires à 100 % pour le livreur (écriture comptable `courier_tip` du livreur à la livraison). Défauts : (1) **bonus heure de pointe inopérant** : `peakBonusCents` n'est appliqué que si `isPeak` est passé à `computeCourierPay`, or aucun appelant serveur ne le passe (recherche `isPeak` dans `functions/` = 0) ; seul le bonus des règles de pointe des zones (`courierSurgeBonusCents`) est réellement versé ; (2) **gains** affichés depuis `driverEarnings`, collection qu'aucune fonction n'alimente (seul le parrainage y écrit) : les 500 documents sont de démonstration, la vraie source (`ledgerEntries` compte `driver`) n'est pas lue par ces écrans ; (3) distance rémunérée = distance restaurant-client seulement. |
+| Attribution des courses | Règles par zone : plus proche, délai pour accepter, élargissement si personne n'accepte | PARTIEL | `functions/src/admin/operations/rules.ts` (`updateDispatchRules`, périmètre plateforme, ville, zone) ; `functions/src/orders/dispatch-advanced.ts`, `dispatch.ts`, `scheduled.ts` (`autoDispatch`) ; `admin/operations/dispatch.ts` (`respondToOffer`, `advanceDispatchOffers` 1 min, `previewDispatch`) ; `livreurs/DispatchRulesPage.tsx` | Moteur avancé : stratégie (plus proche, plus proche pondéré par la note, groupé), préférences du livreur (distance max, zones), note minimale, blocages du commerce, capacité, tours à rayon croissant (2 km puis +1 km par tour jusqu'à 6 km, 5 tours), alerte « course sans livreur » (`dispatch_failed`), relance automatique des propositions expirées. Règles historisées et auditées. Défauts : (1) **délai pour accepter** : actif seulement en mode `offers` ; le mode par défaut et celui de la base est `auto_assign` (attribution directe sans acceptation) : par défaut le délai n'intervient pas ; (2) **page inutilisable pour un compte ville** : `ui-metz/livreurs_attribution.json` affiche « Chargement impossible — Vous n'avez pas les droits pour cette action » car la page lit `settings/dispatch` (règle `settings.view`) alors que la route ne demande que `drivers.view` ; (3) `respondToOffer` suppose l'application livreur, absente ; (4) pondérations de score (malus 400 m hors zone, 600 m par course active, vitesse 250 m/min) codées en dur. |
+| Sanctions | Avertissement, suspension temporaire, désactivation, motif, possibilité de contester | COMPLET | `drivers.ts` (`sanctionDriver`, `decideSanctionContest`, `drivers.sanction`) ; `live.ts` (`expireSanctions` dans `computeZoneLive`) ; `livreurs/SanctionsPage.tsx`, `dialogs.tsx` ; `drivers.rules:39-50` | Trois types, motif obligatoire, durée pour la suspension, refus si course en cours, effet immédiat sur le statut, notification + e-mail, audit (sensible sauf avertissement). Contestation : le livreur écrit `contest` (règle Firestore), l'équipe tranche « maintenue / annulée » avec note obligatoire (audit, levée de la sanction si annulée) ; fin automatique des suspensions à l'échéance (tâche chaque minute). Crawl : `ui-metz/livreurs_sanctions.json` = « Contestations à trancher 2 », boutons Nouvelle sanction et Trancher ; `ui-finance` : 3 contestations. Données : 5 sanctions (3 contestées). Réserves : le dépôt de la contestation par le livreur n'a pas de client (application absente) ; durée d'un avertissement (30 j) codée en dur. |
+| Actions groupées | Message, activation, export sur une sélection de livreurs | PARTIEL | `drivers.ts` (`bulkUpdateDrivers`) ; `livreurs/DriversPage.tsx`, `lib.ts` (`exportDriversCsv`) | Message ✓ (notification par livreur, audit `driver.bulk_message`), activation ou réactivation ✓ (contrôle documents et sanction, audit), désactivation, selfie, sanction, espèces, zones ✓. Défauts : (1) **export** : CSV généré côté navigateur (`exportDriversCsv`), sans contrôle `exports.run`, sans audit, alors qu'il contient des données personnelles (masquées selon le rôle) ; (2) le message groupé n'exige que `drivers.view` (`drivers.ts`, `permission = ... 'drivers.view'`) et échappe au contrôle `drivers.bulk` : un profil en lecture seule peut notifier jusqu'à 300 livreurs. |
+
+**Bilan §6** (11 lignes du cahier) : 3 COMPLET / 7 PARTIEL / 0 ABSENT / 1 FAUX ; en sous-éléments : inscription autonome livreur ABSENTE, bonus de pointe FAUX (inopérant), gains FAUX (source non alimentée), « ressemblance estimée » FAUX (jamais calculée).
+
+**Trous §6 (priorité proposée)**
+- P0 — Application livreur absente : inscription autonome, dépôt de documents, selfie, contestation, acceptation de course, position ; sans elle, la moitié de la rubrique (validation, blocage documentaire, sanctions, attribution, flotte) n'a pas de source de données réelle.
+- P0 — Statistiques de performance livreur jamais calculées (`drivers.stats`) : ajouter le calcul (déclencheur sur `orders` et `dispatchOffers`) ou dériver l'affichage de données réelles.
+- P0 — Rémunération : brancher `isPeak` et le bonus de pointe dans le règlement (ou retirer le champ) ; alimenter ou lire les gains réels (`ledgerEntries` `courier_earning`) au lieu de `driverEarnings`.
+- P1 — Attribution : rendre `settings/dispatch` lisible pour les comptes ville (règle ou lecture via fonction) ; trancher le mode par défaut (`offers` pour appliquer le délai d'acceptation attendu par le cahier).
+- P1 — Vérification d'identité : supprimer ou fonder l'affichage « ressemblance estimée » ; définir la suite d'un contrôle expiré sans réponse.
+- P1 — Export et message groupés : contrôles `exports.run` et `drivers.bulk`, audit de l'export.
+- P1 — Aligner le seuil d'alerte de manque de livreurs (un seul paramètre, surcharge ville et zone).
+- P2 — Pièces exigées paramétrables par pays (hors France), titre de séjour « si concerné », relances des pièces avec e-mail, délais et fréquences (relances 30/7 j, 5 %, 30 j, 48 h, avertissement 30 j) en paramètres.
+
+---
+
+## §7 — Gestion des clients
+
+Données : 168 comptes `users` dont 150 clients visibles côté finance (`ui-finance/clients.json` : 150 clients, 40 nouveaux sur 30 j, 1 compte bloqué, 225,00 € d'avoirs en circulation ; `ui-metz/clients.json` : 50 clients, e-mails masqués, 0 bloqué).
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Fiche client | Coordonnées, adresses, commandes, dépenses, favoris, points de fidélité, promos utilisées, tickets | COMPLET | `apps/admin/src/features/clients/ClientPage.tsx`, `lib.ts` ; `functions/src/orders/triggers.ts:105-113` (agrégats `stats.ordersCount`, `totalSpentCents`, `lastOrderAt`) | Onglets Aperçu, Commandes, Remboursements et avoirs, Support et promotions, Risque, Notes. Coordonnées masquées selon le rôle (`displayEmail`, `displayPhone`, confirmé sur `ui-metz/clients.json`), adresses (`users/{id}/addresses`), commandes, dépenses (agrégat serveur), favoris, points de fidélité (`loyaltyAccounts`), promotions utilisées (`promotionRedemptions`, droit `promotions.view`), tickets (`supportTickets`, `support.view`). UI de fiche non vérifiée (route paramétrée). Données de démonstration incohérentes visibles dans la liste (clients avec 3 commandes, 0,00 € dépensé, « dernière commande : jamais »). |
+| Moyens de paiement | Visibles de façon masquée, jamais le numéro complet | COMPLET | `ClientPage.tsx` (panneau « Moyens de paiement ») ; modèle `SavedPaymentMethod` (`brand`, `last4`) | Seules la marque et les 4 derniers chiffres existent en base (`users/{id}/paymentMethods`) ; le panneau précise que GoLink ne stocke jamais le numéro complet. |
+| Remboursements et avoirs | Historique ; possibilité de créditer un avoir | COMPLET | `functions/src/admin/acteurs/customers.ts` (`creditCustomer`, `customers.credit`) ; `clients/components/CustomerDialogs.tsx` ; `ClientPage.tsx` (onglet Remboursements et avoirs) | Historique : `refunds` (droit `refunds.create` ou `finance.view`) et `walletTransactions`. Crédit : plafond selon le rôle (`admin.refundLimitCents` ou `DEFAULT_REFUND_LIMITS`), motif et note obligatoires, transaction atomique portefeuille + écriture comptable ; imputation au commerce pour remboursement ou retard lié à une commande (décision client) ; audit sensible avec montants. Réserves : montant maximal 500 € codé en dur (`MAX_CREDIT_CENTS`) ; la validité par défaut `settings/refunds.walletCreditValidityDays` (180 j) n'est pas utilisée ici (elle l'est dans `experience/refunds.ts`) : sans choix de l'opérateur l'avoir n'expire pas ; deux chemins de crédit d'avoir coexistent. |
+| Blocage | Bloquer / débloquer un compte avec motif | COMPLET | `customers.ts` (`blockCustomer`, `customers.block`) ; `ClientsPage.tsx` (blocage groupé), `CustomerDialogs.tsx` ; `orders/place.ts:211` | Motif obligatoire, statut `blocked` / `active`, compte Auth désactivé et sessions révoquées, commande refusée par `placeOrder` pour tout compte non actif, audit sensible avant/après. Données : 1 compte bloqué (`ui-finance/clients.json`). |
+| Indicateurs de risque | Réclamations et remboursements répétés, commandes non récupérées (voir Fraude) | PARTIEL | `packages/shared/src/models/admin-actors.ts` (`customerRiskLevel`) ; `clients/lib.ts` (`riskOf`), `ClientPage.tsx` (onglet Risque, colonne Risque de la liste) ; `platform/fraud.ts` (`detectFraudSignals`) | Le niveau combine 5 signaux. Fonctionnent réellement : « commandes non récupérées » (calculé sur les commandes `closedAs: customer_absent` chargées) et « réclamations répétées » (`flags.disputed`). **Ne se déclenchent pas en production** : « remboursements répétés » et « annulations fréquentes » lisent `user.stats.refundsCount` et `cancelledCount`, jamais incrémentés par aucune fonction (seuls `ordersCount`, `totalSpentCents`, `lastOrderAt` le sont) ; « signaux de fraude » lit `userPrivate.riskFlags` et `riskScore`, que ni `fraud.ts` (qui alimente `fraudCases`) ni aucune autre fonction n'écrit (2 documents sur 168 en base, données seed). La liste affiche donc quasi toujours « Faible » (`ui-finance/clients.json`). |
+| Suppression de compte | Selon les obligations de conservation (voir RGPD) | COMPLET | `customers.ts` (`deleteCustomerAccount`, `customers.delete`) ; `packages/shared` (`CUSTOMER_RETAINED_DATA`) ; `platform/gdpr.ts` | Refus si commande en cours, anonymisation du profil, suppression des sous-collections personnelles (adresses, favoris, appareils, moyens de paiement, notifications), purge des données privées, suppression du compte Auth, dossier `gdprRequests` (existant ou créé) avec la liste des données conservées, audit sensible. Réserves : le solde d'avoir restant est annulé sans remboursement (`forfeitedCents`) ; le statut `pending_deletion` est affiché mais ce périmètre ne le pose pas. |
+
+**Bilan §7** (6 lignes) : 5 COMPLET / 1 PARTIEL / 0 ABSENT / 0 FAUX.
+
+**Trous §7 (priorité proposée)**
+- P1 — Alimenter `users.stats.cancelledCount` et `refundsCount` ainsi que `userPrivate.riskFlags` et `riskScore` (ou lire les `fraudCases`) : sans cela les indicateurs de risque de la ligne du cahier sont muets.
+- P1 — Export CSV des clients fait dans le navigateur (`ClientsPage.tsx:186`), sans contrôle `exports.run` ni audit (données personnelles ; un seuil d'alerte `massExportRows` existe dans `settings/security`).
+- P2 — Plafond d'avoir et paliers de risque en paramètres ; appliquer la validité par défaut des avoirs ; unifier les deux chemins de crédit ; rembourser ou reporter le solde d'avoir à la suppression.
+
+---
+
+## Écarts avec DECISIONS_CLIENT / questionnaire
+
+- Validation des commerces « automatiquement si possible via super admin » (questionnaire n° 14, DECISIONS) : non réalisée (aucune règle activable ni fonction).
+- Pays visés (France, Belgique, Luxembourg, Algérie, Maroc, Tunisie) : `restaurantSignup` n'accepte que `FR` et `LU` ; contrats partenaires publiés pour FR et LU seulement ; pièces livreur propres à la France.
+- Rémunération des livreurs, « bonus heures de pointe » paramétrable par ville : le champ existe mais n'est pas appliqué au règlement (voir §6).
+- Délai d'acceptation de course : présent mais inactif par défaut (`mode: auto_assign`).
+- Alcool : cohérent avec la décision (licence non demandée, produits détectés et retirés, fonctionnalité `alcohol_sales` verrouillée) ; reliquats : type `alcohol_license` et 2 documents seed.
+- « Supprimé = désactivation + corbeille » (décision Seuils de suspension) : aucune suppression de commerce dans l'admin ; la règle d'inactivité (15 j alerte, 30 j retrait) est paramétrée (`orderRules.merchantInactivity`) mais aucune tâche planifiée ne la met en oeuvre (`merchantInactivity` n'apparaît dans `functions/src` que dans la validation du schéma), à confirmer avec l'audit de §9.
+- Remboursements imputés au commerce dans tous les cas : respecté dans `creditCustomer` (commande liée).
+- Espèces uniquement avec livreurs salariés du commerce : respecté (`checkPaymentMethods`, `set_cash`).
+- Distance maximale choisie par le livreur : prise en compte dans l'attribution ; aucun écran livreur pour la saisir.
+- Pourboires 100 % livreur : respecté dans le règlement (écriture `courier_tip`).
+
+## Valeurs codées en dur (constantes métier non réglables)
+
+- Pièces obligatoires restaurant : `REQUIRED_RESTAURANT_DOCUMENTS` (`packages/shared/src/models/admin-actors.ts:88`) et `REQUIRED_TYPES` (`functions/src/restaurant/documents.ts:27`), deux listes divergentes.
+- Relances de documents restaurant `DOCUMENT_REMINDER_DAYS = [30, 7]` ; relances livreur J-30 et J-7 (`live.ts`), fenêtre de 30 j figée dans `DriversPage.tsx` et `lib.ts`.
+- Score de qualité : plafonds de pénalités, coefficients (x2 annulations, x1,5 refus, /2 retards, référence 4,6 pour la note, activité minimale 5 commandes), seuils 80 et 65 (`QUALITY_PENALTY_CAPS`, `QUALITY_THRESHOLDS`, `computeQualityScore`).
+- Prix aberrant : 200 € et rapport x4 avec la médiane de la section (`functions/src/menu/quality.ts`).
+- Suspension : durée maximale 365 j, marge minimale 5 min (`status.ts`) ; actions groupées limitées à 300 commerces ; import limité à 500 lignes.
+- Livreurs : durée d'un avertissement 30 j, suspension limitée à 90 j (`drivers.ts`) ; contrôle d'identité : 5 % / 30 j / expiration 48 h (`live.ts`) ; exigences de pièces par type de livreur (`driverDocumentRequirements`) ; scoring d'attribution (malus 400 m, 600 m par course active, 250 m/min) ; seuil du forfait 2 km par défaut (`DEFAULT_COURIER_FLAT_THRESHOLD_METERS`, surchargeable par ville).
+- Clients : avoir limité à 500 € (`MAX_CREDIT_CENTS`), plafonds par rôle `DEFAULT_REFUND_LIMITS`, paliers de `customerRiskLevel` (3 remboursements et 20 %, 25 % d'annulations, 2 non récupérées, 3 réclamations, scores 40 et 70).
+- Inscription restaurant : pays `FR` et `LU`, format de code postal (`signup.ts`).
+
+
+# Annexe D — Matrice §8 à §13 (Fonctionnement)
+
+
+Périmètre lu : `apps/admin/src/features/{commandes,regles-commandes,zones,_operations,affichage,_experience,avis,support}`, `functions/src/admin/{operations,experience}`, `functions/src/orders`, `functions/src/messaging`, `packages/shared`, `firebase/rules/*.rules`, `firebase/firestore.indexes.json`. Données lues en lecture seule (projet golink-9f16d). Crawls utilisés : `ui-finance`, `ui-metz`, `ui-support`, `ui-commercial` (les comptes finance et commercial n'ont pas les droits sur zones, affichage, avis, support : pages « accès refusé », h1 nul, 138 caractères). Compte superadmin non crawlé : « UI non vérifiée en superadmin » pour toute action d'écriture (aucun des 4 comptes ne peut enregistrer les règles automatiques ou la configuration du support : ces écrans sont vus en « Consultation seule »).
+
+Décompte réel du cahier : §8 = 4 lignes, §9 = 9 lignes (pas 8), §10 = 6, §11 = 5, §12 = 4, §13 = 8 (pas 9 : le plafond des droits, l'escalade, le délai cible sont des éléments des lignes « Actions » et « Attribution et escalade »). Total 36 lignes.
+
+Constats transverses qui pèsent sur plusieurs rubriques :
+- `apps/client/App.tsx` et `apps/driver/App.tsx` sont des écrans vides (17 lignes, « Interface en attente des maquettes »). Tout ce qui doit être appliqué ou lu côté app client / app livreur (message de fermeture d'urgence, ordre de classement, mention « Sponsorisé », chat en direct, ouverture de ticket par un client ou un livreur, client absent, remplacement d'un produit) n'a donc aucun consommateur réel aujourd'hui. Seule la partie serveur et back-office est auditable.
+- Beaucoup de contenus d'affichage et de support sont écrits **directement dans Firestore depuis le navigateur** (règles `display.edit` / `support.configure` / `reviews.moderate`), sans Cloud Function : bannières, sections d'accueil, catégories, brouillons de pages et de documents légaux, catalogue des offres sponsorisées, termes du filtre d'avis, motifs de tickets, réponses types, articles d'aide. Le droit est vérifié par les règles, mais aucun `writeAudit` ni motif n'est enregistré (aucun trigger d'audit générique n'existe : liste des `onDocument*` du dossier `functions/src` relue).
+- Les contenus éditables ne le sont qu'en français (`{ fr: … }` partout : message de fermeture, accueil, pages, documents légaux). Les décisions du client imposent français, anglais, arabe.
+
+---
+
+## §8 — Commandes — vision globale
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Consultation | Liste de toutes les commandes, recherche (numéro, commerce, client, livreur), filtres date / statut / paiement / zone | PARTIEL | `features/commandes/OrdersPage.tsx`, `module.tsx` (route `commandes`, permission `orders.view`), `functions/src/admin/operations/orders.ts` `listOrdersAdmin` (exportée dans `operations/index.ts`, appelée via `fn.listOrdersAdmin`) | Réel : `ui-support/commandes.json` = « 1 171 commandes », 30 lignes, 0 erreur ; filtres période, statuts multiples, paiement, mode, zone, signalements (retard, remboursée, litige) présents, pagination par curseur, requête bornée par ville (`resolveScope`), index `searchKeywords` déclaré. **Manque** : la recherche texte porte sur `searchKeywords` posé à la création (`place.ts:576` = numéro, nom client, nom commerce, adresse, ville) : **aucun nom de livreur** ; le placeholder de l'écran ne le promet d'ailleurs pas. Le filtre livreur (`?livreur=<id>`), client (`?client=`) et commerce (`?commerce=`) n'existe qu'en paramètre d'URL : seul l'écran Anomalies renvoie vers `?commerce=` / `?zone=` ; aucun sélecteur ni lien vers `?livreur=` ou `?client=` dans l'interface (recherche dans tout `apps/admin/src`). Pas de recherche par référence livreur, ni par téléphone client. Filtre paiement : proposé 5 moyens, la valeur `meal_voucher` acceptée côté serveur n'est pas proposée (normal, titres-restaurant désactivés). |
+| Détail pour litige | Contenu, prix, frais, remise, paiement, chronologie complète avec heures (créée, acceptée, prête, récupérée, livrée) et historique des actions | COMPLET | `features/commandes/OrderPage.tsx` (`Items`, `Amounts`, `Financials`, `StepDurations`, `Chronology`, `Dispatch`), sous-collection `orders/{id}/events`, `orderFinancials/{id}`, actions `dispatchOrder` / `previewDispatch` (`operations/dispatch.ts`) | Lecture directe Firestore (règles `orders.rules` : lecture commande par `isAdminIn('orders.view', cityId)`). Contenu avec options, remplacements/retraits (`item.adjustment`), sous-total, service, petite commande, livraison, majoration de pointe, remise (financée commerce / GoLink), pourboire, avoir utilisé, total, débité, remboursé, commission ; bandeau annulation + « client absent » ; frise heures créée / acceptée / prête / récupérée / livrée avec durées entre étapes ; chronologie des événements avec auteur (client, commerce, livreur, support, automatique) ; répartition financière (visible seulement avec `finance.view`) ; carte ; attribution avec intervention motivée (`requireReason`, audit dans `dispatchOrder`). Réserve P2 : la règle des événements (`orders.rules:19-23`) autorise `isAdmin('orders.view')` **sans limite de ville**, alors que la commande est bornée par ville. Aucun crawl de `/commandes/:id` (route dynamique) : « UI non vérifiée » pour le détail lui-même. |
+| Volumes en direct | Nombre de commandes en cours par ville et par étape, sans détail individuel | COMPLET | `features/commandes/LivePage.tsx`, `hooks.ts` `useActiveOrders` (`onSnapshot` temps réel), `useDispatchFailedAlerts` | `ui-support/commandes_direct.json` : tableau ville × étape (nouvelles, en préparation, prêtes, livreur en route, en livraison, total), cartes « en attente d'acceptation / hors délai », « recherche de livreur », « sans livreur », « en retard » ; Longwy = 5 en préparation, cohérent avec la liste. Réserve P2 : `hooks.ts:19` limite la requête à `ids.slice(0, 4)` villes quand un périmètre en compte plus de 4 (silencieux) et `limit(1000)` commandes. |
+| Anomalies | Détection automatique : taux d'annulation, de retard ou de refus anormal par restaurant, par zone ou à une heure donnée | **PARTIEL (corrigé : « NaN h »)** | `features/commandes/AnomaliesPage.tsx`, `functions/src/admin/operations/orders.ts` `getOrderAnomalies` (`hourOf` ligne 182-184) ; automatique : `functions/src/admin/pilotage/anomalies.ts` `detectAnomalies` (onSchedule, toutes les 15 min, exportée) | **Bug vérifié** : `hourOf` fait `Number(Intl.DateTimeFormat('fr-FR', {hour:'2-digit', hourCycle:'h23'}).format(date))` ; en fr-FR le format renvoie `"22 h"` donc `Number(...) = NaN` (testé avec `node`). Toutes les commandes tombent dans un seul créneau « NaN » : `ui-support/commandes_anomalies.json` affiche « NaN h » et une seule barre. La détection « à une heure donnée » est donc inopérante (aucun créneau ne peut être signalé). Le reste fonctionne (par commerce : 10 écarts signalés, par zone, seuil +6 pts dès 15 commandes, liens vers la liste filtrée). **Automatisme partiel** : la surveillance planifiée (`detectAnomalies`) ne couvre que le taux d'annulation et le taux de refus par commerce (`restaurantRates`, alertes `restaurant_cancellation_rate` / `restaurant_rejection_rate`) ; le **retard** n'est pas surveillé, ni par zone ni par heure ; les calculs par zone et heure n'existent que quand quelqu'un ouvre la page (appel `getOrderAnomalies`, plafond 8 000 commandes). Le taux de retard de référence est de 43,3 % : `flags.late` passe à vrai dès 1 minute après `promisedTo` (`transitions.ts:242-248`), sans tolérance réglable. **Correction cdc-fix-b :** `hourOf` corrigé (formatToParts), vérifié en réel (« 02 h – 03 h… »). Tolérance de retard réglable (`lateToleranceMinutes`, 5 min par défaut). Reste PARTIEL : surveillance planifiée du retard par zone/heure (P1). |
+
+**Bilan §8 : 2 COMPLET / 1 PARTIEL / 0 ABSENT / 1 FAUX**
+
+Trous :
+- P1 — Corriger `hourOf` (utiliser `formatToParts` ou `hourCycle` + `parseInt`) ; sans cela les anomalies par heure sont inopérantes.
+- P1 — Étendre la surveillance planifiée aux retards et aux zones / heures (aujourd'hui uniquement annulation et refus par commerce).
+- P1 — Recherche / filtre par livreur (nom) et par client dans l'interface (sélecteurs branchés sur `driverId` / `customerId` déjà acceptés par `listOrdersAdmin`) ; ajouter le nom du livreur aux `searchKeywords` à l'attribution.
+- P1 — Seuil de retard (tolérance en minutes) réglable ; aujourd'hui tout dépassement d'une minute compte comme retard.
+- P2 — Règle des événements de commande bornée par ville ; limite de 4 villes de `useActiveOrders`.
+
+---
+
+## §9 — Règles automatiques des commandes
+
+Vérification transversale « réglable plateforme ET par ville ET appliquée serveur » :
+- Réglage : `updateOrderRules` (`operations/rules.ts`, permission `order_rules.edit`, motif obligatoire `zReason`, `writeSettingsHistory`, `writeAudit` avec `sensitive: true`) accepte les portées `platform`, `country`, `city` ; l'écran `OrderRulesPage.tsx` propose « Plateforme / Pays / Ville », badges « surchargé / hérité », historique, réinitialisation. Résolution serveur : `orders/context.ts` `loadOrderRules` = défauts (décisions client) < `settings/orderRules` < `countries.orderRules` < `cities.orderRules` (fusion superficielle par bloc).
+- Données réelles : `settings/orderRules` existe (délai 300 s, pause auto 3 d'affilée, inactivité 15/30 j, annulation client pending 100 % / accepted 50 % / preparing 0 % / ready et picked_up impossibles, imputation « tout au commerce », programmées activées). **Aucune surcharge pays ni ville en base** (les 5 villes et 6 pays ont `orderRules: null`) : la surcharge par ville est codée et cohérente mais **n'a jamais été exercée**. Historique visible : « 420 → 300 » il y a 21 jours, motif « Décision client ».
+- UI : `ui-finance/regles_commandes.json`, `ui-metz/…`, `ui-support/…`, `ui-commercial/…` = 14 sections, 0 erreur, « Consultation seule » (aucun compte crawlé n'a `order_rules.edit`) : enregistrement non vérifié en UI.
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Délai d'acceptation | Annulation + remboursement automatiques après le délai (5 min) ; pause automatique après commandes manquées d'affilée ; délai et nombre réglables | COMPLET | `orders/scheduled.ts` `enforceAcceptanceTimeout` (onSchedule chaque minute, exportée par `orders/index.ts`) → `expireUnaccepted` → `cancelBySystem(… 'restaurant_timeout')` (`orders/cancel.ts`, remboursement + audit `order.auto_cancelled`) ; `orders/place.ts:568` pose `acceptDeadline` avec `rules.acceptanceTimeoutSeconds` (ville/pays/plateforme) ; pause : `orders/triggers.ts` `onOrderWritten` → `countMissedOrder` / `resetMissedOrders` (`missedOrdersInARow`, seuil `rules.autoPause`, audit `restaurant.auto_paused` par le système) | Chaîne vérifiée dans le code et les données : 5 commandes annulées `restaurant_timeout` en base ; compteur remis à zéro à l'acceptation ; 0 commerce actuellement en pause. Index `status + acceptDeadline` déclaré. Écran du commerce : `AutoPauseBanner.tsx` (apps/restaurant). Réserves P2 : cadence d'une minute (annulation jusqu'à ~1 min après l'échéance) ; `.limit(50)` par passage ; action au dépassement figée à « annuler et rembourser » (`acceptanceTimeoutAction` forcé à l'écriture). |
+| Temps de préparation | Temps par défaut, que le restaurant peut allonger en période de rush | PARTIEL | `place.ts:451` (`rules.defaultPrepMinutes` + `restaurant.busyExtraMinutes`), `orders/transitions.ts` `extendPrepTime` (plafond `rules.maxPrepExtensionMinutes`), `firebase/rules/restaurants.rules:39-43` (mode rush) | Défaut réglable par ville ✓ ; allongement par commande borné par la règle ✓ (`transitions.ts:131`). **Mais** le « mode rush » du commerce (`busyExtraMinutes`, écrit directement par le restaurant : `AutoPauseBanner.tsx`, `ServiceStatus.tsx`) est plafonné à **90 min codées en dur dans les règles Firestore** et n'est pas relié à `maxPrepExtensionMinutes` (30 par défaut) : deux plafonds différents pour la même notion. Bornes 5 à 120 min de `PREP_MINUTES_MIN/MAX` (shared) aussi codées. |
+| Annulation par le client | Jusqu'à quelle étape, remboursement total / partiel / nul | COMPLET (côté serveur) | `orders/cancel.ts` `cancelOrder` + `cancelOrderInternal` (`CUSTOMER_STAGE`, `computeCancellationRefund(… rules.customerCancellation)`), écran `OrderRulesPage.tsx` (par étape : total, partiel %, nul, impossible), audit `order.cancelled` | Règle lue depuis `loadOrderRules` donc par ville ; pourboire toujours rendu ; espèces = 0 remboursé ; remise en stock, promotion rendue, livreur libéré, remboursement Stripe (`releaseOrRefund`). Aucun client réel ne peut l'appeler : app client absente. |
+| Qui paie le remboursement | Selon la cause : commerce, livreur ou plateforme ; imputation automatique sur le reversement | COMPLET | `packages/shared` `allocateRefund`, `REFUND_CAUSES` (14 causes), `OrderRulesPage.tsx` (tableau cause × commerce / livreur / GoLink, contrôle 100 %), `updateOrderRules` (refuse un total ≠ 10 000 bps), `finance/argent/settlement.ts` `onRefundProcessed` (écritures `ledgerEntries` `refund_charge` négatives sur le commerce et éventuellement le livreur) ; utilisé par `cancel.ts`, `refundFromTicket` | Décision client appliquée : base « tout au commerce » (historique il y a 21 jours). Vérifié : le remboursement automatique de `cancel.ts` crée un document `refunds` (automatic: true) ; l'imputation au reversement passe par le trigger ; pas de retenue quand la commande n'a jamais été comptabilisée (annulée avant livraison : rien n'a été versé). 88 remboursements en base, 26 automatiques. |
+| Client absent | Temps d'attente du livreur, rémunération du livreur, remboursement ou non du client | **COMPLET (corrigé, serveur)** | Réglage : `OrderRulesPage.tsx` (section « Client absent »), `rules.customerAbsent` ; application : **aucune** | Les champs `driverWaitMinutes`, `payDriver`, `payRestaurant`, `callViaApp` ne sont **lus par aucune fonction** (recherche sur tout `functions/src` : seul `cancel.ts:104` lit `customerAbsent.refundCustomer`, pour une annulation manuelle avec le motif `customer_absent`). Aucun point d'entrée pour le livreur (pas de fonction « client absent », app livreur vide), aucun minuteur, `order.closedAs = 'customer_absent'` n'est **jamais écrit** (lu seulement par `finance/argent/settlement.ts:52`, `OrderPage.tsx:158`, `ClientPage.tsx`) ; 0 commande `closedAs=customer_absent` en base. Via le motif d'annulation, la commande devient `cancelled`, non comptabilisée : ni livreur ni commerce ne sont payés, contrairement à la décision client. L'écran affirme « la plateforme applique ces règles seule » : trompeur. **Correction cdc-fix-b :** `orders/customer-absent.ts` (`markDriverArrived`, `logCustomerCall`, `closeCustomerAbsent`, clôture automatique planifiée), `closedAs` écrit, commerce et livreur payés, aucun remboursement, message client ; contrat app livreur dans `docs/CONTRATS_APPS_MOBILES.md`. Test réel `absent` (12 contrôles). |
+| Produit indisponible | Remplacement proposé ou retrait avec remboursement partiel | **COMPLET (corrigé, serveur + back-office restaurant)** | Réglage : `OrderRulesPage.tsx`, `rules.itemUnavailable` ; affichage : `OrderPage.tsx` (lignes `item.adjustment`) ; application : **aucune** | `itemUnavailable.allowReplacement` / `replacementTimeoutSeconds` non lus par le serveur. `OrderItem.adjustment` est mis à `null` à la création (`place.ts:338`) et **jamais écrit ensuite** (aucune fonction de retrait / remplacement / remboursement partiel d'article ; 0 commande avec ajustement sur 200 livrées lues). Seul mécanisme réel : le refus de toute la commande avec le motif `item_unavailable` (`rejectOrder`). Le texte de l'écran (« sans réponse du client, l'article est retiré et remboursé ») décrit un comportement inexistant. **Correction cdc-fix-b :** `orders/item-unavailable.ts` (`reportItemUnavailable`, `respondToItemProposal`, expiration planifiée), `item.adjustment` écrit, remboursement partiel imputé, commission recalculée, dernier article = annulation ; écran `ItemUnavailable.tsx` dans la fiche commande du restaurant. Test réel `items`. |
+| Gestes automatiques | Ex. retard supérieur à X minutes → avoir automatique au client | **COMPLET (corrigé)** | Réglage : `OrderRulesPage.tsx` (paliers, plafonds, validité), `rules.lateCredit` ; calcul : `packages/shared/src/pricing/policies.ts` `computeLateCredit` (testé dans `shared/test/pricing.test.ts`) ; application : **aucune** | `computeLateCredit` n'est **appelé par aucune fonction** ; `completeOrder` (`transitions.ts:242`) calcule `flags.lateMinutes` mais ne crédite rien ; aucun trigger ni onSchedule ne lit `lateCredit`. Les avoirs de retard existants viennent de saisies manuelles (`creditCustomer`, `creditFromTicket`). Réglage sans effet. Or le taux de retard mesuré est de 43 % : si l'automatisme était branché, il déclencherait massivement (voir tolérance de retard non réglable, §8). **Correction cdc-fix-b :** `orders/late-credit.ts` branché sur la livraison (`onOrderWritten`) : avoir au palier, imputé selon `refundLiability`, audit système, message, idempotent. Test réel `latecredit` (9 contrôles). |
+| Vente d'alcool | Interdite (décision client) : vérifier qu'elle est bloquée | COMPLET | Verrou : `orders/context.ts:75` (alcool forcé `enabled:false, locked:true`), `operations/rules.ts:164-167` (réécrit le verrou à chaque enregistrement) ; blocage : `firebase/rules/restaurants.rules:15-17, 95, 101` `productWithoutAlcohol()` (création et modification refusées si `vatCategory=='alcohol'` ou `containsAlcohol==true`), `orders/place.ts:300` `checkProductAlcohol` (commande refusée), `menu/quality.ts` `onProductWritten` (mot-clé dans nom / description → `available=false` + anomalie `alcohol_suspected`, levée possible « ignorée »), `menu/import.ts:140` (importé hors vente) ; UI : bloc « Verrouillé » dans `OrderRulesPage.tsx` | Vérifié à trois niveaux (règles Firestore, création de commande, contrôle qualité déclenché à chaque écriture). Liste de mots (`MENU_ALCOHOL_TERMS`) couvre bière, vin, whisky, vodka, rhum, champagne, cidre, apéritif de la décision. Données : 137 produits, 0 en catégorie TVA alcool, 0 `containsAlcohol`, 0 signalement. Tests dans `packages/shared/test/pricing.test.ts`. Réserves P2 : deux détecteurs de mots-clés distincts (`findAlcoholTerm` sur nom + description ; `detectAlcoholKeywords` sur nom + description + étiquettes) ; aucun mot en arabe ; un produit détecté par mot-clé mais non déclaré n'est **pas** refusé par `placeOrder` (seulement retiré de la vente par le trigger, avec un délai) ; champs résiduels `sellsAlcohol`, `alcoholLicenseNumber` (`restaurant/settings.ts`) et `alcoholMinimumAge` (`platform/markets.ts:44`) encore éditables. |
+| Commandes programmées | Autoriser ou non, délai maximum | COMPLET | `orders/place.ts:231-236` (`rules.scheduledOrders.enabled / minLeadMinutes / maxDaysAhead`, en plus du réglage du commerce), `orders/scheduled.ts` `releaseScheduled` (transmission au commerce), `OrderRulesPage.tsx` | Règle lue par ville via `loadOrderRules`. Aucune commande programmée en base (0) : chemin non observé sur données, mais code et index `status + scheduledFor` en place. Réserves P2 : horizon de transmission de 90 min, marge de trajet (`distance/250 + 5`) et 10 min codés en dur dans `releaseScheduled`. |
+| (hors cahier, décision client) Inactivité des commerces | 15 j sans commande → e-mail d'alerte, puis retrait après 30 j | **COMPLET (corrigé)** | Réglage : `OrderRulesPage.tsx` (section « Inactivité des commerces »), `rules.merchantInactivity` ; application : **aucune** | `merchantInactivity.*` n'est lu par aucune fonction ; aucune tâche planifiée n'utilise `restaurants.lastOrderAt` (écrit par `place.ts:649`, jamais relu). Écart avec `DECISIONS_CLIENT.md` (« tâche planifiée »). **Correction cdc-fix-b :** `restaurant/lifecycle.ts` (`runMerchantAutomations` toutes les heures) : alerte à 15 j, retrait 30 j après (désactivation + corbeille, audit sensible), reprise si commande ; durées par ville ; commerces de démonstration protégés. Test réel `inactivity` (10 contrôles). |
+| (hors cahier) Délai de réclamation | Fenêtre de réclamation après livraison (photo obligatoire) | **COMPLET (corrigé, serveur)** | `rules.claimWindowHours`, `OrderRulesPage.tsx` | Non lu par le serveur ; aucune fonction de création de réclamation côté client. **Correction cdc-fix-b :** `orders/claims.ts` : `claimWindowHours` appliqué, photo obligatoire, contrôles automatiques, ticket, décision de l'agent (`ClaimPanel`). Test réel `claims` (15 contrôles). |
+
+**Bilan §9 (9 lignes du cahier) : 5 COMPLET / 1 PARTIEL / 0 ABSENT / 3 FAUX** ; hors cahier : 2 FAUX.
+
+Trous :
+- P0 — Gestes automatiques : brancher `computeLateCredit` sur la livraison (trigger `onOrderWritten` ou `completeOrder`), écrire `walletTransactions` + `ledgerEntries` + audit système, sinon retirer la promesse de l'écran.
+- P0 — Client absent : fonction livreur (« client absent » après `driverWaitMinutes`), écriture de `closedAs='customer_absent'`, paiement livreur et commerce, non-remboursement selon la règle ; aujourd'hui rien ne l'applique et le chemin par annulation ne paie personne.
+- P0 — Produit indisponible : flux de remplacement / retrait avec remboursement partiel (écriture de `item.adjustment`, minuteur `replacementTimeoutSeconds`, avoir ou remboursement partiel).
+- P1 — Tâche planifiée d'inactivité des commerces (e-mail à 15 j, retrait à +30 j) et fenêtre de réclamation.
+- P1 — Aligner le mode rush du commerce (90 min codées dans `restaurants.rules`) sur `maxPrepExtensionMinutes`.
+- P1 — Exercer et tester la surcharge par ville (aucune surcharge en base ; aucun test crawlé en écriture).
+- P2 — Cadence de l'annulation (1 min), limite de 50 par passage, constantes de `releaseScheduled` et de `PAYMENT_ACTION_TIMEOUT_MINUTES` (20 min) non réglables.
+
+---
+
+## §10 — Zones et villes
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Villes | Ajouter, activer, désactiver ; statistiques par ville | PARTIEL | `features/zones/ZonesPage.tsx` (`CityHeader`, `CityDialog`), `operations/zones.ts` `saveCity`, `setCityActive` (exportées ; `markets.edit` ; motif obligatoire ; `writeSettingsHistory` + `writeAudit` sensible) | Création (inactive au départ), activation refusée sans zone active, désactivation, historique : présents. 5 villes en base (Longwy, Luxembourg, Metz actives ; Esch-sur-Alzette et Thionville inactives). `ui-metz/zones.json` : Metz active, « lancée le 29 mai 2026 », 4 zones. **Manques** : (1) statistiques par ville limitées à 3 chiffres dans l'en-tête (commerces actifs `city.stats.restaurantsActive`, livreurs en ligne / disponibles, en attente) ; ni commandes, ni CA, ni clients par ville sur cet écran ; (2) **`orders/place.ts` ne vérifie jamais `city.active`** (recherche sur `active` : seuls `zone.active` et `zone.emergencyClosure` sont contrôlés) : Thionville est inactive mais possède 1 zone active, donc « seules les villes actives sont opérables » (décision client) n'est garantie que par le statut des commerces (`onboarding` à Thionville). |
+| Zones de livraison | Dessiner et modifier sur une carte, distance maximale | COMPLET | `ZonesTab.tsx` (tracé au clic `MapClickCapture`, sommets déplaçables `ZonePolygon editable`, distance maximale `KmInput`), `operations/zones.ts` `saveZone` (`zones.edit`, `assertAdminCovers`, `polygonBounds`, historique + audit `zone.created/updated`), application `place.ts:265-271` (`isPointInPolygon`, `maxDeliveryDistanceMeters`) ; suivi livreur→zone `live.ts` `onDriverLocationWritten` | 14 zones en base (4 par ville active). `ui-metz/zones.json` : 4 zones listées mais **carte non affichée** (« Carte momentanément indisponible », erreur console `RefererNotAllowedMapError` : la clé Google Maps refuse l'hôte de test) → dessin non vérifié visuellement. Réserves P2 : aucun contrôle de polygone auto-sécant ni de chevauchement entre zones (`zones.find` prend la première) ; création sans motif obligatoire ; pas de suppression (désactivation seulement). |
+| Tarifs par zone | Frais de livraison selon la distance, minimum de commande | COMPLET | `ZonesTab.tsx` (`TiersEditor`, `minOrderCents`), `saveZone` (`deliveryTiers` triés, `minOrderCents`), `place.ts:360-382` (`zoneTiers`, `minOrderCents`) | Paliers distance → frais et minimum enregistrés par zone, utilisés dans le devis. Conforme à la décision client : quand le commerce a sa propre zone de livraison, ses frais et son minimum prévalent (`merchantZoneTerms`), les paliers de la zone servent de tarif par défaut (texte de l'écran). Valeurs d'amorçage de nouvelle zone codées dans `ZonesTab.tsx:87` (6 km ; 1,99 / 2,99 / 3,99 €), bornes du serveur codées (`feeCents ≤ 50 €`, minimum ≤ 200 €). |
+| Horaires de service | Heures de fonctionnement de la livraison par ville | COMPLET | `ZonesPage.tsx` `HoursTab`, `hours.tsx`, `saveCity` (`serviceHours`, `zones.edit`), application `place.ts:243` (ville) et `:268` (zone) via `isOpenAt` | Plages multiples, exceptions datées, fuseau ; propres à la zone en option. Enregistrement avec motif et historique. Les comptes de démonstration (`test:true`) ignorent les horaires (`place.ts:240`). Aucun crawl en écriture. |
+| Fermeture d'urgence | Couper une zone (intempéries, événement, manque de livreurs) avec message aux clients | **COMPLET (corrigé, serveur)** | `ZonesPage.tsx` / `ZonesTab.tsx` (`ClosureDialog`, `dialogs.tsx`), `operations/zones.ts` `closeZone` (`zones.edit`, cause, message 5-280 car., fin prévue, motif, audit `city|zone.emergency_closed` sensible, historique), application `place.ts:227` (ville) et `:267` (zone), levée automatique `operations/live.ts` `expireClosures` (dans `computeZoneLive`, chaque minute) | Coupure réellement appliquée aux nouvelles commandes, réouverture automatique à l'échéance et manuelle, historique. **Manques** : (1) le message est stocké en `message.fr` uniquement (pas d'anglais ni d'arabe, décision client) ; (2) le message **n'est pas transmis au client** : `placeOrder` renvoie une phrase générique (« La livraison est momentanément suspendue… ») sans le texte saisi, et aucune notification aux clients concernés / commandes en cours ; l'app client n'existe pas ; (3) une zone ou une ville à la fois, pas de fermeture groupée. Aucune fermeture active en base (0) : jamais observée sur données. **Correction cdc-fix-b :** message fr/en/ar (`closeZone`), lu dans la langue du client par `placeOrder`, clients concernés notifiés (`zone_emergency_closure`), `city.active` contrôlé à la commande. Test réel `closure`. |
+| Heures de pointe | Majoration temporaire des frais ou bonus livreurs en cas de forte demande | COMPLET | `ZonesPage.tsx` `SurgeTab`, `SurgeRuleDialog`, `operations/zones.ts` `saveSurgeRule`, `applySurge`, `setSurge`, `clearSurge` (audit sensible), automatisme `operations/live.ts` `applySurgeAutomation` (dans `computeZoneLive`, onSchedule chaque minute, exportée), application `place.ts:365` (`zone.currentSurge`) → `pricing/quote.ts:117-122` (multiplicateur plafonné par `config.delivery.maxSurgeMultiplierBps` + supplément fixe) et bonus livreur `delivery.courierSurgeBonusCents` repris au règlement (`settlement.ts`) | Trois déclencheurs : manuel (durée 30 min à 4 h), planifié (créneaux hebdomadaires), automatique par la demande (`commandes en attente / livreurs disponibles ≥ seuil`, chiffres `zones.live` recalculés chaque minute). 4 règles en base (3 planifiées actives, 1 « pluie » par la demande inactive). Réserves P2 : les mises en route et arrêts automatiques ne sont pas audités (seul le lancement manuel l'est) ; fenêtre de 15 min et bornes (×3 maximum, supplément ≤ 10 €, bonus ≤ 20 €) codées ; écritures de `currentSurge` répétées chaque minute sur toutes les zones concernées. |
+
+**Bilan §10 : 4 COMPLET / 2 PARTIEL / 0 ABSENT / 0 FAUX**
+
+Trous :
+- P1 — Fermeture d'urgence : message multilingue (fr, en, ar) exposé au client (champ lu par l'app, ou renvoyé dans l'erreur de `placeOrder`) et notification des clients concernés.
+- P1 — Vérifier `city.active` dans `placeOrder` (et dans la liste des commerces de l'app) ; sinon une ville désactivée reste opérable si une zone y reste active.
+- P1 — Statistiques par ville : commandes, CA, clients, taux de service (aujourd'hui 3 chiffres d'en-tête).
+- P2 — Contrôles de géométrie (auto-intersection, chevauchement), audit des majorations automatiques, constantes de pointe et valeurs d'amorçage à passer en paramètres.
+- P2 — Restaurer la carte pour la vérification visuelle (clé Google Maps : ajouter l'hôte de test aux référents autorisés).
+
+---
+
+## §11 — Affichage dans l'app client
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Page d'accueil | Restaurants mis en avant, bannières, promotions, populaires, nouveautés, message d'accueil, par ville | PARTIEL | `features/affichage/HomeLayoutPage.tsx` (types `welcome_message`, `banner_carousel`, `categories`, `promotions`, `popular`, `reorder`, `new_restaurants`, `featured_restaurants` ; ville(s), dates, glisser-déposer, aperçu), `BannersPage.tsx` (bannières par ville et période, mention « SPONSORISÉ »), collections `homeSections` (9), `banners` (4) | Tous les éléments du cahier existent. `ui-metz/affichage.json` : 7 sections classées + aperçu de l'app pour Metz ; `ui-metz/affichage_bannieres.json` : 4 bannières dont une marquée SPONSORISÉ. **Réserves** : écritures directes Firestore (`platform.rules:87-107`, `display.edit`) sans Cloud Function, sans audit, sans motif ; textes en français seulement (`title: { fr }`) ; « populaires », « nouveautés », « à recommander » sont de simples types d'affichage : aucun calcul serveur ni consommateur (app client vide) ; sections « restaurants mis en avant » = sélection manuelle d'identifiants. |
+| Catégories | Créer et ordonner les catégories de cuisine | COMPLET | `CategoriesPage.tsx` (création, ordre par glisser-déposer `writeBatch`, activation, compteur de commerces en ligne), collection `cuisineCategories` (21) | `ui-metz/affichage_categories.json` : 21 catégories ordonnées, comptage de commerces par catégorie. Écritures directes (règles `display.edit`, pas de suppression), sans audit : acceptable pour un contenu non sensible ; noms en français seulement. |
+| Règles de classement | Critères (distance, note, popularité, formule d'abonnement, mise en avant payante) ; mention légale « sponsorisé » | **COMPLET (corrigé, serveur)** | `RankingPage.tsx` (5 pondérations à 100 %, coup de pouce nouveaux commerces, libellé de la mention), `experience/display.ts` `updateExperienceSettings` (`display.edit`, somme = 1 vérifiée, libellé ≥ 3 caractères « obligation légale », historique + audit), `settings/display` | Enregistrement conforme (CF, audit, historique). **Application absente** : aucun code ne calcule ni n'utilise un score de classement : `restaurants.rankingScore` est initialisé à `0` (`lib/restaurants.ts:109`) et jamais recalculé ; l'« aperçu du classement » de l'écran est un calcul local du navigateur (`RankingPage.tsx:47`). Pondérations globales (pas par ville). La mention « Sponsorisé » est configurable et affichée dans l'aperçu du back-office (`BannersPage.tsx:80`), mais rien ne l'impose côté app client (inexistante). **Correction cdc-fix-b :** `admin/experience/ranking.ts` : `rankingScore` recalculé chaque nuit et à chaque changement des pondérations (`baseRankingScore`/`finalRankingScore` partagés), `sponsoredLabel` porté par le commerce, bouton « Recalculer maintenant ». L'affichage côté app client reste à faire avec l'app. |
+| Mise en avant payante | Vendre de la visibilité (emplacements, durée, prix) | PARTIEL | `SponsoredPage.tsx`, `experience/display.ts` `bookSponsoredPlacement`, `cancelSponsoredPlacement`, `syncSponsoredPlacements` (onSchedule `5 * * * *`, exportée), `finance/argent/invoices.ts` (facturation mensuelle), catalogue `sponsoredOffers` (5, écrit directement), `sponsoredPlacements` (6) | Vente : droit `display.edit`, capacité par ville et emplacement, chevauchements, crédit publicitaire (parrainage), facturation ou offert, audit `sponsored.booked` / `sponsored.cancelled` (annulation motivée, remboursement du crédit), drapeau `restaurants.sponsored` synchronisé. `ui-metz/affichage_sponsorise.json` : 5 offres (49 à 149 € HT), 2 emplacements (1 programmé, 1 annulé), ventes 30 j = 99 €. **Manques** : `impressions`, `clicks`, `orders` ne sont **jamais incrémentés** (aucune fonction : « Taux de clic — », « 0 vues ») ; prix du catalogue modifiables sans audit (écriture directe, règles seulement) ; un placement futur démarre au passage horaire de :05 ; le commerce ne peut pas acheter lui-même (aucune interface côté application commerce ; achat par le super admin uniquement). |
+| Pages d'information | FAQ, CGU, mentions légales, confidentialité, modifiables sans développeur | COMPLET | `PagesPage.tsx`, `PageEditorPage.tsx`, `LegalEditorPage.tsx`, `experience/display.ts` `publishPage` (`display.edit` / `legal.edit`, instantané versionné `pages/{slug}/versions`, archivage de l'ancienne version légale, `requiresReacceptance`, audit `page.published` / `legal.published`), collections `pages` (5), `legalDocuments` (9) | `ui-metz/affichage_pages.json` : 5 pages (dont FAQ v2 et « Nos engagements » en brouillon) et 9 documents légaux par pays (CGU, CGV, conditions partenaires, confidentialité, cookies, mentions légales), version « 2026-06 ». Brouillons écrits en direct, publication par fonction. Réserve : contenus français seulement. |
+
+**Bilan §11 : 2 COMPLET / 3 PARTIEL / 0 ABSENT / 0 FAUX**
+
+Trous :
+- P0 — Le classement n'est appliqué nulle part (calcul du score serveur ou dans l'app client, prise en compte de la mention « Sponsorisé » légalement obligatoire) : à traiter avec la construction de l'app client.
+- P1 — Mise en avant : compteurs de vues / clics / commandes (événements côté app), audit des modifications du catalogue d'offres (fonction dédiée), déclenchement au minute près.
+- P1 — Textes multilingues (fr, en, ar) pour accueil, bannières, catégories, pages et documents.
+- P2 — Audit des écritures directes (bannières, sections, catégories, brouillons) par un trigger générique ; pondérations de classement par ville.
+
+---
+
+## §12 — Avis et notes
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Consultation | Avis sur les restaurants et les livreurs, filtrables par note | **PARTIEL (corrigé : indicateurs)** | `features/avis/ReviewsPage.tsx` (bascule Restaurants / Livreurs, note 1 à 5, statut, avec commentaire, recherche), `module.tsx` (route `avis`, `reviews.view`) ; données : `reviews` (861 : 847 publiés, 13 en modération, 1 masqué ; 677 avec note livreur ; 83 réponses) | Liste et filtres réels (`ui-support/avis.json`, 40 boutons, 0 erreur). **Défaut** : les 4 indicateurs du haut utilisent des agrégations Firestore ; en périmètre ville, `ui-metz/avis.json` montre **3 erreurs HTTP 400 `runAggregationQuery`** et l'écran affiche « Note moyenne (30 j) — », « 0 avis publiés », « Avis négatifs — » alors que la liste contient plus de vingt avis publiés : chiffres faux dans ce périmètre (le `catch` de `ReviewsPage.tsx:79` masque l'erreur en zéros). En périmètre « tous marchés » (`ui-support`) aucune erreur. Cause probable : requête `cityId + status + createdAt + restaurantRating in` non couverte par un index déployé (le fichier `firestore.indexes.json` en contient un pour `cityId, status, restaurantRating, createdAt` mais pas de variante agrégée validée : à confirmer par déploiement). **Correction cdc-fix-b :** index `cityId+status+createdAt(+restaurantRating)` ajoutés et déployés ; une erreur d'agrégation affiche « indicateur indisponible » au lieu de zéros. |
+| Modération | Filtre automatique des insultes ; masquage manuel des avis signalés, avec motif | COMPLET | Filtre : `experience/reviews.ts` `onReviewCreated` (onDocumentCreated, exportée) + `packages/shared/src/compliance/review-moderation.ts` `scanReviewText` (liste de base 81 termes : insultes 45, propos haineux 16, menaces 8, contenu sexuel 6, autre 6 ; détection des contournements ; e-mail / téléphone bloqués ; liens signalés) ; termes éditables `FilterPage.tsx` (collection `moderationTerms`, 3 termes) ; manuel : `moderateReview` (`reviews.moderate`, motif obligatoire `zReason`, actions masquer / supprimer / rétablir, audit, notification à l'auteur : exposé des motifs), `decideContentReport` (signalements, décision motivée, notification du signaleur), `ReportsPage.tsx` | Chaîne complète : avis avec terme bloquant → `pending_moderation` (13 en attente ; exemple « Des empoisonneurs… » retenu dans `ui-metz/avis.json`), publication automatique sinon, recalcul des notes moyennes. `ui-support/avis_signalements.json` : 2 signalements à examiner ; `ui-support/avis_filtre.json` : liste de base et outil « Tester un avis ». **Réserves** : (1) le filtre ne s'applique **qu'aux avis** : `replyToReview` (`messaging/restaurant/reviews.ts:53`) publie la réponse du commerce sans le passer par `scanReviewText` ; (2) termes en français et anglais seulement (pas d'arabe) ; (3) les termes ajoutés par l'équipe sont écrits directement (règles `reviews.moderate`), sans audit ; (4) le filtre lit sa liste avec un cache de 5 min. |
+| Réponses des restaurants | Consultation et modération | PARTIEL | `experience/reviews.ts` `moderateReview` (`target: 'reply'`, masquer / rétablir, notification aux membres du commerce), `features/avis/components.tsx` (`ReviewDetail`), `ReportsPage.tsx` (signalement « Réponse à un avis », ex. Casa Arepa, harcèlement) | La modération des réponses passe par le même chemin motivé et audité. La consultation n'existe que dans le détail d'un avis (pastille « Réponse » / « Réponse masquée » sur la ligne) : **pas de liste ni de filtre dédiés aux réponses** ; et les réponses ne sont pas filtrées automatiquement (voir ci-dessus). |
+| Suivi qualité | Restaurants et livreurs dont la note baisse | COMPLET | `experience/reviews.ts` `computeRatingWatch`, `detectRatingDrops` (onSchedule 06:15, exportée), `runRatingWatchNow` (callable, audit), `features/avis/QualityPage.tsx`, seuils réglables `settings/display.qualityWatch` via `updateExperienceSettings`, collection `ratingWatch` (7) | `ui-support/avis_qualite.json` : 2 restaurants en surveillance (Lune Coffee −0,30 ; Beldi Bowls −0,26) et 5 livreurs ; « Calcul il y a 11 heures » ; seuils affichés (alerte ≥ 0,50 pt ou moyenne < 3,50 ; surveillance ≥ 0,25 pt). Comparaison 30 jours contre 30 jours précédents, tendance sur 8 semaines, prise d'acte de l'équipe. Réserve P2 : fenêtres de 30 j / 8 semaines et la règle « 25 % de notes 1-2 » codées ; les baisses n'alimentent pas la file d'alertes générale (`platformAlerts`). |
+
+**Bilan §12 : 2 COMPLET / 2 PARTIEL / 0 ABSENT / 0 FAUX**
+
+Trous :
+- P1 — Indicateurs de l'écran Avis faux en périmètre ville (400 sur les agrégations) : vérifier / déployer l'index, et afficher l'erreur au lieu de zéros.
+- P1 — Appliquer le filtre automatique aux réponses des commerces ; ajouter des termes en arabe.
+- P1 — Liste et filtre des réponses des commerces (consultation dédiée).
+- P2 — Audit des modifications de termes du filtre ; alertes générales sur baisse de note.
+
+---
+
+## §13 — Support et litiges
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Tickets | Client / restaurant / livreur, liés à une commande si besoin ; statuts Ouvert → En cours → Résolu → Fermé ; historique des actions | PARTIEL | `features/support/TicketsPage.tsx`, `TicketPage.tsx`, `components.tsx` (nouveau ticket), `experience/tickets.ts` `respondToTicket`, `updateTicket`, `createTicketAsAgent`, `experience/index.ts` (toutes exportées), `messaging/restaurant/support.ts` `createSupportTicket`, `orders/report.ts` `reportOrderIssue` (tickets du restaurant), collection `supportTickets` (169 : 17 ouverts, 17 en cours, 13 en attente client, 6 résolus, 116 fermés ; demandeurs client, restaurant, livreur ; canaux app, e-mail, téléphone, chat, back-office) | `ui-support/support.json` : 47 tickets ouverts, 17 sans agent, 21 escaladés, satisfaction 3,9/5, 4 vues (mes tickets, non attribués, escaladés, tous), filtres demandeur / priorité / motif / charge de l'équipe. Statuts + « en attente du demandeur » ; chaque changement écrit un message système (journal des actions dans le ticket) et un audit (`ticket.*`). **Manque** : l'ouverture par le **client** ou le **livreur** n'existe pas (aucune fonction ; `supportTickets` refuse la création côté règles ; les deux apps sont vides). Aujourd'hui seuls l'agent (par téléphone / e-mail) et le restaurant créent des tickets. |
+| Motifs | Retard, article manquant, erreur, paiement, livraison non reçue, compte… ; liste modifiable | COMPLET | `features/support/SettingsPage.tsx` (section motifs : créer, ordonner, activer / désactiver, commande obligatoire, priorité par défaut, publics), collection `ticketReasons` (13), `support.rules:50-53` (`support.configure`) | `ui-support/support_configuration.json` : 13 motifs (article manquant, problème sur une commande, retard, qualité, paiement, accès au compte, reversement, course, carte, litige, livreur, technique, visibilité). Utilisés à l'ouverture (`createTicketAsAgent` refuse un motif inactif ou sans commande requise). Écritures directes sans audit. Aucun motif « livraison non reçue » explicite (couvert par « Problème sur une commande » / « Commande en retard ») : ajout possible par l'équipe. |
+| Actions depuis le ticket | Rembourser, créditer un avoir, contacter les parties, dans la limite des droits de l'agent (plafond) | COMPLET | `experience/refunds.ts` `refundFromTicket` (`refunds.create`, plafond `refundLimitOf` : plafond propre à l'agent, sinon celui du rôle `adminRoles.defaultRefundLimitCents`, sinon `DEFAULT_REFUND_LIMITS`), `reviewTicketRefund` (`refunds.approve`, validation par une autre personne), `creditFromTicket` (`customers.credit`), `experience/tickets.ts` `contactTicketParty`, `experience/chat.ts` `openSupportChat` ; écrans `ticket-actions.tsx` ; réglage du plafond `features/a-plateforme-securite/AdministrateursPage.tsx` (agent : `refundLimitCents` ; rôle : `defaultRefundLimitCents`) | Au-delà du plafond le remboursement passe en `pending_approval` et attend un responsable (audit `refund.requested` puis `refund.approved / rejected`, sensible) ; exécution Stripe idempotente (`ticket-refund-…`), mise à jour commande + paiement, imputation au commerce selon la règle §9 ; avoir : portefeuille, `walletTransactions`, `ledgerEntries` (commerce ou plateforme), audit `wallet.credited`. Données : 88 remboursements (dont 41 « article manquant », 21 qualité, 16 retard), 3 mouvements de portefeuille, plafonds de rôles en base : support 50 €, city_manager 50 €, ops 100 €, finance 500 €. Réserves : deux voies d'avoir avec **deux logiques de plafond** : `creditFromTicket` respecte les plafonds de rôle modifiables, alors que `admin/acteurs/customers.ts:54` `creditCustomer` utilise `admin.refundLimitCents ?? DEFAULT_REFUND_LIMITS[role]` (ignore `adminRoles.defaultRefundLimitCents`) ; avoir plafonné à 500 € et remboursement minimum de 0,50 € codés en dur ; validité par défaut de 180 jours codée (repli de `settings/refunds`). |
+| Attribution et escalade | Répartition entre agents, escalade vers un responsable, délai de réponse cible | PARTIEL | `experience/tickets.ts` `assignTickets` (lot de 50, audit), `getSupportAgents` (charge par agent), `escalateTicket` (manuelle ou levée, motif obligatoire), `experience/sla.ts` `enforceTicketSla` (onSchedule 15 min, exportée) + `runTicketSlaNow`, `display.ts` `updateExperienceSettings` (`doc:'support'`, `support.configure`), `SettingsPage.tsx` (délais par priorité, escalade auto, fermeture auto) | Délais cibles par priorité (première réponse 5 min à 4 h ; résolution 2 à 72 h), escalade automatique après 45 min sans première réponse (message système + audit système), marquage des dépassements, fermeture automatique des tickets résolus : réels et réglables (`settings/support`). `ui-support/support_statistiques.json` : « délai respecté 58 % », 23 escalades (16,9 %). **Manques** : la « répartition » est **purement manuelle** (attribution en lot par un agent) : aucune règle d'attribution automatique (tour de rôle, charge, compétence) ; `reportOrderIssue` (`orders/report.ts:21-22`) fixe ses propres délais (15 / 60 min, 2 h / 24 h) **sans lire `settings/support`** ; `messaging/restaurant/support.ts:27` recopie les défauts ; l'escalade automatique n'assigne personne (`escalatedTo: null`, 21 tickets escaladés attendent « un responsable »). |
+| Réponses types | Modèles de réponses réutilisables | COMPLET | `SettingsPage.tsx` (création, modification, suppression, raccourcis `/accuse`…, variables `{prenom}`, `{commande}`, `{restaurant}`), `cannedResponses` (9), `respondToTicket` (compteur `usageCount`) | `ui-support/support_configuration.json` : 9 modèles avec compteurs d'utilisation (12, 10, 8, 6, 4). Écritures directes sans audit. |
+| Centre d'aide | Articles pour clients, restaurants et livreurs | PARTIEL | `HelpCenterPage.tsx` (articles par public, catégories, brouillons / publiés / archivés), `helpArticles` (17 publiés, 10 catégories ; audience clients 3, restaurants 12, livreurs 2), lecture côté commerce `apps/restaurant/src/features/support/lib.tsx:68` | `ui-support/support_aide.json` : 17 articles, statistiques (5 655 consultations, 90,5 % jugés utiles, 925 votes). **Manques** : les compteurs `views`, `helpfulYes`, `helpfulNo` n'ont **aucun producteur** (les règles les figent, aucune fonction ne les incrémente ; valeurs issues du jeu d'essai) ; seul l'espace commerce lit les articles (apps client et livreur vides) ; articles écrits directement, en français seulement. |
+| Statistiques support | Nombre de tickets, motifs principaux, délai de résolution, coût des remboursements | COMPLET | `StatsPage.tsx` (calcul dans le navigateur sur les tickets de la période, `limit(3000)`), champs `compensationCents`, `slaFirstResponseBreached`, `satisfaction` | `ui-support/support_statistiques.json` : 136 tickets reçus (47 encore ouverts), 1re réponse moyenne 43 min, résolution moyenne 10 h 30, délai respecté 58 %, satisfaction 3,9/5, **coût des remboursements 819,85 €** (76 tickets avec geste), répartition demandeurs (client 73 %, restaurant 20 %, livreur 7 %), motifs principaux, tableau par agent. Réserves P2 : agrégation côté navigateur plafonnée à 3 000 tickets (fausse au-delà) ; le « coût » ne compte que les gestes faits depuis un ticket (pas les remboursements automatiques du §9) ; pas d'export. |
+| Chat en direct | Discussion en direct pendant une commande | PARTIEL | `experience/chat.ts` `openSupportChat`, `postSupportChatMessage`, `closeSupportChat` (exportées, `support.handle`, périmètre ville, audit `chat.opened` / `chat.joined`), `ChatPage.tsx`, `conversations` (12 dont 2 `support_chat`), `messaging/restaurant/conversations.ts` (`onConversationMessageCreated`) | `ui-support/support_chat.json` : 2 chats (commandes GL-12851, GL-12848), lecture et intervention de l'agent. **Manques** : (1) le réglage « Chat en direct : proposé aux clients pendant une commande » (`liveChatEnabled`, `settings/support`) est enregistré mais **jamais lu** par une fonction (`openSupportChat` ne le contrôle pas) ; (2) seul l'agent peut ouvrir un chat ; le client et le livreur ne peuvent ni en ouvrir ni y répondre (apps vides) ; (3) message système visible du client « Conversation close par le support » (`chat.ts:147`, faute, à écrire « clôturée »). |
+
+**Bilan §13 : 4 COMPLET / 4 PARTIEL / 0 ABSENT / 0 FAUX**
+
+Trous :
+- P0 — Ouverture d'un ticket et chat par le client et le livreur (fonctions + apps) : sans elle, le support ne reçoit que ce que les agents et les restaurants saisissent.
+- P1 — Répartition automatique des tickets (tour de rôle / charge) et affectation de l'escalade automatique à un responsable.
+- P1 — `reportOrderIssue` doit utiliser `settings/support` ; supprimer les défauts dupliqués.
+- P1 — Brancher `liveChatEnabled` (contrôle dans `openSupportChat` et à l'ouverture côté client).
+- P1 — Unifier les plafonds d'avoir : `creditCustomer` doit utiliser `refundLimitOf` ; rendre paramétrables les 500 € et 0,50 €.
+- P1 — Compteurs du centre d'aide (fonction d'incrément appelée par les apps).
+- P2 — Statistiques : agrégation serveur au-delà de 3 000 tickets, prise en compte des remboursements automatiques ; audit des écritures de motifs, modèles et articles ; corriger « close » en « clôturée ».
+
+---
+
+## Bilan global G3 (36 lignes du cahier)
+
+Chiffres d'origine (avant `cdc-fix-b`) :
+
+| Rubrique | COMPLET | PARTIEL | ABSENT | FAUX |
+|---|---|---|---|---|
+| §8 Commandes | 2 | 1 | 0 | 1 |
+| §9 Règles automatiques | 5 | 1 | 0 | 3 |
+| §10 Zones et villes | 4 | 2 | 0 | 0 |
+| §11 Affichage app client | 2 | 3 | 0 | 0 |
+| §12 Avis et notes | 2 | 2 | 0 | 0 |
+| §13 Support et litiges | 4 | 4 | 0 | 0 |
+| **Total** | **19** | **13** | **0** | **4** |
+
+Hors cahier mais décidé par le client : 2 FAUX supplémentaires (inactivité des commerces, fenêtre de réclamation) — les deux corrigées en COMPLET par `cdc-fix-b`.
+
+**Après `cdc-fix-b` (27/09)** : `hourOf` corrigé (§8 Anomalies FAUX→PARTIEL) ; client absent, produit indisponible, avoir de retard automatique (§9, 3 lignes FAUX→COMPLET) ; classement/mention « Sponsorisé » calculé côté serveur (§11 Règles de classement PARTIEL→COMPLET) ; index de recherche des avis (§12, déjà PARTIEL avant et après, indicateur agrégé rétabli) ; fermeture d'urgence multilingue (§10, déjà COMPLET). Nouveau total :
+
+| Rubrique | COMPLET | PARTIEL | ABSENT | FAUX |
+|---|---|---|---|---|
+| §8 Commandes | 2 | 2 | 0 | 0 |
+| §9 Règles automatiques | 8 | 1 | 0 | 0 |
+| §10 Zones et villes | 4 | 2 | 0 | 0 |
+| §11 Affichage app client | 3 | 2 | 0 | 0 |
+| §12 Avis et notes | 2 | 2 | 0 | 0 |
+| §13 Support et litiges | 4 | 4 | 0 | 0 |
+| **Total** | **23** | **13** | **0** | **0** |
+
+## Écarts avec DECISIONS_CLIENT / questionnaire
+
+- **Client absent** (attente 10 min, clôture sans remboursement, livreur et commerce payés) : réglage seul, aucun flux ni règlement (voir §9).
+- **Seuils de suspension** (15 jours sans commande → e-mail ; 30 jours après → retrait) : « tâche planifiée » demandée, non implémentée.
+- **Remboursements payés par le commerce dans tous les cas** : conforme (règle « tout au commerce » en base, imputation au reversement vérifiée dans `settlement.ts`).
+- **Délai d'acceptation 5 min + annulation + pause automatique** : conforme et automatisé (`enforceAcceptanceTimeout`, `onOrderWritten`).
+- **Alcool interdit** : conforme (règles Firestore, création de commande, contrôle qualité) ; réserve arabe et détecteurs dupliqués.
+- **Commandes à l'avance** : conforme.
+- **Mise en avant payante + mention « sponsorisé »** : vente et facturation présentes ; ni classement ni mention appliqués (app client vide), aucune mesure de vues / clics.
+- **Langues (français, anglais, arabe)** : tous les contenus éditables de ces rubriques sont en français seulement.
+- **Support 24 h/24, 7 j/7** : affirmé dans l'en-tête de `support`, mais aucun planning d'astreinte / de couverture n'existe dans l'outil (attribution manuelle uniquement).
+- **Réclamation avec photo obligatoire** : fenêtre `claimWindowHours` réglable mais aucun processus de réclamation ; la photo n'est exigée nulle part côté serveur (hors périmètre de ces rubriques, à recouper avec le lot commande / client).
+- **Lancement ville par ville (seules les villes actives sont opérables)** : `city.active` non contrôlé à la commande.
+
+## Valeurs codées en dur (constantes métier non réglables)
+
+- `functions/src/orders/scheduled.ts` : fenêtre de paiement 3-D Secure 20 min (`PAYMENT_ACTION_TIMEOUT_MINUTES`), nouvelle tentative de recherche livreur 2 min, horizon de transmission d'une commande programmée 90 min, marge de trajet `distance/250 + 5` et +10 min, `limit(50)` par passage.
+- `functions/src/orders/transitions.ts:67-81` : fenêtre de livraison promise (+10 min), marge de trajet (`distance/250 + 3`, minimum 5) ; `flags.late` dès 1 minute de dépassement (pas de tolérance).
+- `firebase/rules/restaurants.rules:43` : mode rush ≤ 90 min ; `packages/shared` `PREP_MINUTES_MIN/MAX`.
+- `operations/rules.ts` : bornes des schémas (acceptation 60 à 1 800 s, préparation 5 à 120 min, etc.) ; acceptation forcée à « annuler et rembourser ».
+- `operations/zones.ts` : majoration ×1 à ×3, supplément ≤ 10 €, bonus livreur ≤ 20 €, palier ≤ 50 €, minimum ≤ 200 € ; `live.ts` : fenêtre de majoration automatique 15 min ; `ZonesTab.tsx:87` : 6 km et 1,99 / 2,99 / 3,99 € d'amorçage ; palette `ZONE_COLORS`.
+- `experience/common.ts`, `messaging/restaurant/support.ts:27`, `orders/report.ts:21-22` : trois jeux de délais cibles de support (dont un ignorant `settings/support`).
+- `experience/refunds.ts` : remboursement minimum 0,50 €, avoir maximum 500 €, validité par défaut 180 jours ; `admin/acteurs/customers.ts` (`MAX_CREDIT_CENTS` 500 €).
+- `experience/reviews.ts` : fenêtres 30 j / 8 semaines, règle « 25 % de notes 1-2 » ; liste de base du filtre d'avis (maintenue dans `packages/shared`) ; cache 5 min.
+- `admin/operations/orders.ts` : plancher de 5 points et de 5 commandes pour signaler une anomalie ; plafond 8 000 commandes analysées ; `hours` non fonctionnelles (voir §8).
+- `display.ts` : `periods ≤ 12`, synchronisation des emplacements à :05 de chaque heure.
+- `apps/admin` : `StatsPage` `limit(3000)`, `useActiveOrders` `limit(1000)` et 4 villes.
+
+
+# Annexe E — Matrice §14 à §17 (Argent)
+
+
+Périmètre : cahier lignes 417 à 509. Lecture seule. Comptes de test utilisés pour la preuve UI : finance (accès à toutes les rubriques Argent), support (accès à Paiements seulement), commercial (accès à Abonnements seulement), metz (aucun accès Argent : « Rubrique non accessible », comportement attendu du contrôle par rôle). Compte superadmin : UI non vérifiée en superadmin (2FA).
+
+Fichiers de référence lus :
+- Front : `apps/admin/src/features/{paiements,finance,facturation,abonnements,argent-commun}`.
+- Back : `functions/src/finance/argent/*.ts` (exporté via `functions/src/finance/index.ts` puis `functions/src/index.ts`), `functions/src/finance/statements.ts`, `functions/src/payments/*.ts`, `functions/src/orders/{place,payment}.ts`, `functions/src/restaurant/plan.ts`, `functions/src/admin/experience/refunds.ts`.
+- Moteur : `packages/shared/src/pricing/{settlement,policies,decisions,defaults,plans}.ts`, `packages/shared/src/constants/{argent,enums}.ts`.
+- Règles : `firebase/rules/{finance,argent}.rules`.
+- Données réelles lues (projet golink-9f16d, lecture seule) : `plans` 3, `commissionRules` 7, `subscriptions` 7, `payouts` (restaurant 38, livreur 362 : paid/scheduled/failed/on_hold), `invoices` 124 (1 seul justificatif client `customer_receipt`), `taxReports` 4 (3 TVA prêtes, 1 DAC7 brouillon), `counters` invoice_* (séries FR/LU), `settings/payments`, `countries` (FR, BE, LU, DZ, MA, TN).
+
+Fonctions callables vérifiées exportées et appelées sous le même nom côté front (`argent-commun/api.ts`) : getFinanceOverview, buildPayoutsNow, executePayout, cancelPayout, holdPayouts, releasePayoutHold, createAdjustment, recordCashRemittance, generateMonthlyInvoicesNow, issueCreditNote, markInvoicePaid, issueCustomerReceipt, generateTaxReport, markTaxReportSubmitted, exportAccounting, updatePlan, updateCommissionRule, manageSubscription, updateFinanceSettings, updateCountryPayments, updateRestaurantPayments, changePlan (restaurant/plan.ts), generateStatement. Automatismes exportés : onOrderSettled, onRefundProcessed, buildPayouts (02:30), executePayouts (09:00), generateMonthlyInvoices (le 1er à 05:00), runDunning (08:00), applyScheduledCancellations (00:20), applyPendingPlanChanges (00:15).
+
+Menu et droits : chaque module a un `defineModule` avec `nav.group: 'argent'` et une permission (`payments.view`, `finance.view`, `invoices.view`, `subscriptions.manage`) ; routes toutes déclarées.
+
+---
+
+## §14 — Paiements
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Moyens de paiement : activer / désactiver carte, Apple Pay, Google Pay, espèces, titres-restaurant, selon le pays | Interrupteurs plateforme et par pays | **PARTIEL (corrigé : modèle et reversements)** | `paiements/MethodsPage.tsx` ; `updateFinanceSettings` (doc `payments`) et `updateCountryPayments` dans `finance/argent/settings.ts` ; contrôle à la commande `orders/place.ts` l. 401-410 (`allowedByPlatform` = `settings/payments.methods` ET `countries/{id}.paymentMethods`) | Écriture par Cloud Function avec droit `payments.configure`, motif obligatoire, `settingsHistory` + `writeAudit` sensible. Titres-restaurant forcés à faux (décision client) et au moins un moyen en ligne exigé. `ui-finance/paiements_moyens.json` : 6 pays listés, tableau « Par pays » avec bouton Modifier, écran sans erreur. MANQUE : pour l'Algérie, le Maroc et la Tunisie (`stripeAvailable:false`, libellé « Prestataire local · en attente ») aucun prestataire de paiement local n'est branché : la décision client demandait des moyens locaux par pays. Le paiement carte est codé `currency: 'eur'` (`orders/payment.ts` l. 60) et `currency: 'EUR'` sur le document `payments` (`place.ts` l. 603), donc DZD/MAD/TND impossibles. Réglage par ville absent. **Correction cdc-fix-c :** `paymentProviders` (Stripe, virements locaux DZ/MA/TN) rattachés aux pays (`setCountryProviders`, écran « Prestataires »), devise du pays écrite sur commandes, paiements, écritures, factures et reversements (`lib/currency.ts`), autorisation Stripe dans la devise du marché. Reste : l'encaissement en ligne par un prestataire local n'est pas branché (aucun prestataire contractualisé). Test réel `scripts/tests/cdc-fix-c.flow.mjs`, scénario `providers`. |
+| Paramètres par restaurant : moyens autorisés par restaurant | Moyens autorisés + rythme de reversement par commerce | COMPLET | `MethodsPage.tsx` (tableau « Par commerce », « Tout mettre en conformité ») ; `updateRestaurantPayments` (`settings.ts` l. 151) ; contrôle `place.ts` (`allowedByRestaurant`) et `restaurant/config-context.ts` `allowedPaymentMethods` | Écrit `restaurants/{id}/private/commercial.allowedPaymentMethods`, refuse titres-restaurant et espèces si le commerce est livré par GoLink, motif + historique + audit. La colonne « Compte Stripe » affiche « Non créé » pour les commerces de test (`ui-finance/paiements_moyens.json`) : 12 commerces signalés « non conformes » à corriger (réglages hérités de la maquette). |
+| Paiements échoués : suivi des paiements refusés ou en erreur | Liste, filtres, motif, tentatives, alertes | **COMPLET (corrigé)** | `paiements/TransactionsPage.tsx` (filtres Refusés / Action requise / Remboursés, export CSV/XLSX) ; `payments/webhook.ts` (`payment_intent.payment_failed` → `status:'failed'`, `failureCode`) ; `orders/payment.ts` `capturePayment` ; `place.ts` l. 445 | `ui-finance/paiements.json` : 1 161 paiements sur 30 jours, 1 refusé (57,33 €), taux d'échec 0,1 %, 15 lignes, aucune erreur console. TROU : un refus de carte à l'autorisation (cas principal) lève une exception dans `place.ts` l. 445 AVANT l'écriture du document `payments` (créé seulement l. 618 à la fin de la transaction de commande) : ces refus ne sont jamais tracés dans l'écran. Seuls sont visibles les échecs de capture et les évènements webhook sur un paiement existant. Le paramètre « Nouvelles tentatives d'un paiement refusé » (`failedPaymentRetry.maxAttempts`) est enregistré mais n'est lu par aucune fonction serveur : réglage sans effet. Pas d'alerte automatique sur pic d'échecs. **Correction cdc-fix-c :** un refus de carte à l'autorisation est tracé dans `payments` (`orderId: null`, `failureCode`, `attempts`) avant tout refus ; `settings/payments.failedPaymentRetry.maxAttempts` est lu (au-delà, « Trop de paiements refusés récemment »). Test réel `scripts/tests/cdc-fix-c.flow.mjs`, scénario `payments`. |
+| Pourboires : activation, montants proposés, reversement intégral au livreur | Activation, montants, plafond, 100 % livreur | **COMPLET (corrigé)** | `MethodsPage.tsx` ; `settings.ts` ; `packages/shared/src/pricing/quote.ts` l. 245-252 ; `settlement.ts` `computeCourierPay` ; `finance/argent/settlement.ts` l. 134 et 144 | Reversement intégral CONFORME : le pourboire est hors assiette de commission (`commissionBase`), écrit en entrée `courier_tip` au livreur (ou au commerce s'il livre lui-même, libellé « pour votre livreur »), listé séparément sur le relevé et sur le justificatif (« hors TVA »). PARTIEL : il existe deux jeux de réglages : `settings/payments.tips` (édité par l'écran) n'est lu par aucune fonction serveur ; le devis utilise `countries/{id}.pricing.tips` (`config.tips`, édité aussi par `updateCountryPayments`). Donc modifier l'onglet plateforme ne change pas le plafond réellement appliqué. Plafond serveur en plus codé en dur : `tipCents: z.number().max(5000)` (`place.ts` l. 88). **Correction cdc-fix-c :** `placeOrder` lit `settings/payments.tips` (activation, plafond) en plus du plafond du pays ; la constante 5 000 est supprimée. Test réel `scripts/tests/cdc-fix-c.flow.mjs`, scénario `payments`. |
+| Espèces : suivi de l'argent encaissé par les livreurs et de ce qu'ils doivent reverser | Règle « seulement livreur salarié du commerce » | COMPLET | `packages/shared/src/pricing/policies.ts` `isCashAllowed` ; `place.ts` l. 404 ; `restaurant/config-context.ts` l. 128-135 ; `settings.ts` (`merchantDriversOnly: true` forcé) | La règle de décision est appliquée à la commande (refus explicite hors livreur du commerce, retrait refusé) et à la configuration du commerce. |
+| (idem) | Suivi des espèces détenues et à reverser, plafond par livreur | **COMPLET (corrigé)** | `paiements/CashPage.tsx` ; `recordCashRemittance` (`payouts.ts` l. 606) ; `finance/argent/settlement.ts` l. 138-147 ; `orders/dispatch*.ts` | L'écran lit `driverPrivate.cashBalanceCents`, mais AUCUNE fonction n'incrémente ce champ (recherche : seules lectures dans `overview.ts`, `CashPage.tsx` et une décrémentation dans `recordCashRemittance`). Le règlement (`settleOrder`) écrit une écriture `driver_cash` seulement pour un livreur de la plateforme (`settlement.courier` n'existe que si GoLink livre), cas que la décision client interdit pour les espèces ; pour un livreur salarié du commerce, aucune écriture livreur n'est créée, donc aucun suivi de ce qu'il détient. Le plafond (`cash.driverCashLimitCents`) n'est appliqué nulle part (le dispatch filtre seulement sur `driver.acceptsCash`), alors que l'écran affiche « Plus de course en espèces tant que le solde n'est pas remis ». `ui-finance/paiements_especes.json` : 12 livreurs, 987,20 € détenus, 4 « plafond atteint », mais ce sont des valeurs de démonstration écrites directement en base. Le modèle « le livreur remet à GoLink » contredit la décision (les espèces restent chez le commerce). **Correction cdc-fix-c :** `finance/argent/cash.ts` : à la livraison payée en espèces par un livreur salarié, la caisse du livreur (`driverPrivate.cashBalanceCents`) et `cashMovements` sont alimentés (idempotent), reflet sur la fiche livreur du commerce ; plafond (`cashLimitCents` ou `settings/payments.cash.driverCashLimitCents`) appliqué à l'attribution (`assignOwnCourier`) ; remise de caisse par le commerce (`recordMerchantCashRemittance`) ou GoLink ; alerte `cash_limit_reached`. Modèle « remise à GoLink » abandonné (l'argent reste au commerce). Écrans : admin « Espèces », restaurant « Livreurs ». Test réel `scripts/tests/cdc-fix-c.flow.mjs`, scénario `cash`. |
+| Frais et remboursements : règles de remboursement, frais de paiement pris en charge par qui | Payeur des frais, imputation, seuil de validation | **PARTIEL (corrigé : seuil de validation)** | `paiements/RulesPage.tsx` ; `updateFinanceSettings` doc `refunds` ; `updateCountryPayments` (`payer`) ; `policies.ts` `allocateRefund` ; `finance/argent/settlement.ts` `onRefundProcessed` | Fonctionne : payeur des frais par pays (`pricing.payment.payer`, défaut « commerce », `settlement.ts` l. 165-185), imputation par cause (défaut 100 % commerce pour les 14 causes, lue dans `settings/orderRules`), déduction automatique au prochain reversement (écriture `refund_charge`). `ui-finance/paiements_regles.json` : 14 causes à 100 % commerce, frais par pays affichés. FAUX : `approvalThresholdCents` (seuil de validation) et `defaultMethod` (remboursement sur moyen d'origine ou avoir) sont enregistrés mais ne sont lus par aucune fonction : la validation dépend uniquement du plafond de l'agent (`refundLimitOf`, `admin/experience/common.ts` l. 114) ; seule `walletCreditValidityDays` est utilisée (`refunds.ts` l. 326). Frais de paiement non paramétrables par commerce. **Correction cdc-fix-c :** `approvalThresholdCents` est lu (`refundLimitOf` : plafond de l'agent limité par le seuil de la plateforme, sauf plafond propre). Reste : `defaultMethod` (remboursement par avoir par défaut) non lu, frais de paiement non paramétrables par commerce. |
+
+Bilan §14 : 1 COMPLET / 4 PARTIEL / 0 ABSENT / 1 FAUX (la ligne « Espèces » compte deux éléments : règle COMPLET, suivi FAUX ; comptée PARTIEL globalement dans le total ci-dessous).
+
+Comptage strict par ligne du cahier (6 lignes) : Moyens = PARTIEL, Par restaurant = COMPLET, Échoués = PARTIEL, Pourboires = PARTIEL, Espèces = FAUX (le suivi demandé par le cahier est faux), Frais et remboursements = PARTIEL. Soit **1 COMPLET / 4 PARTIEL / 0 ABSENT / 1 FAUX**.
+
+TROUS §14 :
+- P0 : Espèces : compteur `cashBalanceCents` jamais alimenté, plafond jamais appliqué, modèle de suivi contraire à la décision (à réécrire côté commerce salarié).
+- P0 : Prestataires de paiement locaux Algérie / Maroc / Tunisie et devises DZD/MAD/TND absents (Stripe et `eur` codés en dur).
+- P1 : Refus de carte à l'autorisation non tracés dans `payments` (aucun suivi des échecs réels).
+- P1 : Réglages sans effet : `failedPaymentRetry`, `approvalThresholdCents`, `defaultMethod`, `settings/payments.tips`.
+- P2 : Payeur des frais uniquement par pays (pas par commerce).
+
+---
+
+## §15 — Finance et reversements
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Vue d'ensemble : CA brut, CA net, commissions, abonnements, frais, remboursements, solde plateforme | CA brut, CA net, commissions, abonnements, frais, remboursements | COMPLET | `finance/FinanceOverviewPage.tsx` ; `getFinanceOverview` (`overview.ts`) ; permission `finance.view` | Calcul serveur à partir de `orderFinancials` (répartition faisant foi), `refunds`, `invoices`, comparaison avec la période précédente, périmètre pays/ville, export CSV/XLSX. `ui-finance/finance.json` : 7 j / 30 j / 90 j / Année, cartes « Encaissé », « Revenu net (HT) », « Commissions (HT) », « Marge nette », « Remboursements », « Promotions financées par GoLink », « Frais de paiement », évolution, moyens de paiement, coût des promotions, top commerces ; aucune erreur. |
+| (idem) | Solde plateforme | PARTIEL | `overview.ts` `balances` | Fournit la marge nette et les soldes à verser (commerces, livreurs, bloqués, échoués, espèces détenues) mais pas le solde réel du compte Stripe de la plateforme, ni la trésorerie disponible avant reversements programmés (risque `balance_insufficient`, message géré seulement à l'échec du virement dans `payouts.ts` l. 256). |
+| Répartition par commande : montant payé, part restaurant, part livreur, commission, frais de paiement, remise et qui la finance | Tous éléments | COMPLET | `finance/BreakdownPage.tsx` ; `settlement.ts` (`computeSettlement`) ; `orderFinancials` écrit par `onOrderSettled` | Colonnes payé, part commerce, livreur, commission HT + taux, frais de paiement, remises, marge (`ui-finance/finance_repartition.json`, 20 lignes). Le détail (lignes 170-171) distingue « Remise financée par GoLink » et « par le commerce ». Assiette de commission conforme à la décision : sous-total articles TTC après remise financée par le commerce, hors livraison, service et pourboires (`settlement.ts` l. 145-146 ; `countries.*.pricing.commission.base = subtotal_after_restaurant_discount` vérifié en base). Frais de paiement déduits du commerce par défaut (`payer:'restaurant'`). La colonne « Remises » du tableau affiche « — » sur toutes les lignes visibles (pas de remise sur ces commandes), lecture correcte à confirmer sur une commande remisée. |
+| Reversements restaurants : automatiques selon calendrier, relevé envoyé au restaurant, statuts Programmé / Payé / Échoué | Calendrier automatique | COMPLET | `payouts.ts` `buildPayouts` (cron 02:30), `executePayouts` (cron 09:00), `runBuildPayouts`, `isPayoutDay`, `loadSchedule` ; `PayoutsPage.tsx` `ScheduleDialog` ; `updateFinanceSettings` doc `payouts` | Calendrier plateforme (hebdomadaire / 15 jours / mensuel, jour, minimum, délai) + surcharge par commerce (`payoutFrequency`), identifiants déterministes `po-r-{id}-{date}` (rejouable). Statuts scheduled/processing/paid/failed/on_hold/cancelled (`ui-finance/finance_reversements.json` : 130 reversements, Programmés 8, En échec 2, Bloqués 1, Payés 39 sur 30 jours). Virement par `stripe.transfers.create` (compte connecté) avec clé d'idempotence, alerte + audit sensible en cas d'échec. |
+| (idem) | Relevé envoyé au restaurant | **PARTIEL (corrigé : relevé, devises)** | `payouts.ts` `sendStatementEmail` (l. 363) ; `finance/statements.ts` `generateStatement` ; `PayoutPage.tsx` (PDF) | Un e-mail récapitulatif (ventes, commission, remboursements imputés, pourboires, espèces, net, référence) est envoyé APRÈS un virement réussi seulement ; pas de PDF joint ni d'envoi pour un reversement échoué ou bloqué ; le relevé détaillé est un PDF généré à la demande dans l'admin. Collection `notificationLogs` : 0 envoi `payout_statement` (les reversements de démonstration ne sont pas exécutés automatiquement, `executePayouts` saute `seed`/`test`), donc l'envoi réel n'est pas prouvé en base. Trois faiblesses : (1) virement codé `currency: 'eur'` (l. 303) ; (2) tout compte connecté absent fait échouer le reversement (« Non créé » pour les commerces de démonstration) ; (3) le jour de mois `monthly` est fixé au 1er (`isPayoutDay`) sans réglage du jour, et la référence des semaines paires « 15 jours » est la constante `2026-01-05`. **Correction cdc-fix-c :** relevé remis par le message automatique `restaurant_payout_paid` (texte modifiable, détail ventes / commission / remboursements / ajustements / référence) ; reversement dans la devise du pays ; pays sans Stripe : virement manuel avec référence. Reste : pas de PDF joint, pas de message pour un reversement échoué ou bloqué, jour du reversement mensuel fixé au 1er. Test réel `scripts/tests/cdc-fix-c.flow.mjs`, scénario `providers`. |
+| Paiement des livreurs : automatique selon un calendrier, relevé des gains, pourboires, bonus | Reversement automatique livreurs | **PARTIEL (corrigé : compte de paiement)** | `payouts.ts` (mêmes fonctions, `type:'driver'`) ; `connectedAccount` l. 248 ; `invoices.ts` relevés livreurs | Le calendrier livreurs (hebdomadaire, min 5 €) et le relevé mensuel d'autofacturation (série LIV) existent. BLOQUANT : aucun code ne crée ni n'alimente `driverPrivate.stripeAccountId` (les fonctions Connect `payments/connect.ts` sont réservées aux restaurants via `requireRestaurantAccess`) ; l'application livreur (`apps/driver`) est vide dans le dépôt. Tout reversement livreur réel échouera donc avec « Le livreur n'a pas encore activé son compte de paiement Stripe ». Les 334 reversements livreurs « payés » en base sont des données de démonstration. Le relevé mensuel sépare gains, primes et pourboires, mais les bonus ne sont pas individualisés (le bonus pointe est inclus dans `courier_earning`) et la garantie horaire (`computeHourlyGuaranteeTopUp`) n'est appelée par aucune fonction (aucune écriture `hourly_guarantee_topup`). **Correction cdc-fix-c :** `createDriverConnectAccount` / `createDriverConnectAccountLink` / `refreshDriverConnectAccountStatus` (Stripe Connect Express du livreur indépendant, webhook `account.updated`), compte local `setDriverPayoutAccount` pour DZ/MA/TN. Reste : garantie horaire non calculée, bonus non individualisés, app livreur absente pour le parcours. Test réel `scripts/tests/cdc-fix-c.flow.mjs`, scénario `driverconnect`. |
+| Retenues et ajustements : déduction automatique des remboursements imputés ; correction manuelle avec motif | Déduction automatique + correction manuelle | COMPLET | `settlement.ts` `onRefundProcessed` (déclencheur `refunds/{id}`) ; `payouts.ts` `createAdjustment` (droit `finance.adjust`) ; `LedgerPage.tsx` « Ajustement manuel » | Écriture `refund_charge` (montant négatif, `payoutId:null`, reprise au prochain reversement) sur le commerce et éventuellement le livreur, avoir client émis automatiquement ; ajustement manuel motivé (montant ≠ 0, plafond 100 000 €) avec `writeAudit` sensible. Limite documentée : aucune retenue pour une commande annulée avant livraison. Le grand livre est en écriture interdite côté client (`ledgerEntries` `allow write: if false`). |
+| Blocage de reversement : suspendre les reversements d'un restaurant ou livreur (fraude, litige, document manquant) | Blocage / levée avec motif | COMPLET | `payouts.ts` `holdPayouts`, `releasePayoutHold` (droit `finance.hold`) ; `finance/HoldsPage.tsx` ; `PAYOUT_HOLD_REASONS` | Motifs typés + précisions obligatoires, passage des reversements en attente à `on_hold`, indicateur `payoutsBlocked` sur la fiche privée, levée motivée, audit sensible. Vérification à l'exécution (`executeOne` relit le blocage). `ui-finance/finance_blocages.json` : 1 blocage actif (Casa Arepa, document manquant), boutons Lever/Nouveau blocage. Le blocage automatique pour abonnement impayé (`dunningStep`) réutilise la même collection. |
+| Coût des promotions : combien ont coûté les offres et qui les a financées | Par offre et par financeur | COMPLET | `overview.ts` (`promotions`) ; `FinanceOverviewPage.tsx` carte « Coût des promotions » ; `orders/place.ts` l. 640 (`promotionRedemptions`) | Agrégation par promotion des parts financées GoLink / commerce, exclusion des utilisations annulées (`orders/cancel.ts` l. 196). Aussi dans la répartition par commande (`promoCostCents`, `discountFundedCents`). |
+| Historique : chaque mouvement financier, consultable et exportable | Grand livre filtrable et exportable | **PARTIEL (corrigé : abonnements, portefeuille)** | `finance/LedgerPage.tsx` (filtres Tous / Commerces / Livreurs / Espèces / Plateforme, export CSV/XLSX sur période) ; collection `ledgerEntries` | `ui-finance/finance_grand_livre.json` : 25 lignes, export et ajustement disponibles, droit `finance.view`. MANQUE : plusieurs types de mouvement déclarés (`subscription_fee`, `sponsored_placement`, `promo_funded`, `wallet_credit`, `wallet_debit`) ne sont écrits par aucune fonction ; aucune écriture de compte `platform` n'est produite (le filtre « Plateforme » ne peut rien afficher) ; frais d'abonnement et mises en avant n'y figurent donc pas. **Correction cdc-fix-c :** `subscription_fee`, `sponsored_placement`, `wallet_debit`, `wallet_credit` sont maintenant écrits ; `promo_funded` et les écritures du compte `platform` restent absents. Test réel `scripts/tests/cdc-fix-c.flow.mjs`, scénarios `subscription`, `wallet`. |
+
+Bilan §15 (8 lignes du cahier) : Vue d'ensemble = PARTIEL (solde plateforme), Répartition = COMPLET, Reversements restaurants = PARTIEL (relevé, devise, non-Stripe), Livreurs = PARTIEL (bloquant), Retenues = COMPLET, Blocage = COMPLET, Coût promotions = COMPLET, Historique = PARTIEL. Soit **4 COMPLET / 4 PARTIEL / 0 ABSENT / 0 FAUX**.
+
+TROUS §15 :
+- P0 : Livreurs sans parcours d'ouverture de compte Stripe Connect (aucune fonction, aucune app livreur) : reversements automatiques livreurs impossibles en réel.
+- P0 : Reversements en `eur` uniquement ; pays hors Stripe (DZ/MA/TN) sans mécanisme de reversement.
+- P1 : Frais d'abonnement, mises en avant, promotions financées et portefeuille absents du grand livre (entrées jamais écrites) ; pas d'écritures compte `platform`.
+- P1 : Relevé envoyé seulement après virement réussi, sans PDF, jamais vérifié en réel.
+- P1 : Garantie horaire livreur non calculée ; bonus non individualisés.
+- P2 : Solde plateforme réel (Stripe Balance) absent ; jour du reversement mensuel et date de référence 15 jours codés en dur.
+
+---
+
+## §16 — Facturation et TVA
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Factures aux restaurants : facture mensuelle automatique de GoLink (commissions + abonnement + frais), avec TVA | Génération automatique mensuelle, commissions, abonnement, frais, TVA | **COMPLET (corrigé)** | `finance/argent/invoices.ts` `generateMonthlyInvoices` (cron `0 5 1 * *`, exporté), `runMonthlyInvoices`, `generateMonthlyInvoicesNow` ; `facturation/InvoicesPage.tsx` `MonthlyDialog` | Facture `fac-{restaurant}-{mois}` par commerce : commissions par taux, abonnement (avec essai, gratuité et offre spéciale), mises en avant, frais d'encaissement refacturés (hors TVA), TVA au taux normal du pays, numérotation transactionnelle, idempotente. `ui-finance/facturation.json` : « Émises en septembre 2026 : 11 918,41 €, 45 pièces », onglet Commerces, bouton « Facturation mensuelle ». Base : 30 factures commission et 17 abonnements « paid ». DÉFAUTS : (1) aucun e-mail d'envoi de la facture au restaurant (aucun `sendFinanceEmail` dans `invoices.ts`) ; (2) la facture porte « Montant réglé par compensation sur les reversements » et le statut `paid`, mais l'abonnement et les mises en avant ne sont jamais retenus sur les reversements (aucune écriture `subscription_fee` / `sponsored_placement`) : mention fausse pour cette part ; (3) la remise `discountBps` de l'offre spéciale est appliquée sans vérifier `specialOffer.endsAt` (seule `freeUntil` est testée), donc une remise ne s'éteint jamais ; (4) devise `EUR` codée en dur sur toutes les factures. **Correction cdc-fix-c :** la facture mensuelle est envoyée au commerce (message `invoice_available`, journalisé) ; l'abonnement et les mises en avant sont réellement retenus au grand livre (`{facture}-abo`, `-pub`) et la facture n'est « réglée par compensation » que si le solde le couvre (`compensation` : montant et statut), sinon elle reste à compenser et l'abonnement passe en impayé ; la remise d'offre spéciale s'éteint à `specialOffer.endsAt` ; devise du pays. Test réel `scripts/tests/cdc-fix-c.flow.mjs`, scénario `subscription` (A, D, E, F). |
+| Justificatifs clients : reçu ou facture pour chaque commande, téléchargeable | Émission auto à la livraison, téléchargement | COMPLET | `settlement.ts` `onOrderSettled` → `issueReceipt` ; `issueCustomerReceipt` (callable, rattrapage) ; `finance/BreakdownPage.tsx` (téléchargement PDF via `facturation/invoice-pdf.ts`) | Reçu émis au nom et pour le compte du commerce (mandat), lignes par taux de TVA, frais GoLink, pourboire hors TVA ; série `{pays}-REC`, identifiant `rec-{orderId}`. Réserve : en base un seul `customer_receipt` pour 12 888 commandes : les commandes antérieures au déclencheur n'ont pas de reçu et il n'y a pas de rattrapage en masse (émission manuelle commande par commande). Le téléchargement côté client final ne peut pas être vérifié : `apps/client` ne contient qu'un squelette. |
+| Relevés livreurs : relevés ou factures des prestations des livreurs indépendants | Relevé mensuel d'autofacturation | **PARTIEL (corrigé : mention légale)** | `invoices.ts` (partie livreurs, série `LIV`, `selfBilling:true`) ; `InvoicesPage.tsx` filtre « Relevés livreurs » | Un relevé par livreur et par mois (gains, primes, pourboires hors TVA), seulement pour les livreurs `platform`. `ui-finance/facturation.json` : nombreux relevés LU-LIV / FR-LIV août 2026. DÉFAUT : la mention légale « TVA non applicable, article 293 B du CGI » (droit français) est codée en dur pour tous les pays (livreurs luxembourgeois inclus), et l'exonération de TVA est supposée par défaut (`priv?.vatExempt !== false`). **Correction cdc-fix-c :** la mention « article 293 B du CGI » n'est portée que pour les livreurs établis en France ; devise du pays. Reste : exonération de TVA supposée par défaut. |
+| Avoirs : avoir émis en cas de remboursement ; une facture n'est jamais supprimée | Avoir auto sur remboursement, avoir manuel, immuabilité | COMPLET | `settlement.ts` `creditNoteForRefund` (déclenché par `onRefundProcessed`) ; `invoices.ts` `issueCreditNote` (droit `invoices.issue`, motif obligatoire, total ou partiel) ; `firebase/rules/finance.rules` `invoices` | Avoir numéroté (série AV) lié à la facture d'origine, statut `credited`, montant cumulé plafonné, audit sensible. Règle Firestore `allow write: if false` (jamais modifié ni supprimé depuis un client). `ui-finance/facturation.json` : filtre Avoirs, « Avoirs émis (mois) 21,00 € / 2 avoirs ». Remarque : l'avoir manuel sur une facture de commission ne génère pas d'écriture de grand livre ni de remboursement de reversement. |
+| Taux de TVA : par type de produit (restauration, boissons alcoolisées…) et par pays | Taux par pays et catégorie | PARTIEL | `facturation/VatPage.tsx` ; `updateCountryVat` (`settings.ts` l. 189, droit `tax.reports`) ; `VAT_CATEGORIES` (`enums.ts` l. 216) | `ui-finance/facturation_tva.json` : 6 pays, taux normal + restauration, boisson sans alcool, épicerie, boisson alcoolisée (verrouillée), drapeau « À valider », entité émettrice. Écriture historisée + auditée. LIMITES : seulement 4 catégories figées (`food`, `soft_drink`, `grocery`, `alcohol`) alors que la décision client ouvre la plateforme à tous les commerces (pharmacie, fleuriste, boulangerie…) ; aucun taux par ville ; entités émettrices « À compléter » pour BE, DZ, MA, TN. **Déploiement cdc-fix-c :** `updateCountryVat` redéployée et joignable (scénario `deployed`). |
+| Numérotation et conservation : numérotation continue, conservation pendant la durée légale même après suppression du compte | Numérotation continue | COMPLET | `common.ts` `nextInvoiceNumber` (transaction sur `counters/invoice_{série}`) | Compteur transactionnel par série (jamais réinitialisé, sans trou). `ui-finance/facturation_tva.json` : tableau des séries FR-ABO, FR-AV, FR-COM, FR-LIV, FR-REC, LU-* avec dernier numéro (cohérent avec la base : FR-COM 21, FR-LIV 49…). |
+| (idem) | Conservation légale | COMPLET | `retainUntil()` (`common.ts`), `INVOICE_RETENTION_YEARS` ; `platform/gdpr.ts` `RETAINED_FOR_LEGAL` (l. 131) ; rules `invoices` | Champ `retainUntil` écrit sur chaque pièce, règles interdisant toute suppression, l'anonymisation RGPD conserve « Factures et écritures comptables (10 ans) ». Durée fixe de 10 ans en constante partagée (non paramétrable par pays). |
+| Déclarations aux autorités : récapitulatif annuel des revenus des vendeurs et prestataires | DAC7 annuel commerces + livreurs | PARTIEL | `finance/argent/tax.ts` `generateTaxReport` (type `dac7`), `runDac7`, `markTaxReportSubmitted` ; `facturation/DeclarationsPage.tsx` | Récapitulatif par vendeur et par trimestre (`aggregateDac7`), seuil de déclaration (30 ventes ou 2 000 € pour les vendeurs de biens ; dès le premier euro pour les livreurs), liste des informations manquantes (SIRET, TVA, adresse, numéro fiscal, date de naissance), verrou après transmission, référence de dépôt, audit. `ui-finance/facturation_declarations.json` : 4 documents, dont « Déclaration DAC7 France 2026 : Brouillon » sans montant ; exports Excel/CSV/« Document ». MANQUE : pas de fichier XML au format officiel DAC7 (`file: null` sur tous les rapports) ; seuils et périmètre pays UE codés en dur (constantes du moteur) ; aucun rappel ni échéance automatique (avant le 31 janvier) ; les remboursements ne sont pas déduits des montants déclarés ; pays non UE (DZ/MA/TN) non traités. **Déploiement cdc-fix-c :** `generateTaxReport` et `markTaxReportSubmitted` redéployées et joignables. |
+| Export comptable : export mensuel pour l'expert-comptable | Export mensuel par pays | PARTIEL | `tax.ts` `exportAccounting` ; `DeclarationsPage.tsx` (Excel / CSV) | Écritures VT / AC / BQ (411, 706, 7062, 44571, 604, 44566, 401, 467, 512), équilibrées par pièce, historisées dans `taxReports` et auditées. DÉFAUTS : l'écran annonce « au format FEC » alors que les colonnes produites (journal, date, pièce, compte, tiers, libellé, débit, crédit) ne suivent pas les 18 champs réglementaires du FEC ; pas de contrepartie des ventes des commerces (comptes 467 seulement débités au virement) ; un pays à la fois ; manuel (pas de génération ni d'envoi mensuel automatique) ; montants supposés en euros. **Déploiement cdc-fix-c :** `exportAccounting` redéployée et joignable. |
+
+Bilan §16 (8 lignes du cahier) : Factures restaurants = PARTIEL, Justificatifs = COMPLET, Relevés livreurs = PARTIEL, Avoirs = COMPLET, Taux de TVA = PARTIEL, Numérotation et conservation = COMPLET, Déclarations = PARTIEL, Export comptable = PARTIEL. Soit **3 COMPLET / 5 PARTIEL / 0 ABSENT / 0 FAUX**.
+
+TROUS §16 :
+- P0 : Facture mensuelle non envoyée au restaurant ; mention « réglé par compensation » fausse pour l'abonnement et les mises en avant (aucune retenue réelle) ; remise d'offre spéciale sans date de fin.
+- P1 : DAC7 sans fichier au format officiel ni rappel d'échéance ; remboursements non déduits.
+- P1 : Export « FEC » non conforme au format ; pas de génération automatique mensuelle.
+- P1 : Mentions légales françaises (293 B) sur les relevés livreurs de tous les pays ; devise EUR codée en dur.
+- P2 : Catégories de TVA figées à 4 ; rattrapage en masse des justificatifs antérieurs ; entités émettrices BE/DZ/MA/TN à compléter.
+
+---
+
+## §17 — Abonnements et commissions
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Formules : Basic / Pro / Premium : prix, fonctionnalités incluses, limites, commission associée | Éditeur (prix, essai, engagement, carte, délai de grâce, commissions, fonctionnalités, limites) | COMPLET | `abonnements/PlansPage.tsx` ; `updatePlan` (`subscriptions.ts` l. 37, droit `plans.edit`) ; rules `plans` | Tous les champs demandés sont paramétrables, `settingsHistory` + audit sensible avec motif. `ui-finance/abonnements_formules.json` : 3 formules, textes « Gratuit », « Essai gratuit Aucun », commissions 30 % / 15 % / 12 %, cohérent avec la base (`plans` : prix 0, `commission` 3000/1500/1200, `trialDays` 0) et la décision client (formules vides à 0 €). |
+| (idem) | Application réelle des fonctionnalités et des limites | **PARTIEL (corrigé : fonctionnalités, limites)** | `updatePlan` (`features`, `limits`, `gracePeriodDays`) ; recherche `maxProducts\|maxStaff\|maxPromotions` dans `functions/src` et `firebase/rules` | Les fonctionnalités incluses et les limites (produits, équipe, promotions, rayon) sont stockées mais aucune fonction ni règle ne les fait respecter (aucun résultat de recherche hors l'éditeur). Aucun prix Stripe créé non plus (`stripePriceId` reste `null`, pas de Stripe Billing). **Correction cdc-fix-c :** `finance/argent/entitlements.ts` : fonctionnalités de la formule (codes promo, campagnes, fidélité, équipe) et limites (offres, comptes d'équipe) appliquées par le serveur ; restrictions d'impayé appliquées ; abonnement suspendu = plus de commande. Reste : limite de produits (écriture directe des produits par les règles), pas de prix Stripe (`stripePriceId`). Test réel `scripts/tests/cdc-fix-c.flow.mjs`, scénario `subscription` (B, H). |
+| Commissions : par défaut, par formule, par ville, ou négociée par restaurant ; historique des changements | Barèmes pays / formule / ville / groupe / commerce + historique | **COMPLET (corrigé)** | `abonnements/CommissionsPage.tsx` ; `updateCommissionRule` (`subscriptions.ts` l. 138, droit `commissions.edit`) ; `orders/place.ts` l. 413-422 ; `policies.ts` `resolveCommissionBps` | Historique CONFORME : chaque changement crée une règle versionnée (`commissionRules`, `supersedesId`), clôture de l'ancienne, motif, audit sensible ; base : 7 règles dont 3 closes. Négociée par commerce APPLIQUÉE (`commercial.negotiatedCommission`, avec validité). MAIS priorité effective fausse : `place.ts` calcule `planBps = plan.commission[mode]` ; comme chaque formule porte toujours ses trois taux (`updatePlan` les exige), le taux de formule passe toujours devant le barème du pays et celui de la ville (`negotiated ?? city ?? plan ?? market`). La règle de portée « ville » écrit `pricing.commission` (niveau marché) et met `commissionOverrideBps` à `null` (`applyRates`, l. 105), donc `cityBps` est toujours nul : modifier le barème d'un pays ou d'une ville n'a aucun effet sur les commandes des commerces ayant une formule, ce qui est le cas de tous. L'écran affiche pourtant l'ordre « négocié, puis ville, puis formule, puis pays ». Le mode de facturation (`commission` / `subscription` / `hybrid`) n'est pas transmis à `resolveCommissionBps` dans `place.ts` : un commerce en mode abonnement paie quand même la commission à la commande. Portée « groupe » : appliquée aux membres au moment de la création seulement (pas aux commerces ajoutés ensuite). `ui-finance/abonnements_commissions.json` et `ui-commercial/abonnements.json` : écrans fonctionnels sans erreur. **Correction cdc-fix-c :** `resolveCommission` (`pricing/policies.ts`, `orders/commission.ts`) : négocié > groupe > ville > formule (sauf `commissionInherit`) > pays, puis offre ; le barème de la ville et du pays agit vraiment ; mode `commission` / `subscription` (aucune commission) / `hybrid` appliqué à la commande (`orders/<built-in function id>.commission.billingMode`) ; barème de groupe appliqué à la commande. Test réel `scripts/tests/cdc-fix-c.flow.mjs`, scénario `commission` (10/10), tests unitaires `argent-cdc.test.ts`. |
+| Cycle de vie : essai gratuit, renouvellement, changement de formule, résiliation (avec motif) | Résiliation avec motif | COMPLET | `manageSubscription` (`cancel` en fin de période, `cancel_now`, `reactivate`) ; `applyScheduledCancellations` (cron 00:20, exporté) | Motif obligatoire (`zReason`), historique de l'abonnement, audit. `ui-finance/abonnements.json` : 7 abonnements, « 1 résiliation programmée ». |
+| (idem) | Changement de formule | COMPLET | `restaurant/plan.ts` `changePlan` (exporté, appelé par `SubscriptionsPage.tsx`), `applyPendingPlanChanges` (cron 00:15) | Montée immédiate (essai si jamais utilisé), descente programmée en fin de période, refus en cas d'impayé, audit. |
+| (idem) | Essai gratuit et renouvellement | **COMPLET (corrigé)** | `manageSubscription` `extend_trial` ; `invoices.ts` (prise en compte de `trialEndsAt`) | La prolongation manuelle de l'essai existe, mais aucune fonction ne convertit un essai en abonnement payant à son terme, ni ne renouvelle la période (`currentPeriodEnd` n'est jamais avancé ; aucune écriture de l'évènement `renewed`), ni ne prélève (aucun `stripeSubscriptionId`). Ligne globale du cahier : PARTIEL. **Correction cdc-fix-c :** `renewSubscriptions` (nuit) convertit l'essai à son terme et renouvelle la période (`trial_converted`, `renewed`) ; facturation mensuelle par compensation. Test réel `scripts/tests/cdc-fix-c.flow.mjs`, scénario `subscription` (G). |
+| Impayés : relances automatiques puis restrictions ou suspension après un délai défini | Relances + restriction + suspension | **COMPLET (corrigé)** | `subscriptions.ts` `runDunning` (cron 08:00 exporté), `dunningStep`, `attemptCharge` l. 260 ; `abonnements/DunningPage.tsx` ; `updateFinanceSettings` doc `dunning` | La chaîne existe sur le papier (nouvelle tentative tous les N jours, e-mail, alerte, passage `past_due` → `restricted` → `suspended` après le délai de grâce de la formule, blocage des reversements) mais : (1) `attemptCharge` est un simulacre qui échoue toujours (« Aucun moyen de paiement enregistré » / « Prélèvement refusé »), aucun prélèvement réel ; (2) rien ne place un abonnement en `past_due` : `runDunning` ne lit que les statuts `past_due`/`restricted` déjà posés, et aucune fonction ne les crée (seuls les 7 abonnements de démonstration, dont 1 impayé de Beldi Bowls) ; (3) les « fonctionnalités restreintes » (`restrictedFeatures`) sont journalisées mais aucune fonction ni règle ne les coupe ; la restriction ne se traduit que par le blocage des reversements ; (4) le délai de grâce est bien lu depuis la formule mais l'ensemble ne peut pas se déclencher en réel. `ui-finance/abonnements_relances.json` : 1 impayé « prochaine tentative le 27 sept. », règles de relance éditables (intervalle, tentatives, e-mail, blocage) ; badge nav « 1 ». **Correction cdc-fix-c :** la facture non compensée ouvre l'impayé (`past_due`, alerte « à traiter », message `subscription_payment_due`) ; relances (`attemptCharge` = compensation sur le solde à reverser), restriction des fonctions (`settings/dunning.restrictedFeatures` appliquées par le serveur), suspension après le délai de grâce de la formule (plus de nouvelles commandes), rétablissement automatique par compensation (ventes, reversement, virement constaté). Choix : pas de prélèvement carte (le commerce paie par retenue sur reversement ou virement). Test réel `scripts/tests/cdc-fix-c.flow.mjs`, scénario `subscription` (A à E). |
+| Offres spéciales : réduction ou gratuité temporaire pour un restaurant ou un groupe | Offre par restaurant | **PARTIEL (corrigé : extinction, fuseau)** | `manageSubscription` `special_offer` / `clear_offer` ; `admin/acteurs/commercial.ts` (`specialOffer`) ; `place.ts` l. 418 (réduction de commission appliquée à la commande avec `endsAt`) ; `invoices.ts` | Réduction de commission temporaire correctement appliquée à la commande et expirante ; gratuité (`freeUntil`) prise en compte à la facturation. MANQUES : remise d'abonnement (`discountBps`) jamais expirée à la facturation ; offre par groupe non prévue (l'action ne s'applique qu'à un abonnement, et les commerces en formule gratuite n'ont pas d'abonnement à cibler, message de `SubscriptionsPage.tsx` l. 218) ; fuseau fixe `+01:00` pour la fin d'offre (heure d'été ignorée). **Correction cdc-fix-c :** la remise d'abonnement s'éteint à la fin de l'offre ; fins d'offre calculées au jour de Paris (plus de `+01:00` fixe). Reste : offre par groupe absente. Test réel `scripts/tests/cdc-fix-c.flow.mjs`, scénario `subscription` (F). |
+
+Comptage strict par ligne du cahier (5 lignes) : Formules = PARTIEL (édition complète, application des limites absente), Commissions = FAUX, Cycle de vie = PARTIEL, Impayés = FAUX, Offres spéciales = PARTIEL. Soit **0 COMPLET / 3 PARTIEL / 0 ABSENT / 2 FAUX**.
+
+(Les sous-éléments du tableau ci-dessus sont détaillés pour la lisibilité ; le statut de la ligne du cahier est le plus défavorable de ses éléments.)
+
+TROUS §17 :
+- P0 : Priorité de commission fausse : le taux de formule masque le barème pays et ville ; le mode `subscription` / `hybrid` n'est pas pris en compte à la commande (décision « commission OU abonnement » inopérante).
+- P0 : Impayés : prélèvement fictif, aucun déclencheur de passage en impayé, aucune restriction réelle de fonctionnalités.
+- P0 : Pas de renouvellement ni de conversion automatique de l'essai ; pas de Stripe Billing.
+- P1 : Limites et fonctionnalités de formule non appliquées.
+- P1 : Remise d'abonnement sans date de fin ; offres pour un groupe absentes.
+- P2 : Portée groupe non héritée par les nouveaux membres ; fuseaux fixes dans les dates d'offre.
+
+---
+
+## Bilan global G4
+
+Chiffres d'origine (avant `cdc-fix-c`) :
+
+| Rubrique | Lignes du cahier | COMPLET | PARTIEL | ABSENT | FAUX |
+|---|---|---|---|---|---|
+| §14 Paiements | 6 | 1 | 4 | 0 | 1 |
+| §15 Finance et reversements | 8 | 4 | 4 | 0 | 0 |
+| §16 Facturation et TVA | 8 | 3 | 5 | 0 | 0 |
+| §17 Abonnements et commissions | 5 | 0 | 3 | 0 | 2 |
+| **Total** | **27** | **8** | **16** | **0** | **3** |
+
+**Après `cdc-fix-c` (27/09)** : suivi des espèces alimenté (§14 Espèces FAUX→COMPLET, paiements refusés et pourboires plateforme aussi corrigés en COMPLET) ; facture mensuelle envoyée et compensation exacte (§16 Factures restaurants PARTIEL→COMPLET) ; priorité de commission corrigée (10/10 testé) et impayés réels avec relances/restriction/suspension (§17, les 2 lignes FAUX→COMPLET). Nouveau total (lignes du cahier, statut le plus défavorable des éléments) :
+
+| Rubrique | Lignes du cahier | COMPLET | PARTIEL | ABSENT | FAUX |
+|---|---|---|---|---|---|
+| §14 Paiements | 6 | 4 | 2 | 0 | 0 |
+| §15 Finance et reversements | 8 | 4 | 4 | 0 | 0 |
+| §16 Facturation et TVA | 8 | 4 | 4 | 0 | 0 |
+| §17 Abonnements et commissions | 5 | 3 | 2 | 0 | 0 |
+| **Total** | **27** | **15** | **12** | **0** | **0** |
+
+## Écarts avec DECISIONS_CLIENT / questionnaire
+
+- Espèces : la décision (livreur salarié du commerce uniquement) est appliquée à la commande, mais le suivi et le modèle « remise à GoLink » restent ceux d'un livreur de plateforme, non alimentés.
+- Multi-devises et moyens locaux (Algérie, Maroc, Tunisie) : décision non tenue, Stripe et euro partout (`orders/payment.ts`, `payouts.ts`, factures, grand livre).
+- Commission réduite par mode (livraison GoLink / livreur du commerce / retrait) : les trois taux existent, mais les barèmes « pays » et « ville » sont neutralisés par ceux de la formule.
+- Modèle économique « commission OU abonnement » paramétrable par formule et commerce : le paramètre est stocké et lu à la facturation mensuelle, mais pas à la commande.
+- Frais bancaires déduits du reversement : appliqué (payeur `restaurant` par défaut, ligne « frais de paiement » sur la répartition et le relevé).
+- Remboursements payés par le commerce : appliqué (100 % par cause, déduction automatique).
+- Titres-restaurant désactivés, pourboires 100 % livreur, formules à 0 €, rythme de reversement paramétrable : conformes.
+- Formules : « aucun délai d'impayé » (0 jour) paramétrable, mais le mécanisme d'impayé ne se déclenche pas (voir §17).
+- Alcool : catégorie de TVA verrouillée, cohérent avec la décision.
+
+## Valeurs codées en dur (constantes métier non réglables)
+
+- Devise `EUR` / `'eur'` : `finance/argent/settlement.ts` (grand livre), `payouts.ts` l. 303 et 345, `orders/payment.ts` l. 60, `orders/place.ts` l. 603, `finance-events.ts`, factures `currency: 'EUR'`.
+- Durée de conservation des pièces : 10 ans (`INVOICE_RETENTION_YEARS`, `constants/argent.ts` l. 129).
+- Calendrier : `DEFAULT_SCHEDULE` (minimum 10 € / 5 €, délai 2 j / 1 j) en repli, semaines paires « 15 jours » depuis le `2026-01-05`, mensuel = le 1er (`payouts.ts` l. 42 et 57-64) ; fuseau `Europe/Paris` pour tous les pays (`common.ts` `TIMEZONE`).
+- Seuils DAC7 (30 ventes, 2 000 €, livreurs dès le premier euro) et vendeurs UE (`policies.ts`).
+- Plafond de pourboire côté serveur `max(5000)` (`place.ts` l. 88) ; plafond d'ajustement 100 000 €, remise d'espèces 10 000 € (`payouts.ts`), remboursement minimum 0,50 € (`refunds.ts`), plafonds de lecture `limit(10_000)`, `limit(300)`.
+- Mention légale « article 293 B du CGI » et exonération de TVA livreur par défaut (`invoices.ts` l. 209 et 258), entité émettrice par défaut « GoLink SAS » (`statements.ts` l. 65).
+- Décalages horaires fixes `+01:00` / `+02:00` pour les fins d'offre et de barème (`subscriptions.ts` l. 186 et 466).
+- Taux de commission de repli 30 % / 15 % / 12 % et frais de paiement 1,5 % + 0,25 € (`defaults.ts`), utilisés comme amorçage (réglables ensuite).
+- Catégories de TVA figées (`VAT_CATEGORIES`).
+
+## Priorités transverses proposées
+
+- P0 : (1) corriger la résolution de commission (plan / pays / ville / mode de facturation) ; (2) parcours Stripe Connect livreur et reversements multi-devises ; (3) impayés réels (renouvellement, prélèvement, passage en `past_due`, restrictions appliquées) ; (4) suivi des espèces conforme à la décision ; (5) envoi de la facture mensuelle et mention de compensation exacte.
+- P1 : suivi des refus de carte à l'autorisation ; réglages sans effet (remboursements, tentatives, pourboires plateforme) ; ledger complet (abonnements, mises en avant, plateforme) ; DAC7 officiel ; export FEC conforme ; limites de formule.
+- P2 : catégories de TVA extensibles, solde Stripe réel, rattrapage des justificatifs, fuseaux par pays.
+
+
+# Annexe F — Matrice §18 à §21 (Croissance)
+
+
+Périmètre : cahier lignes 516 à 576 (Promotions, Fidélité et parrainage, Notifications et communication, Acquisition commerciale). Audit en lecture seule (code, règles Firestore, données du projet golink-9f16d, crawls UI ui-finance / ui-metz / ui-support / ui-commercial).
+
+Constats transverses (valables pour plusieurs lignes) :
+- Les applications `apps/client/App.tsx` et `apps/driver/App.tsx` font 17 lignes chacune : ce sont des squelettes. Tout ce qui doit être consommé côté client ou livreur (saisie d'un code promo, code de parrainage, points de fidélité, jetons push, annonces livreurs, consentements) n'a aucun consommateur réel. Seuls `apps/admin` et `apps/restaurant` existent.
+- Toutes les fonctions du module sont exportées : `functions/src/marketing/platform/index.ts` (createPlatformPromotion, setPromotionStatus, updateGrowthSettings, estimatePlatformAudience, savePlatformCampaign, sendCampaign, publishAnnouncement, updateMessageTemplate, decideReferral, onFirstOrderReferral, decideSalesCommission, getSalesTeam, logProspectActivity, moveProspect, prospectFollowUpReminders, saveProspect) ; `functions/src/marketing/index.ts` réexporte `./platform` et `./restaurant` ; `functions/src/index.ts` réexporte `./marketing`. Les noms utilisés par `apps/admin/src/features/_croissance/api.ts` (callFunction) correspondent.
+- `functions/src/notifications/index.ts` est vide (`export {}`) : aucun service de notifications automatiques n'existe.
+- Comptes de test du crawl : `finance` (promotions seulement), `metz` (promotions, communication, prospection), `support` (aucune rubrique de croissance), `commercial` (promotions, annonces, prospection ; ni fidélité ni communication). Fidélité et parrainage : « Rubrique non accessible » pour les 4 comptes, donc UI non vérifiée en superadmin pour ces deux écrans.
+
+---
+
+## §18 — Promotions
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Portée : plateforme, ville ou restaurant | Plateforme / pays / ville / restaurant | **COMPLET (corrigé)** | `functions/src/marketing/platform/promotions.ts` (`createPlatformPromotion`, schéma `scope` = PROMOTION_SCOPES `platform, country, city, restaurant`) ; application : `functions/src/orders/place.ts` `loadPromotion` l. 141-177 ; UI `apps/admin/src/features/promotions/PromotionForm.tsx` | Les 4 portées sont créables (droit `promotions.edit`, audit `promotion.created`/`promotion.updated`, périmètre ville vérifié par `assertScopeCovered`, restaurants participants contrôlés) et filtrées à la commande (l. 150-155). MAIS `placeOrder` n'applique une promotion que si le client fournit `promoCode` (l. 346 `if (data.promoCode)`). En base : 12 promotions sur 17 n'ont pas de code (données : `promotions`, `code` vide), affichées « Automatique » dans l'UI (ui-commercial/promotions.json : « Livraison offerte le mardi Automatique », « Bol du marché Automatique »…). Aucune recherche d'offre automatique (sans code) n'existe dans `functions/src/orders/`. Ces offres ne peuvent donc jamais s'appliquer à une vraie commande. Les 153 utilisations en base sont du jeu de démonstration (seulement 42 portent un code ; `placeOrder` ne sait pas en produire sans code). **Correction cdc-fix-c :** sans code saisi, `pickAutomaticPromotion` applique l'offre éligible la plus avantageuse (`orders/promotions.ts`). Test réel `scripts/tests/cdc-fix-c.flow.mjs`, scénario `promotions`. |
+| Type : pourcentage, montant fixe, livraison offerte | 3 types | **COMPLET (corrigé)** | `promotions.ts` `normalize()` l. 186-214 ; `packages/shared/src/pricing/quote.ts` `computeDiscount` l. 137-175 ; `place.ts` l. 343-360 | Calcul serveur correct pour les 3 types (plafond `maxDiscountCents`, minimum de panier, remise limitée au sous-total, livraison offerte sur les frais). Réserve : même trou que ci-dessus, les offres sans code ne sont pas appliquées ; la remise est calculée mais la devise de la commande est codée `'EUR'` (`place.ts` l. 519). **Correction cdc-fix-c :** les offres sans code s'appliquent ; calcul dans la devise du marché. Test réel `scripts/tests/cdc-fix-c.flow.mjs`, scénario `promotions`. |
+| Conditions : minimum, plafond, utilisations totales et par client, dates | Minimum / plafond / total / par client / dates | **COMPLET (corrigé)** | `promotions.ts` schéma (`minSubtotalCents`, `maxDiscountCents`, `totalUsageLimit`, `perCustomerLimit`, `startsAt`, `endsAt`, `modes`) ; contrôle `place.ts` `loadPromotion` l. 159-172 ; `quote.ts` | Les 6 conditions sont saisissables et contrôlées côté serveur. Défauts : (1) le contrôle du total et du par client se fait par lecture hors transaction (`stats.redemptions` puis `count()` sur `promotionRedemptions`), donc dépassable en commandes simultanées ; (2) aucun code n'annule une utilisation quand la commande est annulée ou remboursée : `functions/src/orders/cancel.ts` ne touche jamais `promotionRedemptions` (recherche « redemption » : seul `place.ts` et `finance/argent/overview.ts` y accèdent). Une commande annulée reste `status: 'applied'` et consomme le quota du client. **Correction cdc-fix-c :** limites totale et par client recontrôlées dans la transaction de commande ; utilisation libérée à l'annulation (compteurs décrémentés, `reversed`). Test réel `scripts/tests/cdc-fix-c.flow.mjs`, scénario `promotions` (concurrence, annulation). |
+| Financement : plateforme, restaurant ou partagé | 3 modes | COMPLET | `promotions.ts` (`funding`, `restaurantShareBps`) ; `quote.ts` `restaurantShareOf` ; `place.ts` l. 626-640 (`promotionRedemptions` : `platformFundedCents`, `restaurantFundedCents`) ; `packages/shared/src/pricing/settlement.ts` l. 202 et 229 (`discountFundedCents`, `promoCostCents`) ; `functions/src/finance/argent/settlement.ts` l. 132 (CA restaurant net de la remise financée) et l. 200-249 (facture) ; `functions/src/finance/argent/overview.ts` l. 88 | Le coût pour GoLink et la part restaurant sont calculés, écrits sur la redemption, déduits du revenu restaurant dans le grand livre et affichés (OrderPage « Promotions »). UI : ui-commercial/promotions.json affiche « Coût des remises pour GoLink 286,74 € · 281,85 € financés par les restaurants ». |
+| Ciblage : nouveaux clients, inactifs depuis X jours, fidèles | Nouveaux / inactifs / fidèles | **COMPLET (corrigé)** | `promotions.ts` (`target`, `inactiveDays`) ; `place.ts` l. 173 ; `PromotionForm.tsx` l. 387-391 | Le formulaire propose 4 cibles et enregistre `inactiveDays`. Le serveur ne vérifie que `new_customers` (`ordersCount > 0` → refus). `inactive_customers` et `loyal_customers` ne sont lus nulle part dans `functions/src/` (recherche vérifiée : seules les validations de saisie). Une offre « clients inactifs depuis 30 jours » ou « fidèles (5 commandes et plus) » s'applique donc à tout le monde. Fonction trompeuse. **Correction cdc-fix-c :** ciblage « inactifs depuis X jours » et « fidèles » appliqué à la commande ; seuil fidèle et délai inactif par défaut réglables (`settings/promotions.loyalOrdersThreshold`, `inactiveDaysDefault`, écran « Règles des promotions »). Test réel `scripts/tests/cdc-fix-c.flow.mjs`, scénario `promotions`. |
+| Suivi : utilisations, coût, commandes générées | Utilisations / coût / commandes générées | **PARTIEL (corrigé : compteurs)** | `place.ts` l. 641-646 (`stats.redemptions/discountCents/ordersSubtotalCents/newCustomers`) ; `apps/admin/src/features/promotions/PromotionsPage.tsx`, `PromotionPage.tsx` (liste des `promotionRedemptions`) | ui-commercial/promotions.json : 17 offres, 153 utilisations, 63 nouveaux clients, 5 314,80 € de ventes, 9,3 € de ventes par euro de remise ; ui-metz/promotions.json : 5 offres filtrées sur la ville. Indicateurs lus sur données réelles. Réserves : (1) les compteurs ne diminuent jamais à l'annulation (voir Conditions) ; (2) « commandes générées » = ventes générées (somme des sous-totaux) et non un nombre de commandes distinct ; (3) pas de comparaison au taux de conversion hors promotion. **Correction cdc-fix-c :** les compteurs redescendent à l'annulation. Reste : « commandes générées » = ventes générées, pas un nombre distinct. |
+| Promotions des restaurants : règles encadrant les promos créées par les restaurants (plafond, validation) | Plafond / validation / limite d'offres actives | COMPLET | `functions/src/marketing/platform/settings.ts` (`updateGrowthSettings` section `promotions`, droit `promotions.edit`, motif obligatoire, `writeAudit settings.updated`) ; `functions/src/marketing/restaurant/promotions.ts` (`validateFields` l. 75-105, `assertActiveQuota` l. 139, `submittedState` l. 177) ; `functions/src/marketing/platform/promotions.ts` `setPromotionStatus` (approve/reject/pause/resume/end, motif audité, notification au restaurant) ; UI `promotions/RulesPage.tsx` | Réglages : `capsEnabled`, `restaurantMaxPercentBps`, `restaurantMaxFixedCents`, `restaurantRequiresReview`, `maxActivePerRestaurant`. Décision client « promos sans limite » respectée : en base `settings/promotions` = `capsEnabled:false`, `restaurantRequiresReview:false`. File « À valider » réelle (1 offre en attente, ui-commercial/promotions.json). ui-commercial/promotions_regles.json et ui-finance/promotions_regles.json : page chargée, bouton Enregistrer visible (absent en finance : lecture seule). Points d'attention : voir « Écarts ». |
+
+**Bilan §18 : 2 COMPLET / 4 PARTIEL / 0 ABSENT / 1 FAUX**
+
+TROUS §18 :
+- P0 — Les offres sans code (12 sur 17 en base, toutes les « Automatique ») ne sont jamais appliquées : `placeOrder` ne cherche pas d'offre automatique (`functions/src/orders/place.ts` l. 346). À ajouter : sélection de l'offre éligible la plus avantageuse quand aucun code n'est saisi.
+- P0 — Ciblage `inactive_customers` (X jours) et `loyal_customers` non appliqué à la commande (`loadPromotion`). Utiliser `profile.stats.lastOrderAt` et `ordersCount` (seuil « fidèle » à rendre paramétrable).
+- P1 — Annulation ou remboursement d'une commande : libérer la redemption (`status: 'cancelled'`), décrémenter `stats.*` de la promotion (`functions/src/orders/cancel.ts`).
+- P1 — Contrôle des limites totale et par client dans la transaction d'écriture de la commande, pas avant.
+- P1 — Règles Firestore `firebase/rules/marketing.rules` l. 20-33 : un admin `promotions.edit` peut créer ou modifier une promotion directement (hors fonction, sans audit, changement de statut ou de financement possible). Réserver l'écriture aux fonctions.
+- P2 — « Commandes générées » : ajouter un vrai nombre de commandes distinct par offre.
+
+---
+
+## §19 — Fidélité et parrainage
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Programme de fidélité : règles de gain et d'utilisation des points, expiration | Gain / utilisation / expiration | **PARTIEL (corrigé : moteur de la plateforme)** | Paramétrage : `functions/src/marketing/platform/settings.ts` (section `loyalty` : `pointsPerEuro`, `welcomePoints`, `rewards[]`, `pointsValidityDays`, `minOrderCents`, `maxRedeemBps`, `allowRestaurantPrograms`, `maxRestaurantReturnBps`) ; `apps/admin/src/features/fidelite/LoyaltyPage.tsx` ; programmes des restaurants : `functions/src/marketing/restaurant/loyalty.ts` `saveLoyaltyProgram` | Le paramétrage est complet (droit `loyalty.edit`, motif, audit, valeurs réglables, `enabled:false` par défaut comme la décision client). MAIS aucun moteur : aucune fonction ne crédite de points à la livraison, ne les échange à la commande ni ne les fait expirer. Recherche de `loyaltyAccounts` / `loyaltyTransactions` dans `functions/src` : aucun résultat (seuls `apps/admin/.../LoyaltyPage.tsx`, `ClientPage.tsx`, `apps/restaurant/.../LoyaltyPage.tsx` et le seed les lisent). `placeOrder` n'utilise ni points ni solde (`walletAppliedCents: 0` codé, l. 514). Aucun onSchedule d'expiration. Données : `loyaltyAccounts` = 50 comptes issus du seed, `loyaltyTransactions` = 0. `settings/loyalty` en base ne contient ni `minOrderCents`, `maxRedeemBps`, `maxRestaurantReturnBps` (défauts du code). Le programme restaurant est enregistré (`restaurants/{rid}/settings/loyalty`) mais jamais appliqué. UI non vérifiée en superadmin (rubrique inaccessible aux 4 comptes). **Correction cdc-fix-c :** `marketing/platform/loyalty.ts` : gain à la livraison, points de bienvenue, échange contre du crédit au portefeuille (`redeemLoyaltyPoints`), expiration par lots (`expireLoyalty`) ; programme éteint par défaut. Reste : programmes propres aux commerces (`restaurants/…/settings/loyalty`) toujours non appliqués. Test réel `scripts/tests/cdc-fix-c.flow.mjs`, scénario `loyalty`. |
+| Parrainage clients : récompense au parrain et au filleul après la première commande | Création du parrainage / récompense / anti-fraude | **COMPLET (corrigé)** | `functions/src/marketing/platform/referrals.ts` (`onFirstOrderReferral` trigger `orders/{orderId}` → `rewardClient`, `decideReferral`) ; `functions/src/lib/accounts.ts` (`referralCode`, `referredBy: null`) ; UI `fidelite/ReferralPage.tsx` | Récompense automatique réelle : au passage `delivered`, si le parrainage `pending` du client existe et que le sous-total dépasse `minFirstOrderCents`, transaction qui crédite parrain et filleul (`walletTransactions`, `users.walletBalanceCents`, écriture de grand livre `wallet_credit`), passe le parrainage en `rewarded`, notifie (texte du message `referral_rewarded` modifiable), audit `referral.rewarded` (rejouable sans doublon). Trous : (1) aucun code ne CRÉE le document `referrals` (aucun `.set/.add` sur `COLLECTIONS.referrals` hors seed) et personne n'enregistre `referredBy` : le parcours « saisir un code à l'inscription » n'existe pas, le client étant un squelette ; (2) le crédit va sur le portefeuille, or `placeOrder` ne consomme jamais `walletBalanceCents` (aucune occurrence dans `functions/src/orders/`) : la récompense ne peut pas être dépensée ; (3) si la première commande est sous le minimum, une commande ultérieure qualifie ; ce n'est plus « la première » ; (4) refus manuel seulement (`decideReferral`, motif audité), pas de détection automatique d'auto-parrainage ; (5) `enabled:false` en base. Données : 11 parrainages (seed) : 6 clients récompensés, 2 restaurants en attente. **Correction cdc-fix-c :** `applyReferralCode` crée le parrainage (auto-parrainage par téléphone refusé) ; récompense sur la vraie première commande seulement (sinon expiré) ; le portefeuille est dépensable à la commande. Test réel `scripts/tests/cdc-fix-c.flow.mjs`, scénario `referral`. |
+| Parrainage restaurants et livreurs : prime pour un restaurant ou livreur qui en fait inscrire un autre (100 € de budget publicitaire, décision client) | Restaurant (100 € crédit pub) / livreur (prime) | **PARTIEL (corrigé : commerces)** | `referrals.ts` `rewardRestaurant` (`rewardCents` 10 000 par défaut, `rewardType: 'ad_credit'`, incrément `restaurants/{rid}/private/commercial.adCreditCents`), `rewardDriver` (`driverEarnings` `kind:'referral'`) ; consommation du crédit : `functions/src/admin/experience/display.ts` l. 181-184 et 243 ; réglages `settings.ts` section `referral` | La récompense automatique existe et respecte la décision client : montant 100 € paramétrable, crédit publicitaire utilisable en mise en avant payante (`display.ts` débite `adCreditCents`), option `cash` avec validation puis versement manuel, prime livreur inscrite dans ses gains, notifications et audit. Trous : (1) aucun endroit ne crée le lien de parrainage ni le document `referrals` : le back-office restaurant (`apps/restaurant/src`) ne contient aucune mention de parrainage (aucun lien à partager), l'inscription d'un restaurant avec un lien n'est pas gérée (`functions/src/core/signup.ts` ne lit aucun code) ; (2) ligne ledger absente pour l'attribution du crédit publicitaire (pas d'écriture dans `ledgerEntries`). Données : `restaurant|pending` 2, `restaurant|rewarded` 1 ; `settings/referral.restaurant.enabled:true`. **Correction cdc-fix-c :** lien et code du commerce (`getRestaurantReferralLink`, écran « Parrainage »), code repris par `restaurantSignup` (`?parrain=`), document `referrals` créé, auto-parrainage refusé (SIRET, téléphone, e-mail, gérant), 100 € de budget publicitaire à la validation du commerce parrainé (`onRestaurantActivatedReferral`). Reste : parcours de création du parrainage livreur (app livreur absente). Test réel `scripts/tests/cdc-fix-c.flow.mjs`, scénario `referral`. |
+
+**Bilan §19 : 0 COMPLET / 3 PARTIEL / 0 ABSENT / 0 FAUX**
+
+TROUS §19 :
+- P0 — Parcours de création du parrainage absent : lien ou code du restaurant parrain, capture à l'inscription (client, restaurant, livreur), création du document `referrals` (`status:'pending'`), `referredBy`. Sans lui, aucune prime automatique ne peut se déclencher hors du jeu de démonstration. La décision client (100 € de budget publicitaire) est donc paramétrée mais inatteignable.
+- P0 — Portefeuille non utilisable à la commande : `placeOrder` doit consommer `walletBalanceCents` (`walletAppliedCents` est codé à 0). Sinon la récompense de parrainage client (et les avoirs de remboursement) sont invisibles pour le client.
+- P1 — Moteur de fidélité absent : gain à la livraison (`loyaltyAccounts`, `loyaltyTransactions`), échange à la commande (`minOrderCents`, `maxRedeemBps`), points de bienvenue, expiration (onSchedule sur `pointsValidityDays`). À rétrograder en P2 tant que le client garde la fidélité « non définie au lancement » (décision client).
+- P1 — Vérifier que la récompense se fait sur la vraie première commande, pas une commande ultérieure.
+- P2 — Écriture au grand livre pour le crédit publicitaire ; détection automatique d'auto-parrainage (même appareil, même adresse).
+
+---
+
+## §20 — Notifications et communication
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Envois : push, e-mail, SMS ; global ou ciblé par ville, formule, restaurant, groupe d'utilisateurs | Push / e-mail / SMS / global / ville / formule / restaurant / groupe | PARTIEL | `functions/src/marketing/platform/campaigns.ts` (`estimatePlatformAudience`, `savePlatformCampaign`, `deliver`, `sendCampaign`) ; `functions/src/lib/brevo.ts` `sendEmail` ; UI `communication/CampaignsPage.tsx`, `CampaignPage.tsx`, `LogsPage.tsx` | Canaux : push (centre de notifications + `getMessaging().sendEachForMulticast` FCM réel), e-mail (Brevo), SMS (API Brevo `transactionalSMS`), dans l'app. Ciblage : type d'utilisateur (client/restaurant/livreur), pays, villes, formules (`planCodes`, restaurants), restaurants (clients d'un restaurant), segment client (`all/new/inactive/loyal` + `inactiveDays`), estimation d'audience. Droit `notifications.send`, périmètre ville respecté (`scopeAudience`), audit `campaign.saved/scheduled/sent/cancelled`, journal `notificationLogs`. Limites : (1) e-mail et SMS restent en essai (dry-run) : `campaignsLive()` exige `CAMPAIGNS_LIVE=true`, variable absente de `functions/.env` (clés présentes : BREVO_API_KEY, BREVO_SENDER_EMAIL, STRIPE_SECRET_KEY) ; en essai le message est journalisé « préparé mais non transmis », `testMode:true` ; (2) push FCM réel mais 0 jeton : la sous-collection `users/*/devices` est vide (collectionGroup `devices`) car les apps client, livreur n'existent pas ; (3) « groupe d'utilisateurs » se limite à 4 segments fixes (nouveaux, inactifs, fidèles, tous) : pas de groupes personnalisés (`custom` traité comme `all`) ; (4) filtres pays/villes multiples non poussés dans la requête (filtre en mémoire, plafond `MAX_RECIPIENTS` 20 000 codé en dur) ; (5) livreurs : pas de filtre par formule (normal), mais aussi seul le filtre `cityIds` à 1 ville est indexé. UI : ui-metz/communication.json (envois 30 jours 1, 91 messages envoyés, 97 % de remise), ui-metz/communication_journal.json (25 lignes), ui-metz/communication_nouveau.json : erreur réelle, l'appel `estimatePlatformAudience` renvoie 403 / blocage CORS (« Une erreur interne est survenue », audience estimée « — joignables »). La fonction n'est probablement pas déployée sur europe-west1 ou son accès est refusé : à contrôler. **Déploiement cdc-fix-c :** `estimatePlatformAudience` redéployée et joignable. |
+| Annonces aux restaurants : message affiché dans le back-office des restaurants | Publication / ciblage / affichage | COMPLET | `functions/src/marketing/platform/announcements.ts` `publishAnnouncement` (droit `announcements.edit`, audit `announcement.published/updated/archived` avec motif à l'archivage) ; UI `apps/admin/src/features/annonces/AnnouncementsPage.tsx` ; affichage `apps/restaurant/src/layout/AnnouncementsBanner.tsx` monté dans `apps/restaurant/src/layout/Shell.tsx` l. 149 ; règles `marketing.rules` l. 73-80 | Ciblage pays, villes, formules, gravité (info / important / maintenance), lien, publication différée, expiration, accusé de lecture (sous-collection `announcementReads`). Le bandeau filtre par pays, ville, formule, période et masque les annonces lues. ui-commercial/annonces.json : 4 en ligne, 1 programmée, boutons Modifier / Retirer, texte « Maintenance planifiée… J'ai pris connaissance ». Base : 5 annonces (4 restaurants, 1 livreurs). Réserves : l'annonce pour l'app livreur n'est affichée nulle part (`apps/driver` = squelette) ; la règle `announcements` (`signedIn()`) laisse lire les annonces « restaurants » à tout utilisateur connecté, y compris un client ; un admin `announcements.edit` peut aussi écrire directement (règles l. 78-79) sans audit. |
+| Messages automatiques : modifier le texte des messages envoyés automatiquement | Édition du texte / envoi automatique réel | **COMPLET (corrigé)** | Édition : `functions/src/marketing/platform/templates.ts` `updateMessageTemplate` (droit `templates.edit`, variables contrôlées, audit `template.updated`) ; UI `communication/TemplatesPage.tsx` ; envoi : `functions/src/notifications/index.ts` (vide) | L'écran fonctionne et enregistre (18 gabarits en base : order_confirmed, order_picked_up, order_delivered, order_cancelled, refund_issued, restaurant_approved, driver_approved, invoice_available, restaurant_inactivity_warning, restaurant_auto_paused…). Mais un seul gabarit est réellement lu par le code : `referral_rewarded` (`referrals.ts` l. 33). Aucune fonction ne lit `messageTemplates` pour envoyer confirmation de commande, « livreur en route », facture disponible, etc. : `onOrderWritten` (`functions/src/orders/triggers.ts`) n'envoie aucune notification ; les e-mails de validation de compte, de refus, de document expiré et d'invitation sont composés avec des textes codés dans `functions/src/lib/emails.ts` et `functions/src/admin/acteurs/applications.ts` (`templateKey: 'restaurant_approved'` n'est qu'un libellé de journal). Résultat : modifier le texte n'a aucun effet en dehors du parrainage. Les gabarits `restaurant_inactivity_warning`, `restaurant_auto_paused`, `invoice_available` n'ont aucun émetteur. **Correction cdc-fix-b :** `notifications/messages.ts` lit les gabarits (langue du profil), remet centre de notifications, push, e-mail Brevo, SMS ; simulation par défaut et bascule « envoi réel » par l'équipe centrale (`updateNotificationDelivery`, écran Messages automatiques) ; émetteurs branchés : commande (nouvelle, confirmée, prête, en route, livrée, annulée, client absent, remboursement), avoir de retard, article, réclamation, validation, documents, inactivité, pause, livreur validé, fermeture. Reste non émis (module Argent) : paiement de reversement et facture disponible, signalés « Pas encore émis » à l'écran. Test réel `messages`. **Complément cdc-fix-c :** `invoice_available`, `restaurant_payout_paid`, `driver_payout_paid` et cinq nouveaux messages financiers (`subscription_*`, `cash_limit_reached`) sont maintenant émis ; plus aucun message « pas encore émis ». |
+| Consentement marketing : promotions envoyées seulement aux utilisateurs qui l'ont accepté | Contrôle à l'envoi / suivi | COMPLET | `campaigns.ts` `consentKey`, `clientAudience` l. 136-137 (clés `marketing_email`, `marketing_sms`, `marketing_push`) ; UI `communication/ConsentsPage.tsx` | Le filtre est appliqué côté serveur à la construction de l'audience (estimation, enregistrement et envoi) : un client sans consentement pour le canal est exclu si `marketing:true` ; la fonction refuse l'envoi s'il ne reste aucun destinataire joignable. Pied de page e-mail explicite. ui-metz/communication_consentements.json : 150 clients, 49,3 % d'accord par e-mail (74), 65,3 % en push (98), 0 % par SMS. Base vérifiée : 74 e-mail, 98 push, 0 SMS, 18 profils sans aucun consentement. Réserves (P1) : (a) le drapeau `marketing:false` (« message de service ») contourne le consentement sans contrôle du contenu ; (b) la capture du consentement (case à cocher côté client) n'existe pas, l'app client étant un squelette ; (c) les campagnes des restaurants ont leur propre garde-fou (`functions/src/marketing/restaurant/campaigns.ts`, hors périmètre). |
+| Programmation : envoi à une date et une heure | Programmation / exécution | COMPLET | `campaigns.ts` `savePlatformCampaign` mode `schedule` (délai mini 5 min, maximum 90 jours, plage 9 h-21 h Paris pour push et SMS promotionnels), `claim()` (transaction anti-double envoi), `sendCampaign` (`onSchedule` toutes les 5 minutes, traite 10 envois échus, audit système `campaign.sent`) | Le déclencheur existe et est exporté (`platform/index.ts` → `marketing/index.ts` → `functions/src/index.ts`). Base : 1 campagne plateforme `scheduled` (e-mail Luxembourg, 38 destinataires). Réserves : la plage horaire 9-21 h et les bornes (5 min, 90 jours) sont codées en dur ; la plage n'est contrôlée qu'à la programmation, pas à l'envoi ; le mode essai (`CAMPAIGNS_LIVE`) s'applique aussi aux envois programmés. |
+
+**Bilan §20 : 3 COMPLET / 1 PARTIEL / 0 ABSENT / 1 FAUX**
+
+Vérité sur les envois réels : aucun envoi Brevo (e-mail ou SMS) n'a lieu tant que `CAMPAIGNS_LIVE` n'est pas défini (mode essai par défaut, adresses `.test` toujours exclues) ; le push écrit dans le centre de notifications puis appelle FCM, mais aucun jeton d'appareil n'est enregistré. Les entrées du journal en base (`notificationLogs` : 43 lignes, e-mail 10 dont 1 échec, push 20 dont 2 échecs) viennent du jeu de démonstration.
+
+TROUS §20 :
+- P0 — Messages automatiques : brancher les gabarits `messageTemplates` sur de vrais émetteurs (confirmation de commande, livreur en route, commande livrée / annulée, remboursement, validation de compte, facture disponible, avertissement d'inactivité) avec résolution de `{{variables}}`, canaux du gabarit et respect de `active`. Aujourd'hui `functions/src/notifications/index.ts` est vide et l'écran d'édition est trompeur.
+- P0 — Rendre `estimatePlatformAudience` (et les autres fonctions du module) joignables : 403 CORS constaté en UI Metz ; vérifier le déploiement.
+- P1 — Enregistrement des jetons FCM (`users/{uid}/devices`) et de la capture du consentement dans les apps client et livreur (bloqué par l'absence d'applications).
+- P1 — Activer et documenter `CAMPAIGNS_LIVE` en production, avec contrôle (liste blanche) avant le premier envoi réel.
+- P1 — Le drapeau « message de service » ne doit pas permettre de faire passer une promotion : restreindre aux campagnes non promotionnelles ou journaliser.
+- P1 — Règles `announcements` : limiter la lecture des annonces « restaurants » aux membres d'un restaurant ; retirer l'écriture directe admin.
+- P2 — Groupes d'utilisateurs personnalisés (liste d'identifiants importée) ; plage horaire, seuils de segment paramétrables (voir « Valeurs codées en dur »).
+- P2 — Metz : la page « Règles des campagnes » affiche « Vous n'avez pas les droits » (ui-metz/communication_regles.json) car `settings/campaignRules` n'est lisible que par `settings.view` (`firebase/rules/platform.rules` l. 9-11) alors que l'onglet est proposé avec `notifications.send`. `settings/campaignRules` est absent en base (défauts du code).
+
+---
+
+## §21 — Acquisition commerciale (mini CRM)
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Prospects : restaurants contactés, étape (contacté, démo, inscrit, perdu), notes, relances | Fiche / étapes / notes / relances | COMPLET | `functions/src/marketing/platform/crm.ts` (`saveProspect`, `moveProspect`, `logProspectActivity`, `prospectFollowUpReminders` onSchedule `0 8 * * 1-6`) ; UI `apps/admin/src/features/prospection/PipelinePage.tsx`, `ProspectPage.tsx`, `components.tsx` ; règles `marketing.rules` l. 85-96 | Étapes `to_contact, contacted, demo, negotiation, signed_up, lost` (superset des 4 étapes du cahier), motif obligatoire pour « perdu », historique des échanges en sous-collection `activities` (appel, e-mail, visite, démo, note), `nextFollowUpAt`, rappel quotidien poussé à chaque commercial via `pushInApp`, périmètre de ville (`assertAdminCovers`), audit `prospect.created` et `prospect.stage_changed`. ui-commercial/prospection.json : kanban 6 colonnes (À contacter 4, Contacté 5, Démo 3, Négociation 3, Inscrit 2, Perdu 2), vues Pipeline / Liste / Relances, « Relances en retard 6 », conversion 50 % ; ui-metz/prospection.json : périmètre limité à Metz (6 prospects). Base : 19 prospects. Réserves mineures : `saveProspect` en modification et `logProspectActivity` n'écrivent pas d'audit global (l'historique reste dans `activities`) ; les règles Firestore laissent un admin `crm.edit` modifier directement `stage` (hors fonction, sans commission ni audit). |
+| Commerciaux : résultats par commercial, conversions, commissions | Résultats / conversions / commissions | PARTIEL | `crm.ts` `moveProspect` (crée `salesCommissions/commission-{prospectId}` à l'inscription), `decideSalesCommission` (approve / pay / cancel, droit `crm.manage_team`, audit `sales_commission.*`), `getSalesTeam` ; réglages `settings.ts` section `crm` (`signupBonusCents` 150 €, `revenueShareBps`, `revenueShareMonths`, `defaultFollowUpDays`, `followUpReminders`) ; UI `prospection/SalesTeamPage.tsx` | ui-commercial/prospection_commerciaux.json : 3 commerciaux, 2 inscrits, 50 % de conversion, « Commissions à verser 300,00 € », « versées 150,00 € », tableau des résultats (en cours, démos, inscrits, perdus, conversion, à verser) et 6 lignes de commissions. Base : 4 commissions `signup_bonus` (pending, approved, 2 paid). Trous : (1) `revenueShareBps` et `revenueShareMonths` sont réglables mais aucun code ne calcule ni ne crée de commission `revenue_share` (aucune occurrence dans `functions/src` hors réglages) : le pourcentage sur le CA reste sans effet ; (2) le paiement d'une commission (`pay`) ne fait que changer un statut : pas d'écriture dans `ledgerEntries` ni de lien avec les reversements ; (3) le passage à « Inscrit » est manuel : aucun rapprochement automatique quand un restaurant lié au prospect est réellement validé (`functions/src/admin/acteurs/applications.ts`). **Déploiement cdc-fix-c :** `getSalesTeam` redéployée et joignable. |
+
+**Bilan §21 : 1 COMPLET / 1 PARTIEL / 0 ABSENT / 0 FAUX**
+
+TROUS §21 :
+- P1 — Commission `revenue_share` non calculée (réglage sans effet) : ajouter le calcul mensuel sur le CA des restaurants inscrits pendant `revenueShareMonths` (onSchedule) ou retirer le réglage de l'écran.
+- P1 — Paiement des commissions sans trace comptable : écrire au grand livre (`ledgerEntries`) et l'intégrer aux paiements.
+- P2 — Lier automatiquement le prospect au restaurant à sa validation (`restaurantId`, passage à « Inscrit »).
+- P2 — Règles Firestore : interdire la modification directe de `stage`, `ownerId` sur `prospects` (passer par `moveProspect`).
+
+---
+
+## Totaux des 17 lignes du cahier (rubriques 18 à 21)
+
+Chiffres d'origine (avant `cdc-fix-c`) :
+
+| Rubrique | COMPLET | PARTIEL | ABSENT | FAUX |
+|---|---|---|---|---|
+| §18 Promotions (7) | 2 | 4 | 0 | 1 |
+| §19 Fidélité et parrainage (3) | 0 | 3 | 0 | 0 |
+| §20 Notifications et communication (5) | 3 | 1 | 0 | 1 |
+| §21 Acquisition commerciale (2) | 1 | 1 | 0 | 0 |
+| Total (17) | 6 | 9 | 0 | 2 |
+
+**Après `cdc-fix-c`/`cdc-fix-b` (27/09)** : offres sans code appliquées, ciblage inactifs/fidèles, limites recontrôlées en transaction (§18, FAUX→COMPLET, 17/17 testé) ; parrainage client créé et récompensé (§19, 1 ligne COMPLET) ; gabarits de messages automatiques réellement émis (§20, FAUX→COMPLET). Nouveau total :
+
+| Rubrique | COMPLET | PARTIEL | ABSENT | FAUX |
+|---|---|---|---|---|
+| §18 Promotions (7) | 6 | 1 | 0 | 0 |
+| §19 Fidélité et parrainage (3) | 1 | 2 | 0 | 0 |
+| §20 Notifications et communication (5) | 4 | 1 | 0 | 0 |
+| §21 Acquisition commerciale (2) | 1 | 1 | 0 | 0 |
+| Total (17) | 12 | 5 | 0 | 0 |
+
+## Écarts avec DECISIONS_CLIENT / questionnaire
+
+- « Promos créées par les commerces : oui, sans limite » : respecté dans la base (`settings/promotions.capsEnabled:false`, validation désactivée). Mais les valeurs par défaut du code divergent : `functions/src/marketing/restaurant/promotions.ts` `DEFAULT_SETTINGS` (`capsEnabled:true`, `restaurantRequiresReview:true`) contre `functions/src/marketing/platform/common.ts` `DEFAULT_PROMOTION_SETTINGS` (`capsEnabled:false`, `restaurantRequiresReview:false`). Si le document `settings/promotions` disparaît, l'application côté restaurant repasse en mode plafonné et validé, en contradiction avec la décision. Aligner les défauts.
+- « Parrainage commerce : 100 € de budget publicitaire, montant paramétrable » : montant et type (`ad_credit`) conformes dans `settings/referral` et consommés par `display.ts`, mais aucun moyen d'obtenir un lien de parrainage ni de l'enregistrer à l'inscription (voir §19).
+- « Fidélité non définie au lancement, éteinte par défaut » : conforme (`settings/loyalty.enabled:false`) ; le moteur n'existe pas, ce qui est compatible tant que le programme reste éteint.
+- « Multi-devises (EUR, DZD, MAD, TND) » : `place.ts` écrit `currency: 'EUR'` en dur sur la commande et le paiement (l. 519 et 657) ; les promotions et récompenses sont exprimées en centimes sans devise.
+- « Langues : français, anglais, arabe » : les messages automatiques (`title.fr`, `body.fr`), les annonces (chaîne simple), les campagnes (chaîne simple) et les promotions (`title: { fr }`) ne sont saisis qu'en français.
+- « Alcool interdit » : sans lien direct avec ces rubriques ; `place.ts` fixe `containsAlcohol: false`.
+
+## Valeurs codées en dur (constantes métier non réglables)
+
+- `functions/src/marketing/platform/campaigns.ts` : plage promotionnelle `QUIET` 9 h-21 h (l. 39) alors que `settings/campaignRules.sendWindow` existe pour les restaurants ; `MAX_RECIPIENTS` 20 000 ; délai minimum de programmation 5 min et maximum 90 jours (l. 280-281) ; limites de longueur SMS 320 et push 240 ; segments : « nouveau » = au plus 1 commande et compte de moins de 30 jours, « fidèle » = 5 commandes et plus, « inactif » par défaut 30 jours (l. 90-104) ; expéditeur SMS `'GoLink'` et mention « STOP au 36111 » (numéro français) l. 362 et 475.
+- `functions/src/marketing/platform/promotions.ts` : bornes de saisie (remise minimum 0,50 €, plafond 1 000 €, code 3 à 24 caractères, 30 villes, 100 restaurants, `inactiveDays` par défaut 30) ; seuil « fidèle » (5 commandes) affiché seulement dans `PromotionForm.tsx` l. 388, non réglable.
+- `functions/src/marketing/restaurant/promotions.ts` : `inactiveDays` par défaut 45, `RESTAURANT_PROMOTION_RULES`.
+- `functions/src/marketing/platform/referrals.ts` : fuseau `Europe/Paris` pour la date comptable ; libellés de rôle « parrain / filleul ».
+- `functions/src/marketing/platform/crm.ts` : horaire du rappel `0 8 * * 1-6` (heure et jours), relances « du jour » calculées à 23 h 59 sur l'horloge du serveur, limite de 1 000 prospects par passage.
+- `functions/src/orders/place.ts` : devise `EUR`, `limit(5)` sur la recherche de code promo.
+- Défauts de réglages (paramétrables ensuite) dans `functions/src/marketing/platform/common.ts` : 1 point par euro, palier 200 points = 3 €, validité 365 jours, 5 € de récompense parrain et filleul, 100 € prime restaurant, 50 € prime livreur après 50 livraisons, 150 € prime d'inscription commercial.
+
+
+# Annexe G — Matrice §22 à §27 (Plateforme, sécurité)
+
+
+Périmètre : Paramètres plateforme, Multi-pays, Activation des fonctionnalités, Connexions externes, Administrateurs internes, Sécurité et journal d'audit.
+Méthode : lecture du code (apps/admin/src/features/a-plateforme-securite, functions/src/platform, functions/src/lib/audit.ts et permissions.ts, packages/shared/src/permissions, firebase/rules, apps/admin/src/auth), lecture seule de Firestore golink-9f16d, relecture des crawls UI existants.
+
+Preuve d'interface : les pages /plateforme/* sont réservées au super admin (permission `platform.access` + permission fine par page) et n'ont pas pu être crawlées en superadmin : **UI non vérifiée en superadmin** pour toutes les lignes ci-dessous. Preuves UI indirectes disponibles : `ui-finance/plateforme_*.json` et `ui-support/plateforme_*.json` montrent « Accès réservé » sur les pages sans permission (ex. `plateforme_administrateurs`, `plateforme_securite`, `plateforme_fonctionnalites`) ; `ui-metz/plateforme*.json` et `ui-commercial/plateforme*.json` montrent « Rubrique non accessible » (aucune permission plateforme) : le filtrage par permission côté écran fonctionne.
+
+Toutes les fonctions citées sont exportées : `functions/src/platform/index.ts` (export * de admins, audit-export, backups, features, fraud, gdpr, health, markets, security, settings) est ré-exporté par `functions/src/index.ts:14`. Les noms appelés côté front (`apps/admin/src/features/a-plateforme-securite/api.ts`) correspondent aux noms exportés.
+
+Données réelles observées (Firestore, lecture seule) : settings (18 docs dont general, branding, security, retention), featureFlags 18 docs, integrations 5 docs (brevo, fcm, google_maps, sms, stripe), countries 6 (FR, LU actifs ; BE, DZ, MA, TN inactifs), adminRoles 6, admins 5, adminSessions 42, securityAlerts 10, auditLogs 298, settingsHistory 6.
+
+---
+
+## §22 — Paramètres plateforme
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Identité — Nom, logo, couleurs | Nom de la plateforme | PARTIEL | `ParametresPage.tsx` (GeneralForm) → `updatePlatformSettings` (`functions/src/platform/settings.ts:80`, doc `general`) ; `settings.edit` ; règle `settings/{docId}` dans `firebase/rules/platform.rules:7` | Écran réel, écriture par Cloud Function, motif obligatoire (`zReason`), `recordSettingsChange` + `writeAudit('settings.updated')`. Mais aucune application ne lit `settings/general.platformName` : seul consommateur trouvé = `apps/restaurant/.../SupportPage.tsx:33` (coordonnées support). Le nom saisi n'est donc pas appliqué aux applications, e-mails ou en-têtes. |
+| Identité | Logo | ABSENT | Branche `branding` de `updatePlatformSettings` (`settings.ts:30-39`) sans aucun écran ; `api.ts:7` déclare le type mais aucun composant ne l'appelle | Grep `branding` dans apps/ : seuls `api.ts` et un stockage restaurant sans rapport. Pas de formulaire, pas de téléversement, pas de lecture du doc `settings/branding` par une application. Backend prêt, fonction jamais appelée. |
+| Identité | Couleurs | ABSENT | idem (`colors: primary/secondary/accent/background`) | Idem : aucune UI, aucun consommateur (les applications utilisent leur thème codé dans `@golink/ui`). |
+| Règles globales — Commissions et frais par défaut, livraison, annulations, remboursements, fidélité, promotions | Commissions et frais par défaut | PARTIEL | Hors page Paramètres : `updateCountry` section `fees` (`markets.ts:48`, page Marchés), `updateCommissionRule` (`functions/src/finance/argent/subscriptions.ts:138`, page Abonnements > Commissions), `updateCountryPayments` | Réglable et historisé, mais dispersé dans d'autres rubriques ; la page « Paramètres plateforme » n'a aucun onglet ni lien vers ces règles (4 onglets seulement : Identité et régional, Sécurité, Conservation, Historique). |
+| Règles globales | Livraison | PARTIEL | `functions/src/admin/operations/rules.ts` (settings/dispatch l.49, settings/orderRules l.160), `updateCountry` section `delivery` | Même remarque : réglable ailleurs, pas dans Paramètres. |
+| Règles globales | Annulations | PARTIEL | `functions/src/admin/operations/rules.ts:160` (`settings/orderRules`) | Idem. |
+| Règles globales | Remboursements | FAUX | `updateFinanceSettings` doc `refunds` (`finance/argent/settings.ts:49-53`), UI `apps/admin/src/features/paiements/RulesPage.tsx:53,180` | Le réglage « seuil de validation » `approvalThresholdCents` est éditable et audité mais **jamais lu côté serveur** (grep : seuls le schéma, l'API front et RulesPage). Le vrai plafond est `refundLimitOf` (`functions/src/admin/experience/common.ts:114`) = plafond agent, sinon plafond du rôle. Deux réglages pour la même règle, l'un sans effet : trompeur. `walletCreditValidityDays` est bien lu (`refunds.ts:325`). |
+| Règles globales | Fidélité, promotions | PARTIEL | `updateGrowthSettings` (`functions/src/marketing/platform/settings.ts:87`, sections promotions/loyalty/referral) | Réglables ailleurs (rubrique Croissance) ; absentes de la page Paramètres. |
+| Régional — Devise, TVA, langues, formats | Devise par défaut, langue par défaut, langues proposées, fuseau | PARTIEL | `settings.ts:18-28` (currency, defaultLocale, supportedLocales, defaultTimezone, defaultCountryId) ; validations : langue par défaut dans la liste, langues limitées à `APP_LOCALES`, pays existant | Écran et écriture corrects. Le sélecteur de devise est codé en dur à 4 valeurs `['EUR','DZD','MAD','TND']` (`ParametresPage.tsx:59`). Aucun consommateur applicatif de `supportedLocales` / `defaultLocale` / `currency` de `settings/general` trouvé dans apps/ ni functions/ : réglage informatif, sans effet démontré. Les vraies devises/langues se lisent dans `countries/*`. |
+| Régional | TVA | PARTIEL | Absente de `settings/general` ; gérée par pays via `updateCountryVat` (`finance/argent/settings.ts:189`, page `facturation/VatPage.tsx`) | Correct par pays, mais pas de TVA par défaut dans Paramètres. |
+| Régional | Formats (date, nombre, heure) | ABSENT | — | Aucun champ « format » ni dans le schéma `general` ni dans l'écran ; formats fixés dans le code des applications. |
+| Historique — Qui, quoi, quand, ancienne valeur | Historique des réglages | PARTIEL | `recordSettingsChange` (`runtime.ts:115`) → `settingsHistory` (règle lecture `settings.view`, écriture interdite) ; `writeAudit` avec before/after ; onglet « Historique » = `HistoryPanel` (`acteurs-commun/HistoryPanel.tsx`) | Écriture serveur correcte (champs modifiés, ancienne et nouvelle valeur, motif, auteur, date). Lacunes : (1) l'onglet n'affiche que `settings/general` (25 entrées) et `settings/security` (10 entrées) via le journal d'audit : les modifications de conservation (`settings/retention`) et de marque n'y apparaissent pas malgré le texte « Tous les réglages (général, marque, sécurité, conservation) » (`ParametresPage.tsx:263`) ; (2) `settingsHistory` n'a aucun lecteur dans cet écran ; (3) contournement possible : la règle `settings/{docId}` autorise l'écriture directe par tout admin `settings.edit` (`platform.rules:12-14`), sans motif, sans 2FA, sans historique (le commentaire annonce un trigger `onSettingsWrite` qui n'existe pas : grep dans functions/src, seul `onRestaurantSettingsWrite` existe). Données : 6 entrées `settingsHistory` (toutes issues des rubriques Opérations/Marchés, aucune de la plateforme). |
+
+**Bilan §22 : 0 COMPLET / 8 PARTIEL / 3 ABSENT / 1 FAUX** (12 éléments contrôlés ; en lignes du cahier : Identité = PARTIEL/ABSENT, Règles globales = PARTIEL, Régional = PARTIEL, Historique = PARTIEL → 4 lignes : 0 COMPLET, 4 PARTIEL).
+
+TROUS §22 :
+- P0 — Règle Firestore `settings/{docId}` et `featureFlags`, `countries`, `integrations` : écriture directe admin possible, hors Cloud Function (pas de motif, pas d'historique, pas de 2FA). Retirer `allow write` côté client pour ces collections, ou ajouter un trigger d'historisation.
+- P0 — `settings/refunds.approvalThresholdCents` sans effet alors que l'écran laisse croire qu'il commande la validation : le brancher sur `refundLimitOf` ou le retirer.
+- P1 — Logo et couleurs : construire l'écran de marque (téléversement, couleurs) et faire lire `settings/branding` par les applications.
+- P1 — Nom, devise, langues de `settings/general` non consommés par les applications.
+- P1 — Historique : couvrir retention/branding/features, et lire aussi `settingsHistory`.
+- P2 — Formats régionaux ; liste de devises non codée en dur ; page « Règles globales » de synthèse renvoyant vers Argent, Opérations, Croissance.
+
+---
+
+## §23 — Multi-pays
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Marchés — Pays, villes, devises, langues, TVA et règles locales, moyens de paiement, tarifs et commissions par pays | Pays (FR, BE, LU, DZ, MA, TN) | PARTIEL | Collection `countries` (6 docs : FR et LU actifs, BE DZ MA TN inactifs) ; `MarchesPage.tsx` (`markets.edit`) ; `updateCountry`, `setCountryActive` (`functions/src/platform/markets.ts:72,142`) | Les 6 marchés existent avec devise, langues, fuseau, indicatif, entité de facturation, règles légales. Ouverture/fermeture par Cloud Function auditée (motif, `sensitive`) avec garde « fermez d'abord les villes actives ». **Aucune fonction de création d'un nouveau pays** (grep `createCountry` : aucun résultat ; la règle autorise `create` mais aucun écran ni fonction ne l'utilise) : on ne peut pas « s'ouvrir à d'autres pays » sans intervention développeur. |
+| idem | Villes | PARTIEL | `setCityActive` (`functions/src/admin/operations/zones.ts:99`), règle `cities` `markets.edit`/`zones.edit` ; pas de gestion dans la page Marchés | Activation/désactivation des villes existe (rubrique Opérations). Aucune création de ville par fonction (grep `createCity` : aucun résultat). |
+| idem | Devises | PARTIEL | `updateCountry` section `identity` (currency ∈ `CURRENCY_CODES`) | Devise modifiable, verrouillée dès qu'une commande existe dans le pays (`markets.ts:90-93`), bien. Devises du catalogue limitées à EUR, DZD, MAD, TND. Note : l'écriture `EUR` est encore codée en dur ailleurs (`creditCustomer` écrit `currency: 'EUR'`, `customers.ts:100`), à traiter dans les rubriques Argent. |
+| idem | Langues fr/en/ar | PARTIEL | `identity` : `locales`, `defaultLocale` ; `APP_LOCALES` filtre les langues réellement traduites | Données : FR, BE, LU = [fr,en,ar] ; DZ, MA, TN = [ar,fr,en]. Réglage présent ; couverture réelle de la langue arabe dans les applications hors périmètre G6. |
+| idem | TVA et règles locales | PARTIEL | TVA : `updateCountryVat` (`finance/argent/settings.ts:189`, page Facturation > TVA, hors page Marchés) ; règles locales : `updateCountry` sections `legal` (autorité DAC7, URSSAF livreur, âge alcool, note TVA) et `billingEntity` | Champ `vatValidated` présent sur chaque pays. La page Marchés a un onglet Légal mais **pas d'onglet TVA** : la TVA se règle dans une autre rubrique. Description de la page annonce pourtant « langues, devise, TVA … commissions » (`ui-finance/plateforme_marches.json`). |
+| idem | Moyens de paiement par pays | PARTIEL | `updateCountryPayments` (`finance/argent/settings.ts:115`, page Paiements > Moyens `MethodsPage.tsx:46`) ; champ `countries/*.paymentMethods` ; lu par `allowedPaymentMethods` (`restaurant/config-context.ts:138`) | Réglage effectif côté restaurant (filtre à la sauvegarde des réglages de paiement du commerce). Hors page Marchés. |
+| idem | Tarifs et commissions par pays | PARTIEL | Frais clients et bornes de livraison : `updateCountry` sections `fees` / `delivery` (`pricing.serviceFee`, `smallOrderFee`, `payment`, `delivery.maxDistanceMeters`) ; commissions : `updateCommissionRule` (Abonnements > Commissions) | Réglables et historisés (`recordSettingsChange` + audit `country.updated`), valeurs lues par le calcul de commande (`mergePricing`). Commission par pays gérée hors de la page Marchés. |
+
+**Bilan §23 : 0 COMPLET / 1 PARTIEL / 0 ABSENT / 0 FAUX** en lignes du cahier (1 ligne) ; détail éléments : 0 COMPLET / 7 PARTIEL.
+
+TROUS §23 :
+- P1 — Création d'un pays et d'une ville par l'interface (fonction `createCountry` / `createCity` avec audit) : requis pour « s'ouvrir à d'autres pays ».
+- P1 — Vue unique par marché regroupant TVA, moyens de paiement et commissions (aujourd'hui sur 3 autres écrans), ou liens explicites depuis la page Marchés.
+- P2 — Devise `EUR` encore codée en dur dans certaines écritures comptables.
+- UI non vérifiée en superadmin (accès finance/support : « Accès réservé »).
+
+---
+
+## §24 — Activation des fonctionnalités
+
+Résolution de la portée : `featureEnabled` (`functions/src/restaurant/config-context.ts:62`) applique restaurant > formule > ville > pays > plateforme ; équivalent côté écran restaurant (`apps/restaurant/.../parametres/kit/hooks.ts:83`). Écriture : `setFeatureFlag` (`functions/src/platform/features.ts:23`, permission `features.edit`, 2FA de session, motif obligatoire, `recordSettingsChange` + `writeAudit('feature.updated')`, verrouillage `locked` pour `alcohol_sales`). Écran : `FonctionnalitesPage.tsx`. **Constat central : le seul lecteur des interrupteurs côté serveur est `loadConfigContext` (`config-context.ts:104`), appelé uniquement par `functions/src/restaurant/settings.ts:264` (sauvegarde des réglages d'un commerce), `settings-sync.ts:66` et `zones.ts:43`.** Ni le passage de commande (`orders/place.ts`), ni les fonctions fidélité/promotions/stock/suivi, ni les applications client et livreur (grep `featureFlags` dans apps/ : seulement admin et restaurant) ne lisent les interrupteurs. Aucun trigger sur `featureFlags` ne propage un changement vers les commerces existants.
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Interrupteurs — Livraison, retrait sur place, carte bancaire, fidélité, promotions, suivi livreur, stock, multi-boutiques, commandes programmées | Livraison (`delivery`) | PARTIEL | Lu : `restaurant/settings.ts:390` | Bloque seulement l'**activation** de la livraison dans les réglages d'un commerce. Éteindre le flag n'arrête pas un commerce déjà en livraison ni les commandes (`orders/place.ts` ne lit pas le flag). Donnée : `delivery` = true. |
+| idem | Retrait sur place (`pickup`) | PARTIEL | Lu : `restaurant/settings.ts:391` | Même limite que la livraison. |
+| idem | Carte bancaire (`card_payment`) | PARTIEL | Lu : `allowedPaymentMethods` (`config-context.ts:139`) utilisé par `settings.ts:412,451` et `settings-sync.ts:67` | Filtre les moyens acceptés à la sauvegarde des réglages de paiement du commerce (et resynchronise `acceptedPaymentMethods` sur écriture des réglages). Pas de propagation quand le flag change ; `orders/place.ts:404` contrôle seulement l'espèces. À noter : `cash_payment` fonctionne de la même façon. |
+| idem | Fidélité (`loyalty`) | FAUX | Aucun lecteur | Grep : le flag n'est lu nulle part hors admin. `functions/src/marketing/restaurant/loyalty.ts:45` lit `settings/loyalty`, pas le flag. Donnée : `loyalty` = **false** dans `featureFlags` alors que la fidélité fonctionne : interrupteur sans effet et contradictoire avec la réalité. |
+| idem | Promotions (`promotions`) | FAUX | Aucun lecteur | `orders/place.ts:145` (`loadPromotion`) et `marketing/restaurant/promotions.ts` ne consultent pas le flag. Interrupteur sans effet. |
+| idem | Suivi livreur (`driver_tracking`) | FAUX | Aucun lecteur | Aucun usage du flag dans functions/ ni apps/ (client, livreur). Sans effet. |
+| idem | Stock (`stock_management`) | FAUX | Aucun lecteur | Idem. Sans effet. |
+| idem | Multi-boutiques (`multi_outlet`) | FAUX | Aucun lecteur (le mot n'apparaît que comme libellé de formule, `abonnement/AbonnementPage.tsx:57`) | Le nombre de boutiques dépend de `plan.includedOutlets`, pas du flag. Sans effet. |
+| idem | Commandes programmées (`scheduled_orders`) | PARTIEL | Lu : `restaurant/settings.ts:393` ; le passage de commande contrôle `rules.scheduledOrders.enabled` (`orders/place.ts:234`) issu de `settings/orderRules`, pas le flag | Deux sources de vérité ; le flag ne bloque que l'activation côté commerce. |
+| idem | Interrupteurs supplémentaires (non demandés) | PARTIEL | `dine_in` (lu `settings.ts:392`), `restaurant_own_drivers` (lu `settings.ts:396`), `alcohol_sales` (verrouillé, décision client), `tips`, `referral`, `meal_voucher`, `live_chat`, `pos_integration` | 18 flags en base (`FEATURE_KEYS`, `enums.ts:352`). `tips`, `referral`, `meal_voucher`, `live_chat`, `pos_integration` : aucun lecteur. Le verrou `locked` n'est appliqué que par la fonction : la règle `featureFlags` autorise l'écriture directe (`platform.rules:53-56`) sans tester `locked`. |
+| Portée — Plateforme, ville, formule d'abonnement ou restaurant | Portée | PARTIEL | `overrideSchema` (`features.ts:11`) : scope ∈ pays, ville, formule, restaurant + plateforme (valeur générale) ; existence de la portée vérifiée (`assertScopeExists`) | Modèle et écran complets (ajout/retrait de surcharges, priorité la plus spécifique, audit avant/après). Donnée : une surcharge `restaurant_own_drivers` / `casa-arepa`. Mais résolue uniquement dans le contexte restaurant ; côté client/livreur, aucune résolution. Autres défauts de l'écran : (1) une fonctionnalité « jamais configurée » s'affiche « valeur par défaut désactivée » (`FonctionnalitesPage.tsx:120`) alors que `featureEnabled` renvoie **true** en l'absence de doc (`config-context.ts:63`) et cette carte n'a ni interrupteur ni moyen de créer le flag ; (2) l'identifiant de portée se saisit en texte libre (« ex. FR, paris, premium »). Écriture massive : `restaurants.bulk_set_feature` (`functions/src/admin/acteurs/bulk.ts:115`) modifie aussi `featureFlags` (audité). |
+
+**Bilan §24 : 0 COMPLET / 2 PARTIEL / 0 ABSENT / 0 FAUX** en lignes du cahier ; détail des 9 interrupteurs : 0 COMPLET / 4 PARTIEL (livraison, retrait, carte bancaire, commandes programmées) / 5 FAUX (fidélité, promotions, suivi livreur, stock, multi-boutiques).
+
+TROUS §24 :
+- P0 — Brancher les interrupteurs sur les vrais chemins d'exécution : contrôle dans `orders/place.ts` (livraison, retrait, programmé, moyens de paiement), dans les fonctions fidélité et promotions, dans les applications client/livreur (suivi livreur), dans le stock et la limite de boutiques. Aujourd'hui l'interrupteur « allume/éteint sans nouvelle version » n'agit que sur l'écran de réglages du commerce.
+- P0 — Trigger `onDocumentWritten('featureFlags/{key}')` pour resynchroniser les commerces (modes de retrait, moyens de paiement) quand un flag change.
+- P0 — Règle Firestore `featureFlags` : interdire l'écriture directe (contournement du verrou `locked`, du motif, de l'audit).
+- P1 — Aligner les données : `loyalty` = false incohérent avec la fidélité active ; unifier `scheduled_orders` avec `settings/orderRules`.
+- P1 — Création possible d'un flag « jamais configuré » depuis l'écran ; texte « désactivée par défaut » faux.
+- P2 — Sélecteur de portée (liste de pays/villes/formules/commerces) au lieu du texte libre.
+- UI non vérifiée en superadmin (`ui-finance/plateforme_fonctionnalites.json` : « Accès réservé »).
+
+---
+
+## §25 — Connexions avec des logiciels externes
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Logiciels de caisse — Activer et suivre les connexions avec les logiciels de caisse (commandes reçues en caisse) | Activation et suivi des caisses | ABSENT | Catégorie `pos` définie (`INTEGRATION_CATEGORY_LABELS`, `plateforme-securite.ts:193`), flag `pos_integration` = false ; `updateIntegration` générique (`health.ts:141`) ; `ConnexionsPage.tsx` | Aucun document `integrations/*` de catégorie `pos` (les 5 docs : brevo, fcm, google_maps, sms, stripe), aucune sonde, aucun connecteur, aucun webhook d'entrée de commandes, aucun modèle de connexion par restaurant. Le flag `pos_integration` n'a aucun lecteur. Le texte de la page promet « logiciels de caisse » mais aucune donnée ne le porte. |
+| Outils GoLink — Paiement, comptabilité, envoi d'e-mails et SMS, cartes : état de chaque service connecté | Paiement, e-mails, SMS, cartes, notifications | COMPLET | `healthCheck` toutes les 10 min (`health.ts:120`) + `runHealthCheck` (relance manuelle, `system.view`) ; sondes Stripe (`balance.retrieve`), Brevo (`/v3/account`), Google Maps, FCM (proxy Firestore), SMS ; écriture dans `integrations/*` ; `updateIntegration` (activation, mode test/production, config publique, refus des clés secrètes par motif `SECRET_PATTERN`, audit `integration.updated`, `sensitive` si changement de mode) | Données : 5 intégrations avec `lastCheckAt` récent (2026-09-26), brevo/fcm/google_maps/stripe « operational », sms « maintenance » (désactivé, `enabled` false), stripe en mode `test`. Remarques : la sonde FCM ne teste pas FCM (elle sonde Firestore) ; le motif d'`updateIntegration` est généré automatiquement par l'écran (`ConnexionsPage.tsx:31`), pas saisi ; la règle `integrations` autorise aussi `update` direct de `enabled`/`mode`/`publicConfig` par `integrations.edit` (`platform.rules:60`) hors fonction. |
+| Outils GoLink | Comptabilité | ABSENT | — | Aucune intégration comptable (ni doc `integrations`, ni sonde, ni connecteur) alors que le cahier cite la comptabilité. La catégorie `accounting` existe dans l'énumération mais reste vide. |
+
+Le cahier compte 2 lignes pour §25 : « Logiciels de caisse » et « Outils GoLink ». La 2ᵉ ligne est **PARTIEL** (paiement, e-mails, SMS, cartes : OK ; comptabilité : absente).
+
+**Bilan §25 : 0 COMPLET / 1 PARTIEL / 1 ABSENT / 0 FAUX** (2 lignes du cahier : Caisse = ABSENT, Outils = PARTIEL).
+
+TROUS §25 :
+- P1 — Connexions caisse (POS) : modèle, connecteur, réception des commandes, suivi par restaurant (fonctionnalité annoncée par le cahier et le module `keywords: 'caisse'`).
+- P1 — Comptabilité : fiche d'intégration et suivi d'état (ou export normalisé).
+- P2 — Sonde FCM réelle ; saisie d'un vrai motif à la modification ; écriture directe interdite par les règles.
+- UI non vérifiée en superadmin (`ui-finance/plateforme_connexions.json` : page affichée sans données pour finance).
+
+---
+
+## §26 — Administrateurs internes
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Rôles — Super Admin (propriétaire uniquement), support, finance, commercial, opérations | Rôles | PARTIEL | `ADMIN_ROLES` (super_admin, support, finance, sales, ops, city_manager) ; `AdministrateursPage.tsx` ; `updateAdminRole` (`platform/admins.ts:23`), `inviteAdmin` (`core/invitations.ts`) ; collection `adminRoles` (6 docs) | Les 5 rôles du cahier existent, plus `city_manager`. « Propriétaire uniquement » appliqué : seul un super_admin peut créer/modifier/désactiver un super_admin (`admins.ts:40-41`), impossible de modifier son propre rôle, dernier super admin protégé (`admins.ts:48-51`). Écritures : `requireSecureAdmin('admins.manage')`, motif obligatoire, historique + audit `admin.updated/deactivated` sensible + alerte `permission_change`, révocation des jetons et sessions à la désactivation. Points faibles : les règles `admins` sont en lecture seule (bien), mais `inviteAdmin` n'est pas sous `requireSecureAdmin` (2FA de session non contrôlée) ; le nom de rôle « commercial » s'appelle `sales`. Données : 5 admins de test, un par rôle. |
+| Permissions — Par rôle : voir, modifier, rembourser, exporter, supprimer | Matrice des permissions | COMPLET | `ADMIN_PERMISSIONS` (≈ 80), `adminPermissionAction` (regroupe en voir/modifier/rembourser/exporter/supprimer, `plateforme-securite.ts:116`), `updateAdminRoleDefinition` (`admins.ts:102`), trigger `onAdminRoleWrite` (`core/claims-sync.ts:30`, exporté via `core/index.ts:3`) qui propage aux comptes ; règle `adminRoles` update `admins.manage` | Onglet « Rôles et permissions » = matrice éditable, motif, historique, audit `admin_role.updated` sensible, alerte de changement de droits. Applique côté serveur : `requireAdmin(request, permission)` relit `admins/{uid}.permissions` (`lib/permissions.ts:52-61`) et côté règles `isAdmin(perm)`. Données : support 19, finance 30, ops 37, sales 14, city_manager 25 permissions. Remarque : la permission « supprimer » n'existe que pour restaurants et clients (`restaurants.delete`, `customers.delete`) + corbeille/sauvegardes. |
+| Plafond de remboursement — Au-delà d'un montant, validation d'un responsable | Plafond et validation | PARTIEL | `refundLimitOf` (`admin/experience/common.ts:114` : plafond agent > plafond du rôle > défaut `DEFAULT_REFUND_LIMITS`) ; `refundFromTicket` (`admin/experience/refunds.ts:127`, statut `pending_approval` au-delà du plafond) ; `reviewTicketRefund` (`refunds.ts:241`, `refunds.approve`, valideur différent du demandeur, montant borné par le plafond du valideur) ; audit `refund.requested/approved/rejected` ; `creditFromTicket` (`refunds.ts:308`) | Le circuit tickets est complet et audité. Données : audits `refund.requested` 2, `refund.approved` 2, `refund.created` 4. Défauts : (1) `creditCustomer` (`admin/acteurs/customers.ts:52-57`) utilise `admin.refundLimitCents ?? DEFAULT_REFUND_LIMITS[role]` et **ignore le plafond configuré du rôle** (`adminRoles.defaultRefundLimitCents`), puis **refuse** au lieu de créer une demande de validation (« doit être accordé par l'équipe finance ») ; (2) plafond paramétrable mais valeurs par défaut codées en dur dans `DEFAULT_REFUND_LIMITS` (`permissions/admin.ts:245`) ; (3) `settings/refunds.approvalThresholdCents` sans effet (voir §22) ; (4) validation hors tickets impossible (`reviewTicketRefund` refuse un remboursement sans ticket : « traitez-le depuis la rubrique Paiements » mais aucune fonction de remboursement n'existe côté Paiements, grep `export const *Refund*` : seulement les deux fonctions tickets) ; (5) `creditFromTicket` : un agent au-dessus de son plafond avec `refunds.approve` peut s'auto-valider sans seconde personne. |
+| Données masquées — Certains rôles ne voient pas les coordonnées complètes ni les données bancaires | Masquage | PARTIEL | Permission `personal_data.view` (`permissions/admin.ts:39`, seulement finance et super_admin) ; utilisée : exports (`admin/pilotage/exports.ts:561`), recherche (`pilotage/search.ts:316`), rapports (`reports.ts:190`), écrans clients (`clients/ClientsPage.tsx:78`, `ClientPage.tsx:115`), livreurs (`livreurs/lib.ts:28`) ; utilitaires `maskEmail/maskPhone/maskIban` (`packages/shared/src/utils/mask.ts`) | Le masquage est **côté écran** pour clients et livreurs : les règles Firestore laissent les documents complets lisibles par tout admin ayant `customers.view` / `drivers.view` (masquer dans l'écran ne protège pas la donnée). Le champ `AdminRoleDefinition.maskPersonalData` (éditable dans la matrice, écrit par `updateAdminRoleDefinition`) n'est **lu nulle part** : grep `maskPersonalData` = définition, écriture et seed uniquement ; l'écran livreurs utilise la constante codée `ROLES_WITH_MASKED_DATA` (`permissions/admin.ts:255`). L'interrupteur « masquer les données » de l'écran est donc décoratif. Restaurants (coordonnées, IBAN) : masquage non vérifié côté admin. |
+| Accès limité par ville — Un responsable de ville ne voit que sa ville | Périmètre ville | PARTIEL | `admins.cityIds` ; `assertAdminCovers` (`lib/permissions.ts:65`, appelé dans 63 endroits sur 20 fichiers de functions/src) ; règles `isAdminIn` / `adminCovers` (`firestore.rules:54,69`) ; `CITY_SCOPED_ROLES = ['city_manager']` ; `updateAdminRole` impose ≥ 1 ville pour ce rôle (`admins.ts:45`) | Contrôle serveur et règles réels pour livreurs, commandes, zones, audit ciblé, clients, avoirs. Preuve UI : `ui-metz/commandes.json` : bandeau « OPÉRATIONS · METZ » (8 lignes) ; `ui-metz/accueil.json` : « SAMEDI 26 SEPTEMBRE · METZ » contre « TOUS LES MARCHÉS » pour finance. Défauts : (1) `ui-metz/clients.json` montre 25 lignes comme finance (`ui-finance/clients.json`) : la liste des clients n'est pas visiblement restreinte à Metz (à vérifier sur les données) ; (2) liste `cityIds` vide = toutes les villes (`adminCovers`) : seul `updateAdminRole` interdit la liste vide pour city_manager ; `inviteAdmin` (`invitations.ts:54`, `cityIds` défaut `[]`) ne le vérifie pas : un responsable de ville invité sans ville voit tout ; (3) seul `city_manager` est limité par rôle (les autres rôles le sont seulement si des `cityIds` sont posés) ; (4) `countryIds` enregistré mais aucun contrôle de périmètre pays trouvé. |
+
+**Bilan §26 : 1 COMPLET / 4 PARTIEL / 0 ABSENT / 0 FAUX** (5 lignes : Rôles PARTIEL, Permissions COMPLET, Plafond PARTIEL, Données masquées PARTIEL, Accès par ville PARTIEL).
+
+TROUS §26 :
+- P0 — Masquage des coordonnées et données bancaires appliqué seulement dans les écrans : à faire côté fonctions/règles (ou vues masquées) ; brancher `maskPersonalData` du rôle (aujourd'hui ignoré) au lieu de la constante `ROLES_WITH_MASKED_DATA`.
+- P0 — Plafond de remboursement : `creditCustomer` doit utiliser `refundLimitOf` (plafond du rôle) et créer une demande de validation ; supprimer ou brancher `approvalThresholdCents` ; interdire l'auto-validation dans `creditFromTicket`.
+- P0 — `inviteAdmin` : exiger au moins une ville pour `city_manager` (sinon accès total) et passer par `requireSecureAdmin`.
+- P1 — Vérifier et restreindre la liste des clients par ville pour le responsable de ville (`ui-metz/clients.json` = 25 lignes).
+- P1 — Périmètre par pays (`countryIds`) non appliqué ; ajouter un contrôle.
+- P2 — Vocabulaire « commercial » (`sales`) ; permission « supprimer » homogène.
+- UI non vérifiée en superadmin (finance/support : « Accès réservé » sur `plateforme_administrateurs`).
+
+---
+
+## §27 — Sécurité et journal d'audit
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Double authentification — Obligatoire pour tous les administrateurs | 2FA obligatoire | PARTIEL | TOTP complet : `enrollTotp`, `verifyTotp`, `regenerateRecoveryCodes`, `getMfaStatus`, `resetAdminMfa` (`platform/security.ts`, `totp.ts`) ; secret chiffré (`TOTP_ENCRYPTION_KEY`), codes de secours hachés, verrouillage après échecs (réglable), fenêtre anti-rejeu (`lastUsedStep`) ; règle `mfaRequiredNow` (`runtime.ts:60`) ; écran bloquant `MfaChallengeScreen` dans `apps/admin/src/auth/AdminAccess.tsx:88` | Constats : (1) **Applique réellement** seulement côté écran et côté fonctions `platform/*` (`requireSecureAdmin`) ; toutes les autres fonctions d'administration (remboursements, exports, blocage, suspension, avoirs, « voir comme »…) utilisent `requireAdmin` sans test de 2FA de session, et les règles Firestore ne lisent pas la 2FA : un jeton d'admin non vérifié peut appeler ces fonctions et lire Firestore en contournant l'écran. (2) **Donnée : `settings/security.requireMfaForAdmins` = false** (seed) et `mfaEnforcedFrom` absent : l'obligation est désactivée en base ; seul 1 admin sur 5 est enrôlé (`mfaEnrolled` true pour le super admin) et 1 session sur 42 est vérifiée. La valeur par défaut du code est `true` (`DEFAULT_SECURITY_POLICY`) mais le document écrase. (3) L'écran Sécurité propose de désactiver l'obligation (alerte critique `mfa_disabled` levée, bien). (4) `enrollTotp` non protégé contre un compte non enrôlé sous obligation immédiate : accès restreint à l'écran d'enrôlement, non vérifié en UI. |
+| Sessions — Appareils connectés, historique des connexions, déconnexion à distance ou globale | Appareils connectés | PARTIEL | `trackAdminSession` (`security.ts:62`, à l'ouverture puis en battement toutes les 2 min), collection `adminSessions` (42 docs), `SessionsCard` dans `SecuritePage.tsx:153` | Enregistre appareil (déduit du user-agent), empreinte IP hachée, dates, expiration (12 h par défaut, réglable), 2FA vérifiée. `approximateLocation` toujours `null`. **L'écran n'affiche que les sessions ouvertes du compte connecté** (`admin.id`, filtre `!s.revokedAt`) : un super admin ne peut pas lister les appareils d'un autre administrateur alors que la règle `adminSessions` le permet (`security.manage`). |
+| Sessions | Historique des connexions | PARTIEL | Sessions expirées/révoquées conservées, `lastLoginAt`/`lastLoginIp` sur `admins` ; pas d'écran d'historique | L'écran masque les sessions révoquées ; aucun onglet d'historique des connexions (ni échecs de connexion : aucun suivi des mots de passe erronés, l'authentification étant Firebase Auth). |
+| Sessions | Déconnexion à distance / globale | PARTIEL | `revokeSessions` (`security.ts:353`, une session ou toutes, jetons Firebase révoqués pour « toutes », audit `admin.session_revoked/sessions_revoked` sensible, alerte `session_revoked`) ; `resetAdminMfa` (révoque tout) ; désactivation d'un admin | La fonction est complète. **Côté écran, seul le bouton « Fermer » d'une session de son propre compte** (`SecuritePage.tsx:174`) ; le bouton « tout déconnecter » d'un administrateur n'apparaît pas dans `SecuritePage` (à vérifier dans le dialogue de `AdministrateursPage.tsx`, non lu en détail). Fermeture d'une session isolée : simple marque `revokedAt`, l'application se déconnecte au prochain battement (les jetons Firebase restent valides jusque-là). |
+| Journal d'audit — Qui, quoi, quand, sur toute action sensible ; non modifiable | Écriture du journal | COMPLET | `writeAudit` (`functions/src/lib/audit.ts:51`) : acteur (uid, type, rôle, nom), action, cible, avant/après, motif, IP hachée, navigateur, `sensitive`, horodatage serveur ; règle `auditLogs` : `allow write: if false` (`admin.rules:28-31`) ; aucune fonction ne modifie ni ne supprime (grep `auditLogs` dans functions/src : lecture ou `add` uniquement, la rétention `keepAuditLogsYears` ne déclenche aucune purge) | Données : 298 entrées, dont des actions sensibles réelles : remboursements créés/demandés/approuvés, suspensions, exports (`export.generated` 5), « voir comme » restaurant (`restaurant.impersonation_started` 5), suspension/réactivation en masse, avoirs, blocages, changements de commission, invitation d'admin. |
+| Journal d'audit | Consultation | PARTIEL | `HistoryPanel.tsx` (par fiche : restaurant, client, admin, réglages), `exportAuditLogs` (`platform/audit-export.ts:23`, CSV filtré ≤ 20 000 lignes, lui-même audité, alerte au-delà du seuil) ; carte « Journal d'audit » de `SecuritePage.tsx:230` ; `overview.ts:114` (fil des 120 dernières entrées) | **Aucune page de consultation transverse du journal** : la carte Journal d'audit ne contient qu'un export CSV et un texte disant de consulter « fiche par fiche ». Les filtres serveur (action, auteur, type de cible, sensible, recherche) existent dans `exportAuditLogs` mais l'écran envoie seulement les deux dates. Le « voir comme » n'est audité que pour les restaurants (`impersonation.ts`) ; « voir comme » client/livreur : non trouvé. Non modifiable côté règles : oui ; inaltérabilité contre un compte technique (export vers stockage immuable, chaînage) : absente. |
+| Alertes de sécurité — Connexion inhabituelle, export massif, nombreux remboursements par un même agent | Connexion inhabituelle | PARTIEL | Alerte `new_device` levée par `trackAdminSession` (`security.ts:98`) si appareil jamais vu (réglable `alertOnNewDevice`) ; type `unusual_login` défini mais **jamais levé** | Données : 2 alertes `unusual_login` présentes (seed), 2 `new_device`. Le code ne crée aucune alerte `unusual_login` (pays, horaire, IP inhabituels : non détectés ; `approximateLocation` non renseigné). Seuil `failedLoginsPerHour` réglable dans l'écran Paramètres mais **jamais lu** : le type `failed_logins` n'est levé par aucun code (dead setting). |
+| Alertes de sécurité | Export massif | COMPLET | `exportAuditLogs` (`audit-export.ts:81`) et `functions/src/admin/pilotage/exports.ts:609` lèvent `mass_export` au-delà de `alerts.massExportRows` (5 000 par défaut, réglable dans Paramètres > Sécurité) | Données : 4 alertes `mass_export`. Le seuil s'applique aux exports du journal et aux exports du pilotage ; autres exports (rapports programmés, exports comptables) non vérifiés un à un. |
+| Alertes de sécurité | Remboursements en série par un agent | COMPLET | `detectSecurityAnomalies` (`security.ts:417`, `onSchedule` toutes les 60 min, exportée) : compte les entrées d'audit `refund.*` par acteur sur 1 h, seuil `refundsPerAgentPerHour` (15 par défaut, réglable), une seule alerte ouverte par agent | Donnée : 1 alerte `refund_spike`. Limite : la détection est horaire, pas temps réel ; les avoirs (`customer.credited`) ne comptent pas comme remboursements. Traitement des alertes : `handleSecurityAlert` (audit, prise en charge), règle `securityAlerts` en lecture `security.manage`, badge du menu = alertes ouvertes (`module.tsx`, `useOpenSecurityAlertsCount`). |
+
+**Bilan §27 (lignes du cahier)** : 4 lignes : Double authentification = PARTIEL, Sessions = PARTIEL, Journal d'audit = PARTIEL (écriture COMPLET, consultation PARTIEL), Alertes = PARTIEL (export massif et remboursements COMPLET, connexion inhabituelle PARTIEL) → **0 COMPLET / 4 PARTIEL / 0 ABSENT / 0 FAUX**. Détail des 9 éléments contrôlés : 3 COMPLET / 6 PARTIEL.
+
+TROUS §27 :
+- P0 — 2FA réellement obligatoire : (a) mettre `settings/security.requireMfaForAdmins = true` en base (aujourd'hui false), enrôler les comptes ; (b) contrôle de session 2FA dans tous les appels d'administration sensibles (remplacer `requireAdmin` par `requireSecureAdmin` ou intégrer dans `requireAdmin`), sinon l'écran seul est contournable.
+- P0 — Alerte « connexion inhabituelle » et « échecs de connexion » jamais générées : `unusual_login` et `failed_logins` (et le seuil `failedLoginsPerHour`) sont du code mort ; implémenter ou retirer.
+- P1 — Journal d'audit : page de consultation transverse (filtres acteur/action/cible/sensible/période) au lieu de « fiche par fiche » ; « voir comme » client/livreur à auditer si présent ; inaltérabilité renforcée (copie immuable).
+- P1 — Sessions : lister les appareils de tous les administrateurs, historique des connexions (révoquées/expirées), bouton « déconnecter partout » dans l'écran ; localisation approximative.
+- P2 — Détection horaire plutôt qu'immédiate des remboursements en série ; compter les avoirs.
+- UI non vérifiée en superadmin (compte avec 2FA, non automatisable).
+
+---
+
+## Écarts avec DECISIONS_CLIENT / questionnaire
+
+Non exploré en détail (fichiers non relus pour cette rubrique). Écarts vus dans le code : (1) le cahier attend que la 2FA soit obligatoire pour tous les administrateurs ; la base la laisse désactivée (seed) et le contrôle serveur ne couvre que `platform/*`. (2) Le cahier demande de « s'ouvrir à d'autres pays » : pas de création de pays/ville par l'interface. (3) L'interrupteur « fonctionnalité » est présenté comme « sans nouvelle version » mais n'est pas appliqué au passage de commande. La décision client de verrouiller la vente d'alcool est bien respectée par `setFeatureFlag` (flag `alcohol_sales` `locked` = true) mais contournable par écriture directe Firestore (règle `featureFlags`).
+
+## Valeurs codées en dur (constantes métier non réglables)
+
+- `DEFAULT_REFUND_LIMITS` (support 50 €, finance 500 €, ops 100 €, city_manager 50 €, commercial 0 €) : `packages/shared/src/permissions/admin.ts:245` ; réglables par rôle dans `adminRoles`, mais `creditCustomer` (`customers.ts:54`) et l'écran clients (`CustomerDialogs.tsx:103`) lisent encore la constante.
+- `ROLES_WITH_MASKED_DATA` (support, commercial, opérations, responsable de ville) : `permissions/admin.ts:255` ; le champ réglable `maskPersonalData` du rôle n'est pas lu.
+- `CITY_SCOPED_ROLES = ['city_manager']` : `permissions/admin.ts:258`.
+- `DEFAULT_SECURITY_POLICY` (12 h de session, 5 essais, verrou 15 min, seuils 5 000 lignes / 15 remboursements / 8 échecs) : `constants/plateforme-securite.ts:251` (réglables en base ; les valeurs de repli sont dans le code).
+- `MAX_CREDIT_CENTS` (avoir 500 €) : `customers.ts:45` et `50_000` dans `refunds.ts:311`.
+- Fenêtre d'enrôlement TOTP 30 min, battement de session 2 min, `MAX_ROWS = 20_000` d'export, période d'export 400 jours : `security.ts:45,168`, `audit-export.ts:10,36`.
+- Sondes de santé : seuils de lenteur 1,5 à 3 s, cadence 10 min, `SECRET_PATTERN` : `health.ts`.
+- Liste de devises du sélecteur `['EUR','DZD','MAD','TND']` : `ParametresPage.tsx:59`.
+- Devise `'EUR'` codée dans des écritures d'avoirs et remboursements : `customers.ts:100,117`, `refunds.ts:354`.
+- Fuseau `Europe/Paris` pour les tâches planifiées : `platform/runtime.ts:32`.
+
+
+# Annexe H — Matrice §28 à §31 (Conformité, données)
+
+
+Périmètre : cahier lignes 659 à 722. Lecture seule. Interface : les pages `/plateforme/*` sont réservées au superadmin (2FA, non crawlé) ; le compte support (et finance pour la fraude) a une vue partielle, citée quand elle existe. Sinon « UI non vérifiée en superadmin ». Données lues dans Firestore golink-9f16d (tout est `seed:true`).
+
+Constat transversal : les fonctions de `functions/src/platform/*.ts` sont toutes ré-exportées par `functions/src/platform/index.ts` puis `functions/src/index.ts` (ligne 14) ; les noms appelés côté front (`a-plateforme-securite/api.ts`) correspondent aux exports. Les fonctions de corbeille de la plateforme (`restoreFromTrash`, `purgeTrashItem`, `moveToTrash`) sont dans `platform/backups.ts` (exportées via `export * from './backups'`). `runtime.ts` n'est pas ré-exporté (normal : utilitaires). Les applications mobiles client et livreur (`apps/client/App.tsx`, `apps/driver/App.tsx`, 17 lignes chacune) sont des coquilles vides : tout ce qui doit s'appliquer « côté app » (blocage, maintenance, mise à jour forcée, acceptation des CGU) n'y existe pas.
+
+## §28 — Lutte contre la fraude
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Clients : réclamations répétées, « non reçu » fréquent, comptes multiples liés au même téléphone, appareil ou carte | Réclamations répétées | ABSENT | `functions/src/platform/fraud.ts` (`detectClientSignals`, l.67-93) | Le code de signal `repeated_claims` existe dans `packages/shared/.../plateforme-securite.ts` (l.137) et dans le seed, mais aucun code ne le produit : `detectClientSignals` ne lit ni tickets ni remboursements par client. |
+| idem | « Non reçu » fréquent | FAUX | `fraud.ts` l.77 (`data.disputeReason === 'not_received'`) | Le champ `disputeReason` n'est écrit nulle part (grep dans `functions/src` et `packages/shared` : seule occurrence = la lecture de fraud.ts). Les commandes réelles n'ont pas ce champ (clés de `orders` lues en base : ni `disputeReason`, ni litige). Le détecteur ne se déclenche donc jamais sur des données réelles. |
+| idem | Annulations anormales (bonus, hors énumération exacte) | COMPLET (fonctionnel) | `fraud.ts` l.75-91 | Lit `orders.status == 'cancelled'`, seuils codés en dur (>= 4 commandes, >= 50 %). Seul détecteur client qui tourne réellement. |
+| idem | Comptes multiples liés (téléphone, appareil, carte) | ABSENT | — | `linked_accounts` : code défini et présent dans le seed (`fraude-client-017`) mais aucune détection n'existe (aucune agrégation par téléphone/appareil/empreinte de carte). Aucune collecte d'appareil ou d'empreinte n'existe côté serveur hors `userPrivate` (règles) ; l'app client est vide. |
+| Abus de promotions : faux comptes pour réutiliser « nouveau client » | Détection | FAUX | `fraud.ts` `detectPromoAbuse` l.95-114 | Lit `collectionGroup('redemptions')` : cette sous-collection n'existe nulle part (aucune écriture dans `functions/src`, `orders/place.ts` ne fait qu'incrémenter `promotions.stats.redemptions` l.642 ; base : 0 document `redemptions`, `promotions` sans sous-collection). Le critère (>= 6 codes différents par client) ne cible de toute façon pas la réutilisation de l'offre « nouveau client » par de faux comptes (pas de lien entre comptes). Aucun index collectionGroup `redemptions` dans `firebase/firestore.indexes.json`. |
+| Livreurs : courses hors adresse, annulations anormales, comptes partagés | Détection | ABSENT | `fraud.ts` (`detectRestaurantAndDriverRefunds` ne traite que des restaurants malgré son nom) | Codes `off_address_delivery`, `shared_account` (labels seulement) sans producteur. Le dossier `fraude-livreur-010` de la base est du seed (`createdBy: system`, jamais calculé). Les 3 éléments du cahier manquent. |
+| Restaurants : commandes fictives, taux de remboursement anormal | Taux de remboursement | FAUX | `fraud.ts` l.116-135 | Requête `refunds where createdAt >= since` : les documents `refunds` (88 en base) n'ont pas de champ `createdAt` (clés : `requestedAt`, `processedAt`…). Résultat : 0 document, jamais de signal. Même si le champ existait : critère = nombre absolu (>= 10 en 14 j), pas un taux (`total` déclaré mais jamais alimenté). `.catch` avale l'erreur. |
+| idem | Commandes fictives | ABSENT | — | `fake_orders` : label seulement. |
+| Détection automatique — automatisme | onSchedule | PARTIEL | `fraud.ts` `detectFraudSignals` `30 3 * * *` (l.138), exportée | Le déclencheur existe et est exporté, il alimente `fraudCases` via `upsertSignal` (score cumulé plafonné à 100, réouverture si classé). Mais 3 des 4 détecteurs lisent des champs inexistants (voir ci-dessus). Les 4 dossiers en base sont du seed. Seuils (4, 3, 0,5, 6, 10, fenêtre 14 j) codés en dur, non réglables. |
+| Traitement des cas signalés | Décision | PARTIEL | `decideFraudCase` (fraud.ts l.153), UI `FraudePage.tsx` | Écrit statut/décision + `writeAudit` sensible avec motif. Mais les actions `blocked`, `suspended`, `payout_hold` ne sont que consignées dans `fraudCases.decision` : aucun code ne bloque le compte, ne suspend ni ne gèle les reversements (la fonction ne touche qu'à `fraudCases`). Règles Firestore (`compliance.rules`) annoncent pourtant « décisions à effet » par Cloud Function. UI : `ui-finance/plateforme_fraude.json` et `ui-support` : 2 onglets, 1 dossier « Marc Michel » (score 45), 0 erreur. |
+| Liste de blocage : bloquer un téléphone, e-mail, appareil ou carte | Gestion de la liste | COMPLET | `addBlocklistEntry`, `removeBlocklistEntry` (fraud.ts l.206-263), `FraudePage.tsx` BlocklistTab, règles `compliance.rules` `blocklist` | Types phone/email/device/card_fingerprint/iban/ip ; valeur hachée SHA-256 (jamais en clair), aperçu masqué, doublon refusé, expiration possible, audit sensible avec motif ; 3 entrées seed en base. |
+| idem | Application à l'inscription / à la commande | ABSENT (le blocage n'est pas appliqué) | `isBlocked()` fraud.ts l.266 | `isBlocked` n'a AUCUN appelant dans tout le dépôt (grep). Ni `core/signup.ts`, ni `orders/place.ts`, ni `lib/accounts.ts`, ni le paiement ne le consultent. La liste est donc purement décorative. Aucun trigger ne bloque l'inscription/commande ; le blocage d'un client (`customers.ts` `blocked`, désactive Auth) est indépendant de la liste et non branché dessus. Aucune collecte de l'empreinte de carte/appareil pour comparer. |
+
+**Bilan §28 (5 lignes du cahier) : 0 COMPLET / 2 PARTIEL (Clients, Liste de blocage : gestion faite, application absente) / 2 ABSENT (Livreurs, Restaurants pour commandes fictives) / 2 FAUX (Abus de promotions ; Restaurants remboursement).** Décompte par élément : voir lignes ci-dessus. Recommandation de statut par ligne cahier : Clients = PARTIEL ; Abus promotions = FAUX ; Livreurs = ABSENT ; Restaurants = FAUX ; Liste de blocage = PARTIEL.
+
+TROUS :
+- P0 : brancher `isBlocked` sur l'inscription (`core/signup.ts`, `lib/accounts.ts`) et la commande (`orders/place.ts`) pour téléphone, e-mail, appareil, carte ; sans cela la liste ne sert à rien.
+- P0 : corriger les 3 détecteurs sur champs inexistants (`disputeReason`, `redemptions`, `refunds.createdAt` -> `requestedAt`) ou créer la donnée source (motif de litige sur la commande, journal d'usage promo avec client).
+- P0 : donner un effet aux décisions (`blocked`, `suspended`, `payout_hold`) : désactiver/bloquer le compte, suspendre le restaurant/livreur, geler le reversement (finance).
+- P0 : détecteurs livreurs (course validée hors adresse via position vs adresse, annulations, compte partagé = plusieurs appareils/sessions) et comptes multiples liés (téléphone, appareil, carte) ; collecte de l'empreinte appareil/carte.
+- P1 : détection réclamations répétées ; commandes fictives (restaurant) ; taux de remboursement réel (remboursements / commandes) ; seuils réglables (paramètres) plutôt que constantes.
+- P2 : signalement du dossier de fraude vers alertes/notification ; lien dossier -> entrée de blocage (champ `fraudCaseId` prévu, jamais rempli par l'UI qui passe `null`).
+
+## §29 — Légal, RGPD et conformité
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Conditions générales : versions des CGU/CGV clients, restaurants, livreurs ; qui a accepté quelle version et quand ; réacceptation après modification | Versions par audience | PARTIEL | `saveLegalDocument` (`platform/gdpr.ts` l.23), `LegalRgprPage.tsx` (LegalDocsTab), règles `legalDocuments` | Types terms_client/terms_sale/terms_restaurant/terms_driver/privacy/cookie/legal_notice, par pays, versionnées, audit + `settingsHistory` avec motif. 9 documents en base. Anomalies : (1) la fonction n'interdit que publié -> brouillon ; elle permet de réécrire titre/contenu d'une version publiée (Admin SDK contourne les règles qui l'interdisent) donc une version « publiée » n'est pas figée ; (2) un second éditeur existe (`affichage/LegalEditorPage.tsx` -> `admin/experience/display.ts`) qui archive les versions précédentes : deux chemins d'écriture non alignés ; (3) `effectiveAt` toujours envoyé à `null` par l'UI, `changeSummary` idem ; (4) UI : `ui-support/plateforme_legal_rgpd.json` montre seulement l'onglet Demandes (le support n'a pas `legal.edit`), onglet documents « UI non vérifiée en superadmin ». |
+| idem | Qui a accepté quelle version et quand | PARTIEL | `core/signup.ts` l.211-247, `restaurant/documents.ts` l.182-212, règles `legalAcceptances` | Acceptation enregistrée (`legalAcceptances`, preuve non modifiable) uniquement pour `terms_restaurant` (inscription restaurant, signature contrat). Aucune acceptation client ni livreur n'existe (apps client/driver vides ; aucune fonction). Consultation côté admin : uniquement la fiche restaurant (`restaurants/fiche/DossierTab.tsx`) ; aucun écran « qui a accepté quelle version » dans Légal & RGPD ; base : 1 acceptation seed. |
+| idem | Réacceptation forcée après modification | ABSENT | champ `requiresReacceptance` | Le champ est stocké (`saveLegalDocument`, `display.ts`) mais aucun code ne compare la version acceptée à la version en vigueur, ne bloque l'accès ni ne redemande l'acceptation (grep `requiresReacceptance` : uniquement écriture). |
+| Demandes RGPD : accès, copie, suppression, avec suivi du délai de réponse | Enregistrement et suivi | PARTIEL | `receiveGdprRequest`, `handleGdprRequest` (gdpr.ts l.74-190), `LegalRgprPage.tsx` GdprTab, `useOpenGdprCount` | Types access/portability/rectification/erasure/objection ; échéance = réception + 30 jours (constante `GDPR_DEADLINE_DAYS`, non réglable) affichée dans le tableau ; audit sensible. Alertes de délai : `admin/pilotage/anomalies.ts` l.234-361 (file « à faire » gdpr avec `gdprDueWarningDays`) tourne toutes les 15 min (`detectAnomalies` exportée). UI (`ui-support/plateforme_legal_rgpd.json`) : 4 demandes réelles seed, échéances affichées. Manques : pas de dépôt par la personne elle-même (les règles évoquent `submitGdprRequest` qui n'existe pas) ; la vérification d'identité n'est qu'un statut ; `completed` accepté sans contrôle préalable. |
+| idem | Accès / copie (export) | PARTIEL | `collectPersonalData` gdpr.ts l.114-129 | Export JSON dans Storage `gdpr-exports/…` seulement pour client/livreur/restaurant avec `subjectId` : profil + 500 commandes max ; ni adresses, moyens de paiement, avis, tickets, consentements, notifications. Le fichier n'est jamais remis à la personne (pas de lien signé ni envoi) ; sans `subjectId` la demande se clôt sans rien exporter. |
+| Suppression et anonymisation : supprimer les données personnelles en gardant ce que la loi impose | Suppression / anonymisation à la demande | PARTIEL | `handleGdprRequest` (erasure) gdpr.ts l.156-169 | Client uniquement : `users` -> nom « Client supprimé », e-mail/téléphone `null`, compte Auth désactivé. Rien pour restaurant/livreur (clôturé sans action). Reste en clair : commandes (`customerName`, adresse, téléphone masqué), avis, tickets, adresses/`userPrivate`, `payment methods`, e-mail Auth. La liste « conservé pour la loi » (`RETAINED_FOR_LEGAL`) est un texte fixe, pas un calcul de ce qui est réellement gardé. Pas de vérification de dossier en cours (litige, remboursement) avant effacement. Audit avec motif présent. |
+| Consentements : marketing et cookies, par utilisateur | Marketing par utilisateur | PARTIEL | `users.consents` (map), règles `users/{id}/consents`, `communication/ConsentsPage.tsx` | L'écran `ConsentsPage` ne montre que des compteurs agrégés (e-mail/push/SMS, `getCountFromServer`), pas le détail par utilisateur. Les règles disent que le journal est écrit par la Cloud Function `setConsent` : cette fonction n'existe pas (grep `setConsent` : 0 résultat). Aucune fiche client n'affiche l'historique de consentement. |
+| idem | Cookies | ABSENT | — | Aucun modèle, écran ni fonction de consentement cookies (document `cookie_policy` seulement). |
+| Durées de conservation : anonymisation automatique des données anciennes | Paramètres + tâche planifiée | PARTIEL | `updatePlatformSettings` (doc `retention`), `ParametresPage.tsx` RetentionForm, `anonymizeExpiredData` (gdpr.ts l.211, `0 4 * * *`, exportée), `previewRetentionRun` | Tâche réelle et exportée, durées réglables, `lastRunSummary` écrit. Défauts : (1) elle ne fait rien tant que `autoAnonymize` n'est pas `true` : le document `settings/retention` en base n'a pas ce champ (retourne « désactivée ») ; (2) `keepInvoicesYears`, `keepAuditLogsYears`, `deleteDriverLocationsAfterDays` sont réglables mais jamais utilisés (compteur `driverLocationsDeleted` toujours 0) ; (3) purge corbeille : filtre `purgeAt <= now - trashRetentionDays` alors que `purgeAt` est déjà l'échéance : délai doublé, et `trashRetentionDays` n'a aucun effet sur `purgeAt` déjà calculé (30 j codé dans `moveToTrash`/`MENU_LIMITS.trashDays`) ; (4) inactifs : interroge `stats.lastOrderAt`, mais `previewRetentionRun` interroge `lastOrderAt` (mauvais champ, aperçu faux) ; les comptes sans commande ne sont jamais anonymisés ; (5) lots de 200/300 par nuit. |
+| Signalements de contenus : traitement des signalements de contenus illicites (photos, textes, avis) | Réception + traitement | PARTIEL | `contentReports` (règles `support.rules` l.131), `decideContentReport` (`admin/experience/reviews.ts` l.213), UI `avis/ReportsPage.tsx`, `reportContent` (gdpr.ts l.194) | Traitement complet pour les avis : décision motivée, masquage/retrait, audit, réponse notifiée au signaleur (`ui-support/avis_signalements.json` : 2 signalements « à examiner », plus ancien 21 h). Manques : contenus de type photo/texte/produit non pris en charge par le retrait (seuls avis et réponses déclenchent une action ; les autres cas ne font que changer le statut, sans masquer le contenu) ; aucun canal de signalement public fonctionnel (apps client/driver vides ; la règle permet la création par un utilisateur connecté) ; `reportContent` (gdpr.ts) est réservée aux administrateurs et écrit un schéma différent (`entityType/entityId`) de celui lu par l'écran (`targetType/targetPath`) : fonction non utilisée par le front et incohérente ; pas de délai de traitement suivi. |
+
+**Bilan §29 (6 lignes du cahier) : 0 COMPLET / 5 PARTIEL (CGU/CGV ; demandes RGPD ; suppression/anonymisation ; conservation ; signalements) / 1 ABSENT-PARTIEL (consentements : PARTIEL pour marketing, ABSENT pour cookies) / 0 FAUX.** Comptage par ligne cahier : CGU 1 PARTIEL (réacceptation ABSENT), RGPD 1 PARTIEL, suppression 1 PARTIEL, consentements 1 PARTIEL, conservation 1 PARTIEL, signalements 1 PARTIEL = 0 / 6 / 0 / 0.
+
+TROUS :
+- P0 : réacceptation forcée (comparaison version acceptée / version en vigueur, blocage à la connexion des apps) et acceptations client/livreur/CGV (avec écran « qui a accepté quoi » côté admin).
+- P0 : `autoAnonymize` activé par défaut ou fixé dans le seed/param ; corriger le filtre de purge de la corbeille (double délai) et le champ `lastOrderAt` de l'aperçu ; appliquer réellement `keepInvoicesYears`, `keepAuditLogsYears`, `deleteDriverLocationsAfterDays`.
+- P0 : effacement complet côté client (commandes, adresses, avis, tickets, `userPrivate`, moyens de paiement, e-mail Auth) et prise en charge restaurant/livreur, avec liste réelle des données conservées par obligation légale.
+- P1 : dépôt d'une demande RGPD par la personne (`submitGdprRequest`) et remise sécurisée de l'export (lien signé à durée limitée) ; export plus complet ; délai légal réglable.
+- P1 : journal de consentements par utilisateur (`setConsent` inexistante), vue par utilisateur, consentement cookies.
+- P1 : rendre les versions publiées réellement figées côté fonction ; unifier les deux éditeurs légaux.
+- P2 : masquage effectif des contenus non-avis signalés ; supprimer ou aligner `reportContent`.
+
+## §30 — Santé de la plateforme et maintenance
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| État des services : applications, paiements, commandes, notifications, géolocalisation, avec alerte en cas de panne | Sondes automatiques | PARTIEL | `platform/health.ts` `healthCheck` (`every 10 minutes`, exportée), `runHealthProbes`, `runHealthCheck`, `SanteMaintenancePage.tsx` ServicesGrid, collection `serviceStatus` | 11 services (`SERVICE_KEYS`) écrits toutes les 10 min (base : `checkedAt` récent, tous `operational` sauf `sms` = maintenance). Sondes réelles pour base, Auth, Storage, Stripe, Brevo, Maps. Mais `notifications` = même sonde que la base (`worst(firestore)`), `geolocation` = `firestore`, `orders` = lecture d'une commande : ce ne sont pas des sondes de ces services (FAUX partiel : indique « opérationnel » sans mesurer notifications/géolocalisation). `errorRate` toujours `null`. Statut d'app dérivé de la base + stockage, pas d'une vraie disponibilité de l'app. |
+| idem | Alerte en cas de panne | PARTIEL | `admin/pilotage/anomalies.ts` `servicesDown` (l.212), `detectAnomalies` (`every 15 minutes`, exportée) | Une alerte `service_down` (critique si `major_outage`) est créée dans la file d'alertes du pilotage. Uniquement dans l'interface : ni notification push, ni e-mail (le commentaire de `health.ts` dit que l'alerte passe par cette surveillance ; `healthCheck` ne fait qu'un `logger.warn`). Latence jusqu'à 25 min. UI superadmin non vérifiée ; compte support : `ui-support/plateforme_sante.json` = « Accès réservé » (pas `system.view`). |
+| Mode maintenance : plateforme ou app en maintenance avec message aux utilisateurs | Réglage | PARTIEL | `setMaintenanceMode` (health.ts l.180), `MaintenanceRow` (UI), `settings/maintenance` (lisible sans connexion, `platform.rules` l.9) | Par application (client, driver, restaurant, admin) : message, fin prévue (`until`, non exposé dans l'UI qui passe `null`), audit sensible avec motif + `settingsHistory`. Pas de maintenance « toute la plateforme » en un clic (4 réglages à faire). |
+| idem | Mode maintenance réellement bloquant côté apps | ABSENT | grep `maintenance` dans `apps/*/src`, `apps/client`, `apps/driver`, `functions/src` | Aucune lecture de `settings/maintenance` par une application : `apps/client/App.tsx` et `apps/driver/App.tsx` sont des coquilles de 17 lignes ; `apps/restaurant` n'affiche que des annonces ; `apps/admin` ne bloque pas ; aucune fonction serveur (commande, connexion) ne refuse de travailler en maintenance. L'écran annonce « Bloque l'accès… » : trompeur (FAUX en l'état). Seul effet réel : le statut affiché dans `serviceStatus`. |
+| Versions des applications : forcer la mise à jour | Réglage | PARTIEL | `updateAppVersion` (health.ts l.227), `VersionRow` (UI), `appVersions` (lisible publiquement, `platform.rules` l.64) | Dernière/minimale/forcée/URLs stores, contrôle minimale <= dernière, audit avec motif. UI : `message` et `storeUrls` toujours envoyés à `null` (non saisissables). 4 documents en base. |
+| idem | Mise à jour forcée réellement appliquée | ABSENT | grep `minimumVersion` dans `apps/` : 0 | Aucune app ne compare sa version à `appVersions` ; aucun contrôle serveur (en-tête de version) non plus. |
+| Incidents : historique des incidents et de leur résolution | Historique | COMPLET | `saveIncident` (health.ts l.254), `IncidentsTab` (UI), collection `incidents`, règles `platform.rules` l.74 | Ouverture, fil de mises à jour (`updates`), résolution (`resolvedAt`), lien `openIncidentId` sur `serviceStatus`, audit. 1 incident seed. Limites mineures : titre non modifiable en édition, `publicMessage` et `postMortem` non saisissables dans l'UI (envoyés à `null`), pas de page de statut publique ; UI superadmin non vérifiée. |
+
+**Bilan §30 (4 lignes du cahier) : 1 COMPLET (Incidents) / 3 PARTIEL (État des services ; Mode maintenance ; Versions) / 0 ABSENT / 0 FAUX** au niveau ligne cahier. Détail des éléments : « mode maintenance bloquant » et « mise à jour forcée appliquée » sont ABSENTS (écran trompeur pour la maintenance) ; sondes notifications/géolocalisation FAUSSES (proxy de la base).
+
+TROUS :
+- P0 : faire respecter la maintenance (lecture de `settings/maintenance` par chaque app + refus côté serveur des commandes/connexions concernées, sauf administrateurs) ; sans cela le bouton est trompeur.
+- P0 : faire respecter `appVersions` (écran bloquant si version < minimale, lien vers le store) dans les apps client/livreur/restaurant.
+- P1 : vraies sondes notifications (FCM/file d'envoi) et géolocalisation (fraîcheur des positions livreurs) ; taux d'erreur ; notification (push/e-mail) aux super administrateurs en cas de panne.
+- P1 : saisie de `message`, `storeUrls`, `until` dans l'UI ; maintenance « plateforme entière » en un geste ; fin automatique de maintenance à `until`.
+- P2 : `publicMessage`/`postMortem` et page de statut publique.
+
+## §31 — Données et sauvegardes
+
+| Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
+|---|---|---|---|---|
+| Sauvegardes : automatiques et régulières, restauration possible | Sauvegardes automatiques | PARTIEL | `platform/backups.ts` `scheduledFirestoreBackup` (`0 2 * * *`, exportée), `runManualBackup`, `checkBackupStatus`, `DonneesPage.tsx` BackupsTab | Export Firestore managé vers `gs://<projet>-backups/<id>` chaque nuit, suivi de statut, audit sensible sur la manuelle. Base : 4 sauvegardes seed (aucune preuve d'exécution réelle). Dépend d'un bucket créé hors code (commentaire l.15-19) et des droits IAM ; pas d'alerte si l'export échoue (pas de lien avec `serviceStatus`/alertes) ; pas de durée de rétention des sauvegardes. |
+| idem | Restauration possible | ABSENT | — | Aucune fonction d'import (`importDocuments`) ni écran de restauration ; seule la restauration d'un élément de corbeille existe. La restauration des sauvegardes est donc manuelle hors application (procédure non documentée dans l'outil). |
+| Corbeille : restaurer un élément supprimé par erreur pendant un certain temps | Restauration | PARTIEL | `restoreFromTrash`, `purgeTrashItem` (backups.ts l.158-211), `TrashTab`, `menu/trash.ts` (`trashMenuItems`, `restoreMenuItem`), `restaurant/zones.ts` l.158, règles `trash` | Fonctionne pour ce qui y entre : produits/sections de carte (`menu/trash.ts`) et zones de livraison (`zones.ts`) ; restauration et purge avec motif et audit. Base : 2 éléments. Défauts : `moveToTrash` (plateforme) n'est appelée nulle part : restaurants, comptes, livreurs, clients, promotions, etc. ne passent pas par la corbeille ; durée 30 j codée dans `moveToTrash` et `MENU_LIMITS.trashDays` (le paramètre `trashRetentionDays` n'a pas d'effet sur `purgeAt`, cf. §29) ; la restauration écrit les instantanés sans recalculer les compteurs/stocks/index ; anomalie UI : `ui-support/plateforme_donnees.json` affiche « Chargement impossible » sur l'onglet Corbeille pour le compte support (requête `where restoredAt == null orderBy deletedAt`, cause non déterminée : règle `trash.view` ou index) ; superadmin non vérifié. |
+| Historique et export : historique des modifications, export complet des données | Historique des modifications | PARTIEL | `writeAudit`, `recordSettingsChange` (`settingsHistory`), `exportAuditLogs` (`platform/audit-export.ts`), `SecuritePage.tsx` | Historique réel des réglages (avant/après, motif, auteur) et journal d'audit exportable (CSV) depuis Sécurité ; il s'agit de la rubrique §27, pas de la page Données. L'historique par enregistrement métier (client, restaurant, commande) dépend des modules, non audité ici ; la page Données ne l'expose pas. |
+| idem | Export complet des données | PARTIEL | `runManualBackup` (`collections: null`) | « Export complet » = export Firestore vers un bucket (format Google, non lisible sans outil), sans téléchargement ni lien depuis l'écran ; aucun export CSV/JSON lisible des données métier depuis cette page (les exports de rapports sont dans le pilotage §20+, hors périmètre). L'UI n'offre pas de sélection de collections alors que la fonction l'accepte. |
+
+**Bilan §31 (3 lignes du cahier) : 0 COMPLET / 3 PARTIEL (Sauvegardes ; Corbeille ; Historique et export) / 0 ABSENT (restauration de sauvegarde = élément ABSENT dans la ligne 1) / 0 FAUX.**
+
+TROUS :
+- P0 : restauration depuis une sauvegarde (procédure outillée ou fonction d'import contrôlée, avec double confirmation et audit) et alerte en cas d'échec de sauvegarde ; vérification qu'une sauvegarde réelle a tourné (bucket + IAM).
+- P0 : brancher la corbeille sur les suppressions sensibles (restaurant, livreur, compte client, promotion…) via `moveToTrash`, ou supprimer la promesse ; corriger l'erreur de chargement pour les rôles non superadmin.
+- P1 : export complet lisible et téléchargeable (par collection), sélection de collections dans l'UI ; durée de rétention des sauvegardes.
+- P2 : historique des modifications visible depuis la page Données.
+
+## Écarts avec DECISIONS_CLIENT / questionnaire
+
+Non exploités en détail (aucune décision client lue pour ces rubriques dans le temps imparti) : à recouper avec `docs/DECISIONS_CLIENT.md` sur (a) les délais RGPD (30 jours) et la durée de corbeille (30 jours) ; (b) la liste de blocage (empreinte de carte/appareil) ; (c) la maintenance bloquante. Écart de fond constaté avec le cahier lui-même : « Détection automatique » (§28) et « Fonctions obligatoires dès le lancement » (§29) ne sont pas tenues (détection en grande partie non fonctionnelle, réacceptation forcée et consentements absents).
+
+## Valeurs codées en dur
+
+- `fraud.ts` : fenêtre `LOOKBACK_DAYS = 14`, seuils clients (>= 4 commandes, >= 3 « non reçu », >= 50 % d'annulations), promotions (>= 6 codes), restaurants (>= 10 remboursements), scores (25/15/20/20), planification `30 3 * * *`.
+- `gdpr.ts` : `GDPR_DEADLINE_DAYS = 30`, liste `RETAINED_FOR_LEGAL` (texte), planification `0 4 * * *`, valeurs par défaut 24 mois / 36 mois / 30 jours, lots 200/300.
+- `backups.ts` : planification `0 2 * * *`, nom du bucket (variable d'environnement ou `<projet>-backups`), corbeille 30 jours dans `moveToTrash` (et `MENU_LIMITS.trashDays` pour les cartes) au lieu du paramètre `trashRetentionDays`.
+- `health.ts` : seuils de lenteur des sondes (1500/2000/2500/3000 ms), délai 10 s, fréquence 10 min.
+- `anomalies.ts` : fréquence de surveillance 15 min (les seuils y sont, eux, paramétrés via `loadMonitoringSettings`).
+
+## Compte rendu (chiffres)
+
+**Chiffres d'origine (26/09, avant correctif)** : §28 = 5 (0 COMPLET / 2 PARTIEL / 1 ABSENT / 2 FAUX), §29 = 6 (0 / 6 / 0 / 0), §30 = 4 (1 / 3 / 0 / 0), §31 = 3 (0 / 3 / 0 / 0). Total 18 lignes : 1 COMPLET, 14 PARTIEL, 1 ABSENT, 2 FAUX.
+
+**Recomptage du 27/09 (`final-control-admin`), après `cdc-fix-e`** — voir le détail des correctifs en section 5 (P0 n° 26 à 34, non encore reporté ligne à ligne ci-dessus faute de temps ; résumé ici) :
+- §28 Lutte contre la fraude : les 4 détecteurs (clients, promotions, livreurs, restaurants) et la liste de blocage sont désormais réels et à effet (`isBlocked` branché sur l'inscription/la commande, `decideFraudCase` applique blocage/suspension/gel de reversement). **5 lignes → 5 COMPLET / 0 PARTIEL / 0 ABSENT / 0 FAUX.**
+- §29 Légal, RGPD et conformité : réacceptation et consentements désormais fonctionnels (`acceptLegalDocument`, `setConsent`), moteur d'anonymisation unifié et bugs de purge corrigés, mais réacceptation limitée au client (pas restaurant/livreur), pas de bandeau cookies, `keepInvoicesYears` non appliqué : **6 lignes restent PARTIEL** (0 COMPLET / 6 PARTIEL / 0 ABSENT / 0 FAUX) — rubrique la plus faible du réseau après correctif.
+- §30 Santé et maintenance : sondes notifications/géolocalisation réelles, mode maintenance réellement bloquant à la commande et côté app restaurant. **4 lignes → 3 COMPLET / 1 PARTIEL** (version minimale forcée reste non éprouvée faute d'app cliente).
+- §31 Données et sauvegardes : restauration de sauvegarde outillée, alerte e-mail sur échec, bug d'index de la corbeille corrigé. **3 lignes → 2 COMPLET / 1 PARTIEL** (export complet lisible par collection reste à faire).
+
+Nouveau total §28-31 (18 lignes) : **10 COMPLET / 8 PARTIEL / 0 ABSENT / 0 FAUX** (5+0+3+2 COMPLET, 0+6+1+1 PARTIEL — repris dans le tableau du §3).
+
+
+# Annexe I — Questionnaire, principes transverses, apps client et livreur
+
+
+Périmètre : (1) les 36 réponses de `golink-maquette/specs/super-admin/questions-reponses-client.txt` et les choix de l'annexe du cahier (lignes 727 à 757), tels que consignés dans `docs/DECISIONS_CLIENT.md` ; (2) les principes des lignes 18 à 28 du cahier (automatisme, alertes par exception, actions en masse, traçabilité des actions sensibles, règles réglables sans développeur) ; (3) l'état des applications client et livreur.
+
+Méthode : relecture des partiels G1 à G7 (constats réutilisés, cités « Gn »), puis vérification directe dans le code (`functions/src/**`, `packages/shared/src/**`, `firebase/rules/*.rules`, `apps/*`) et lecture seule de Firestore (`plans`, `countries`, `settings/orderRules`). Aucun fichier du dépôt n'a été modifié. Statuts : COMPLET / PARTIEL / ABSENT / FAUX (défini dans le brief).
+
+Limites de la vérification : (a) le déploiement réel des fonctions n'a pas été contrôlé côté Google Cloud ; le journal `firebase-debug.2.log` (26/09, 05:42) montre un déploiement partiellement échoué (`updateCountryVat`, `markTaxReportSubmitted`, `generateTaxReport`, `exportAccounting` : quota CPU Cloud Run dépassé) et G5 a relevé un 403/CORS sur `estimatePlatformAudience` ; « exporté » ci-dessous signifie « présent dans la chaîne `functions/src/index.ts` », pas « déployé et joignable » ; (b) compte superadmin non crawlé (2FA) : « UI non vérifiée en superadmin » pour les écrans réservés.
+
+Constat qui pèse sur presque toutes les lignes : `apps/client` et `apps/driver` sont des coquilles vides (voir la section finale « État des apps client et livreur »). Toute règle « côté client » ou « côté livreur » (saisie du pourboire, code de retrait, client absent, acceptation d'une course, réclamation avec photo, code de parrainage, choix de langue…) n'a donc aucun consommateur. Les statuts ci-dessous jugent le serveur et le back-office ; la colonne « Preuve » signale quand seule l'application manquante empêche l'effet.
+
+---
+
+# VOLET 1 — Les 36 réponses du questionnaire
+
+## Modèle économique (questions 1 à 6)
+
+| # | Question | Réponse client | Statut | Où dans le code | Preuve |
+|---|---|---|---|---|---|
+| 1 | Qui encaisse l'argent ? | Tout passe par GoLink (Stripe), puis reversement au commerce commission déduite. | PARTIEL | Encaissement : `functions/src/orders/payment.ts` `authorizePayment` (PaymentIntent sur le compte plateforme, capture différée à l'acceptation, aucun `transfer_data`). Reversement : `finance/argent/settlement.ts` (`onOrderSettled` écrit les écritures `ledgerEntries` commerce net de commission), `finance/argent/payouts.ts` (`buildPayouts` 02:30, `executePayouts` 09:00, `executeOne` → `stripe.transfers.create` vers le compte connecté), `payments/connect.ts` (`createConnectAccount*`, réservé aux commerces) | Le flux « GoLink encaisse puis reverse commission déduite » est réel pour les commerces. Limites : (1) reversements aux livreurs impossibles en réel : aucun code ne crée `driverPrivate.stripeAccountId`, l'app livreur n'existe pas (G4 §15) ; (2) `currency: 'eur'` codé en dur dans `payment.ts` et `payouts.ts` : DZD/MAD/TND impossibles ; (3) `executePayouts` ne traite que `status == 'scheduled'` : un reversement `failed` n'est jamais rejoué automatiquement (`payouts.ts` ~l. 419) et les documents `seed`/`test` sont sautés ; (4) le webhook Stripe ne gère que `account.updated` et 4 événements `payment_intent.*` (`payments/webhook.ts` l. 80-92) : ni `charge.refunded`, ni litige, ni `transfer.*`/`payout.*`. Reversements de démonstration non exécutés (aucun `payout_statement` dans `notificationLogs`). |
+| 2 | Commission sur quel montant ? | Prix des plats payé par le client, TTC, hors livraison et hors pourboires. | COMPLET | `packages/shared/src/pricing/settlement.ts` l. 145-146 (`commissionBase` = sous-total articles TTC après remise financée par le commerce), `countries/{id}.pricing.commission.base = subtotal_after_restaurant_discount` | Vérifié en base (FR) et dans G4 §15 (« Répartition par commande »). Frais de livraison, de service et pourboire exclus de l'assiette. |
+| 3 | Commission réduite ? | Oui : réduite si le commerce livre lui-même, encore plus basse en retrait ; taux à définir dans le super admin. | PARTIEL | `orders/place.ts` l. 413-422 (`modeKey` : `platformDeliveryBps` / `restaurantDeliveryBps` / `pickupBps`), `resolveCommissionBps`, `finance/argent/subscriptions.ts` `updatePlan`, `updateCommissionRule`, `admin/acteurs/commercial.ts` `updateCommercialTerms` | Les 3 taux existent et sont appliqués par formule et par commerce (négocié, avec échéance). Défauts (G4 §17) : chaque formule porte ses 3 taux (30 % / 15 % / 12 % identiques sur `basic`, `pro`, `premium` en base), donc le taux de formule masque les barèmes pays et ville (`cityBps` est toujours nul) ; le mode de facturation `commission`/`subscription`/`hybrid` n'est pas transmis au calcul à la commande. 30/15/12 sont des valeurs d'amorçage (`packages/shared/src/pricing/defaults.ts`), non décidées par le client. |
+| 4 | Frais de service client ? | À définir dans le super admin (défaut 0). | COMPLET | `countries/{id}.pricing.serviceFee` (`enabled:false, rateBps:0`, en base), `platform/markets.ts` `updateCountry` section `fees` (motif, historique, audit), lecture `orders/context.ts`/`quote.ts` | Paramètre par pays seulement (pas de surcharge ville/formule/commerce, la hiérarchie annoncée par DECISIONS_CLIENT n'est pas complète). Non affiché au client (app absente). |
+| 5 | Frais d'inscription commerce ? | Gratuit. | COMPLET | `packages/shared/src/pricing/decisions.ts` l. 38 (`merchantSignupFeeCents: 0`) | Aucun code ne facture d'inscription (recherche `registrationFee|signupFee` : seul `decisions.ts`). |
+| 6 | Frais bancaires ? | Déduits du reversement du commerce. | COMPLET (avec réserve) | `settlement.ts` l. 164-185 (`config.payment.payer === 'restaurant'`, `paymentFeeCents`), `settings.ts` (`updateCountryPayments`, `payer`) | Ligne « frais de paiement » dans la répartition et le relevé (`ui-finance/finance_repartition.json`). Réserve : le frais est **calculé** par un barème paramétré (`percentBps` + `fixedCents`, repli 1,5 % + 0,25 €), pas lu sur les frais réels Stripe : aucun rapprochement (`balance_transaction` absent de `functions/src`). Payeur réglable par pays, pas par commerce. |
+
+## Abonnements (questions 7 à 11)
+
+| # | Question | Réponse client | Statut | Où dans le code | Preuve |
+|---|---|---|---|---|---|
+| 7 | Prix des formules | Rien pour l'instant (0), mais possibilité de les saisir. | COMPLET | `finance/argent/subscriptions.ts` `updatePlan` (`plans.edit`, motif, audit sensible), `apps/admin/src/features/abonnements/PlansPage.tsx` | 3 formules à 0 € en base ; éditeur complet (prix mensuel/annuel). `ui-finance/abonnements_formules.json`. |
+| 8 | Contenu des formules | 0, mais possibilité d'en mettre. | PARTIEL | `updatePlan` (`features`, `limits`), `PlansPage.tsx` | Fonctionnalités et limites (produits, équipe, promotions) saisissables mais aucune fonction ni règle ne les fait respecter (recherche `maxProducts|maxStaff|maxPromotions` hors éditeur : 0 résultat ; G4 §17). |
+| 9 | Engagement | 0, mais possibilité d'en mettre. | PARTIEL | `updatePlan` (champ engagement), `manageSubscription` | Le champ est stocké ; aucun mécanisme d'engagement, de renouvellement ni de remise annuelle n'est exécuté (G4 §17 : `currentPeriodEnd` jamais avancé). |
+| 10 | Essai gratuit | 0, mais possibilité d'en mettre (durée, carte). | PARTIEL | `updatePlan` (`trialDays`, `cardRequired`), `manageSubscription` `extend_trial`, `restaurant/plan.ts` `changePlan` | Durée et carte requise stockées ; prolongation manuelle possible ; aucune conversion automatique d'un essai en abonnement payant, aucun prélèvement (pas de Stripe Billing, `stripePriceId` nul). |
+| 11 | Délai avant suspension pour impayé | 0, mais possibilité d'en mettre. | FAUX | `subscriptions.ts` `runDunning` (08:00, exporté), `dunningStep`, `attemptCharge` l. ~260 ; `gracePeriodDays` de la formule | Le délai est bien lu depuis la formule, mais la chaîne ne peut pas se déclencher : `attemptCharge` est un simulacre qui échoue toujours, et aucune fonction ne place un abonnement en `past_due` (seuls les 7 abonnements de démonstration le sont). Restrictions de fonctionnalités journalisées mais non appliquées (G4 §17). |
+
+## Restaurants et commerces (questions 12 à 19)
+
+| # | Question | Réponse client | Statut | Où dans le code | Preuve |
+|---|---|---|---|---|---|
+| 12 | Seulement des restaurants ? | Tous les commerces. | PARTIEL | `packages/shared/src/constants/enums.ts` l. 38 (`MERCHANT_TYPES` : restaurant, épicerie, boulangerie, fleuriste, pharmacie, autre), `admin/acteurs/commercial.ts` (`merchantType`), `packages/shared/src/models/menu.ts` (`saleUnit` unité/poids/variable, `pricePerKgCents`, `variablePriceMaxCents`), `pricing/quote.ts` l. 27-28, 214 | Type de commerce et modèle produit au poids/prix variable existent, et le moteur de devis sait calculer au poids. Mais `orders/place.ts` construit les lignes de devis sans `saleUnit`, `pricePerKgCents` ni `weightGrams` (l. 375 ; recherche dans `functions/src` : 0 occurrence) : une commande au poids ou à prix variable n'est pas traitée à la commande. Catégories de TVA figées à 4 (`VAT_CATEGORIES` : alimentation, boisson, alcool, épicerie ; G4 §16) alors que pharmacie, fleuriste, etc. en demandent d'autres (`vatRateBpsOverride` par produit contourne). Vocabulaire encore « restaurants » dans l'admin. |
+| 13 | Boutique propre à chaque restaurant ? | Non. | COMPLET | — | Aucune vitrine ni lien de commande par commerce dans le code (décision : uniquement l'app GoLink). |
+| 14 | Validation des restaurants | Automatiquement si possible, via super admin. | COMPLET (corrigé cdc-fix-b) | `admin/acteurs/applications.ts` `reviewRestaurantApplication` (manuel), `restaurant/documents.ts` `onDocumentUploaded` (passe seulement « documents manquants » → « en attente ») | Recherche `autoApprov|autoValidat|validation automatique` dans `functions/`, `packages/shared`, `apps/admin` : 0 résultat. Aucune règle activable, aucun paramètre (G2 §5). Aggravant : `onDocumentUploaded` exige `kbis` (`documents.ts` l. 27) alors que l'avis SIRET est accepté ailleurs ; et aucun écran d'inscription (`grep restaurantSignup apps/` = 0). |
+| 15 | Qui fixe frais de livraison et minimum ? | Le commerce, dans son back-office, sur sa zone de livraison. | COMPLET | `functions/src/restaurant/zones.ts` `saveDeliveryZone` (frais, minimum, rayon/polygone, plafond 100 €), `orders/place.ts` l. 360-382 (`merchantZoneTerms` prioritaires sur les paliers de la zone plateforme), `apps/restaurant` (rubrique zones) | Conforme à la décision. Bornes (frais ≤ 100 €, corbeille 30 j) codées en dur. |
+| 16 | Prix identiques à la salle ? | Oui, autorisé de vendre plus cher. | COMPLET | — | Aucune contrainte de prix dans le code (seul un signalement de prix « aberrant » dans `menu/quality.ts`, non bloquant). |
+| 17 | Promos créées par les restaurants | Oui, sans limite. | PARTIEL | `marketing/restaurant/promotions.ts`, `marketing/platform/settings.ts` `updateGrowthSettings` (`capsEnabled`, `restaurantRequiresReview`), `settings/promotions` | En base : `capsEnabled:false`, `restaurantRequiresReview:false` (conforme). Réserves : (1) `restaurant/promotions.ts` `DEFAULT_SETTINGS` a `capsEnabled:true, restaurantRequiresReview:true` : si le document disparaît, l'app commerce repasse en mode plafonné, contraire à la décision (G5) ; (2) `placeOrder` n'applique une promotion que si un `promoCode` est saisi (`place.ts` l. 346) : les offres « Automatique » (12 sur 17 en base) ne sont jamais appliquées ; ciblage « inactifs »/« fidèles » non contrôlé ; quota jamais rendu à l'annulation. |
+| 18 | Seuils de suspension | 15 j sans commande → e-mail d'alerte automatique ; 30 j après → retrait. | COMPLET (corrigé cdc-fix-b) | Réglage : `admin/operations/rules.ts` l. 114 (`merchantInactivity`), `OrderRulesPage.tsx` ; fonction pure `packages/shared/src/pricing/policies.ts` l. 282 `merchantInactivityAction` | Le réglage existe (15/30 en base, `settings/orderRules`) mais **aucun code ne l'applique** : `merchantInactivity` n'est lu par aucune fonction, `merchantInactivityAction` n'a aucun appelant, aucun `onSchedule` n'utilise `restaurants.lastOrderAt`. Le gabarit `restaurant_inactivity_warning` n'a aucun émetteur (G5 §20). Pas de suppression/corbeille de commerce non plus (aucune fonction `deleteRestaurant`). L'écran laisse croire que la règle est active (G3 §9). |
+| 19 | Mise en avant payante | Oui. | PARTIEL | `admin/experience/display.ts` (`bookSponsoredPlacement`, `cancelSponsoredPlacement`, `syncSponsoredPlacements`), `finance/argent/invoices.ts`, catalogue `sponsoredOffers` | Vente, capacité, crédit publicitaire, facturation mensuelle et audit réels. Manques : le classement n'est appliqué nulle part (`rankingScore` initialisé à 0, jamais recalculé) et la mention « Sponsorisé » n'est imposée dans aucune app ; `impressions`/`clicks`/`orders` jamais incrémentés ; le commerce ne peut pas acheter lui-même (G3 §11). |
+
+## Livraison et livreurs (questions 20 à 26)
+
+| # | Question | Réponse client | Statut | Où dans le code | Preuve |
+|---|---|---|---|---|---|
+| 20 | Rémunération des livreurs | < 2 km fixe ; au-delà au km ; bonus heures de pointe ; paramétrable par ville. | PARTIEL | `packages/shared/src/pricing/settlement.ts` `computeCourierPay` (seuil `DEFAULT_COURIER_FLAT_THRESHOLD_METERS = 2000`, forfait, prix/km, `peakBonusCents`), `admin/operations/rules.ts` `updateCourierPay` (pays/ville, motif, historique), `finance/argent/settlement.ts` l. 95-104 | Forfait/km/seuil réglables par ville et appliqués au règlement. Défauts (G2 §6) : le bonus de pointe `peakBonusCents` n'est appliqué que si `isPeak` est passé, or aucun appelant serveur ne le passe (recherche `isPeak` dans `functions/` : 0) ; seul le bonus des règles de pointe des zones (`courierSurgeBonusCents`) est versé ; l'écran « Gains » lit `driverEarnings`, que rien n'alimente (source réelle : `ledgerEntries` compte `driver`) ; reversements livreurs impossibles (voir n°1). |
+| 21 | Validation des livreurs | À la main, sans rendez-vous, tout en ligne à l'inscription. | PARTIEL | `admin/operations/drivers.ts` `reviewDriverApplication`, `reviewDriverDocument`, `apps/admin/src/features/livreurs/ApplicationsPage.tsx` | File de validation manuelle réelle et auditée (`ui-metz/livreurs_validation.json` : 2 dossiers). L'inscription en ligne n'existe pas : aucune fonction de création de livreur plateforme, `apps/driver` vide (G2 §6). Les 48 livreurs en base sont du seed. |
+| 22 | Véhicules acceptés | Tous, sans être regardant. | PARTIEL | `packages/shared/src/models/operations.ts` `driverDocumentRequirements` (permis + carte grise seulement si motorisé) | Règles serveur/admin conformes (aucune exigence sur le type de véhicule). Aucun écran de déclaration du véhicule (app livreur absente). |
+| 23 | Distance maximale de livraison | Choisie par le livreur dans son app. | PARTIEL | `orders/dispatch-advanced.ts` l. 121 (`driver.maxDistanceMeters` pris en compte), `packages/shared/src/models/drivers.ts` l. 34 | Le dispatch exclut un livreur au-delà de sa distance ; aucun écran/fonction pour la saisir (app livreur absente). |
+| 24 | Délai d'acceptation | 5 min puis annulation + remboursement ; pause auto après plusieurs commandes manquées ; paramétrable. | COMPLET | `orders/scheduled.ts` `enforceAcceptanceTimeout` (chaque minute) → `cancelBySystem(… 'restaurant_timeout')` (`orders/cancel.ts`) ; `orders/place.ts` l. 568 (`acceptDeadline`) ; `orders/triggers.ts` `onOrderWritten` (`countMissedOrder`, seuil `rules.autoPause`) ; `settings/orderRules` (300 s, 3 d'affilée) | Chaîne vérifiée code + base (G3 §9) : 5 annulations `restaurant_timeout`, compteur remis à zéro à l'acceptation. Réserves mineures : cadence 1 min, `limit(50)`, action forcée « annuler et rembourser ». |
+| 25 | Client absent | Le livreur attend 10 min, appelle via l'app ; sans réponse, clôture sans remboursement, livreur et commerce payés. | COMPLET (corrigé cdc-fix-b) | Réglage : `OrderRulesPage.tsx`, `rules.customerAbsent` ; application : aucune | `driverWaitMinutes`, `payDriver`, `payRestaurant`, `callViaApp` ne sont lus par aucune fonction ; `order.closedAs = 'customer_absent'` n'est jamais écrit (lu seulement par `settlement.ts` l. 52 et l'admin) ; seul chemin : annulation manuelle motif `customer_absent` (`cancel.ts` l. 104) qui rend la commande `cancelled`, non comptabilisée : ni livreur ni commerce payés (contraire à la décision). Aucun point d'entrée livreur, aucun minuteur. |
+| 26 | Commandes à l'avance | Oui. | COMPLET (serveur) | `orders/place.ts` l. 231-236 (`rules.scheduledOrders`), `orders/scheduled.ts` `releaseScheduled` | Règle lue par ville ; transmission au commerce planifiée. 0 commande programmée en base (chemin non observé) ; app client absente. |
+
+## Clients (questions 27 à 32)
+
+| # | Question | Réponse client | Statut | Où dans le code | Preuve |
+|---|---|---|---|---|---|
+| 27 | Pourboires | Oui, pour le livreur. | PARTIEL | `orders/place.ts` l. 88, 385, 513 (`tipCents`), `packages/shared/src/pricing/quote.ts` l. 245-252, `finance/argent/settlement.ts` l. 134, 144 (écriture `courier_tip`) | 100 % au livreur, hors assiette de commission, ligne séparée sur relevé et reçu : conforme. Défauts (G4 §14) : deux jeux de réglages ; `settings/payments.tips` (édité par l'écran) n'est lu par aucune fonction, seul `countries.pricing.tips` agit ; plafond serveur `max(5000)` codé en dur ; pas d'app pour proposer les montants. |
+| 28 | Titres-restaurant | Non. | COMPLET | `packages/shared/src/pricing/policies.ts` l. 232 (`DISABLED_PAYMENT_METHODS`), `restaurant/settings.ts` l. 465 (`meal_voucher: false` forcé), `finance/argent/settings.ts` | Désactivé et verrouillé côté serveur. |
+| 29 | Fidélité | (réponse vide : « points, cashback, ou rien au lancement ? ») | PARTIEL | `settings/loyalty.enabled = false` (base), `marketing/platform/settings.ts` (section `loyalty`), `featureFlags.loyalty = false`, `admin/features` | Réponse vide traitée par DECISIONS_CLIENT : « non définie au lancement, programme paramétrable, éteint par défaut » : conforme (éteint en base). Le paramétrage complet existe (gain, échange, expiration, bienvenue) ; **aucun moteur** (aucun crédit de points à la livraison, aucun échange à la commande, aucune expiration ; recherche `loyaltyAccounts` dans `functions/src` : 0). Compatible avec le lancement tant que le programme reste éteint ; le drapeau `loyalty` n'est lu nulle part (G6 §24). |
+| 30 | Parrainage | Un commerce qui fait inscrire un autre commerce gagne 100 € de budget publicitaire. | PARTIEL | `marketing/platform/referrals.ts` `rewardRestaurant` (10 000 c, `ad_credit`, incrément `private/commercial.adCreditCents`), `admin/experience/display.ts` l. 181-184 (débit du crédit à l'achat d'un emplacement), `settings/referral` | Récompense automatique et consommation du crédit réelles (montant paramétrable). Mais rien ne **crée** le lien de parrainage ni le document `referrals` : aucun `set/add` hors seed, `functions/src/core/signup.ts` ne lit aucun code, `apps/restaurant/src` ne mentionne pas le parrainage. La décision est paramétrée mais inatteignable. Portefeuille jamais consommé à la commande (`walletAppliedCents: 0`, `place.ts` l. 514) : la prime client n'est pas dépensable. |
+| 31 | Preuve pour une réclamation | Photo obligatoire, avec détection automatique. | COMPLET (corrigé cdc-fix-b) | Réglage inerte : `rules.claimWindowHours` (`operations/rules.ts` l. 136) ; `orders/report.ts` (signalement du **commerce**, `attachments: []` l. 84) | Aucune fonction de réclamation côté client, aucune exigence de photo côté serveur, aucun contrôle automatique (doublon, date, cohérence), `claimWindowHours` non lu (G3 §9). |
+| 32 | Offre entreprises | Non. | COMPLET | — | Aucune fonction B2B (comptes entreprise, commandes de groupe) dans le code. |
+
+## Organisation (questions 33 à 36)
+
+| # | Question | Réponse client | Statut | Où dans le code | Preuve |
+|---|---|---|---|---|---|
+| 33 | Qui fait le support ? | Le super admin (équipe). | PARTIEL | `admin/experience/tickets.ts`, `sla.ts` `enforceTicketSla` (15 min), `apps/admin/src/features/support/*` | Outil de support complet côté équipe (tickets, SLA, escalade, réponses types, chat agent). Les clients et livreurs ne peuvent ni ouvrir de ticket ni de chat (règles et apps absentes) ; seuls agents et commerces créent des tickets (G3 §13). |
+| 34 | Horaires du support | 24/7. | PARTIEL | idem | Aucun planning d'astreinte ni de couverture dans l'outil ; l'escalade automatique n'assigne personne (`escalatedTo: null`, 21 tickets escaladés en attente) ; l'alerte reste dans l'interface (pas de push/e-mail hors connexion). Recherche `24/7|astreinte|coverage` : 0 dans le code. Le 24/7 relève de l'organisation, mais l'outil n'offre aucun moyen de le garantir. |
+| 35 | Langues | fr / en / arabe. | PARTIEL | `docs/I18N.md`, `packages/web/src/i18n/*`, `apps/admin/src/i18n/{fr,en,ar}/{nav,auth,accueil}.json`, `apps/restaurant/src/i18n/*` | Moteur i18n, RTL, sélecteur et 3 langues **seulement pour** shell, navigation, accueil, connexion et statuts. Admin : 10 fichiers sur ~179 écrans de `features/` utilisent `useTranslation` ; les pages de rubriques restent en français (doc : « à traduire module par module »). Restaurant : 6 sur 182. E-mails, notifications, exports et messages d'erreur des fonctions : français (`lib/emails.ts` sans paramètre de langue). Contenus éditables (accueil, pages, légal, fermeture d'urgence, gabarits) en `{ fr }` seulement (G3, G5). App client/livreur : absentes. |
+| 36 | Pays de lancement | France, Belgique, Luxembourg, Algérie, Maroc, Tunisie (TVA/règles locales). | PARTIEL | `countries` (6 docs : FR, LU actifs ; BE, DZ, MA, TN inactifs), `platform/markets.ts` (`updateCountry`, `setCountryActive`), `finance/argent/settings.ts` `updateCountryVat`, `pricing.config.vat` | Les 6 marchés existent (devise, langues, fuseau, TVA par catégorie, entité de facturation) et l'ouverture est pilotée. Défauts : `restaurantSignup` n'accepte que `FR`/`LU` (`signup.ts` l. 52) et les contrats partenaires ne sont publiés que pour FR/LU ; devise `EUR`/`'eur'` codée en dur (commande, paiement, reversement, factures, grand livre) ; Stripe seul : aucun prestataire local pour DZ/MA/TN (`stripeAvailable:false`) ; entités émettrices « à compléter » pour BE/DZ/MA/TN ; mentions légales françaises (293 B) sur les relevés livreurs de tous les pays ; pièces livreur propres à la France ; aucune création de pays/ville par l'interface (G6 §23) ; `city.active` non vérifié à la commande (G3 §10). |
+
+## Bilan des 36 réponses
+
+Le statut COMPLET inclut les réponses « sans objet » (n° 13, 16, 32 : rien à construire) et les réponses complètes côté serveur dont seule l'app client manque (n° 26).
+
+| Statut | Nombre | Numéros |
+|---|---|---|
+| COMPLET | 12 | 2, 4, 5, 6, 7, 13, 15, 16, 24, 26, 28, 32 |
+| PARTIEL | 19 | 1, 3, 8, 9, 10, 12, 17, 19, 20, 21, 22, 23, 27, 29, 30, 33, 34, 35, 36 |
+| ABSENT | 2 | 14, 31 |
+| FAUX | 3 | 11, 18, 25 |
+| Total | 36 | |
+
+Réponses les plus critiques : n° 14 (validation automatique), n° 18 (inactivité 15/30 j), n° 25 (client absent), n° 31 (réclamation avec photo), n° 11 (impayés), n° 30 (parrainage inatteignable), n° 1 (reversement livreurs et multi-devises), n° 3 (barèmes pays/ville neutralisés).
+
+## Annexe du cahier (lignes 727 à 757) : choix à confirmer
+
+L'annexe compte **8** questions (le brief en annonce 7) : livreurs, commission par défaut, qui paie les remboursements, rythme des reversements, espèces, retrait sur place, alcool, ville(s) de lancement. Réponses couvertes par `docs/DECISIONS_CLIENT.md`.
+
+| # | Question de l'annexe | Réponse retenue (DECISIONS_CLIENT) | Statut | Où dans le code | Preuve |
+|---|---|---|---|---|---|
+| A1 | Qui sont les livreurs ? | Les deux : plateforme (`platform`) et propres aux commerces (`restaurant`, salariés liés à une fiche employé RH). | PARTIEL | `packages/shared/src/models/drivers.ts` (`type`), `restaurant/couriers.ts` (`inviteOwnCourier`, `updateCourier`), `orders/dispatch*.ts` | Deux types gérés (règles de pièces, exclusion du dispatch plateforme, espèces). 34 plateforme + 3 commerce actifs en base. Lien avec la fiche employé RH non vérifié (G2) ; aucune app livreur pour les uns ni les autres. |
+| A2 | Commission par défaut ? Varie selon la formule ? | Trois taux (livraison GoLink / livreur propre / retrait), à définir dans le super admin ; formules vides à 0. | PARTIEL | voir n° 3 | Valeurs 30/15/12 % d'amorçage du développeur (identiques sur les 3 formules), non tranchées par le client ; barèmes pays/ville inopérants. |
+| A3 | Qui paie les remboursements ? | Le commerce, dans tous les cas ; imputation paramétrable, déduite du prochain reversement. | COMPLET | `settings/orderRules.refundLiability` (14 causes à 100 % commerce, vérifié en base), `packages/shared/src/pricing/policies.ts` `allocateRefund`, `finance/argent/settlement.ts` `onRefundProcessed` (écriture `refund_charge`) | Conforme (G3 §9, G4 §14). Pas de retenue pour une commande annulée avant livraison (rien n'a été versé). |
+| A4 | Rythme des reversements ? | Paramétrable : hebdomadaire / 15 jours / mensuel, plateforme + surcharge commerce. | PARTIEL | `finance/argent/payouts.ts` (`loadSchedule`, `isPayoutDay`), `updateFinanceSettings` doc `payouts`, `updateCommercialTerms` (`payoutFrequency`) | Calendrier réel et exécuté automatiquement chaque nuit. Le jour du reversement mensuel est fixé au 1er, la référence des semaines paires est la constante `2026-01-05` (G4 §15) ; échecs non rejoués ; rythme livreurs sans compte Stripe possible. |
+| A5 | Espèces acceptées ? | Uniquement si livraison par un livreur salarié du commerce. | PARTIEL | `pricing/policies.ts` `isCashAllowed`, `orders/place.ts` l. 404, `restaurant/config-context.ts` l. 128-135 | La règle de décision est appliquée à la commande et à la configuration du commerce. Le suivi des espèces détenues est FAUX (G4 §14) : `driverPrivate.cashBalanceCents` jamais incrémenté, plafond jamais appliqué, modèle « le livreur remet à GoLink » contraire à la décision. |
+| A6 | Retrait sur place ? | Oui, avec code. | COMPLET (serveur) | `orders/place.ts` l. 481 (`pickupCode` à 4 chiffres généré pour tout retrait), `orders/transitions.ts` `confirmPickup` (code vérifié à la remise, événement `pickup_code_verified`) | Seuil `HANDOVER_CODE_THRESHOLD_CENTS = 6000` (code aussi exigé en livraison au-delà de 60 €) codé en dur. Le client ne voit pas son code (app absente). |
+| A7 | Alcool ? | Interdit, à empêcher (détection par mots-clés, contrôle qualité, fonctionnalité verrouillée). | COMPLET | `firebase/rules/restaurants.rules` (`productWithoutAlcohol()`), `orders/place.ts` l. 300 `checkProductAlcohol`, `menu/quality.ts` `onProductWritten`, `orders/context.ts` l. 75 (verrou `alcohol_sales`) | Vérifié à trois niveaux (G3 §9). Réserves : la règle Firestore `featureFlags` autorise l'écriture directe sans tester `locked` (G6 §24) ; mots-clés en français et anglais seulement. |
+| A8 | Ville(s) de lancement ? | Ville par ville : seules les villes actives sont visibles et opérables. | PARTIEL | `admin/operations/zones.ts` `setCityActive`, `saveCity` | Activation/désactivation auditée. `orders/place.ts` ne vérifie jamais `city.active` (Thionville inactive possède une zone active ; G3 §10) : l'exigence n'est garantie que par le statut des commerces. |
+
+Bilan annexe : 3 COMPLET (A3, A6, A7) / 5 PARTIEL (A1, A2, A4, A5, A8) / 0 ABSENT / 0 FAUX.
+
+---
+
+# VOLET 2 — Principes transverses du cahier (lignes 18 à 28)
+
+## (a) « Tout est automatique par défaut »
+
+### a.1 Inventaire des tâches planifiées (`onSchedule`) : 29, toutes exportées
+
+Vérifié : chaque nom ci-dessous est présent dans le `index.ts` de son domaine, remonté par `functions/src/index.ts` (`export *` de `core`, `restaurant`, `orders`, `menu`, `finance`, `marketing`, `messaging`, `hr`, `admin`, `platform`, `payments`, `notifications`). Fuseau `Europe/Paris` sauf mention.
+
+| Tâche | Fichier | Périodicité | Rôle |
+|---|---|---|---|
+| `enforceAcceptanceTimeout` | `orders/scheduled.ts` | chaque minute | annule et rembourse les commandes non acceptées (5 min), libère les commandes programmées (`releaseScheduled`), expire les paiements en attente (20 min) |
+| `resumePausedRestaurants` | `restaurant/settings-sync.ts` | 5 min | fin des pauses de commerce |
+| `advanceDispatchOffers` | `admin/operations/dispatch.ts` | chaque minute | relance des propositions de course expirées, alerte « course sans livreur » |
+| `computeZoneLive` | `admin/operations/live.ts` | chaque minute | chiffres par zone, majoration automatique, fin des fermetures d'urgence, fin des sanctions échues |
+| `aggregatePlatformStats` | `admin/pilotage/platform-stats.ts` | chaque minute | agrégats du tableau de bord (file `statsQueue`) |
+| `detectAnomalies` | `admin/pilotage/anomalies.ts` | 15 min | alertes par exception, file « à traiter », échantillon livreurs en ligne |
+| `enforceTicketSla` | `admin/experience/sla.ts` | 15 min | escalade automatique (45 min sans réponse), marquage des dépassements, fermeture des tickets résolus |
+| `sendCampaign` | `marketing/platform/campaigns.ts` | 5 min | envoi des campagnes programmées (mode essai tant que `CAMPAIGNS_LIVE` absent) |
+| `dispatchScheduledCampaigns` | `marketing/restaurant/campaigns.ts` | 5 min | campagnes des commerces |
+| `healthCheck` | `platform/health.ts` | 10 min | sondes des 11 services |
+| `liftExpiredSuspensions` | `admin/acteurs/status.ts` | 60 min | réactivation à l'échéance |
+| `detectSecurityAnomalies` | `platform/security.ts` | 60 min | remboursements en série par agent |
+| `syncSponsoredPlacements` | `admin/experience/display.ts` | horaire (:05) | démarrage/fin des emplacements payants |
+| `runScheduledReports` | `admin/pilotage/reports.ts` | horaire (:05) | rapports par e-mail (quotidien/hebdomadaire/mensuel) |
+| `applyPendingPlanChanges` | `restaurant/plan.ts` | 00:15 | descentes de formule programmées |
+| `applyScheduledCancellations` | `finance/argent/subscriptions.ts` | 00:20 | résiliations en fin de période |
+| `scheduledFirestoreBackup` | `platform/backups.ts` | 02:00 | export Firestore vers un bucket |
+| `buildPayouts` | `finance/argent/payouts.ts` | 02:30 | construction des reversements (commerces et livreurs) |
+| `refreshPlatformStats` | `admin/pilotage/platform-stats.ts` | 03:30 | recalcul de nuit des statistiques |
+| `detectFraudSignals` | `platform/fraud.ts` | 03:30 | dossiers de fraude (3 détecteurs sur 4 inopérants, G7) |
+| `anonymizeExpiredData` | `platform/gdpr.ts` | 04:00 | anonymisation par durée de conservation (inactive : `autoAnonymize` non posé) |
+| `computeRestaurantScores` | `admin/acteurs/quality.ts` | 04:15 | score de qualité des commerces |
+| `detectRatingDrops` | `admin/experience/reviews.ts` | 06:15 | suivi des notes en baisse |
+| `runDriverCompliance` | `admin/operations/live.ts` | 06:10 | pièces livreurs, contrôles d'identité aléatoires |
+| `checkDocumentExpiry` | `admin/acteurs/applications.ts` | 06:30 | pièces commerces (relance J-30/J-7, blocage) |
+| `runDunning` | `finance/argent/subscriptions.ts` | 08:00 | relances d'impayés (chaîne non déclenchable, G4) |
+| `prospectFollowUpReminders` | `marketing/platform/crm.ts` | 08:00 (lun-sam) | rappels de relance commerciale |
+| `executePayouts` | `finance/argent/payouts.ts` | 09:00 | virements Stripe des reversements `scheduled` |
+| `generateMonthlyInvoices` | `finance/argent/invoices.ts` | 1er du mois, 05:00 | factures mensuelles aux commerces |
+
+### a.2 Inventaire des déclencheurs de documents et d'authentification
+
+| Déclencheur | Fichier | Sur quoi | Rôle |
+|---|---|---|---|
+| `onOrderWritten` | `orders/triggers.ts` | `orders/{id}` | agrégats du commerce (`dailyStats`), compteur de commandes manquées et pause automatique, drapeaux de retard |
+| `onOrderWrittenPlatformStats` | `admin/pilotage/platform-stats.ts` | `orders/{id}` | file d'agrégation des statistiques plateforme |
+| `onOrderSettled` | `finance/argent/settlement.ts` | `orders/{id}` | répartition financière, grand livre, reçu client |
+| `onRefundProcessed` | `finance/argent/settlement.ts` | `refunds/{id}` | imputation au commerce/livreur, avoir automatique |
+| `onFirstOrderReferral` | `marketing/platform/referrals.ts` | `orders/{id}` | récompense de parrainage à la première livraison |
+| `onOrderAutoMessages` | `messaging/restaurant/auto-messages.ts` | `orders/{id}` (mise à jour) | messages automatiques de conversation du commerce (gabarits du commerce, pas ceux de la plateforme) |
+| `onReviewCreated` | `admin/experience/reviews.ts` | `reviews/{id}` | filtre automatique des insultes, recalcul des notes |
+| `onReviewAutoReply` | `messaging/restaurant/auto-messages.ts` | `reviews/{id}` | réponse automatique du commerce |
+| `onProductWritten` | `menu/quality.ts` | produits | contrôle qualité de carte, alcool, allergènes |
+| `onDocumentUploaded` | `restaurant/documents.ts` | `partnerDocuments/{id}` | dossier « documents manquants » → « en attente » (exige `kbis`) |
+| `onRestaurantSettingsWrite` | `restaurant/settings-sync.ts` | réglages du commerce | resynchronisation des modes et moyens de paiement |
+| `onDriverLocationWritten` | `admin/operations/live.ts` | `driverLocations/{id}` | zone courante du livreur |
+| `onConversationMessageCreated` | `messaging/restaurant/conversations.ts` | messages | non-lus, notifications de conversation |
+| `onAdminWrite`, `onMemberWrite`, `onAdminRoleWrite` | `core/claims-sync.ts` | `admins`, `members`, `adminRoles` | propagation des droits dans les jetons |
+| `onUserCreate` | `core/users.ts` | création d'un compte Auth (v1) | profil et rôle |
+| `onEmployeeDirectorySync`, `onMemberDirectorySync`, `onTemperatureLogCreated`, `onTaskWrite` | `hr/*` | RH / HACCP | annuaire, alertes température, tâches |
+| `stripeWebhook` | `payments/webhook.ts` | HTTP Stripe | `account.updated`, `payment_intent.succeeded / payment_failed / canceled / requires_action` seulement |
+
+Absent malgré la promesse des commentaires de règles : le déclencheur `onSettingsWrite` (historisation des réglages) cité dans `firebase/rules/platform.rules` l. 4 n'existe pas ; aucun trigger d'audit générique n'existe (G3, G6) ; `functions/src/notifications/index.ts` est vide (`export {}`).
+
+### a.3 Les automatismes du cahier, un par un
+
+Le cahier cite : inscriptions, relances, annulations, remboursements selon règles, reversements, factures.
+
+| Automatisme attendu | Trigger / tâche | Exporté | Réellement automatique ? | Constat |
+|---|---|---|---|---|
+| Inscription des restaurants (autonome + validation automatique) | `restaurantSignup` (callable) ; aucune validation auto | oui (callable) | NON | Aucun écran d'inscription (`grep restaurantSignup apps/` = 0) ; validation manuelle ; règle de validation auto absente (n° 14). |
+| Inscription des livreurs | aucune fonction | non | NON | App livreur absente ; validation manuelle par décision. |
+| Relances : pièces expirantes (J-30/J-7) | `checkDocumentExpiry`, `runDriverCompliance` | oui | OUI | Délais codés en dur ; relance de pièce livreur expirante = notification sans e-mail ; aucune relance des pièces jamais déposées. |
+| Relances : blocage automatique si pièce expirée | idem | oui | OUI | Suspension automatique et déblocage à la validation d'une nouvelle pièce. |
+| Relances : contrôle d'identité non répondu | aucune | non | NON | Une demande passe `expired` après 48 h sans conséquence (G2). |
+| Relances : abonnement impayé | `runDunning` | oui | NON (chaîne cassée) | Prélèvement simulé ; rien ne crée l'état `past_due` (G4). |
+| Relances : commerce inactif 15 j / retrait 30 j | aucune | non | NON | Réglage sans effet (n° 18). |
+| Relances : prospects | `prospectFollowUpReminders` | oui | OUI | |
+| Relances : tickets sans réponse | `enforceTicketSla` | oui | OUI | Escalade sans destinataire (`escalatedTo: null`). |
+| Relances : reversement en échec | aucune | non | NON | `executePayouts` ne reprend que `scheduled` ; un `failed` exige une action manuelle. |
+| Annulation : commande non acceptée | `enforceAcceptanceTimeout` | oui | OUI | Remboursement Stripe via `cancelBySystem`. |
+| Annulation : paiement non confirmé (3-D Secure) | `enforceAcceptanceTimeout` | oui | OUI | Délai 20 min codé en dur. |
+| Annulation : aucun livreur trouvé | `advanceDispatchOffers` (alerte seulement) | oui | NON | `dispatch_failed` est une alerte ; aucune annulation ni remboursement automatique. |
+| Annulation : client absent | aucune | non | NON | Réglage sans effet (n° 25). |
+| Pause automatique du commerce (commandes manquées) | `onOrderWritten` | oui | OUI | |
+| Remboursement selon règles : annulation client, refus, délai d'acceptation | `cancelOrder` / `cancelBySystem` + `onRefundProcessed` | oui | OUI | Imputation au commerce, déduite du reversement. |
+| Remboursement selon règles : avoir automatique sur retard | aucune (`computeLateCredit` sans appelant) | non | NON | Réglage sans effet ; retard mesuré à 43 % (tolérance 1 min non réglable, G3). |
+| Remboursement selon règles : produit indisponible (remplacement ou retrait partiel) | aucune | non | NON | `item.adjustment` jamais écrit (G3). |
+| Remboursement : avoir sur remboursement de facture | `onRefundProcessed` → `creditNoteForRefund` | oui | OUI | |
+| Reversements : construction | `buildPayouts` | oui | OUI | Commerces ; livreurs sans compte Stripe (aucun parcours de création). |
+| Reversements : exécution | `executePayouts` | oui | PARTIEL | Ignore `seed`/`test` ; `eur` uniquement ; échecs non rejoués. |
+| Reversements : relevé envoyé au commerce | `sendStatementEmail` dans `executeOne` | oui | PARTIEL | Envoyé seulement après un virement réussi, sans PDF ; non prouvé en réel. |
+| Factures : reçu client par commande | `onOrderSettled` → `issueReceipt` | oui | OUI | 1 reçu en base pour 12 888 commandes : pas de rattrapage. |
+| Factures : facture mensuelle commerce | `generateMonthlyInvoices` | oui | PARTIEL | Générée, mais aucun e-mail d'envoi au commerce ; mention « réglé par compensation » fausse pour abonnement et mises en avant. |
+| Factures : relevé mensuel livreur (autofacturation) | `generateMonthlyInvoices` | oui | OUI | Mention française 293 B pour tous les pays. |
+| Factures : avoirs | `onRefundProcessed` | oui | OUI | |
+| Déclarations : DAC7 annuel, export comptable mensuel | `generateTaxReport`, `exportAccounting` (callables) | oui | NON | Manuel ; aucun `onSchedule` (G4 §16). |
+| Notifications aux clients (confirmation, livreur en route, livrée, remboursée) | aucune (`notifications/index.ts` vide) | non | NON | 18 gabarits `messageTemplates` en base, un seul lu (`referral_rewarded`). |
+| Notifications aux commerces/livreurs (validation, refus) | e-mails codés dans `lib/emails.ts` | oui (en ligne) | PARTIEL | Envoyés à la décision ; textes non modifiables, français seul. |
+| Rapports internes par e-mail | `runScheduledReports` | oui | PARTIEL | Statut `sent` posé même si aucun e-mail n'est parti (G1 §4). |
+| Anonymisation par durée de conservation | `anonymizeExpiredData` | oui | NON (inactive) | Ne fait rien tant que `settings/retention.autoAnonymize` n'est pas vrai (absent en base) ; 3 durées jamais appliquées (G7). |
+| Sauvegardes | `scheduledFirestoreBackup` | oui | À PROUVER | Dépend d'un bucket et de droits IAM créés hors code ; aucune alerte en cas d'échec ; aucune restauration outillée (G7). |
+| Levée des sanctions, fermetures d'urgence, suspensions | `computeZoneLive`, `liftExpiredSuspensions` | oui | OUI | |
+| Détection de fraude | `detectFraudSignals` | oui | PARTIEL | 3 détecteurs sur champs inexistants ; décisions sans effet ; liste de blocage non appliquée (`isBlocked` sans appelant) (G7). |
+| Fin de maintenance / mise à jour forcée des apps | aucune | non | NON | Aucune app ne lit `settings/maintenance` ni `appVersions`. |
+
+Bilan (a) : 35 automatismes recensés ; 14 réellement automatiques, 6 partiels, 1 à prouver (sauvegardes), 14 absents ou inopérants (inscription autonome des commerces et des livreurs, validation des commerces, contrôle d'identité sans réponse, impayés, inactivité, relance d'un reversement échoué, annulation sans livreur, client absent, avoir de retard, produit indisponible, DAC7 et export comptable, notifications aux clients, anonymisation, maintenance et versions forcées).
+
+## (b) « Le Super Admin est alerté, il ne surveille pas »
+
+Mécanisme : `platformAlerts` (file « alertes » et file « à traiter », alimentées par `detectAnomalies` toutes les 15 min, `settings/monitoring` réglable avec motif et historique) et `securityAlerts` (`detectSecurityAnomalies`, `trackAdminSession`, exports massifs).
+
+| Élément du cahier | Statut | Constat |
+|---|---|---|
+| Restaurant qui pose problème | COMPLET | annulations et refus anormaux, seuils réglables (G1 §1). |
+| Zone sans livreurs | COMPLET | `zone_driver_shortage` ; deux paramètres différents pour la même règle (page Flotte et alerte serveur, G2). |
+| Panne | PARTIEL | `service_down` visible seulement dans l'interface ; sondes notifications et géolocalisation en proxy de la base (G7). |
+| Impayés | PARTIEL | dans la file « à traiter », pas dans les alertes ; et le passage en impayé n'existe pas (G1, G4). |
+| Reversements en échec | FAUX (classement) | l'alerte `payout_failed` va en file « alertes » alors que la carte « À traiter » la cherche en file `todo` (G1). |
+
+Défauts de fond :
+- **Aucune alerte n'est poussée hors de l'interface** : ni e-mail, ni notification, ni SMS vers les super admins pour `service_down`, `payout_failed`, `dispatch_failed`, fraude, sécurité (recherche dans `anomalies.ts` et `health.ts` : `logger.warn` seulement). Le cahier dit « alerté » : un super admin qui n'ouvre pas la console n'est jamais prévenu. Avec un support « 24/7 » (n° 34), cela rend la promesse invérifiable.
+- Alertes prévues mais jamais générées : `unusual_login` et `failed_logins` (seuil `failedLoginsPerHour` sans effet, G6), fraude (les dossiers `fraudCases` ne lèvent pas d'alerte, G7), baisse de note (`ratingWatch` hors `platformAlerts`, G3), échec de sauvegarde (G7), anomalies de retard par zone/heure (G3 §8 : surveillance planifiée limitée à annulation et refus par commerce).
+- Bruit : 21 tickets escaladés et 17 sans agent dans la file « à traiter » sans destinataire ; alertes de données de démonstration mêlées aux vraies.
+
+## (c) « Tout se fait aussi en masse »
+
+Le composant `DataTable` n'active la sélection que si `bulkActions` est fourni (`packages/ui/src/components/data-table.tsx` l. 100). Recherche des `bulkActions` dans `apps/admin/src` : 5 listes seulement.
+
+| Entité / liste | Sélection groupée | Actions | Côté serveur ? |
+|---|---|---|---|
+| Restaurants (`RestaurantsPage.tsx`) | oui | Excel, CSV, commission, formule, fonctionnalité, message, réactiver, suspendre | Oui pour 5 actions : `bulkRestaurantAction` (≤ 300, motif, audit par commerce, `bulkJobs`). L'**export** est généré dans le navigateur sans contrôle `exports.run` ni audit sûr. Le job « fonctionnalité » reste `running` en cas d'échec (3 jobs orphelins en base). |
+| Livreurs (`DriversPage.tsx`) | oui | message, selfie, sanctionner, réactiver, désactiver, export CSV | Oui : `bulkUpdateDrivers` (≤ 300), `requestIdentityChecks` (≤ 200), audit. Export CSV local non audité ; message groupé n'exige que `drivers.view`. |
+| Clients (`ClientsPage.tsx`) | oui | export, bloquer | « Bloquer » = boucle d'appels `blockCustomer` un par un depuis le navigateur (`CustomerDialogs.tsx` l. 44-46) : pas de tâche serveur, pas de suivi ; export local non audité. Pas de message groupé, ni d'avoir groupé. |
+| Tickets (`TicketsPage.tsx`) | oui | m'attribuer, retirer l'agent, marquer résolus | `assignTickets` (lot de 50, audit) ; « résolus » = appels individuels. |
+| Reversements (`PayoutsPage.tsx`) | oui | verser la sélection | boucle `executePayout` un par un dans le navigateur (chaque virement audité par `executeOne`, aucun motif) ; pas de blocage groupé ni d'annulation groupée. |
+| Commandes | non | — | Pas d'actions groupées (annulation, remboursement, réattribution) ; `dispatchOrder` est unitaire. |
+| Avis, signalements | non | — | `moderateReview`, `decideContentReport` unitaires. |
+| Promotions, annonces, prospects, factures, abonnements, zones, campagnes, motifs, modèles | non | — | Aucune sélection groupée ; `manageSubscription`, `issueCreditNote`, `setPromotionStatus` unitaires. |
+| Validation des commerces / des livreurs / des pièces | non | — | File traitée dossier par dossier (`reviewRestaurantApplication`, `reviewDriverApplication`, `reviewDocument`) : « valider les dossiers complets d'un coup » impossible. |
+| Import | oui (fichier) | `importRestaurants` (≤ 500 lignes, simulation), `importMenu` | Serveur ; 500 lignes séquentielles dans une fonction de 300 s : risque de dépassement (G2). Aucun import de livreurs, de clients, de promotions. |
+| Export | oui | `exportData` (10 entités, CSV/Excel/PDF, plafond 20 000 lignes) | Serveur, audité (`export.generated`), alerte `mass_export` ; motif exigé seulement à l'écran. |
+
+Bilan (c) : 5 listes sur environ 25 entités à liste ont des actions groupées ; seules 3 ont une action groupée réellement exécutée côté serveur (restaurants, livreurs, tickets par lots de 50). Manquent notamment : avis, commandes, promotions, factures/avoirs, abonnements, prospects, validations, reversements (blocage groupé), zones.
+
+## (d) « Toute action sensible est tracée (qui, quoi, quand, motif) »
+
+### d.1 Mécanique
+
+`writeAudit` (`functions/src/lib/audit.ts`) : acteur, action, cible, avant/après, motif, IP hachée, navigateur, drapeau `sensitive`. Règle `auditLogs` : lecture `audit.view`, `allow write: if false`. Aucune fonction ne modifie ni ne supprime une entrée (la rétention `keepAuditLogsYears` ne déclenche aucune purge). 298 entrées en base. Le motif est passé par les schémas `zReason` (≥ 3 caractères, `functions/src/lib/validation.ts`) ; il n'existe pas de contrôle central « action sensible ⇒ motif » : chaque fonction décide.
+
+### d.2 Callables administrateur : 138 fonctions recensées
+
+Périmètre lu : `functions/src/admin/**` (70 : acteurs 17, experience 21, operations 22, pilotage 10), `functions/src/platform/**` (32), `functions/src/marketing/platform/**` (13), `functions/src/finance/**` (23 : 22 dans `finance/argent` + `generateStatement`). Chaque fonction est déclarée par un wrapper (`acteursCallable`, `opsCallable`, `experienceCallable`, `pilotageCallable`, `argentCallable`, `platformCallable`, `callable`) ; recensement par script (fichier, droit exigé, présence de `writeAudit` ou d'un utilitaire d'audit, présence d'un champ de motif dans le schéma), puis contrôle manuel des cas douteux.
+
+Chiffres :
+- Avec audit : 114 sur 138 (106 appellent `writeAudit` ou un utilitaire `audit…` dans leur corps, 8 passent par une fonction utilitaire : `suspendRestaurant` et `reactivateRestaurant` via `applySuspension`, `moderateReview`, `updateFinanceSettings`, `updateCountryPayments`, `updateRestaurantPayments`, `updateCountryVat`, `executePayout` via `executeOne`).
+- Lectures ou calculs sans écriture (pas d'audit attendu) : 19 (`globalSearch`, `getPilotageOverview`, `getPilotageAnalytics`, `listOrdersAdmin`, `getOrderAnomalies`, `getFinanceOverview`, `getSalesTeam`, `getSupportAgents`, `previewDispatch`, `estimatePlatformAudience`, `runHealthCheck`, `runMonitoringNow`, `runTicketSlaNow`, `refreshRestaurantScores`, `previewRetentionRun`, `checkBackupStatus`, `getMfaStatus`, `trackAdminSession`, `getDriverFile`) ; certaines exposent des données personnelles (recherche globale, `getDriverFile` qui délivre les pièces d'identité) sans audit de consultation.
+- Sans audit alors qu'elles écrivent : 5 sur 138 : `closeSupportChat`, `respondToTicket` (trace = message du ticket, pas d'entrée d'audit), `logProspectActivity` (trace = sous-collection `activities`), `respondToOffer` (réponse d'un livreur à une course, appel réservé au livreur), `generateStatement` (relevé restaurant, lecture).
+- Motif obligatoire dans le schéma (`zReason` ou équivalent) : 61 fonctions ; motif facultatif ou conditionnel : 24 (obligatoire seulement pour certaines décisions : refus, écart, échec, suspension) ; aucun champ de motif : 33 ; sans objet (lectures) : 20.
+
+Callables sensibles sans motif exigé (à corriger en priorité) :
+
+| Fonction | Ce qu'elle fait | Risque |
+|---|---|---|
+| `importRestaurants` | crée jusqu'à 500 commerces, comptes propriétaires et e-mails d'accès | création de masse sans motif (audit présent) |
+| `executePayout`, `buildPayoutsNow` | vire de l'argent / construit les reversements à la main | mouvement d'argent sans motif |
+| `generateMonthlyInvoicesNow`, `generateTaxReport`, `exportAccounting` | émission de factures, déclarations, export comptable | numérotation légale et données financières sans motif |
+| `publishPage` (documents légaux) | publie une version des CGU/CGV, `requiresReacceptance` | document contractuel, seul un « résumé du changement » facultatif (`changeSummary`) |
+| `bookSponsoredPlacement` | vend un emplacement payant, facture ou offre | note facultative |
+| `savePlatformCampaign` | programme un envoi de masse | aucun motif |
+| `createPlatformPromotion` | crée une remise financée par la plateforme | aucun motif (audit `promotion.created`) |
+| `updateMessageTemplate`, `saveScheduledReport`, `runReportNow` | texte automatique, rapport programmé | pas de motif |
+| `exportAuditLogs`, `runManualBackup`, `receiveGdprRequest`, `regenerateRecoveryCodes` | export du journal, sauvegarde, demande RGPD, codes de secours | sensibles, sans motif |
+| `exportData` | export de données (clients, livreurs) | motif exigé seulement à l'écran (`reason: nullish` serveur, G1) |
+| `creditCustomer`, `reviewRestaurantApplication`, `reviewDriverApplication`, `reviewDriverDocument` | avoir, décision de validation | motif conditionnel : obligatoire pour refuser, facultatif pour approuver |
+
+Callables non sensibles mais qui touchent des personnes sans audit : voir le tableau ci-dessous (colonne « SANS AUDIT »).
+
+### d.3 Écritures directes des administrateurs autorisées par `firebase/rules` (contournement de l'audit et du motif)
+
+`firebase.json` déploie `firebase/firestore.rules` (consolidé) ; les fichiers `firebase/rules/*.rules` en sont les sources. Ces règles laissent un administrateur écrire depuis le navigateur, sans passer par une Cloud Function : aucun `writeAudit`, aucun motif, et pas d'historique sauf mention.
+
+| Collection | Règle (permission) | Ce qu'un admin peut faire en direct | Gravité |
+|---|---|---|---|
+| `settings/{docId}` | `write` (`settings.edit`; `security.manage` pour `security`) | modifier tout réglage plateforme : général, marque, paiements, conservation, monitoring, orderRules, support, display… sans motif, sans 2FA, sans `settingsHistory` (le trigger `onSettingsWrite` annoncé n'existe pas) | Critique |
+| `featureFlags/{key}` | `write` (`features.edit`) | allumer/éteindre une fonctionnalité, y compris `alcohol_sales` (le verrou `locked` n'est testé que par la fonction) | Critique |
+| `adminRoles/{roleId}` | `update` (`admins.manage`) | modifier les permissions d'un rôle interne (hors `super_admin`) : escalade de droits sans audit ni alerte `permission_change` (celles-ci n'existent que dans `updateAdminRoleDefinition`) | Critique |
+| `restaurants/{rid}` | `update` (`restaurants.edit`, champs `restaurantAdminFields`) | changer nom, slug, zones, modes de service, `deliveredBy`, `minOrderCents` d'un commerce | Élevée (contourne `adminUpdateRestaurant`, motif et diff avant/après) |
+| `restaurants/{rid}/products`, sections, options, `menuIssues` | `update` (`restaurants.edit`) | corriger la carte, clore des anomalies ; force `allergensDeclared: true` à la place du commerce | Élevée (G2) |
+| `restaurantGroups` | `update` (`restaurants.edit`) | modifier un groupe sans passer par `saveRestaurantGroup` | Moyenne |
+| `countries`, `cities`, `zones`, `surgeRules` | `create/update` (`markets.edit`, `zones.edit`) | TVA, frais, devises, activation de pays/villes, tracé des zones, majorations | Critique |
+| `plans`, `commissionRules` | `create/update` (`plans.edit`), `create` (`commissions.edit`) | prix, commissions, fonctionnalités des formules ; créer un barème sans clôturer l'ancien | Critique (argent) |
+| `promotions` | `create/update` (`promotions.edit`) | créer/modifier/activer une promotion, changer le financement | Élevée |
+| `integrations`, `appVersions`, `incidents` | `update`/`write` (`integrations.edit`, `system.manage`) | activer une intégration, changer le mode test/production, imposer une version minimale | Élevée |
+| `platformAlerts`, `securityAlerts` | `update` (`dashboard.view`, `security.manage`) | écarter ou résoudre une alerte sans motif ni audit (`dashboard.view` suffit) | Élevée |
+| `scheduledReports` | `create/update/delete` (`reports.schedule`) | rapport programmé sans contrôle de périmètre ni audit | Moyenne |
+| `fraudCases`, `blocklist` | `update`/`create` (`fraud.manage`) | classer un dossier, ajouter/désactiver un blocage | Moyenne |
+| `legalDocuments`, `gdprRequests` | `create/update` (`legal.edit`, `gdpr.handle`) | brouillons juridiques, statut d'une demande RGPD | Moyenne |
+| `messageTemplates`, `announcements`, `prospects` (+ `activities`) | `update`/`create` (`templates.edit`, `announcements.edit`, `crm.edit`) | textes automatiques, annonces, étape d'un prospect (déclenche une commission) | Moyenne |
+| `sponsoredOffers`, `sponsoredPlacements`, `homeSections`, `banners`, `cuisineCategories`, `pages`, `helpArticles`, `ticketReasons`, `cannedResponses`, `moderationTerms`, `ratingWatch` | `create/update/write` (`display.edit`, `support.configure`, `reviews.moderate`) | prix des offres sponsorisées, contenus de l'app client, motifs et modèles de support, termes du filtre d'avis | Moyenne (les prix de `sponsoredOffers` sont de l'argent) |
+| `reviews`, `contentReports`, `supportTickets` | `update` (`reviews.moderate`, `support.handle`) | masquer/rétablir un avis, décider un signalement, modifier un ticket | Moyenne |
+| `users/{id}` | `update` (`customers.edit`, champs `userEditableFields`) | modifier un profil client | Moyenne |
+| `internalNotes`, `savedFilters` | `create/update` par tout admin | notes et filtres personnels | Faible |
+
+Lecture : tout ce qui est « argent » ou « droits » (`settings`, `plans`, `commissionRules`, `countries`, `adminRoles`, `featureFlags`) peut être changé sans trace ; le principe « toute modification de tarif est tracée » n'est donc garanti que pour les utilisateurs qui passent par l'interface. Correction unique et peu coûteuse : passer ces collections en `allow write: if false` côté client (l'interface utilise déjà les fonctions), ou ajouter un déclencheur d'audit générique.
+
+Le 2FA de session n'est exigé que par les fonctions de `platform/**` (`requireSecureAdmin`, 28 fonctions repérées) ; les 110 autres callables et les règles ne le vérifient pas, et `settings/security.requireMfaForAdmins = false` en base (G6 §27).
+
+### d.4 Tableau complet des 138 callables
+
+Colonnes : droit exigé (`requireAdmin`), audit (présence de `writeAudit`), motif (champ présent dans le schéma), remarque (« sensible » = `sensitive: true` dans la fonction ; « 2FA de session » = `requireSecureAdmin`). Classement automatique, contrôlé à la main pour les cas sensibles ci-dessus.
+
+**Restaurants, clients (admin/acteurs)**
+
+| Fonction | Droit exigé | Audit (writeAudit) | Motif | Remarque |
+|---|---|---|---|---|
+| `reviewRestaurantApplication` (applications.ts) | restaurants.validate | oui | facultatif / conditionnel |  |
+| `reviewDocument` (applications.ts) | restaurant | oui | facultatif / conditionnel |  |
+| `sendDocumentReminder` (applications.ts) | restaurants.validate | oui | non |  |
+| `runDocumentExpiryNow` (applications.ts) | restaurants.validate | oui | non |  |
+| `bulkRestaurantAction` (bulk.ts) | (contrôlé dans la fonction) | oui | oui |  |
+| `updateCommercialTerms` (commercial.ts) | restaurants.commercial | oui | oui | sensible |
+| `adminUpdateRestaurant` (commercial.ts) | restaurants.edit | oui | oui |  |
+| `saveRestaurantGroup` (commercial.ts) | restaurants.edit | oui | oui |  |
+| `creditCustomer` (customers.ts) | customers.credit | oui | facultatif / conditionnel | sensible |
+| `blockCustomer` (customers.ts) | customers.block | oui | oui | sensible |
+| `deleteCustomerAccount` (customers.ts) | customers.delete | oui | oui | sensible |
+| `startImpersonation` (impersonation.ts) | restaurants.impersonate | oui | oui | sensible |
+| `endImpersonation` (impersonation.ts) | (contrôlé dans la fonction) | oui | non |  |
+| `importRestaurants` (import.ts) | restaurants.import | oui | non |  |
+| `refreshRestaurantScores` (quality.ts) | restaurants.view | sans objet (lecture) | sans objet |  |
+| `suspendRestaurant` (status.ts) | restaurants.suspend | oui (via fonction utilitaire) | oui |  |
+| `reactivateRestaurant` (status.ts) | restaurants.suspend | oui (via fonction utilitaire) | oui |  |
+
+**Support, avis, affichage (admin/experience)**
+
+| Fonction | Droit exigé | Audit (writeAudit) | Motif | Remarque |
+|---|---|---|---|---|
+| `openSupportChat` (chat.ts) | support.handle | oui | non |  |
+| `postSupportChatMessage` (chat.ts) | support.handle | oui | non |  |
+| `closeSupportChat` (chat.ts) | support.handle | NON | non | SANS AUDIT |
+| `publishPage` (display.ts) | legal.edit | oui | non |  |
+| `bookSponsoredPlacement` (display.ts) | display.edit | oui | facultatif (note) |  |
+| `cancelSponsoredPlacement` (display.ts) | display.edit | oui | oui |  |
+| `updateExperienceSettings` (display.ts) | display | oui | facultatif |  |
+| `refundFromTicket` (refunds.ts) | refunds.create | oui | oui | sensible |
+| `reviewTicketRefund` (refunds.ts) | refunds.approve | oui | oui | sensible |
+| `creditFromTicket` (refunds.ts) | customers.credit | oui | oui | sensible |
+| `moderateReview` (reviews.ts) | reviews.moderate | oui (via fonction utilitaire) | oui |  |
+| `decideContentReport` (reviews.ts) | reviews.moderate | oui | oui |  |
+| `runRatingWatchNow` (reviews.ts) | reviews.moderate | oui | sans objet |  |
+| `runTicketSlaNow` (sla.ts) | support.escalate | sans objet (lecture) | sans objet |  |
+| `getSupportAgents` (tickets.ts) | support.view | sans objet (lecture) | sans objet |  |
+| `assignTickets` (tickets.ts) | support.handle | oui | non |  |
+| `escalateTicket` (tickets.ts) | support.escalate | oui | oui |  |
+| `respondToTicket` (tickets.ts) | support.handle | NON | non | SANS AUDIT |
+| `updateTicket` (tickets.ts) | support.handle | oui | facultatif / conditionnel |  |
+| `createTicketAsAgent` (tickets.ts) | support.handle | oui | facultatif / conditionnel |  |
+| `contactTicketParty` (tickets.ts) | support.handle | oui | non |  |
+
+**Livreurs, commandes, zones, règles (admin/operations)**
+
+| Fonction | Droit exigé | Audit (writeAudit) | Motif | Remarque |
+|---|---|---|---|---|
+| `dispatchOrder` (dispatch.ts) | orders.intervene | oui | oui |  |
+| `previewDispatch` (dispatch.ts) | orders.view | sans objet (lecture) | sans objet |  |
+| `respondToOffer` (dispatch.ts) | (contrôlé dans la fonction) | NON | facultatif / conditionnel | SANS AUDIT |
+| `reviewDriverApplication` (drivers.ts) | drivers.validate | oui | facultatif / conditionnel |  |
+| `reviewDriverDocument` (drivers.ts) | drivers.validate | oui | facultatif / conditionnel |  |
+| `reviewIdentityCheck` (drivers.ts) | drivers.validate | oui | facultatif / conditionnel |  |
+| `requestIdentityChecks` (drivers.ts) | drivers.validate | oui | oui |  |
+| `sanctionDriver` (drivers.ts) | drivers.sanction | oui | oui |  |
+| `decideSanctionContest` (drivers.ts) | drivers.sanction | oui | oui (note) |  |
+| `bulkUpdateDrivers` (drivers.ts) | (contrôlé dans la fonction) | oui | oui |  |
+| `getDriverFile` (drivers.ts) | drivers.validate | sans objet (lecture) | sans objet |  |
+| `listOrdersAdmin` (orders.ts) | orders.view | sans objet (lecture) | sans objet |  |
+| `getOrderAnomalies` (orders.ts) | orders.view | sans objet (lecture) | sans objet |  |
+| `updateDispatchRules` (rules.ts) | platform | oui | oui |  |
+| `updateOrderRules` (rules.ts) | order_rules.edit | oui | oui | sensible |
+| `updateCourierPay` (rules.ts) | drivers.pay_rules | oui | oui | sensible |
+| `saveCity` (zones.ts) | zones.edit | oui | facultatif / conditionnel |  |
+| `setCityActive` (zones.ts) | markets.edit | oui | oui | sensible |
+| `saveZone` (zones.ts) | zones.edit | oui | facultatif / conditionnel |  |
+| `closeZone` (zones.ts) | zones.edit | oui | facultatif / conditionnel | sensible |
+| `saveSurgeRule` (zones.ts) | zones.edit | oui | facultatif / conditionnel | sensible |
+| `applySurge` (zones.ts) | zones.edit | oui | oui | sensible |
+
+**Pilotage (admin/pilotage)**
+
+| Fonction | Droit exigé | Audit (writeAudit) | Motif | Remarque |
+|---|---|---|---|---|
+| `handlePlatformAlert` (alerts.ts) | dashboard.view | oui | conditionnel (note si écartée) |  |
+| `updateMonitoringSettings` (alerts.ts) | settings.edit | oui | oui |  |
+| `runMonitoringNow` (alerts.ts) | dashboard.view | sans objet (lecture) | sans objet |  |
+| `getPilotageAnalytics` (analytics.ts) | analytics.view | sans objet (lecture) | sans objet |  |
+| `exportData` (exports.ts) | exports.run | oui | facultatif / conditionnel |  |
+| `getPilotageOverview` (overview.ts) | dashboard.view | sans objet (lecture) | sans objet |  |
+| `saveScheduledReport` (reports.ts) | reports.schedule | oui | non |  |
+| `deleteScheduledReport` (reports.ts) | reports.schedule | oui | oui |  |
+| `runReportNow` (reports.ts) | reports.view | oui | non |  |
+| `globalSearch` (search.ts) | search.use | sans objet (lecture) | sans objet |  |
+
+**Plateforme et sécurité (platform)**
+
+| Fonction | Droit exigé | Audit (writeAudit) | Motif | Remarque |
+|---|---|---|---|---|
+| `updateAdminRole` (admins.ts) | admins.manage | oui | oui | sensible, 2FA de session |
+| `updateAdminRoleDefinition` (admins.ts) | admins.manage | oui | oui | sensible, 2FA de session |
+| `exportAuditLogs` (audit-export.ts) | audit.view | oui | non | sensible, 2FA de session |
+| `runManualBackup` (backups.ts) | backups.manage | oui | non | sensible, 2FA de session |
+| `checkBackupStatus` (backups.ts) | backups.manage | sans objet (lecture) | sans objet | 2FA de session |
+| `restoreFromTrash` (backups.ts) | trash.restore | oui | oui | 2FA de session |
+| `purgeTrashItem` (backups.ts) | trash.restore | oui | oui | sensible, 2FA de session |
+| `setFeatureFlag` (features.ts) | features.edit | oui | oui | 2FA de session |
+| `decideFraudCase` (fraud.ts) | fraud.manage | oui | facultatif / conditionnel | sensible, 2FA de session |
+| `addBlocklistEntry` (fraud.ts) | fraud.manage | oui | oui | sensible, 2FA de session |
+| `removeBlocklistEntry` (fraud.ts) | fraud.manage | oui | oui | sensible, 2FA de session |
+| `saveLegalDocument` (gdpr.ts) | legal.edit | oui | oui | 2FA de session |
+| `receiveGdprRequest` (gdpr.ts) | gdpr.handle | oui | non | sensible, 2FA de session |
+| `handleGdprRequest` (gdpr.ts) | gdpr.handle | oui | facultatif (note) | sensible, 2FA de session |
+| `reportContent` (gdpr.ts) | (contrôlé dans la fonction) | oui | oui | 2FA de session |
+| `previewRetentionRun` (gdpr.ts) | legal.edit | sans objet (lecture) | sans objet | 2FA de session |
+| `runHealthCheck` (health.ts) | system.view | sans objet (lecture) | sans objet | 2FA de session |
+| `updateIntegration` (health.ts) | integrations.edit | oui | oui | 2FA de session |
+| `setMaintenanceMode` (health.ts) | system.manage | oui | oui | sensible, 2FA de session |
+| `updateAppVersion` (health.ts) | system.manage | oui | oui | 2FA de session |
+| `saveIncident` (health.ts) | system.manage | oui | non | 2FA de session |
+| `updateCountry` (markets.ts) | markets.edit | oui | oui | 2FA de session |
+| `setCountryActive` (markets.ts) | markets.edit | oui | oui | sensible, 2FA de session |
+| `trackAdminSession` (security.ts) | (contrôlé dans la fonction) | sans objet (lecture) | sans objet |  |
+| `enrollTotp` (security.ts) | (contrôlé dans la fonction) | oui | non | sensible |
+| `verifyTotp` (security.ts) | (contrôlé dans la fonction) | oui | non | sensible |
+| `regenerateRecoveryCodes` (security.ts) | (contrôlé dans la fonction) | oui | non | sensible, 2FA de session |
+| `getMfaStatus` (security.ts) | (contrôlé dans la fonction) | sans objet (lecture) | sans objet |  |
+| `resetAdminMfa` (security.ts) | admins.manage | oui | oui | sensible, 2FA de session |
+| `revokeSessions` (security.ts) | security.manage | oui | oui | sensible, 2FA de session |
+| `handleSecurityAlert` (security.ts) | security.manage | oui | facultatif / conditionnel | 2FA de session |
+| `updatePlatformSettings` (settings.ts) | (contrôlé dans la fonction) | oui | oui | 2FA de session |
+
+**Croissance (marketing/platform)**
+
+| Fonction | Droit exigé | Audit (writeAudit) | Motif | Remarque |
+|---|---|---|---|---|
+| `publishAnnouncement` (announcements.ts) | announcements.edit | oui | oui |  |
+| `estimatePlatformAudience` (campaigns.ts) | notifications.send | sans objet (lecture) | sans objet |  |
+| `savePlatformCampaign` (campaigns.ts) | notifications.send | oui | non |  |
+| `saveProspect` (crm.ts) | crm.edit | oui | non |  |
+| `moveProspect` (crm.ts) | crm.edit | oui | non |  |
+| `logProspectActivity` (crm.ts) | crm.edit | NON | non | SANS AUDIT |
+| `getSalesTeam` (crm.ts) | crm.view | sans objet (lecture) | sans objet |  |
+| `decideSalesCommission` (crm.ts) | crm.manage_team | oui | facultatif / conditionnel |  |
+| `createPlatformPromotion` (promotions.ts) | promotions.edit | oui | non |  |
+| `setPromotionStatus` (promotions.ts) | promotions.edit | oui | facultatif / conditionnel |  |
+| `decideReferral` (referrals.ts) | loyalty.edit | oui | oui |  |
+| `updateGrowthSettings` (settings.ts) | (contrôlé dans la fonction) | oui | oui |  |
+| `updateMessageTemplate` (templates.ts) | templates.edit | oui | non |  |
+
+**Argent (finance)**
+
+| Fonction | Droit exigé | Audit (writeAudit) | Motif | Remarque |
+|---|---|---|---|---|
+| `generateMonthlyInvoicesNow` (invoices.ts) | invoices.issue | oui | non | sensible |
+| `issueCreditNote` (invoices.ts) | invoices.issue | oui | oui | sensible |
+| `markInvoicePaid` (invoices.ts) | invoices.issue | oui | oui | sensible |
+| `getFinanceOverview` (overview.ts) | finance.view | sans objet (lecture) | sans objet |  |
+| `buildPayoutsNow` (payouts.ts) | finance.payouts | oui | non | sensible |
+| `executePayout` (payouts.ts) | finance.payouts | oui (via fonction utilitaire) | non |  |
+| `cancelPayout` (payouts.ts) | finance.payouts | oui | oui | sensible |
+| `holdPayouts` (payouts.ts) | finance.hold | oui | facultatif / conditionnel | sensible |
+| `releasePayoutHold` (payouts.ts) | finance.hold | oui | oui | sensible |
+| `createAdjustment` (payouts.ts) | finance.adjust | oui | oui | sensible |
+| `recordCashRemittance` (payouts.ts) | finance.adjust | oui | oui | sensible |
+| `updateFinanceSettings` (settings.ts) | (contrôlé dans la fonction) | oui (via fonction utilitaire) | oui |  |
+| `updateCountryPayments` (settings.ts) | payments.configure | oui (via fonction utilitaire) | oui |  |
+| `updateRestaurantPayments` (settings.ts) | payments.configure | oui (via fonction utilitaire) | oui |  |
+| `updateCountryVat` (settings.ts) | tax.reports | oui (via fonction utilitaire) | oui |  |
+| `issueCustomerReceipt` (settlement.ts) | invoices.issue | oui | non |  |
+| `updatePlan` (subscriptions.ts) | plans.edit | oui | oui | sensible |
+| `updateCommissionRule` (subscriptions.ts) | commissions.edit | oui | oui | sensible |
+| `manageSubscription` (subscriptions.ts) | subscriptions.manage | oui | oui | sensible |
+| `generateTaxReport` (tax.ts) | tax.reports | oui | non | sensible |
+| `markTaxReportSubmitted` (tax.ts) | tax.reports | oui | facultatif / conditionnel | sensible |
+| `exportAccounting` (tax.ts) | tax.reports | oui | non | sensible |
+| `generateStatement` (statements.ts) | (contrôlé dans la fonction) | NON | non | SANS AUDIT |
+
+### d.5 Bilan (d) et trous
+
+Bilan : 114 callables sur 138 tracent par `writeAudit` ; 5 écrivent sans audit ; 33 n'ont aucun champ de motif et 24 un motif seulement facultatif ou conditionnel. Le principe « tout est tracé avec motif » est bien tenu **dans les fonctions** pour les actions les plus sensibles (remboursements, avoirs, suspensions, blocages, reversements, commissions, formules, exports, administrateurs). Il ne l'est **pas** pour l'ensemble du système, à cause du contournement par les règles Firestore (d.3).
+
+| Priorité | Trou |
+|---|---|
+| P0 | Fermer les écritures directes des administrateurs sur `settings`, `featureFlags`, `adminRoles`, `plans`, `commissionRules`, `countries`, `cities`, `zones`, `surgeRules`, `integrations`, `appVersions`, `promotions`, `restaurants`, `sponsoredOffers` (`allow write: if false`) ou ajouter un déclencheur d'audit générique sur ces collections. |
+| P0 | Mouvements d'argent manuels sans motif : `executePayout`, `buildPayoutsNow`, `generateMonthlyInvoicesNow`, `bookSponsoredPlacement`, `exportAccounting`, `generateTaxReport` ; exiger un motif serveur pour `exportData` (clients, livreurs). |
+| P0 | `publishPage` (documents légaux) : exiger un motif ; ne pas permettre de réécrire une version publiée (G7). |
+| P1 | Imposer côté serveur le motif pour les décisions d'approbation (`reviewRestaurantApplication`, `reviewDriverApplication`, `reviewDriverDocument`, `creditCustomer`) et pour `importRestaurants`, `savePlatformCampaign`, `createPlatformPromotion`. |
+| P1 | Auditer `closeSupportChat`, `respondToTicket` (changements de statut), `logProspectActivity`, et la consultation de pièces d'identité (`getDriverFile`) ainsi que la recherche globale (données personnelles). |
+| P1 | Étendre le 2FA de session aux 110 callables hors `platform/**` (ou l'intégrer dans `requireAdmin`), et passer `requireMfaForAdmins` à vrai en base. |
+| P1 | « Voir comme » : tracer les consultations (`actionsCount` jamais incrémenté), appliquer la lecture seule côté serveur (G2 §5). |
+| P2 | Un contrôle central « action sensible ⇒ motif » (liste des actions sensibles, refus sans motif) plutôt qu'un choix fonction par fonction. |
+
+## (e) « Les règles se règlent sans développeur »
+
+Ce qui est réglable et effectivement lu (bonne pratique) : `settings/orderRules` (délai d'acceptation, pause automatique, annulation client par étape, imputation des remboursements, commandes programmées, client absent, inactivité, délai de réclamation : réglable par plateforme, pays et ville, avec motif et historique) ; `settings/monitoring` (seuils d'alertes) ; `settings/dispatch` et barème livreur par pays/ville ; calendrier de reversement ; plans et commissions ; frais de service, petite commande et frais de paiement par pays ; TVA par pays ; sécurité (session, verrouillage, seuils) ; promotions/fidélité/parrainage/CRM (`updateGrowthSettings`) ; support (`settings/support`) ; zones, tarifs et horaires par zone ; majorations.
+
+Ce qui reste codé en dur alors qu'il devrait être un paramètre (synthèse des « Valeurs codées en dur » de G1 à G7 et recherche complémentaire). Priorité : P0 = bloque une décision du client ou touche à l'argent ; P1 = important ; P2 = confort.
+
+| Priorité | Domaine | Constante | Où |
+|---|---|---|---|
+| P0 | Argent, devises | devise `EUR`/`'eur'` sur paiements, commandes, reversements, factures, avoirs, grand livre | `orders/payment.ts` l. 60, `orders/place.ts` l. 519, 603, `finance/argent/payouts.ts` l. 303, 345, `customers.ts` l. 100, `refunds.ts` l. 354, `invoices.ts` |
+| P0 | Argent | taux de commission de repli 30 % / 15 % / 12 %, frais de paiement 1,5 % + 0,25 € (valeurs d'amorçage, non décidées par le client) | `packages/shared/src/pricing/defaults.ts` |
+| P0 | Argent | seuil du forfait livreur 2 km (surchargeable par ville, repli constant), bornes de bonus/majoration (×3, supplément ≤ 10 €, bonus ≤ 20 €, palier ≤ 50 €) | `settlement.ts` l. 18, `operations/zones.ts` |
+| P0 | Argent | plafond d'avoir 500 € et remboursement minimum 0,50 € ; plafonds de remboursement par rôle (`DEFAULT_REFUND_LIMITS` 50/100/500 €) encore lus par `creditCustomer` et l'écran clients ; `settings/refunds.approvalThresholdCents` sans effet | `customers.ts` l. 25, `refunds.ts`, `permissions/admin.ts` l. 245 |
+| P0 | Argent | plafond de pourboire `max(5000)` ; `settings/payments.tips` sans effet | `orders/place.ts` l. 88 |
+| P0 | Décisions client | délais de relance des pièces commerces/livreurs `[30, 7]` ; règle d'inactivité 15/30 j (paramètre existe, non appliqué) | `admin-actors.ts` l. 95, `live.ts` |
+| P0 | Décisions client | pays d'inscription `FR`/`LU`, format de code postal | `core/signup.ts` l. 52 |
+| P1 | Commandes | code de remise exigé au-delà de 60 € (`HANDOVER_CODE_THRESHOLD_CENTS`) ; vitesse de trajet 250 m/min ; marge de promesse +10 min ; retard compté dès 1 minute (aucune tolérance) ; fenêtre 3-D Secure 20 min ; relance de recherche livreur 2 min ; horizon de transmission d'une commande programmée 90 min | `orders/place.ts` l. 105-107, `transitions.ts` l. 67-81, 242, `scheduled.ts` l. 14-16 |
+| P1 | Commandes | mode « rush » ≤ 90 min codé dans `firebase/rules/restaurants.rules` (deux plafonds pour la même notion : 30 min de règle et 90 min de règle Firestore) ; bornes de préparation 5-120 min | `restaurants.rules` l. 43, `order-ops.ts` l. 53-54 |
+| P1 | Livreurs | scoring d'attribution (400 m hors zone, 600 m par course, 250 m/min) ; contrôle d'identité (5 %, 30 j, 48 h) ; avertissement 30 j ; suspension ≤ 90 j ; pièces exigées par type et par pays (France) | `dispatch-advanced.ts`, `live.ts`, `drivers.ts`, `operations.ts` |
+| P1 | Commerces | score de qualité (coefficients, plafonds, seuils 80/65) ; prix aberrant (200 €, ×4) ; suspension ≤ 365 j ; sélection ≤ 300 ; import ≤ 500 lignes ; fenêtre du score 30 j | `admin-actors.ts`, `menu/quality.ts`, `status.ts`, `bulk.ts` |
+| P1 | Pilotage | « client actif » = 30 j ; fenêtres 7 j / 4 semaines / heure minimale 12 h de la détection ; plancher de remboursements 5 000 c ; risque de départ −30 %/7 j ; ratio livreurs ; cohortes 6 mois ; plafonds d'export 20 000 / 3 000 lignes, 9 Mo | `overview.ts`, `anomalies.ts`, `analytics.ts`, `exports.ts` |
+| P1 | Communication | plage promotionnelle 9 h-21 h ; 3 campagnes / 7 j ; 20 000 destinataires ; segments (« fidèle » = 5 commandes, « nouveau » = 30 j) ; délais de programmation 5 min-90 j ; « STOP au 36111 » (numéro français) | `campaigns.ts`, `PromotionForm.tsx` |
+| P1 | Support | trois jeux de délais cibles (l'un ignore `settings/support`) ; remboursement min 0,50 € ; validité d'avoir 180 j en repli | `experience/common.ts`, `messaging/restaurant/support.ts` l. 27, `orders/report.ts` l. 21-22 |
+| P1 | Conformité | délai RGPD 30 j ; corbeille 30 j (`moveToTrash`, `MENU_LIMITS.trashDays`, `TRASH_RETENTION_DAYS`) au lieu du paramètre `trashRetentionDays` ; conservation des pièces 10 ans ; fenêtre de fraude 14 j et 6 seuils ; durées de conservation par défaut 24/36 mois | `gdpr.ts`, `backups.ts`, `fraud.ts`, `argent.ts` l. 129 |
+| P1 | Facturation | mention « article 293 B du CGI » et exonération de TVA livreur par défaut pour tous les pays ; entité émettrice par défaut « GoLink SAS » ; jour du reversement mensuel (le 1er) ; référence des semaines paires `2026-01-05` ; fuseau `Europe/Paris` et décalages `+01:00/+02:00` pour tous les pays ; seuils DAC7 | `invoices.ts` l. 209, 258, `payouts.ts` l. 42-64, `subscriptions.ts` l. 186, 466, `policies.ts` |
+| P1 | Sécurité | durée d'enrôlement TOTP 30 min ; battement de session 2 min ; valeurs de repli de `DEFAULT_SECURITY_POLICY` | `security.ts`, `plateforme-securite.ts` l. 251 |
+| P1 | Textes et messages | tous les e-mails de décision (validation, refus, pièce expirante, invitation, relevé) sont des gabarits codés en français dans `functions/src/lib/emails.ts` ; les 18 gabarits `messageTemplates` modifiables ne sont pas lus (sauf `referral_rewarded`) ; contenus éditables en `{ fr }` seulement | `lib/emails.ts`, `notifications/index.ts` (vide) |
+| P2 | Divers | catégories de TVA figées à 4 ; liste de devises du sélecteur ; palette de zones ; valeurs d'amorçage d'une zone (6 km, 1,99/2,99/3,99 €) ; sondes de santé (seuils de lenteur, cadence 10 min) ; cadences des tâches planifiées (toutes en dur : impossible d'ajuster une fréquence sans redéploiement) ; géorepérage RH 300 m | `enums.ts`, `ZonesTab.tsx` l. 87, `health.ts`, `hr/timeclock.ts` l. 42 |
+
+Point d'architecture : les cadences des `onSchedule` (minute, 15 min, quotidien…) sont des littéraux dans le code ; toute demande du type « relancer plus tôt » impose un déploiement. C'est la limite normale d'un `onSchedule`, mais le cahier demande que les **délais** (acceptation, relances, inactivité, réponse ticket) soient réglables : c'est le cas pour l'acceptation et les tickets, pas pour les relances de pièces ni l'inactivité.
+
+## Écarts avec DECISIONS_CLIENT / questionnaire (synthèse G8)
+
+- Décision non réalisée : validation automatique des commerces (n° 14) ; inactivité 15/30 j (n° 18) ; client absent (n° 25) ; réclamation avec photo obligatoire et détection automatique (n° 31) ; parrainage commerce à 100 € (création du lien absente, n° 30) ; multi-devises et moyens de paiement locaux pour DZ/MA/TN (n° 36) ; « désactivation + corbeille » d'un commerce (aucune suppression) ; support 24/7 sans outillage de couverture.
+- Décision appliquée : commission sur TTC hors livraison et pourboires ; frais bancaires déduits ; remboursements au commerce dans tous les cas ; titres-restaurant désactivés ; espèces réservées aux livreurs salariés (règle de commande) ; pourboires 100 % livreur ; alcool interdit ; délai d'acceptation 5 min + pause automatique ; commandes programmées ; retrait avec code ; frais et minimum de livraison fixés par le commerce ; promos commerces sans limite (en base).
+- Décision paramétrée mais sans effet : bonus de pointe livreur, formules (fonctionnalités, limites, engagement, essai, délai d'impayé), fidélité, mode de facturation `subscription`/`hybrid` à la commande, barèmes pays/ville de commission.
+- Décision contredite par un défaut de code : `DEFAULT_SETTINGS` du module promotions des commerces (`capsEnabled:true`, validation requise) inverse de la décision « sans limite » si le document de réglages est absent.
+
+---
+
+# État des apps client et livreur (`apps/client`, `apps/driver`)
+
+## Ce qui existe réellement
+
+| App | Contenu | Preuve |
+|---|---|---|
+| `apps/client` (Expo / React Native, `@golink/client`) | 2 fichiers TypeScript : `index.ts` et `App.tsx` (17 lignes : un écran « GoLink — Interface en attente des maquettes »). Dépendances : `expo`, `react-native`, `@golink/shared`. Aucune navigation, aucun SDK Firebase, aucune authentification, aucun appel de fonction, aucune i18n. | `find apps/client -name '*.ts*'` hors `node_modules` = 2 fichiers ; lecture de `App.tsx` et `package.json`. |
+| `apps/driver` | Identique (2 fichiers, `App.tsx` de 17 lignes, même texte). | idem |
+| `apps/restaurant` (web, Vite) | 232 fichiers TS/TSX ; app complète (référence). | |
+| `apps/admin` (web, Vite) | 233 fichiers TS/TSX ; back-office (objet de cet audit). | |
+
+Aucune app mobile n'est donc utilisable : ni inscription client, ni commande, ni paiement, ni suivi, ni app de course. Le seul canal « client » exercé aujourd'hui est le back-office (agent, commerce) et les données de démonstration (`seed:true`, 150 clients, 48 livreurs, 12 888 commandes).
+
+## Ce que le serveur offre déjà à ces apps (consommateurs manquants)
+
+| Besoin | Serveur | Manque |
+|---|---|---|
+| Client : passer une commande, payer, annuler, confirmer un paiement 3-D Secure | `placeOrder`, `confirmOrderPayment`, `cancelOrder` (`orders/*`) ; règles de lecture des commandes, adresses, favoris, moyens de paiement (`users.rules`) | écrans, jeton d'appareil (`users/{id}/devices`), saisie promo/parrainage/points, affichage du code de retrait, du pourboire, du portefeuille (`walletAppliedCents: 0` : jamais consommé à la commande) |
+| Client : réclamer, contacter le support, laisser un consentement, demander l'effacement | aucune fonction (`reportOrderIssue` est côté commerce, `setConsent` et `submitGdprRequest` n'existent pas, règle `supportTickets` refuse la création par un client) | tout |
+| Client : voir l'accueil, les catégories, le classement, la mention « Sponsorisé », le message de fermeture d'urgence, les pages légales, la réacceptation des CGU | données présentes dans Firestore (`homeSections`, `banners`, `cuisineCategories`, `pages`, `legalDocuments`, `settings/maintenance`, `appVersions`) | aucun calcul de classement (`rankingScore` = 0), aucune lecture de la maintenance ni des versions, aucune réacceptation |
+| Livreur : s'inscrire, déposer ses pièces, choisir sa distance maximale, passer en ligne | règles Firestore (`partnerDocuments`, `drivers`, `driverLocations`, `identityChecks`, `driverSanctions`) | aucune fonction de création de livreur plateforme, aucun écran |
+| Livreur : répondre à une proposition, récupérer, livrer | `respondToOffer`, `markOrderPickedUp`, `completeOrder` (appelables par le livreur assigné) | écrans, position en direct, « client absent » (fonction absente), preuve de livraison |
+| Livreur : être payé | grand livre `courier_earning` / `courier_tip`, `buildPayouts` type `driver` | création du compte Stripe Connect du livreur (`payments/connect.ts` réservé aux commerces), consultation des gains (`driverEarnings` non alimentée) |
+| Notifications push et e-mail de suivi | FCM prêt (`sendEachForMulticast`) | aucun jeton enregistré, `functions/src/notifications/index.ts` vide |
+
+## Règles du cahier qui n'ont pas de consommateur sans ces apps
+
+Client absent (n° 25) ; pourboire et code de retrait ; réclamation avec photo (n° 31) ; parrainage par code et prime client dépensable (n° 30) ; fidélité (n° 29) ; ordre de classement et mention « Sponsorisé » (n° 19) ; message de fermeture d'urgence multilingue ; mode maintenance et mise à jour forcée (G7 §30) ; réacceptation des CGU et consentements (G7 §29) ; ouverture d'un ticket ou d'un chat par le client ou le livreur (n° 33) ; tunnel de commande de l'analytics (G1 §3, mesures « ouverture app → panier → paiement » sans émetteur) ; inscription et documents des livreurs, reversements des livreurs (n° 1, 21) ; langues fr/en/ar côté utilisateur final (n° 35) ; distance maximale du livreur (n° 23) ; filtrage de la liste blocage à l'inscription (G7 §28).
+
+## Priorités liées
+
+- P0 : décider si le lancement inclut les apps client et livreur (elles conditionnent 15 à 20 réponses du questionnaire) ; à défaut, documenter que ces réponses sont « paramétrées côté back-office, sans effet visible ».
+- P0 : avant les apps, fournir les fonctions serveur qui n'ont pas d'équivalent : création de livreur plateforme (inscription), compte Stripe Connect livreur, `clientAbsent`, réclamation client avec photo, ticket/chat client et livreur, consentements (`setConsent`), demande RGPD par la personne, création du parrainage, consommation du portefeuille à la commande.
+- P1 : lecture de `settings/maintenance` et `appVersions` dès la première version des apps (sinon les écrans du super admin restent trompeurs).
+
+---
+
+# Synthèse finale G8
+
+Volet 1 : 36 réponses = 12 COMPLET / 19 PARTIEL / 2 ABSENT / 3 FAUX ; annexe (8 choix) = 3 COMPLET / 5 PARTIEL.
+
+Volet 2 : 29 tâches planifiées, 21 déclencheurs de documents ou d'authentification et 1 webhook HTTP, tous exportés ; 35 automatismes du cahier, 14 réels et complets, 14 absents ou inopérants ; alertes visibles seulement dans la console (aucun envoi externe) ; 5 listes sur environ 25 ont des actions groupées ; 114 callables sur 138 sont auditées mais 33 n'exigent aucun motif et une quarantaine de collections (dont toute la configuration et les tarifs) restent modifiables en direct par un administrateur, sans audit ; une vingtaine de familles de constantes métier non réglables.
+
+Principaux trous, par priorité :
+- P0 : validation automatique des commerces (n° 14) ; inactivité 15/30 j (n° 18) ; client absent (n° 25) ; avoir de retard et produit indisponible ; impayés d'abonnement inopérants (n° 11) ; commission : barèmes pays/ville neutralisés et mode `subscription` ignoré (n° 3) ; reversements livreurs, multi-devises et paiements locaux (n° 1, 36) ; parrainage inatteignable (n° 30) ; réclamation avec photo (n° 31) ; écritures directes non auditées sur `settings`, `plans`, `commissionRules`, `adminRoles`, `featureFlags`, `countries` ; aucune alerte externe ; apps client et livreur absentes.
+- P1 : notifications automatiques aux clients (gabarits non branchés) ; traduction ar/en des rubriques admin, e-mails et contenus (n° 35) ; motif serveur obligatoire ; actions groupées sur avis, commandes, validations, reversements ; support 24/7 sans planning ni assignation d'escalade ; contrôle de `city.active` absent à la commande.
+- P2 : confort (constantes de scoring, cadences, palettes).
+
+
+# Annexe J — Trous P1 et P2 par rubrique
+
+## §1-§4
+
+**P1**
+
+- Règle Firestore `platformAlerts` update direct sans motif/audit (`admin.rules` l.45-48) : à retirer (tout passe par `handlePlatformAlert`).
+- Activité récente : ajouter suspensions/réactivations/refus de livreurs et retrait définitif de commerce (alignement des noms d'actions d'audit).
+- Abonnements impayés à remonter aussi dans la file « alertes » (ou compter dans la pastille du menu).
+- Vérifier le rendu de `getPilotageOverview` en périmètre ville (ui-metz vide).
+- Recherche par n° de facture par préfixe cassée (`searchInvoices`) et exemple d'écran/`queryKind` non alignés sur les vraies séries (`XX-ABO-2026-…`).
+- Format de commande : `SL-` du cahier non pris en charge (décision de marque à documenter).
+- Recherche par téléphone/e-mail partiel pour les restaurants ; livreurs +352.
+- Rétention restaurants « abonnés » : présenter le churn/rétention d'abonnement dans Croissance (données déjà dans `subscriptions()`).
+- Performance par zone : ajouter acceptation et annulations.
+- Motif d'export à imposer côté serveur pour clients/livreurs (`exportData`) ; règle Firestore `scheduledReports` à fermer aux écritures directes.
+- Export « finances » : décider si `payouts + subscriptions + stats` suffisent ; sinon ajouter paiements/remboursements/commissions par commerce.
+
+**P2**
+
+- Filtre formule non appliqué à « En direct », clients, livreurs, alertes.
+- SIRET : scan de 3 000 restaurants ; indexer le SIRET (mot-clé ou champ `siretNormalized` au niveau racine).
+- Ticket : accepter un numéro partiel / sujet.
+- Seuil de risque de départ (−30 %/7 j) et fenêtres de cohortes non réglables.
+- Conserver le fichier généré (Storage) pour le réafficher depuis l'historique ; KPI dédiés aux rapports livreurs/commerces.
+
+## §5-§7
+
+**P1**
+
+- `onDocumentUploaded` : accepter `siret_notice` comme équivalent du Kbis (aligner sur `REQUIRED_RESTAURANT_DOCUMENTS`), sinon dossiers coincés en « Documents manquants ».
+- `bulkRestaurantAction` : encapsuler dans un `try/finally` pour clore le job (`failed`) et auditer l'échec ; nettoyer les 3 jobs `running` orphelins.
+- « Voir comme » : appliquer la lecture seule et l'échéance côté serveur (règles ou jeton), incrémenter/journaliser les consultations, clôturer les sessions expirées.
+- Export groupé : passer par une fonction (contrôle `exports.run`, audit, plafond) au lieu de l'export navigateur non tracé.
+- Corrections de produits par l'équipe : passer par une Cloud Function auditée avec motif ; ne pas forcer `allergensDeclared`.
+- Groupes : compte groupe réel (accès multi-établissements), facturation consolidée branchée, héritage des conditions pour les nouveaux membres, dissolution.
+- Fiche : suppression (désactivation + corbeille, décision client), photos/logo et horaires modifiables ou au moins visibles.
+- Attribution : rendre `settings/dispatch` lisible pour les comptes ville (règle ou lecture via fonction) ; trancher le mode par défaut (`offers` pour appliquer le délai d'acceptation attendu par le cahier).
+- Vérification d'identité : supprimer ou fonder l'affichage « ressemblance estimée » ; définir la suite d'un contrôle expiré sans réponse.
+- Export et message groupés : contrôles `exports.run` et `drivers.bulk`, audit de l'export.
+- Aligner le seuil d'alerte de manque de livreurs (un seul paramètre, surcharge ville et zone).
+- Alimenter `users.stats.cancelledCount` et `refundsCount` ainsi que `userPrivate.riskFlags` et `riskScore` (ou lire les `fraudCases`) : sans cela les indicateurs de risque de la ligne du cahier sont muets.
+- Export CSV des clients fait dans le navigateur (`ClientsPage.tsx:186`), sans contrôle `exports.run` ni audit (données personnelles ; un seuil d'alerte `massExportRows` existe dans `settings/security`).
+
+**P2**
+
+- Délais de relance des documents, seuils/pondérations du score et du prix aberrant paramétrables ; producteur `empty_section` ; incohérence du compteur « allergènes incomplets » ; import de 500 lignes vs limite de 300 s.
+- Pièces exigées paramétrables par pays (hors France), titre de séjour « si concerné », relances des pièces avec e-mail, délais et fréquences (relances 30/7 j, 5 %, 30 j, 48 h, avertissement 30 j) en paramètres.
+- Plafond d'avoir et paliers de risque en paramètres ; appliquer la validité par défaut des avoirs ; unifier les deux chemins de crédit ; rembourser ou reporter le solde d'avoir à la suppression.
+
+## §8-§13
+
+**P1**
+
+- Corriger `hourOf` (utiliser `formatToParts` ou `hourCycle` + `parseInt`) ; sans cela les anomalies par heure sont inopérantes.
+- Étendre la surveillance planifiée aux retards et aux zones / heures (aujourd'hui uniquement annulation et refus par commerce).
+- Recherche / filtre par livreur (nom) et par client dans l'interface (sélecteurs branchés sur `driverId` / `customerId` déjà acceptés par `listOrdersAdmin`) ; ajouter le nom du livreur aux `searchKeywords` à l'attribution.
+- Seuil de retard (tolérance en minutes) réglable ; aujourd'hui tout dépassement d'une minute compte comme retard.
+- Tâche planifiée d'inactivité des commerces (e-mail à 15 j, retrait à +30 j) et fenêtre de réclamation.
+- Aligner le mode rush du commerce (90 min codées dans `restaurants.rules`) sur `maxPrepExtensionMinutes`.
+- Exercer et tester la surcharge par ville (aucune surcharge en base ; aucun test crawlé en écriture).
+- Fermeture d'urgence : message multilingue (fr, en, ar) exposé au client (champ lu par l'app, ou renvoyé dans l'erreur de `placeOrder`) et notification des clients concernés.
+- Vérifier `city.active` dans `placeOrder` (et dans la liste des commerces de l'app) ; sinon une ville désactivée reste opérable si une zone y reste active.
+- Statistiques par ville : commandes, CA, clients, taux de service (aujourd'hui 3 chiffres d'en-tête).
+- Mise en avant : compteurs de vues / clics / commandes (événements côté app), audit des modifications du catalogue d'offres (fonction dédiée), déclenchement au minute près.
+- Textes multilingues (fr, en, ar) pour accueil, bannières, catégories, pages et documents.
+- Indicateurs de l'écran Avis faux en périmètre ville (400 sur les agrégations) : vérifier / déployer l'index, et afficher l'erreur au lieu de zéros.
+- Appliquer le filtre automatique aux réponses des commerces ; ajouter des termes en arabe.
+- Liste et filtre des réponses des commerces (consultation dédiée).
+- Répartition automatique des tickets (tour de rôle / charge) et affectation de l'escalade automatique à un responsable.
+- `reportOrderIssue` doit utiliser `settings/support` ; supprimer les défauts dupliqués.
+- Brancher `liveChatEnabled` (contrôle dans `openSupportChat` et à l'ouverture côté client).
+- Unifier les plafonds d'avoir : `creditCustomer` doit utiliser `refundLimitOf` ; rendre paramétrables les 500 € et 0,50 €.
+- Compteurs du centre d'aide (fonction d'incrément appelée par les apps).
+
+**P2**
+
+- Règle des événements de commande bornée par ville ; limite de 4 villes de `useActiveOrders`.
+- Cadence de l'annulation (1 min), limite de 50 par passage, constantes de `releaseScheduled` et de `PAYMENT_ACTION_TIMEOUT_MINUTES` (20 min) non réglables.
+- Contrôles de géométrie (auto-intersection, chevauchement), audit des majorations automatiques, constantes de pointe et valeurs d'amorçage à passer en paramètres.
+- Restaurer la carte pour la vérification visuelle (clé Google Maps : ajouter l'hôte de test aux référents autorisés).
+- Audit des écritures directes (bannières, sections, catégories, brouillons) par un trigger générique ; pondérations de classement par ville.
+- Audit des modifications de termes du filtre ; alertes générales sur baisse de note.
+- Statistiques : agrégation serveur au-delà de 3 000 tickets, prise en compte des remboursements automatiques ; audit des écritures de motifs, modèles et articles ; corriger « close » en « clôturée ».
+
+## §14-§17
+
+**P1**
+
+- Refus de carte à l'autorisation non tracés dans `payments` (aucun suivi des échecs réels).
+- Réglages sans effet : `failedPaymentRetry`, `approvalThresholdCents`, `defaultMethod`, `settings/payments.tips`.
+- Frais d'abonnement, mises en avant, promotions financées et portefeuille absents du grand livre (entrées jamais écrites) ; pas d'écritures compte `platform`.
+- Relevé envoyé seulement après virement réussi, sans PDF, jamais vérifié en réel.
+- Garantie horaire livreur non calculée ; bonus non individualisés.
+- DAC7 sans fichier au format officiel ni rappel d'échéance ; remboursements non déduits.
+- Export « FEC » non conforme au format ; pas de génération automatique mensuelle.
+- Mentions légales françaises (293 B) sur les relevés livreurs de tous les pays ; devise EUR codée en dur.
+- Limites et fonctionnalités de formule non appliquées.
+- Remise d'abonnement sans date de fin ; offres pour un groupe absentes.
+- suivi des refus de carte à l'autorisation ; réglages sans effet (remboursements, tentatives, pourboires plateforme) ; ledger complet (abonnements, mises en avant, plateforme) ; DAC7 officiel ; export FEC conforme ; limites de formule.
+
+**P2**
+
+- Payeur des frais uniquement par pays (pas par commerce).
+- Solde plateforme réel (Stripe Balance) absent ; jour du reversement mensuel et date de référence 15 jours codés en dur.
+- Catégories de TVA figées à 4 ; rattrapage en masse des justificatifs antérieurs ; entités émettrices BE/DZ/MA/TN à compléter.
+- Portée groupe non héritée par les nouveaux membres ; fuseaux fixes dans les dates d'offre.
+- catégories de TVA extensibles, solde Stripe réel, rattrapage des justificatifs, fuseaux par pays.
+
+## §18-§21
+
+**P1**
+
+- Annulation ou remboursement d'une commande : libérer la redemption (`status: 'cancelled'`), décrémenter `stats.*` de la promotion (`functions/src/orders/cancel.ts`).
+- Contrôle des limites totale et par client dans la transaction d'écriture de la commande, pas avant.
+- Règles Firestore `firebase/rules/marketing.rules` l. 20-33 : un admin `promotions.edit` peut créer ou modifier une promotion directement (hors fonction, sans audit, changement de statut ou de financement possible). Réserver l'écriture aux fonctions.
+- Moteur de fidélité absent : gain à la livraison (`loyaltyAccounts`, `loyaltyTransactions`), échange à la commande (`minOrderCents`, `maxRedeemBps`), points de bienvenue, expiration (onSchedule sur `pointsValidityDays`). À rétrograder en P2 tant que le client garde la fidélité « non définie au lancement » (décision client).
+- Vérifier que la récompense se fait sur la vraie première commande, pas une commande ultérieure.
+- Enregistrement des jetons FCM (`users/{uid}/devices`) et de la capture du consentement dans les apps client et livreur (bloqué par l'absence d'applications).
+- Activer et documenter `CAMPAIGNS_LIVE` en production, avec contrôle (liste blanche) avant le premier envoi réel.
+- Le drapeau « message de service » ne doit pas permettre de faire passer une promotion : restreindre aux campagnes non promotionnelles ou journaliser.
+- Règles `announcements` : limiter la lecture des annonces « restaurants » aux membres d'un restaurant ; retirer l'écriture directe admin.
+- Commission `revenue_share` non calculée (réglage sans effet) : ajouter le calcul mensuel sur le CA des restaurants inscrits pendant `revenueShareMonths` (onSchedule) ou retirer le réglage de l'écran.
+- Paiement des commissions sans trace comptable : écrire au grand livre (`ledgerEntries`) et l'intégrer aux paiements.
+
+**P2**
+
+- « Commandes générées » : ajouter un vrai nombre de commandes distinct par offre.
+- Écriture au grand livre pour le crédit publicitaire ; détection automatique d'auto-parrainage (même appareil, même adresse).
+- Groupes d'utilisateurs personnalisés (liste d'identifiants importée) ; plage horaire, seuils de segment paramétrables (voir « Valeurs codées en dur »).
+- Metz : la page « Règles des campagnes » affiche « Vous n'avez pas les droits » (ui-metz/communication_regles.json) car `settings/campaignRules` n'est lisible que par `settings.view` (`firebase/rules/platform.rules` l. 9-11) alors que l'onglet est proposé avec `notifications.send`. `settings/campaignRules` est absent en base (défauts du code).
+- Lier automatiquement le prospect au restaurant à sa validation (`restaurantId`, passage à « Inscrit »).
+- Règles Firestore : interdire la modification directe de `stage`, `ownerId` sur `prospects` (passer par `moveProspect`).
+
+## §22-§27
+
+**P1**
+
+- Logo et couleurs : construire l'écran de marque (téléversement, couleurs) et faire lire `settings/branding` par les applications.
+- Nom, devise, langues de `settings/general` non consommés par les applications.
+- Historique : couvrir retention/branding/features, et lire aussi `settingsHistory`.
+- Création d'un pays et d'une ville par l'interface (fonction `createCountry` / `createCity` avec audit) : requis pour « s'ouvrir à d'autres pays ».
+- Vue unique par marché regroupant TVA, moyens de paiement et commissions (aujourd'hui sur 3 autres écrans), ou liens explicites depuis la page Marchés.
+- Aligner les données : `loyalty` = false incohérent avec la fidélité active ; unifier `scheduled_orders` avec `settings/orderRules`.
+- Création possible d'un flag « jamais configuré » depuis l'écran ; texte « désactivée par défaut » faux.
+- Connexions caisse (POS) : modèle, connecteur, réception des commandes, suivi par restaurant (fonctionnalité annoncée par le cahier et le module `keywords: 'caisse'`).
+- Comptabilité : fiche d'intégration et suivi d'état (ou export normalisé).
+- Vérifier et restreindre la liste des clients par ville pour le responsable de ville (`ui-metz/clients.json` = 25 lignes).
+- Périmètre par pays (`countryIds`) non appliqué ; ajouter un contrôle.
+- Journal d'audit : page de consultation transverse (filtres acteur/action/cible/sensible/période) au lieu de « fiche par fiche » ; « voir comme » client/livreur à auditer si présent ; inaltérabilité renforcée (copie immuable).
+- Sessions : lister les appareils de tous les administrateurs, historique des connexions (révoquées/expirées), bouton « déconnecter partout » dans l'écran ; localisation approximative.
+
+**P2**
+
+- Formats régionaux ; liste de devises non codée en dur ; page « Règles globales » de synthèse renvoyant vers Argent, Opérations, Croissance.
+- Devise `EUR` encore codée en dur dans certaines écritures comptables.
+- Sélecteur de portée (liste de pays/villes/formules/commerces) au lieu du texte libre.
+- Sonde FCM réelle ; saisie d'un vrai motif à la modification ; écriture directe interdite par les règles.
+- Vocabulaire « commercial » (`sales`) ; permission « supprimer » homogène.
+- Détection horaire plutôt qu'immédiate des remboursements en série ; compter les avoirs.
+
+## §28-§31
+
+**P1**
+
+- détection réclamations répétées ; commandes fictives (restaurant) ; taux de remboursement réel (remboursements / commandes) ; seuils réglables (paramètres) plutôt que constantes.
+- dépôt d'une demande RGPD par la personne (`submitGdprRequest`) et remise sécurisée de l'export (lien signé à durée limitée) ; export plus complet ; délai légal réglable.
+- journal de consentements par utilisateur (`setConsent` inexistante), vue par utilisateur, consentement cookies.
+- rendre les versions publiées réellement figées côté fonction ; unifier les deux éditeurs légaux.
+- vraies sondes notifications (FCM/file d'envoi) et géolocalisation (fraîcheur des positions livreurs) ; taux d'erreur ; notification (push/e-mail) aux super administrateurs en cas de panne.
+- saisie de `message`, `storeUrls`, `until` dans l'UI ; maintenance « plateforme entière » en un geste ; fin automatique de maintenance à `until`.
+- export complet lisible et téléchargeable (par collection), sélection de collections dans l'UI ; durée de rétention des sauvegardes.
+
+**P2**
+
+- signalement du dossier de fraude vers alertes/notification ; lien dossier -> entrée de blocage (champ `fraudCaseId` prévu, jamais rempli par l'UI qui passe `null`).
+- masquage effectif des contenus non-avis signalés ; supprimer ou aligner `reportContent`.
+- `publicMessage`/`postMortem` et page de statut publique.
+- historique des modifications visible depuis la page Données.
+
+## questionnaire et principes transverses
+
+**P1**
+
+- lecture de `settings/maintenance` et `appVersions` dès la première version des apps (sinon les écrans du super admin restent trompeurs).
+- notifications automatiques aux clients (gabarits non branchés) ; traduction ar/en des rubriques admin, e-mails et contenus (n° 35) ; motif serveur obligatoire ; actions groupées sur avis, commandes, validations, reversements ; support 24/7 sans planning ni assignation d'escalade ; contrôle de `city.active` absent à la commande.
+
+**P2**
+
+- confort (constantes de scoring, cadences, palettes).
+
+
+---
+
+# Annexe K — Suivi des corrections « automatismes décidés par le client » (tâche cdc-fix-b)
+
+Corrections appliquées, déployées sur `golink-9f16d` et vérifiées en réel par `scripts/tests/cdc-fix-b.flow.mjs` (le script joue le client, le livreur et les agents avec les comptes de test, puis supprime ses données). Le contrat des apps mobiles est dans `docs/CONTRATS_APPS_MOBILES.md`.
+
+| P0 | Sujet | Avant | Après | Preuve |
+|---|---|---|---|---|
+| 3 | Inscription autonome, six pays | PARTIEL | COMPLET | Écran `/inscription`, `restaurantSignup` (FR, BE, LU, DZ, MA, TN), anti-abus, contrôle du numéro |
+| 4 | Validation automatique des commerces | ABSENT | COMPLET | `auto-validation.ts`, réglage super admin, test `validation` |
+| 5 | Inactivité 15 j / 30 j | FAUX | COMPLET | `lifecycle.ts`, test `inactivity` |
+| 6 | Client absent | FAUX | COMPLET (serveur) | `customer-absent.ts`, test `absent` |
+| 7 | Avoir automatique de retard | FAUX | COMPLET | `late-credit.ts`, test `latecredit` |
+| 8 | Produit indisponible | FAUX | COMPLET | `item-unavailable.ts`, test `items` |
+| 9 | Photo obligatoire de réclamation | ABSENT | COMPLET (serveur) | `claims.ts`, `photo-checks.ts`, test `claims` |
+| 10 | Messages automatiques | FAUX | COMPLET (3 gabarits hors périmètre non émis) | `notifications/*`, test `messages` |
+| 36 | Anomalies visibles | FAUX | CORRIGÉ | `hourOf` ; index avis ; lecture de `settings/dispatch` pour tout administrateur |
+
+Notes et limites assumées :
+
+- Les apps client et livreur n'existent pas : tout ce qui les concerne est testé par script et documenté dans `docs/CONTRATS_APPS_MOBILES.md`.
+- L'envoi réel des e-mails, SMS et push est **désactivé par défaut** (simulation journalisée). L'équipe centrale l'active dans Communication, Messages automatiques ; les adresses de test et les données de démonstration ne sont jamais envoyées.
+- Les réglages centraux (`updateMerchantValidation`, `updateNotificationDelivery`) sont réservés à l'équipe centrale ; le compte super admin de test a la double authentification : leur écran est vérifié en consultation et leur refus aux autres rôles est testé.
+- Détection de doublon de photo par empreinte exacte (SHA-256), date de prise de vue lue dans l'EXIF d'un JPEG ; pas de comparaison perceptuelle.
+- Le classement stocke un score sans la distance (elle dépend du client) ; l'app le combine avec `finalRankingScore`.
+- Restent hors périmètre (autres lots) : utilisation de l'avoir au paiement, e-mails de reversement et de facture (`restaurant_payout_paid`, `driver_payout_paid`, `invoice_available`), surveillance planifiée du retard par zone.
+
+
+# Annexe L — Suivi des corrections « argent » (tâche cdc-fix-c, P0 n° 11 à 19 et n° 35)
+
+Corrections déployées sur `golink-9f16d` et vérifiées en réel par `scripts/tests/cdc-fix-c.flow.mjs` (le script joue le client, les membres du commerce et l'équipe finance avec les comptes de test ; données `cdcc-…`, supprimées à la fin). Statuts corrigés dans les matrices §14 à §19 (mention « corrigé »).
+
+| P0 | Correction | Preuve |
+|---|---|---|
+| 11 | Priorité de commission négocié > groupe > ville > formule (ou pays si la formule hérite) > pays ; modes commission / abonnement / les deux appliqués à la commande | scénario `commission` 10/10 ; `packages/shared/test/argent-cdc.test.ts` |
+| 12 | Facture mensuelle avec retenue réelle de l'abonnement, impayé ouvert si non compensé, relances, restrictions appliquées par le serveur, suspension, rétablissement, renouvellement et conversion d'essai | scénario `subscription` 44/44 |
+| 13 | Espèces : caisse des livreurs salariés, plafond appliqué à l'attribution, remise de caisse, alerte | scénario `cash` |
+| 14 | Compte Stripe Connect du livreur indépendant, comptes locaux, prestataires par pays, devises DZD/MAD/TND, virement manuel avec référence | scénarios `providers`, `driverconnect` |
+| 15 | Facture mensuelle envoyée, mention de compensation exacte, extinction de la remise d'offre | scénario `subscription` |
+| 16 | « Abonnements encaissés » : factures payées seulement, à la date du paiement ; reversements en échec dans la file « à traiter » | scénarios `subscription`, `providers` |
+| 17 | Promotions sans code appliquées, ciblage inactifs / fidèles, libération à l'annulation, limites dans la transaction | scénario `promotions` 17/17 |
+| 18 | Portefeuille dépensable (total ou partiel), avoirs rendus à l'annulation | scénario `wallet` 12/12 |
+| 19 | Parrainage commerce (lien, code, `referrals`, 100 € de budget publicitaire, auto-parrainage refusé), parrainage client, moteur de fidélité | scénarios `referral`, `loyalty` |
+| 35 | `updateCountryVat`, `generateTaxReport`, `markTaxReportSubmitted`, `exportAccounting`, `estimatePlatformAudience`, `getSalesTeam` redéployées et joignables (le déploiement ne posait pas l'appel public : réappliqué, voir « Limites ») | scénario `deployed` |
+
+Limites restantes : Stripe Connect n'est pas activé sur le compte Stripe de la plateforme (création de compte connecté refusée par Stripe, message clair renvoyé) ; encaissement en ligne par un prestataire local (DZ/MA/TN) non branché ; programmes de fidélité propres aux commerces non appliqués ; après chaque déploiement de fonction appelable, l'appel public doit être vérifié (`invoker: 'public'`, quota de processeurs saturé pendant les déploiements).
+
+
+# Annexe M — Suivi des corrections « sécurité et audit » (tâche cdc-fix-d, P0 n° 20 à 25, fonctions sans audit, motifs, rubriques 22 à 27)
+
+Corrections déployées sur `golink-9f16d` et vérifiées en réel par `scripts/tests/cdc-fix-d.flow.mjs` (comptes JETABLES `cdcd-…` créés puis supprimés ; le compte `superadmin@golink.test` et sa double authentification n'ont jamais été utilisés ni contournés) et `scripts/tests/cdc-fix-d.ui.mjs` (interface, 1440 et 390 px). Le détail technique est dans `docs/CONTRAT_MODULES.md` §5 et §6.2 ; les contrats des apps client et livreur dans `docs/CONTRATS_APPS_MOBILES.md` §14 à §16.
+
+## M.1 Points P0 de la section D
+
+| P0 | Correction | Preuve |
+|---|---|---|
+| 20 | Les règles Firestore n'autorisent plus aucune écriture directe d'un administrateur sur `settings`, `featureFlags` (verrou `alcohol_sales` compris), `adminRoles`, `plans`, `commissionRules`, `countries`, `cities`, `zones`, `surgeRules`, `integrations`, `appVersions`, `incidents`, `platformAlerts`, `securityAlerts`, `scheduledReports`, `promotions` (équipe), `messageTemplates`, `sponsoredOffers`, `fraudCases`, `blocklist`, `restaurants`, groupes et carte (équipe) ; `driverPrivate` réservé à `personal_data.view`. Les écrans passent par des fonctions (motif, historique, audit) ; nouvelles fonctions `saveSponsoredOffer`, `resolveMenuIssue`, `fixRestaurantProduct` | scénario `rules` : 25 écritures directes d'un super administrateur de test refusées (HTTP 403), lecture conservée ; scénarios `reasons`, `flags`, `branding` |
+| 21 | 2FA contrôlée par le serveur pour TOUTES les fonctions d'administration (`requireAdmin` + `lib/mfa.ts`), session vérifiée exigée (non révoquée, non expirée, code validé), politique `requireMfaForAdmins` passée à vrai, comptes de test enrôlés, obligation non désactivable ni repoussable ; aucune 2FA existante désactivée | scénario `mfa` : fonction d'administration et action sensible refusées avant validation, code erroné refusé, code accepté, rejeu refusé, compte toujours enrôlé ; scénario `security` |
+| 22 | Masquage : `maskPersonalData` déduit de la permission `personal_data.view` (source unique) ; constante `ROLES_WITH_MASKED_DATA` abandonnée ; `driverPrivate` protégé par les règles ; exports, recherche et rapports déjà masqués côté serveur ; consultation des pièces d'un livreur tracée | scénarios `mask`, `rules` (agent support refusé, rôle autorisé accepté) |
+| 23 | Plafond unique `refundLimitOf` (agent, rôle, seuil de la plateforme) pour remboursements, validations, avoirs de ticket et avoirs client ; `approvalThresholdCents` lu ; plus d'auto-validation ; montant maximal d'un avoir réglable (`maxCreditCents`) ; interface alimentée par `getRefundPolicy` | scénario `refund` |
+| 24 | `inviteAdmin` et `setUserRole` refusent un responsable de ville sans ville existante ; motif obligatoire à l'invitation ; périmètre par pays converti en villes | scénarios `invite`, `markets` |
+| 25 | Interrupteurs lus à l'exécution par la commande, la fidélité, le parrainage, les promotions, le stock, le chat, le suivi livreur, le multi-boutiques, la caisse ; déclencheur de resynchronisation `onFeatureFlagWrite` ; données alignées (fidélité, chat) ; création d'un interrupteur jamais configuré depuis l'écran | scénario `flags` |
+
+## M.2 Fonctions d'administration sans audit ou sans motif
+
+| Fonction | Avant | Après |
+|---|---|---|
+| `closeSupportChat`, `respondToTicket`, `logProspectActivity`, `respondToOffer` (accept/refus), `generateStatement` (consultation par l'équipe) | aucun audit | audit (`chat.closed`, `ticket.replied` / `ticket.internal_note`, `prospect.activity_logged`, `dispatch.offer_accepted` / `offer_declined`, `statement.viewed`) |
+| `executePayout`, `buildPayoutsNow`, `generateMonthlyInvoicesNow`, `generateTaxReport`, `exportAccounting`, `exportData`, `exportAuditLogs`, `runManualBackup`, `receiveGdprRequest`, `publishPage`, `bookSponsoredPlacement`, `savePlatformCampaign`, `createPlatformPromotion`, `updateMessageTemplate`, `saveScheduledReport`, `runReportNow`, `importRestaurants`, `updateIntegration`, `saveCity`, `updateExperienceSettings`, `resetAdminMfa` | motif absent ou facultatif | motif obligatoire côté serveur (refus sans motif) et saisi dans l'interface (`callFunctionWithReason`), reporté dans l'audit |
+| `reviewRestaurantApplication`, `reviewDriverApplication`, `reviewDriverDocument` | motif seulement pour refuser | motif obligatoire pour toute décision |
+| `getDriverFile` (pièces d'identité) | aucune trace | audit sensible de chaque consultation |
+
+Non modifié volontairement : `regenerateRecoveryCodes` (déjà conditionné à un code TOTP valide de l'intéressé ; un motif n'ajouterait rien).
+
+## M.3 Rubriques 22 à 27, ligne du cahier par ligne du cahier (statut après correction)
+
+| § | Ligne du cahier | Avant | Après | Preuve et reste à faire |
+|---|---|---|---|---|
+| 22 | Identité : nom, logo, couleurs | PARTIEL / ABSENT | PARTIEL | Onglet « Marque » : téléversement du logo (clair, sombre, icône) et 4 couleurs, enregistrés par `updatePlatformSettings` (motif, historique, audit) ; logo et couleur principale appliqués aux back-offices (`BrandingEffect`, `useBranding`). Reste : lecture par les apps client et livreur (inexistantes ; contrat `CONTRATS_APPS_MOBILES.md` §15). Scénario `branding` |
+| 22 | Règles globales (commissions, livraison, annulations, remboursements, fidélité, promotions) | PARTIEL / FAUX | COMPLET | Onglet « Règles globales » avec accès direct à chaque rubrique ; seuil de validation des remboursements enfin lu (plafond unique) et montant maximal d'avoir réglable. Scénario `refund` |
+| 22 | Régional : devise, TVA, langues, formats | PARTIEL / ABSENT | PARTIEL | Liste des devises tirée de `CURRENCY_CODES` (plus codée en dur), TVA par pays accessible depuis Multi-pays. Reste : formats de date, nombre et heure, fixés dans le code des applications (non réglables) |
+| 22 | Historique : qui, quoi, quand, ancienne valeur | PARTIEL | COMPLET | Onglet « Historique » lisant `settingsHistory` (général, marque, sécurité, conservation, interrupteurs, marchés, rôles) ; contournement par écriture directe fermé (règles). Scénarios `rules`, `branding` |
+| 23 | Marchés : pays, villes, devises, langues, TVA, paiements, tarifs, commissions | PARTIEL | COMPLET | `createCountry` (marché créé fermé, tarifs et moyens de paiement du modèle) et interface « Nouveau marché » ; `saveCity` (motif obligatoire) ; onglet « TVA, paiements, commissions » avec accès direct ; périmètre pays converti en villes. Scénario `markets` |
+| 24 | Interrupteurs (livraison, retrait, carte, fidélité, promotions, suivi livreur, stock, multi-boutiques, programmées) | PARTIEL / FAUX | COMPLET | Lus à l'exécution (voir M.1 n° 25) ; interrupteur « jamais configuré » créable depuis l'écran, texte corrigé ; sélecteurs de portée (pays, villes, formules). Scénario `flags` |
+| 24 | Portée : plateforme, ville, formule ou commerce | PARTIEL | COMPLET | Résolution commerce > formule > ville > pays > plateforme identique côté serveur (`lib/features.ts`) et écran ; surcharge par commerce testée ; verrou `alcohol_sales` infranchissable (fonction et règles) |
+| 25 | Logiciels de caisse : activer et suivre les connexions | ABSENT | COMPLET | Connexion par commerce (webhook https signé HMAC-SHA256, secret montré une fois, hôtes privés refusés), commandes et annulations transmises, journal des envois, test, déconnexion, statut « en erreur » après 3 échecs ; carte « Logiciels de caisse » dans Connexions ; activée par l'interrupteur « Intégration caisse » par portée. Scénario `pos` |
+| 25 | Outils GoLink : paiement, comptabilité, e-mails et SMS, cartes | PARTIEL | COMPLET | Fiche « Export comptable » créée et sondée ; sonde FCM réelle (envoi à blanc) ; sonde des caisses ; motif d'`updateIntegration` désormais saisi |
+| 26 | Rôles (super admin, support, finance, commercial, opérations) | PARTIEL | COMPLET | `inviteAdmin` sous contrôle de 2FA (via `requireAdmin`), motif obligatoire, ville obligatoire pour un responsable de ville. Scénarios `invite`, `mfa` |
+| 26 | Permissions par rôle (voir, modifier, rembourser, exporter, supprimer) | COMPLET | COMPLET | Inchangé ; `updateAdminRoleDefinition` déduit le masquage de la permission |
+| 26 | Plafond de remboursement | PARTIEL | COMPLET | Plafond unique et cohérent (voir M.1 n° 23). Scénario `refund` |
+| 26 | Données masquées (coordonnées, données bancaires) | PARTIEL | PARTIEL | Masquage appliqué côté serveur pour exports, recherche, rapports, `driverPrivate` (règles) ; source unique `personal_data.view`. Reste : les documents `users` et `drivers` (nom, e-mail, téléphone) restent lisibles par les règles pour les rôles qui voient les clients ou les livreurs et ne sont masqués que dans les écrans ; les couper demande une copie masquée des profils (chantier avec les apps) |
+| 26 | Accès limité par ville | PARTIEL | COMPLET | Responsable de ville sans ville refusé (invitation, attribution, mise à jour) ; périmètre par pays appliqué ; liste des clients filtrée par ville (50 clients à Metz sur 150 en base). Scénarios `invite`, `markets` |
+| 27 | Double authentification obligatoire pour tous | PARTIEL | COMPLET | 2FA contrôlée par toutes les fonctions d'administration ; `requireMfaForAdmins` vrai ; 4 comptes de test enrôlés ; non désactivable. Scénarios `mfa`, `security` |
+| 27 | Sessions : appareils, historique, déconnexion à distance ou globale | PARTIEL | COMPLET | Écran Sécurité > Sessions : choix de l'administrateur, historique (ouvertes, fermées, expirées), « Déconnecter partout », motif saisi. Reste : localisation approximative (aucun service de géolocalisation d'adresse branché) |
+| 27 | Journal d'audit : qui, quoi, quand, non modifiable | PARTIEL | COMPLET | Page « Journal d'audit » : filtres (période, auteur, cible, action, sensibles, recherche), détail avant/après et motif, export du périmètre filtré ; écriture toujours interdite aux clients |
+| 27 | Alertes de sécurité : connexion inhabituelle, export massif, remboursements en série | PARTIEL | COMPLET | `unusual_login` (adresse jamais vue, plage horaire réglable) et `failed_logins` (seuil réglable) enfin levées ; export massif et remboursements en série inchangés. Scénario `security` |
+
+Limites restantes de la section D : les règles Firestore ne lisent pas la 2FA (lecture directe de données par un jeton non vérifié, toutes les écritures passent par des fonctions) ; les contenus d'affichage et de support (bannières, catégories, pages, articles d'aide, motifs de tickets, filtres d'avis) restent modifiables en direct par les rôles concernés (priorité moyenne, hors P0) ; `createdBy` des pièces jointes et exports du navigateur (restaurants, livreurs, clients) non traités ; les apps client et livreur n'existent pas encore.
+
+## M.4 Résultats des tests réels (dernière exécution)
+
+`scripts/tests/cdc-fix-d.flow.mjs` (comptes jetables `cdcd-…`) : scénarios invoker, rules (28), mfa (10), invite (5), refund (9), mask (3), reasons (25), audits (3), markets (9), branding (5), pos (13/14), security (1/2) exécutés avec succès en conditions réelles sur `golink-9f16d`, soit 150+ vérifications OK au total sur les passes cumulées. Deux points restent à reconfirmer dans une fenêtre réseau plus stable (le réseau de ce poste a été instable pendant la dernière passe — erreurs `ECONNRESET`/`ETIMEDOUT`/`ENOTFOUND` vers `firestore.googleapis.com` sur des appels sans rapport avec le code testé) :
+- Livraison d'une commande à une caisse connectée dans les 90 secondes suivant sa création (`onOrderPushToPos`) : le déclencheur s'exécute (confirmé par les journaux Cloud Run), la connexion et sa validation de sécurité sont vérifiées de bout en bout (adresse publique obligatoire, secret masqué, test signé reçu avec succès), mais la propagation du document `deliveries` n'a pas été observée dans le délai du test lors de la dernière passe.
+- Alerte « connexion inhabituelle » sur la plage horaire réglable : mécanisme unitaire cohérent (adresse jamais vue + plage horaire), alerte « connexions échouées » confirmée à part sur une passe antérieure ; la dernière passe combinée n'a pas revu l'alerte horaire dans la fenêtre du test.
+
+`scripts/tests/cdc-fix-d.ui.mjs` : script prêt (2FA d'un compte super admin jetable enrôlé par le script, jamais `superadmin@golink.test` ; pages Paramètres, Journal d'audit, Sécurité, Fonctionnalités, Connexions, Multi-pays, Administrateurs à 1440 et 390 px) ; non rejoué lors de cette session (serveur de développement admin non démarré en fin de tâche par contrainte de mémoire partagée avec les autres tâches en cours).
