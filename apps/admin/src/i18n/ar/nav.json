@@ -1,0 +1,46 @@
+{
+  "groups": {
+    "pilotage": "المتابعة",
+    "acteurs": "الأطراف",
+    "operations": "العمليات",
+    "argent": "الأموال",
+    "croissance": "النمو",
+    "plateforme": "المنصة والأمان"
+  },
+  "modules": {
+    "a-plateforme-securite": "المنصة والأمان",
+    "abonnements": "الاشتراكات والعمولات",
+    "accueil": "لوحة المتابعة",
+    "affichage": "عرض تطبيق العميل",
+    "alertes": "التنبيهات",
+    "analytics": "التحليلات",
+    "annonces": "الإعلانات",
+    "avis": "الآراء والتقييمات",
+    "clients": "العملاء",
+    "commandes": "الطلبات",
+    "communication": "الإشعارات والإرسال",
+    "facturation": "الفوترة وضريبة القيمة المضافة",
+    "fidelite": "الولاء والإحالة",
+    "finance": "المالية والتحويلات",
+    "flotte": "الأسطول المباشر",
+    "livreurs": "الموصّلون",
+    "paiements": "المدفوعات",
+    "promotions": "العروض",
+    "prospection": "الاستقطاب التجاري",
+    "rapports": "التقارير والتصدير",
+    "recherche": "البحث",
+    "regles-commandes": "القواعد التلقائية",
+    "restaurants": "المطاعم",
+    "support": "الدعم والنزاعات",
+    "zones": "المناطق والمدن"
+  },
+  "geo": {
+    "allMarkets": "كل الأسواق",
+    "myScope": "نطاقي",
+    "allMyScope": "كل نطاقي",
+    "scopeLabel": "النطاق: {{name}}",
+    "shown": "النطاق المعروض",
+    "hint": "يرشّح جميع الأقسام حسب البلد أو المدينة.",
+    "searchCity": "ابحث عن مدينة"
+  }
+}

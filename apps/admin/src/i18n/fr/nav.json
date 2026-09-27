@@ -1,0 +1,46 @@
+{
+  "groups": {
+    "pilotage": "Pilotage",
+    "acteurs": "Acteurs",
+    "operations": "Opérations",
+    "argent": "Argent",
+    "croissance": "Croissance",
+    "plateforme": "Plateforme & sécurité"
+  },
+  "modules": {
+    "a-plateforme-securite": "Plateforme & sécurité",
+    "abonnements": "Abonnements et commissions",
+    "accueil": "Tableau de bord",
+    "affichage": "Affichage app client",
+    "alertes": "Alertes",
+    "analytics": "Analytics",
+    "annonces": "Annonces",
+    "avis": "Avis et notes",
+    "clients": "Clients",
+    "commandes": "Commandes",
+    "communication": "Notifications et envois",
+    "facturation": "Facturation et TVA",
+    "fidelite": "Fidélité et parrainage",
+    "finance": "Finance et reversements",
+    "flotte": "Flotte en direct",
+    "livreurs": "Livreurs",
+    "paiements": "Paiements",
+    "promotions": "Promotions",
+    "prospection": "Prospection",
+    "rapports": "Rapports et exports",
+    "recherche": "Recherche",
+    "regles-commandes": "Règles automatiques",
+    "restaurants": "Restaurants",
+    "support": "Support et litiges",
+    "zones": "Zones et villes"
+  },
+  "geo": {
+    "allMarkets": "Tous les marchés",
+    "myScope": "Mon périmètre",
+    "allMyScope": "Tout mon périmètre",
+    "scopeLabel": "Périmètre : {{name}}",
+    "shown": "Périmètre affiché",
+    "hint": "Filtre toutes les rubriques par pays ou par ville.",
+    "searchCity": "Rechercher une ville"
+  }
+}

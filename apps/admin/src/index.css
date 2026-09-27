@@ -1,2 +1,4 @@
-*, *::before, *::after { box-sizing: border-box; }
-body { margin: 0; }
+@import "@golink/ui/styles.css";
+
+/* Socle applicatif partagé (pages d'accès, écrans d'état) : Tailwind doit analyser ses classes. */
+@source "../../../packages/web/src";
