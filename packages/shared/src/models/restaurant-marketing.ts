@@ -40,3 +40,59 @@ export interface ReplyTemplate extends Tracked {
   usageCount: number;
   lastUsedAt?: Timestamp | null;
 }
+
+// ------------------------------------------------------------------ Offres sur un plat
+
+/** Types d'offre automatique sur un plat : « 1 acheté, 1 offert » et « Le 2e à -50 % ». */
+export const PRODUCT_OFFER_KINDS = ['bogo', 'half_second'] as const;
+export type ProductOfferKind = (typeof PRODUCT_OFFER_KINDS)[number];
+
+/** Statut calculé d'une offre (jamais stocké) : en ligne, programmée, en pause, terminée, désactivée par GoLink. */
+export const PRODUCT_OFFER_STATUSES = ['live', 'scheduled', 'paused', 'ended', 'disabled'] as const;
+export type ProductOfferStatus = (typeof PRODUCT_OFFER_STATUSES)[number];
+
+/** Désactivation d'une offre par l'équipe GoLink (abus, plat non conforme…) : le commerce ne peut pas la réactiver. */
+export interface ProductOfferModeration {
+  reason: string;
+  by: string;
+  byName?: string | null;
+  at: Timestamp;
+}
+
+/**
+ * restaurants/{rid}/productOffers/{offerId} : offre automatique sur un plat, financée par le
+ * commerce, distincte des campagnes de communication. Écriture par Cloud Functions uniquement ;
+ * les champs de marché (pays, ville) et le nom du commerce sont recopiés pour la vue du super admin.
+ */
+export interface ProductOffer extends Tracked {
+  restaurantId: string;
+  restaurantName: string;
+  countryId: string;
+  cityId: string;
+  kind: ProductOfferKind;
+  productId: string;
+  productName: string;
+  /** Titre affiché au client (3 à 70 caractères). */
+  title: string;
+  /** Message d'accroche (10 à 180 caractères). */
+  message: string;
+  /** Période AAAA-MM-JJ incluse ; fin nulle = sans date de fin. */
+  startDay: string;
+  endDay: string | null;
+  /** Mise en pause par le commerce. */
+  active: boolean;
+  /** Désactivation par GoLink (prime sur `active`). */
+  disabledByPlatform?: ProductOfferModeration | null;
+  /** Compteurs tenus par les fonctions de commande. */
+  ordersCount?: number;
+  discountTotalCents?: number;
+}
+
+/** Statut d'une offre à une date donnée (AAAA-MM-JJ, fuseau du marché). */
+export function productOfferStatus(offer: Pick<ProductOffer, 'active' | 'startDay' | 'endDay' | 'disabledByPlatform'>, today: string): ProductOfferStatus {
+  if (offer.disabledByPlatform) return 'disabled';
+  if (offer.endDay && offer.endDay < today) return 'ended';
+  if (!offer.active) return 'paused';
+  if (offer.startDay > today) return 'scheduled';
+  return 'live';
+}
