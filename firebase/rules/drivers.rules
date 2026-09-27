@@ -1,0 +1,82 @@
+// ---------------------------------------------------------------------------
+// Livreurs : profil, données privées, position en direct, sessions, sanctions,
+// vérification d'identité, propositions de course, gains.
+// Validation, statut, sanctions, attribution et rémunération : Cloud Functions.
+// ---------------------------------------------------------------------------
+
+match /drivers/{driverId} {
+  allow read: if isSelf(driverId) || isAdminIn('drivers.view', resource.data.cityId);
+  // Le livreur ne pilote que sa disponibilité ; passer en ligne exige un compte actif.
+  allow update: if isSelf(driverId)
+      && onlyChanges(['availability', 'lastSeenAt', 'updatedAt', 'updatedBy'])
+      && incoming().availability in ['online', 'offline', 'paused']
+      && (incoming().availability == 'offline' || existing().status == 'active')
+      && existing().activeOrderIds.size() == 0
+      && updatedNow()
+    || isAdminIn('drivers.edit', resource.data.cityId)
+      && onlyChanges(['firstName', 'lastName', 'displayName', 'phone', 'zoneIds', 'acceptsCash', 'searchKeywords', 'updatedAt', 'updatedBy'])
+      && updatedNow();
+  allow create, delete: if false;
+}
+
+// Identité légale, adresse, coordonnées bancaires : réservées aux rôles disposant de la
+// permission « Données personnelles non masquées » (masquage appliqué côté serveur).
+match /driverPrivate/{driverId} {
+  allow read: if isSelf(driverId) || isAdmin('personal_data.view');
+  allow write: if false;
+}
+
+// Position en direct : le livreur écrit uniquement sa position ; la liste des
+// lecteurs autorisés (client et personnel du restaurant de la commande en cours)
+// est tenue par la Cloud Function d'attribution.
+match /driverLocations/{driverId} {
+  allow read: if isSelf(driverId)
+    || (signedIn() && request.auth.uid in resource.data.visibleTo)
+    || isAdmin('orders.view')
+    || isAdmin('drivers.view');
+  allow update: if isSelf(driverId)
+    && onlyChanges(['position', 'geohash', 'heading', 'speedKmh', 'accuracyMeters', 'updatedAt'])
+    && incoming().position is latlng
+    && incoming().updatedAt == request.time;
+  allow create, delete: if false;
+}
+
+match /driverSessions/{sessionId} {
+  allow read: if isSelf(resource.data.driverId) || isAdmin('drivers.view');
+  allow write: if false;
+}
+
+match /driverSanctions/{sanctionId} {
+  allow read: if isSelf(resource.data.driverId) || isAdmin('drivers.view');
+  // Contestation par le livreur ; la décision est prise par Cloud Function (audit).
+  allow update: if isSelf(existing().driverId)
+    && existing().status == 'active'
+    && existing().get('contest', null) == null
+    && onlyChanges(['contest', 'status', 'updatedAt', 'updatedBy'])
+    && incoming().status == 'contested'
+    && isNonEmptyString(incoming().contest.message, 2000)
+    && incoming().contest.submittedAt == request.time
+    && incoming().contest.get('decision', null) == null
+    && updatedNow();
+  allow create, delete: if false;
+}
+
+match /identityChecks/{checkId} {
+  allow read: if isSelf(resource.data.driverId) || isAdmin('drivers.validate');
+  allow update: if isSelf(existing().driverId)
+    && existing().status == 'requested'
+    && onlyChanges(['selfie', 'status'])
+    && incoming().status == 'submitted';
+  allow create, delete: if false;
+}
+
+// Acceptation et refus : Cloud Function respondToOffer (transaction, pas de double attribution).
+match /dispatchOffers/{offerId} {
+  allow read: if isSelf(resource.data.driverId) || isAdmin('orders.view');
+  allow write: if false;
+}
+
+match /driverEarnings/{earningId} {
+  allow read: if isSelf(resource.data.driverId) || isAdmin('finance.view') || isAdmin('drivers.view');
+  allow write: if false;
+}

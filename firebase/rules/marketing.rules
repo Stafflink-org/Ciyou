@@ -1,0 +1,162 @@
+// ---------------------------------------------------------------------------
+// Croissance et communication : promotions, campagnes, messages automatiques,
+// annonces, prospection commerciale. Les envois sont faits par Cloud Functions.
+// ---------------------------------------------------------------------------
+
+// Champs qu'un restaurant ne peut jamais fixer sur ses promotions.
+function promotionLockedFields() {
+  return ['scope', 'restaurantId', 'funding', 'stats', 'countryId', 'cityIds', 'restaurantIds', 'showcase', 'reviewNote'];
+}
+
+function isRestaurantPromotion(data, rid) {
+  return data.scope == 'restaurant' && data.restaurantId == rid && data.funding == 'restaurant';
+}
+
+match /promotions/{promotionId} {
+  allow read: if (resource.data.showcase == true && resource.data.status == 'active')
+    || (resource.data.scope == 'restaurant' && can(resource.data.restaurantId, 'marketing.manage'))
+    || isAdmin('promotions.view');
+  // Création par un restaurant : brouillon ou soumise à validation (activation par Cloud Function).
+  // Promotions de la plateforme et décisions de l'équipe : Cloud Functions (createPlatformPromotion, ...).
+  allow create: if (isRestaurantPromotion(incoming(), incoming().restaurantId)
+        && can(incoming().restaurantId, 'marketing.manage')
+        && incoming().status in ['draft', 'pending_review']
+        && incoming().showcase == false)
+    && incoming().stats.redemptions == 0
+    && incoming().kind in ['percentage', 'fixed', 'free_delivery']
+    && incoming().perCustomerLimit is int && incoming().perCustomerLimit >= 1
+    && createdNow();
+  allow update: if (can(existing().restaurantId, 'marketing.manage')
+        && existing().scope == 'restaurant'
+        && keepsUnchanged(promotionLockedFields())
+        && incoming().status in ['draft', 'pending_review', 'paused', 'ended'])
+    && updatedNow();
+  allow delete: if false;
+}
+
+match /promotionRedemptions/{redemptionId} {
+  allow read: if isSelf(resource.data.userId)
+    || can(resource.data.restaurantId, 'marketing.manage')
+    || isAdmin('promotions.view');
+  allow write: if false;
+}
+
+match /campaigns/{campaignId} {
+  allow read: if (resource.data.scope == 'restaurant' && can(resource.data.restaurantId, 'marketing.manage'))
+    || isAdmin('notifications.send');
+  allow create: if (incoming().scope == 'restaurant' && can(incoming().restaurantId, 'marketing.manage')
+      || incoming().scope == 'platform' && isAdmin('notifications.send'))
+    && incoming().status in ['draft', 'scheduled']
+    && incoming().stats.sent == 0
+    && createdNow();
+  allow update: if (existing().scope == 'restaurant' && can(existing().restaurantId, 'marketing.manage')
+      || existing().scope == 'platform' && isAdmin('notifications.send'))
+    && existing().status in ['draft', 'scheduled']
+    && incoming().status in ['draft', 'scheduled', 'cancelled']
+    && keepsUnchanged(['scope', 'restaurantId', 'stats', 'sentAt'])
+    && updatedNow();
+  allow delete: if false;
+}
+
+match /messageTemplates/{key} {
+  allow read: if isAdmin('templates.edit') || isAdmin('notifications.send');
+  // Modification d'un gabarit : updateMessageTemplate (Cloud Function, audit).
+  allow update: if false;
+  allow create, delete: if false;
+}
+
+match /notificationLogs/{logId} {
+  allow read: if isAdmin('support.view') || isAdmin('notifications.send');
+  allow write: if false;
+}
+
+match /announcements/{announcementId} {
+  allow read: if resource.data.active == true
+      && ((resource.data.audience == 'restaurants' && signedIn())
+        || (resource.data.audience == 'drivers' && isRole('driver')))
+    || isAdmin('announcements.edit');
+  allow create: if isAdmin('announcements.edit') && createdNow();
+  allow update: if isAdmin('announcements.edit') && updatedNow();
+  allow delete: if false;
+}
+
+// ------------------------------------------------------------ Prospection (mini CRM)
+
+match /prospects/{prospectId} {
+  allow read: if isAdmin('crm.view');
+  allow create: if isAdmin('crm.edit') && createdNow();
+  allow update: if isAdmin('crm.edit') && keepsUnchanged(['restaurantId', 'signedUpAt']) && updatedNow();
+  allow delete: if false;
+
+  match /activities/{activityId} {
+    allow read: if isAdmin('crm.view');
+    allow create: if isAdmin('crm.edit') && incoming().by == uid() && incoming().at == request.time;
+    allow update, delete: if false;
+  }
+}
+
+match /salesCommissions/{commissionId} {
+  allow read: if isSelf(resource.data.salesRepId) && isAnyAdmin()
+    || isAdmin('crm.manage_team')
+    || isAdmin('finance.view');
+  allow write: if false;
+}
+
+// ------------------------------------------------------------ Marketing d'un établissement
+// Profil social (lecture publique, fiche de l'app client), messages automatiques
+// (lus par les Cloud Functions) et réponses types de l'équipe.
+
+function restaurantSocialValid() {
+  return incoming().keys().hasOnly(['links', 'shareMessage', 'hashtags', 'updatedAt', 'updatedBy'])
+    && incoming().links is map && incoming().links.size() <= 6
+    && incoming().shareMessage is string && incoming().shareMessage.size() <= 280
+    && incoming().hashtags is list && incoming().hashtags.size() <= 10;
+}
+
+function restaurantAutoMessagesValid() {
+  return incoming().keys().hasOnly(['messages', 'updatedAt', 'updatedBy'])
+    && incoming().messages is map && incoming().messages.size() <= 10;
+}
+
+match /restaurants/{rid}/marketing/{docId} {
+  allow read: if docId == 'social' || isRestaurantMember(rid) || isAdmin('restaurants.view');
+  allow create, update: if can(rid, 'marketing.manage')
+    && incoming().updatedAt == request.time
+    && incoming().updatedBy == uid()
+    && (docId == 'social' && restaurantSocialValid()
+      || docId == 'autoMessages' && restaurantAutoMessagesValid());
+  allow delete: if false;
+}
+
+function replyTemplateValid() {
+  return incoming().kind in ['review_reply', 'customer_message', 'driver_message']
+    && isNonEmptyString(incoming().title, 60)
+    && isNonEmptyString(incoming().body, 1000)
+    && incoming().ratings is list && incoming().ratings.size() <= 5
+    && isOptionalString(incoming().get('shortcut', null), 24);
+}
+
+match /restaurants/{rid}/replyTemplates/{templateId} {
+  allow read: if can(rid, 'marketing.manage') || can(rid, 'reviews.reply') || can(rid, 'messages.use');
+  allow create: if can(rid, 'marketing.manage') && createdNow() && replyTemplateValid() && incoming().usageCount == 0;
+  // Compteur d'utilisation : Cloud Functions (réponse à un avis, message).
+  allow update: if can(rid, 'marketing.manage') && updatedNow() && replyTemplateValid()
+    && keepsUnchanged(['usageCount', 'lastUsedAt', 'createdAt', 'createdBy']);
+  allow delete: if can(rid, 'marketing.manage');
+}
+
+// ------------------------------------------------------------ Croissance (super admin)
+// Compléments de lecture pour les rubriques Promotions, Fidélité, Communication et
+// Prospection. Les écritures passent par les Cloud Functions du domaine marketing.
+
+// Réglages du mini CRM (primes des commerciaux) : lisibles par l'équipe commerciale.
+match /settings/{docId} {
+  allow read: if docId == 'crm' && isAdmin('crm.view');
+}
+
+// Parrainages : suivi par l'équipe fidélité ; parrainages restaurants par les commerciaux.
+match /referrals/{referralId} {
+  allow read: if isAdmin('loyalty.edit')
+    || (isAdmin('crm.view') && resource.data.program == 'restaurant')
+    || (resource.data.program == 'restaurant' && resource.data.referrerType == 'restaurant' && can(resource.data.referrerId, 'settings.manage'));
+}

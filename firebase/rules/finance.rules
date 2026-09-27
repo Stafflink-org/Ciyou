@@ -1,0 +1,96 @@
+// ---------------------------------------------------------------------------
+// Argent : paiements, remboursements, grand livre, reversements, factures,
+// déclarations, formules, abonnements, barèmes de commission.
+// Tous les mouvements sont écrits par Cloud Functions (Stripe, planificateurs).
+// ---------------------------------------------------------------------------
+
+match /payments/{paymentId} {
+  allow read: if (resource.data.payerType == 'client' && isSelf(resource.data.payerId))
+    || (resource.data.get('restaurantId', null) != null
+      && resource.data.purpose != 'order'
+      && can(resource.data.restaurantId, 'finance.view'))
+    || isAdmin('payments.view');
+  allow write: if false;
+}
+
+match /refunds/{refundId} {
+  allow read: if isSelf(resource.data.customerId)
+    || can(resource.data.restaurantId, 'finance.view')
+    || isAdmin('refunds.create')
+    || isAdmin('finance.view');
+  allow write: if false;
+}
+
+match /ledgerEntries/{entryId} {
+  allow read: if (resource.data.accountType == 'restaurant' && can(resource.data.accountId, 'finance.view'))
+    || (resource.data.accountType in ['driver', 'driver_cash', 'customer_wallet'] && isSelf(resource.data.accountId))
+    || isAdmin('finance.view');
+  allow write: if false;
+}
+
+match /payouts/{payoutId} {
+  allow read: if (resource.data.beneficiaryType == 'restaurant' && can(resource.data.beneficiaryId, 'finance.view'))
+    || (resource.data.beneficiaryType == 'driver' && isSelf(resource.data.beneficiaryId))
+    || isAdmin('finance.view');
+  allow write: if false;
+}
+
+match /payoutHolds/{holdId} {
+  allow read: if isAdmin('finance.view');
+  allow write: if false;
+}
+
+// Factures et avoirs : jamais modifiés ni supprimés après émission.
+match /invoices/{invoiceId} {
+  allow read: if (resource.data.recipient.type == 'restaurant' && can(resource.data.recipient.id, 'invoices.view'))
+    || (resource.data.recipient.type in ['client', 'driver'] && isSelf(resource.data.recipient.id))
+    || (resource.data.issuer.type == 'driver' && isSelf(resource.data.issuer.id))
+    || isAdmin('invoices.view');
+  allow write: if false;
+}
+
+match /taxReports/{reportId} {
+  allow read: if isAdmin('tax.reports');
+  allow write: if false;
+}
+
+match /plans/{planCode} {
+  allow read: if true;
+  // Écriture : updatePlan (Cloud Function, motif, audit).
+  allow write: if false;
+}
+
+// Changement de formule, essai, résiliation, impayés : Cloud Functions (Stripe Billing).
+match /subscriptions/{subscriptionId} {
+  allow read: if (resource.data.subscriberType == 'restaurant' && can(resource.data.subscriberId, 'finance.view'))
+    || isAdmin('subscriptions.manage')
+    || isAdmin('finance.view');
+  allow write: if false;
+}
+
+// Barèmes versionnés : une modification crée une nouvelle règle, l'ancienne est close par trigger.
+match /commissionRules/{ruleId} {
+  allow read: if isAdmin('commissions.edit') || isAdmin('finance.view') || isAdmin('restaurants.commercial');
+  // Création d'un barème : updateCommissionRule (Cloud Function : clôture de l'ancien, motif, audit).
+  allow write: if false;
+}
+
+// Prestataires de paiement par pays (Stripe, prestataires locaux) : lisibles par tout compte connecté
+// (choix du compte de paiement dans les apps), modifiés par Cloud Function uniquement.
+match /paymentProviders/{providerId} {
+  allow read: if signedIn();
+  allow write: if false;
+}
+
+// Espèces des livreurs salariés du commerce : suivi de la caisse et remises, écrit par Cloud Function.
+match /cashMovements/{movementId} {
+  allow read: if can(resource.data.restaurantId, 'couriers.manage')
+    || can(resource.data.restaurantId, 'finance.view')
+    || isAdmin('finance.view');
+  allow write: if false;
+}
+
+// Codes de parrainage : recherchés par Cloud Function uniquement.
+match /referralCodes/{code} {
+  allow read, write: if false;
+}
