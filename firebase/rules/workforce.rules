@@ -1,0 +1,278 @@
+// ---------------------------------------------------------------------------
+// Gestion d'entreprise du restaurant (équipe, planning, pointages, absences,
+// paie, tâches, documents) et registre HACCP. Tout est sous restaurants/{rid}.
+// Un employé accède à ses propres données via le champ dénormalisé employeeUid.
+// Le pointage (entrée, sortie, pauses, géolocalisation) passe par la Cloud
+// Function clockEvent ; la génération des bulletins par generatePayslips.
+// ---------------------------------------------------------------------------
+
+function ownsEntry() {
+  return signedIn() && resource.data.get('employeeUid', null) == request.auth.uid;
+}
+
+function ownsEmployeeRecord() {
+  return signedIn() && resource.data.get('uid', null) == request.auth.uid;
+}
+
+function ownsIncoming() {
+  return signedIn() && request.resource.data.get('employeeUid', null) == request.auth.uid;
+}
+
+match /restaurants/{rid}/employees/{employeeId} {
+  allow read: if can(rid, 'team.view') || ownsEmployeeRecord() || isAdmin('restaurants.view');
+  allow create: if can(rid, 'team.manage') && createdNow()
+    && isNonEmptyString(incoming().firstName, 60)
+    && isNonEmptyString(incoming().lastName, 60);
+  allow update: if can(rid, 'team.manage') && updatedNow();
+  allow delete: if false;
+}
+
+match /restaurants/{rid}/employeeDocuments/{documentId} {
+  allow read: if can(rid, 'team.manage') || (ownsEntry() && resource.data.visibleToEmployee == true);
+  allow create: if can(rid, 'team.manage') && createdNow();
+  allow update: if can(rid, 'team.manage') && updatedNow();
+  allow delete: if can(rid, 'team.manage');
+}
+
+match /restaurants/{rid}/availabilities/{availabilityId} {
+  allow read: if can(rid, 'planning.view') || ownsEntry();
+  allow create: if (ownsIncoming() && incoming().locked == false || can(rid, 'planning.manage'))
+    && isIsoDay(incoming().date)
+    && incoming().updatedAt == request.time;
+  allow update: if (ownsEntry() && existing().locked == false && incoming().locked == false
+      || can(rid, 'planning.manage'))
+    && keepsUnchanged(['employeeId', 'employeeUid', 'date'])
+    && incoming().updatedAt == request.time;
+  allow delete: if can(rid, 'planning.manage');
+}
+
+match /restaurants/{rid}/shifts/{shiftId} {
+  allow read: if can(rid, 'planning.view') || ownsEntry();
+  allow create: if can(rid, 'planning.manage') && createdNow()
+    && isIsoDay(incoming().date)
+    && isHourMinute(incoming().startTime)
+    && isHourMinute(incoming().endTime);
+  allow update: if can(rid, 'planning.manage') && updatedNow()
+    && isHourMinute(incoming().startTime)
+    && isHourMinute(incoming().endTime);
+  allow delete: if can(rid, 'planning.manage');
+}
+
+match /restaurants/{rid}/shiftTemplates/{templateId} {
+  allow read: if can(rid, 'planning.view');
+  allow create: if can(rid, 'planning.manage') && createdNow();
+  allow update: if can(rid, 'planning.manage') && updatedNow();
+  allow delete: if can(rid, 'planning.manage');
+}
+
+match /restaurants/{rid}/shiftChangeRequests/{requestId} {
+  allow read: if can(rid, 'planning.manage') || ownsEntry();
+  allow create: if ownsIncoming()
+    && isRestaurantMember(rid)
+    && incoming().status == 'pending'
+    && isIsoDay(incoming().date)
+    && createdNow();
+  allow update: if (can(rid, 'planning.manage')
+      && onlyChanges(['status', 'reviewedBy', 'reviewedAt', 'rejectionReason', 'updatedAt', 'updatedBy'])
+      && incoming().status in ['approved', 'rejected']
+      && incoming().reviewedBy == uid()
+    || ownsEntry() && existing().status == 'pending'
+      && onlyChanges(['status', 'updatedAt', 'updatedBy'])
+      && incoming().status == 'cancelled')
+    && updatedNow();
+  allow delete: if false;
+}
+
+match /restaurants/{rid}/timeEntries/{entryId} {
+  allow read: if can(rid, 'timeclock.manage') || ownsEntry();
+  // Corrections du manager (l'historique est écrit par le trigger onTimeEntryWrite).
+  allow create, update: if can(rid, 'timeclock.manage')
+    && isIsoDay(incoming().date)
+    && incoming().modifiedBy == uid()
+    && incoming().updatedAt == request.time;
+  allow delete: if false;
+
+  match /history/{historyId} {
+    allow read: if can(rid, 'timeclock.manage');
+    allow write: if false;
+  }
+}
+
+match /restaurants/{rid}/weekValidations/{validationId} {
+  allow read: if can(rid, 'timeclock.manage') || ownsEntry();
+  allow update: if (ownsEntry()
+      && existing().status == 'pending'
+      && onlyChanges(['status', 'employeeComment', 'updatedAt'])
+      && incoming().status == 'employee_validated'
+    || can(rid, 'timeclock.manage')
+      && onlyChanges(['status', 'managerComment', 'validatedBy', 'validatedAt', 'updatedAt'])
+      && incoming().status in ['manager_validated', 'rejected', 'pending']
+      && incoming().get('validatedBy', uid()) == uid())
+    && incoming().updatedAt == request.time;
+  allow create, delete: if false;
+}
+
+match /restaurants/{rid}/absences/{absenceId} {
+  allow read: if can(rid, 'planning.view') || ownsEntry();
+  allow create: if (ownsIncoming() && can(rid, 'absences.self') && incoming().status == 'pending'
+      || can(rid, 'absences.manage'))
+    && isIsoDay(incoming().startDate)
+    && isIsoDay(incoming().endDate)
+    && incoming().startDate <= incoming().endDate
+    && createdNow();
+  allow update: if (can(rid, 'absences.manage')
+      && keepsUnchanged(['employeeId', 'employeeUid'])
+    || ownsEntry() && existing().status == 'pending'
+      && onlyChanges(['status', 'updatedAt', 'updatedBy'])
+      && incoming().status == 'cancelled')
+    && updatedNow();
+  allow delete: if false;
+}
+
+match /restaurants/{rid}/payslips/{payslipId} {
+  allow read: if can(rid, 'payroll.view') || (ownsEntry() && resource.data.status in ['validated', 'sent']);
+  allow update: if can(rid, 'payroll.manage')
+    && onlyChanges(['status', 'validatedAt', 'validatedBy', 'bonusCents'])
+    && incoming().status in ['generated', 'validated']
+    && incoming().get('validatedBy', uid()) == uid();
+  allow create, delete: if false;
+}
+
+match /restaurants/{rid}/tasks/{taskId} {
+  allow read: if can(rid, 'tasks.view');
+  allow create: if can(rid, 'tasks.manage') && createdNow() && isNonEmptyString(incoming().title, 200);
+  allow update: if (can(rid, 'tasks.manage')
+    || request.auth.uid in existing().assigneeIds
+      && onlyChanges(['assigneeStatus', 'updatedAt', 'updatedBy'])
+      && incoming().assigneeStatus.diff(existing().assigneeStatus).affectedKeys().hasOnly([request.auth.uid]))
+    && updatedNow();
+  allow delete: if can(rid, 'tasks.manage');
+
+  match /comments/{commentId} {
+    allow read: if can(rid, 'tasks.view');
+    allow create: if can(rid, 'tasks.view')
+      && incoming().authorId == uid()
+      && isNonEmptyString(incoming().body, 2000)
+      && incoming().createdAt == request.time;
+    allow delete: if isSelf(resource.data.authorId) || can(rid, 'tasks.manage');
+    allow update: if false;
+  }
+}
+
+match /restaurants/{rid}/taskTemplates/{templateId} {
+  allow read: if can(rid, 'tasks.view');
+  allow create: if can(rid, 'tasks.manage') && createdNow();
+  allow update: if can(rid, 'tasks.manage') && updatedNow();
+  allow delete: if can(rid, 'tasks.manage');
+}
+
+match /restaurants/{rid}/documents/{documentId} {
+  allow read: if can(rid, 'documents.view');
+  allow create: if can(rid, 'documents.manage') && createdNow();
+  allow update: if can(rid, 'documents.manage') && updatedNow();
+  allow delete: if false;
+}
+
+// ------------------------------------------------------------ HACCP
+
+match /restaurants/{rid}/haccpEquipments/{id} {
+  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow create: if can(rid, 'haccp.manage') && createdNow();
+  allow update: if can(rid, 'haccp.manage') && updatedNow();
+  allow delete: if false;
+}
+
+match /restaurants/{rid}/haccpCleaningTasks/{id} {
+  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow create: if can(rid, 'haccp.manage') && createdNow();
+  allow update: if can(rid, 'haccp.manage') && updatedNow();
+  allow delete: if false;
+}
+
+match /restaurants/{rid}/haccpTemperatureLogs/{id} {
+  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow create: if can(rid, 'haccp.record')
+    && incoming().value is number
+    && incoming().recordedBy == uid()
+    && incoming().recordedAt == request.time
+    && incoming().get('verifiedBy', null) == null;
+  allow update: if can(rid, 'haccp.manage')
+    && onlyChanges(['verifiedBy', 'verifiedAt', 'correctiveAction'])
+    && incoming().verifiedBy == uid();
+  allow delete: if false;
+}
+
+match /restaurants/{rid}/haccpReceptions/{id} {
+  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow create: if can(rid, 'haccp.record')
+    && incoming().receivedBy == uid()
+    && incoming().receivedAt == request.time
+    && incoming().status == 'pending';
+  allow update: if can(rid, 'haccp.manage')
+    && onlyChanges(['status', 'decidedBy', 'decidedAt', 'notes'])
+    && incoming().status in ['accepted', 'refused']
+    && incoming().decidedBy == uid();
+  allow delete: if false;
+}
+
+match /restaurants/{rid}/haccpNonConformities/{id} {
+  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow create: if can(rid, 'haccp.record')
+    && incoming().declaredBy == uid()
+    && incoming().declaredAt == request.time
+    && incoming().status == 'open';
+  allow update: if can(rid, 'haccp.manage')
+    && keepsUnchanged(['declaredBy', 'declaredAt']);
+  allow delete: if false;
+}
+
+match /restaurants/{rid}/haccpCleaningLogs/{id} {
+  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow create: if can(rid, 'haccp.record') && incoming().doneBy == uid() && incoming().doneAt == request.time;
+  allow update, delete: if false;
+}
+
+match /restaurants/{rid}/haccpPestVisits/{id} {
+  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow create: if can(rid, 'haccp.manage') && incoming().createdBy == uid() && incoming().createdAt == request.time;
+  allow update: if can(rid, 'haccp.manage') && keepsUnchanged(['createdBy', 'createdAt']);
+  allow delete: if false;
+}
+
+match /restaurants/{rid}/haccpPestReports/{id} {
+  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow create: if can(rid, 'haccp.record')
+    && incoming().reportedBy == uid()
+    && incoming().reportedAt == request.time
+    && incoming().status == 'open';
+  allow update: if can(rid, 'haccp.manage')
+    && onlyChanges(['status', 'resolvedBy', 'resolvedAt'])
+    && incoming().resolvedBy == uid();
+  allow delete: if false;
+}
+
+match /restaurants/{rid}/haccpPersonnelChecks/{id} {
+  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow create, update: if can(rid, 'haccp.record') && isIsoDay(incoming().date);
+  allow delete: if false;
+}
+
+match /restaurants/{rid}/haccpDocuments/{id} {
+  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow create: if can(rid, 'haccp.manage') && incoming().uploadedBy == uid() && incoming().uploadedAt == request.time;
+  allow delete: if can(rid, 'haccp.manage');
+  allow update: if false;
+}
+
+match /restaurants/{rid}/haccpAudits/{id} {
+  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow create: if can(rid, 'haccp.manage') && incoming().performedBy == uid() && incoming().createdAt == request.time;
+  allow update: if can(rid, 'haccp.manage') && keepsUnchanged(['performedBy', 'createdAt']);
+  allow delete: if false;
+}
+
+// Exports PDF générés par la Cloud Function exportHaccpRegister.
+match /restaurants/{rid}/haccpExports/{id} {
+  allow read: if can(rid, 'haccp.manage') || isAdmin('restaurants.view');
+  allow write: if false;
+}

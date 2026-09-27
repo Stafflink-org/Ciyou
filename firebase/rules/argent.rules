@@ -1,0 +1,28 @@
+// ---------------------------------------------------------------------------
+// Rubriques « Argent » du super admin : lectures complémentaires pour les équipes
+// finance, paiements et abonnements. Toutes les écritures passent par les Cloud
+// Functions (updateFinanceSettings, updateCountryPayments, updateRestaurantPayments,
+// updatePlan…), qui historisent et auditent chaque changement.
+// ---------------------------------------------------------------------------
+
+// Réglages financiers lisibles sans le droit général « paramètres ».
+match /settings/{docId} {
+  allow read: if (docId in ['payouts', 'refunds', 'orderRules'] && (isAdmin('finance.view') || isAdmin('payments.view')))
+    || (docId == 'dunning' && (isAdmin('subscriptions.manage') || isAdmin('finance.view')));
+}
+
+// Historique des réglages financiers (formules, calendrier, paiements, relances, conditions d'un commerce).
+match /settingsHistory/{entryId} {
+  allow read: if (isAdmin('finance.view') || isAdmin('plans.edit') || isAdmin('payments.configure') || isAdmin('subscriptions.manage'))
+    && resource.data.docPath.matches('^(plans/[a-z]+|settings/(payouts|payments|refunds|dunning)|countries/[A-Z]{2}|restaurants/[A-Za-z0-9_-]+/private/commercial)$');
+}
+
+// Moyens de paiement autorisés par commerce : consultables par l'équipe paiements.
+match /restaurants/{rid}/private/{docId} {
+  allow read: if docId == 'commercial' && isAdmin('payments.view');
+}
+
+// Séries de numérotation des factures (numérotation continue) : lecture seule.
+match /counters/{name} {
+  allow read: if name.matches('^invoice_.*$') && isAdmin('invoices.view');
+}

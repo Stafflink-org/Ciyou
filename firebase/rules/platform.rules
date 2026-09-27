@@ -1,0 +1,148 @@
+// ---------------------------------------------------------------------------
+// Plateforme : réglages, marchés, zones, fonctionnalités, affichage app client,
+// santé des services. AUCUNE écriture directe par un administrateur sur les réglages,
+// marchés, zones, fonctionnalités, intégrations et versions : tout passe par une
+// Cloud Function appelable (motif, historique settingsHistory, journal d'audit,
+// double authentification de la session).
+// ---------------------------------------------------------------------------
+
+match /settings/{docId} {
+  // Réglages utiles aux apps sans connexion (vitrine, maintenance, pourboires…).
+  allow read: if docId in ['general', 'branding', 'payments', 'maintenance', 'display', 'loyalty', 'referral']
+    || (signedIn() && docId in ['orderRules', 'promotions', 'support'])
+    || (isAnyAdmin() && docId in ['merchantValidation', 'notificationDelivery', 'dispatch'])
+    || isAdmin('settings.view');
+  // Écriture : Cloud Functions uniquement (updatePlatformSettings, updateFinanceSettings, ...).
+  allow write: if false;
+}
+
+match /settingsHistory/{entryId} {
+  allow read: if isAdmin('settings.view');
+  allow write: if false;
+}
+
+match /countries/{countryId} {
+  allow read: if true;
+  // Écriture : updateCountry, setCountryActive, updateCountryVat, updateCountryPayments (Cloud Functions).
+  allow write: if false;
+}
+
+match /cities/{cityId} {
+  allow read: if true;
+  // Écriture : saveCity, setCityActive, fermeture d'urgence (Cloud Functions).
+  allow write: if false;
+}
+
+match /zones/{zoneId} {
+  allow read: if true;
+  // Écriture : saveZone, closeZone (Cloud Functions).
+  allow write: if false;
+}
+
+match /surgeRules/{ruleId} {
+  allow read: if isAdmin('zones.edit') || isAdmin('drivers.pay_rules');
+  // Écriture : saveSurgeRule, applySurge (Cloud Functions).
+  allow write: if false;
+}
+
+// Verrou `locked` (vente d'alcool) et motif : setFeatureFlag uniquement.
+match /featureFlags/{key} {
+  allow read: if true;
+  allow write: if false;
+}
+
+match /integrations/{key} {
+  allow read: if isAdmin('integrations.view');
+  // Écriture : updateIntegration, sondes de santé (Cloud Functions).
+  allow write: if false;
+}
+
+// Traduction automatique (Azure Translator, cahier « translation-azure ») : réglages publics
+// sans la clé (settings/translator), écriture par saveTranslatorSettings uniquement.
+match /translatorSecrets/{docId} {
+  // Clé chiffrée : jamais lue ni écrite côté client, Cloud Functions uniquement.
+  allow read, write: if false;
+}
+
+match /translations/{docId} {
+  // Cache serveur des traductions et compteurs de débit par utilisateur : Cloud Functions uniquement.
+  allow read, write: if false;
+}
+
+// Cartographie (Google Maps, tâche « maps-settings ») : réglages publics sans les clés
+// (settings/maps), écriture par saveMapsSettings uniquement. La clé web est distribuée
+// au navigateur via la Cloud Function getPublicRuntimeConfig, jamais via Firestore.
+match /mapsSecrets/{docId} {
+  // Clés chiffrées (web + mobile) : jamais lues ni écrites côté client, Cloud Functions uniquement.
+  allow read, write: if false;
+}
+
+match /appVersions/{app} {
+  allow read: if true;
+  // Écriture : updateAppVersion (Cloud Function).
+  allow write: if false;
+}
+
+match /serviceStatus/{serviceKey} {
+  allow read: if isAdmin('system.view');
+  allow write: if false;
+}
+
+match /incidents/{incidentId} {
+  allow read: if isAdmin('system.view');
+  // Écriture : saveIncident (Cloud Function).
+  allow write: if false;
+}
+
+match /counters/{name} {
+  allow read, write: if false;
+}
+
+// ------------------------------------------------------------ Affichage app client
+
+match /cuisineCategories/{id} {
+  allow read: if true;
+  allow create: if isAdmin('display.edit') && createdNow();
+  allow update: if isAdmin('display.edit') && updatedNow();
+  allow delete: if false;
+}
+
+match /homeSections/{id} {
+  allow read: if true;
+  allow create: if isAdmin('display.edit') && createdNow();
+  allow update: if isAdmin('display.edit') && updatedNow();
+  allow delete: if false;
+}
+
+match /banners/{id} {
+  allow read: if true;
+  allow create: if isAdmin('display.edit') && createdNow();
+  allow update: if isAdmin('display.edit') && updatedNow();
+  allow delete: if false;
+}
+
+match /sponsoredPlacements/{id} {
+  allow read: if isAdmin('display.edit') || isAdmin('finance.view')
+    || can(resource.data.restaurantId, 'finance.view');
+  // Vente et facturation d'un emplacement : Cloud Function `bookSponsoredPlacement`.
+  allow update: if isAdmin('display.edit')
+    && keepsUnchanged(['impressions', 'clicks', 'orders', 'invoiceId', 'priceHtCents'])
+    && updatedNow();
+  allow create, delete: if false;
+}
+
+match /pages/{slug} {
+  allow read: if resource.data.published == true || isAdmin('display.edit');
+  allow create: if isAdmin('display.edit') && createdNow();
+  allow update: if isAdmin('display.edit') && updatedNow();
+  allow delete: if false;
+}
+
+match /helpArticles/{id} {
+  allow read: if resource.data.published == true || isAdmin('support.view');
+  allow create: if isAdmin('support.configure') && createdNow();
+  allow update: if isAdmin('support.configure')
+    && keepsUnchanged(['views', 'helpfulYes', 'helpfulNo'])
+    && updatedNow();
+  allow delete: if false;
+}

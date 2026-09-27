@@ -1,0 +1,35 @@
+// ---------------------------------------------------------------------------
+// Équipe & RH (compléments) : annuaire de l'équipe et checklists du service.
+// Sous restaurants/{rid}. Voir aussi workforce.rules.
+// ---------------------------------------------------------------------------
+
+// Annuaire lisible par tout membre actif (noms, postes, couleurs, sans donnée
+// sensible). Écrit uniquement par les triggers onEmployeeDirectorySync et
+// onMemberDirectorySync.
+match /restaurants/{rid}/staffDirectory/{entryId} {
+  allow read: if isRestaurantMember(rid) || isAdmin('restaurants.view');
+  allow write: if false;
+}
+
+// Checklists types (ouverture, fermeture, service).
+match /restaurants/{rid}/checklistTemplates/{templateId} {
+  allow read: if can(rid, 'tasks.view');
+  allow create: if can(rid, 'tasks.manage') && createdNow()
+    && isNonEmptyString(incoming().name, 120)
+    && incoming().items is list && incoming().items.size() <= 60;
+  allow update: if can(rid, 'tasks.manage') && updatedNow()
+    && isNonEmptyString(incoming().name, 120)
+    && incoming().items is list && incoming().items.size() <= 60;
+  allow delete: if can(rid, 'tasks.manage');
+}
+
+// Réalisation du jour : tout membre ayant accès aux tâches coche les points.
+match /restaurants/{rid}/checklistRuns/{runId} {
+  allow read: if can(rid, 'tasks.view');
+  allow create, update: if can(rid, 'tasks.view')
+    && isIsoDay(incoming().date)
+    && incoming().items is list && incoming().items.size() <= 60
+    && incoming().updatedBy == uid()
+    && incoming().updatedAt == request.time;
+  allow delete: if can(rid, 'tasks.manage');
+}

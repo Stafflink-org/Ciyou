@@ -3,26 +3,54 @@
     "database": "(default)",
     "location": "europe-west1",
     "rules": "firebase/firestore.rules",
-    "indexes": "firebase/firestore.indexes.json"
+    "indexes": "firebase/firestore.indexes.json",
+    "predeploy": [
+      "node scripts/build-rules.mjs"
+    ]
   },
   "storage": {
-    "rules": "firebase/storage.rules"
+    "rules": "firebase/storage.rules",
+    "predeploy": [
+      "node scripts/build-rules.mjs"
+    ]
   },
   "functions": [
     {
       "source": "functions",
       "codebase": "default",
       "runtime": "nodejs22",
-      "ignore": ["node_modules", ".git", "*.log", "src"],
-      "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"]
+      "ignore": [
+        "node_modules",
+        ".git",
+        "*.log",
+        "src",
+        "build.mjs",
+        "tsconfig.json",
+        "*.secrets",
+        ".env.local*"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
     }
   ],
   "emulators": {
-    "auth": { "port": 9099 },
-    "firestore": { "port": 8080 },
-    "storage": { "port": 9199 },
-    "functions": { "port": 5001 },
-    "ui": { "enabled": true, "port": 4000 },
+    "auth": {
+      "port": 9099
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "storage": {
+      "port": 9199
+    },
+    "functions": {
+      "port": 5001
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    },
     "singleProjectMode": true
   }
 }
