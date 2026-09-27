@@ -86,6 +86,10 @@ export interface DriverPrivate {
   /** Espèces encaissées non encore reversées à la plateforme. */
   cashBalanceCents: Cents;
   cashLimitCents: Cents;
+  /** Date depuis laquelle la caisse accumule des espèces (remise à `null` à chaque remise complète) — sert à calculer l'ancienneté et l'alerte d'écart (H2). */
+  cashSinceAt?: Timestamp | null;
+  /** Date de la dernière remise de caisse (H2). */
+  lastCashRemittanceAt?: Timestamp | null;
   payoutsBlocked: boolean;
   payoutsBlockedReason?: string | null;
   taxIdentificationNumber?: string | null;

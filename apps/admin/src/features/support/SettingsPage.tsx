@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { collection, deleteDoc, doc, limit, orderBy, query, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import { ArrowDown, ArrowUp, MessageSquareText, Pencil, Plus, Tags, Trash2 } from 'lucide-react';
-import { Badge, Button, Checkbox, ConfirmDialog, Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, EmptyState, FormField, IconButton, Input, PageContainer, PageHeader, Select, Skeleton, Switch, cn, toast, Table } from '@golink/ui';
+import { Badge, Button, Checkbox, ConfirmDialog, Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, EmptyState, FormField, IconButton, Input, PageContainer, PageHeader, Select, Skeleton, Switch, Textarea, cn, toast, Table } from '@golink/ui';
 import {
   COLLECTIONS,
   SETTINGS_DOCS,
@@ -46,6 +46,7 @@ export function SettingsPage() {
       )}
       <div className="space-y-6">
         <SlaPanel editable={editable} />
+        <MerchantNoticePanel editable={editable} />
         <div className="grid gap-6 xl:grid-cols-2">
           <ReasonsPanel editable={editable} />
           <CannedPanel editable={editable} />
@@ -122,6 +123,68 @@ function SlaPanel({ editable }: { editable: boolean }) {
           </div>
         </div>
       )}
+    </Panel>
+  );
+}
+
+// ------------------------------------------------------------------ Message affiché aux commerces
+
+function MerchantNoticePanel({ editable }: { editable: boolean }) {
+  const { can } = useAdminAccess();
+  const settings = useDoc<SupportSettings>(can('settings.view') || can('support.view') ? docAt(paths.settings(SETTINGS_DOCS.support)) : null);
+  const [draft, setDraft] = useState<{ enabled: boolean; title: string; body: string } | null>(null);
+  const { mutate, loading } = useMutation(updateSettings, { success: (r) => (r.changed.length ? 'Message enregistré' : 'Aucun changement') });
+
+  useEffect(() => {
+    if (!settings.data || draft) return;
+    const n = settings.data.merchantNotice;
+    setDraft({ enabled: n?.enabled ?? false, title: n?.title.fr ?? '', body: n?.body.fr ?? '' });
+  }, [settings.data, draft]);
+
+  if (!draft) return settings.error ? <LoadError error={settings.error} compact /> : <Skeleton className="h-32" />;
+  const valid = !draft.enabled || (draft.title.trim().length >= 2 && draft.body.trim().length >= 2);
+
+  return (
+    <Panel
+      title="Message affiché aux commerces"
+      description="Bandeau en tête de « Support » dans le back-office des commerces (ex. « Assistance 24 h/24, 7 j/7 »)."
+      actions={
+        editable ? (
+          <Button
+            variant="primary"
+            size="sm"
+            loading={loading}
+            disabled={!valid}
+            onClick={() =>
+              void mutate({
+                doc: 'support',
+                values: {
+                  firstResponseTargetMinutes: settings.data?.firstResponseTargetMinutes,
+                  resolutionTargetHours: settings.data?.resolutionTargetHours,
+                  autoEscalateAfterMinutes: settings.data?.autoEscalateAfterMinutes,
+                  liveChatEnabled: settings.data?.liveChatEnabled,
+                  autoCloseResolvedAfterDays: settings.data?.autoCloseResolvedAfterDays ?? 7,
+                  merchantNotice: draft.enabled || draft.title || draft.body
+                    ? { enabled: draft.enabled, title: { fr: draft.title.trim() }, body: { fr: draft.body.trim() } }
+                    : null,
+                },
+              })
+            }
+          >
+            Enregistrer
+          </Button>
+        ) : undefined
+      }
+    >
+      <div className="space-y-4">
+        <Switch checked={draft.enabled} disabled={!editable} onCheckedChange={(v) => setDraft({ ...draft, enabled: v })} label="Afficher le message" />
+        <FormField label="Titre" required={draft.enabled}>
+          <Input value={draft.title} disabled={!editable} onChange={(e) => setDraft({ ...draft, title: e.target.value })} maxLength={80} placeholder="Assistance 24 h/24, 7 j/7" />
+        </FormField>
+        <FormField label="Texte" required={draft.enabled}>
+          <Textarea value={draft.body} disabled={!editable} onChange={(e) => setDraft({ ...draft, body: e.target.value })} maxLength={300} rows={2} placeholder="Notre équipe support vous répond à toute heure, tous les jours." />
+        </FormField>
+      </div>
     </Panel>
   );
 }

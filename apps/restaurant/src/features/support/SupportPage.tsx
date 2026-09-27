@@ -69,6 +69,13 @@ export function SupportPage() {
         actions={create}
       />
 
+      {sla.data?.merchantNotice?.enabled && (
+        <div className="tone-info mb-6 rounded-xl border border-(--tone-border) bg-(--tone-bg) px-4 py-3 text-sm text-(--tone-fg)">
+          <p className="font-medium">{sla.data.merchantNotice.title.fr}</p>
+          <p className="mt-0.5">{sla.data.merchantNotice.body.fr}</p>
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Demandes en cours"

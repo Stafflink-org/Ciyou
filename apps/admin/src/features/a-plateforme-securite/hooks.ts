@@ -65,6 +65,10 @@ export function useRetentionSettings() {
   return useDoc(doc(db, COLLECTIONS.settings, SETTINGS_DOCS.retention));
 }
 
+export function useLimitsSettings() {
+  return useDoc(doc(db, COLLECTIONS.settings, SETTINGS_DOCS.limits));
+}
+
 export function useGeneralSettings() {
   return useDoc(doc(db, COLLECTIONS.settings, SETTINGS_DOCS.general));
 }

@@ -322,12 +322,21 @@ const displaySchema = z.object({
   }).optional(),
 });
 const priorities = z.object({ low: z.number().int().min(1), normal: z.number().int().min(1), high: z.number().int().min(1), urgent: z.number().int().min(1) });
+const merchantNotice = z
+  .object({
+    enabled: z.boolean(),
+    title: z.object({ fr: z.string().trim().min(2).max(80) }).passthrough(),
+    body: z.object({ fr: z.string().trim().min(2).max(300) }).passthrough(),
+  })
+  .nullable();
 const supportSchema = z.object({
   firstResponseTargetMinutes: priorities,
   resolutionTargetHours: priorities,
   autoEscalateAfterMinutes: z.number().int().min(5).max(1440),
   liveChatEnabled: z.boolean(),
   autoCloseResolvedAfterDays: z.number().int().min(1).max(60),
+  /** Message affiché en tête de « Support » dans le back-office des commerces (H6). */
+  merchantNotice: merchantNotice.optional(),
 });
 
 export const updateExperienceSettings = experienceCallable(

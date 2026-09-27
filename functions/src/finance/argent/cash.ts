@@ -62,7 +62,8 @@ export async function trackMerchantCash(orderId: string, order: Order): Promise<
   const result = await db.runTransaction(async (tx) => {
     const [existing, privSnap] = await Promise.all([tx.get(movementRef), tx.get(privRef)]);
     if (existing.exists) return { created: false, balance: (existing.data() as CashMovement).balanceAfterCents };
-    const balance = ((privSnap.get('cashBalanceCents') as number | undefined) ?? 0) + collected;
+    const previousBalance = (privSnap.get('cashBalanceCents') as number | undefined) ?? 0;
+    const balance = previousBalance + collected;
     const movement: CashMovement = {
       countryId: order.countryId,
       cityId: order.cityId,
@@ -79,7 +80,7 @@ export async function trackMerchantCash(orderId: string, order: Order): Promise<
       createdBy: 'system',
     };
     tx.set(movementRef, { ...movement, ...(test ? { test: true } : {}) });
-    tx.set(privRef, { cashBalanceCents: balance, updatedAt: Timestamp.now() }, { merge: true });
+    tx.set(privRef, { cashBalanceCents: balance, ...(previousBalance <= 0 ? { cashSinceAt: Timestamp.now() } : {}), updatedAt: Timestamp.now() }, { merge: true });
     return { created: true, balance };
   });
   if (result.created) {
@@ -111,7 +112,7 @@ export const recordMerchantCashRemittance = argentCallable(
       const current = (snap.get('cashBalanceCents') as number | undefined) ?? 0;
       if (data.amountCents > current) throw fail.precondition(`Ce livreur ne détient que ${euros(current)} en espèces.`);
       const next = current - data.amountCents;
-      tx.set(privRef, { cashBalanceCents: next, updatedAt: now }, { merge: true });
+      tx.set(privRef, { cashBalanceCents: next, cashSinceAt: next > 0 ? now : null, lastCashRemittanceAt: now, updatedAt: now }, { merge: true });
       const movement: CashMovement = { countryId: driver.countryId, cityId: driver.cityId, restaurantId: data.restaurantId, driverId: data.driverId, driverName: driver.displayName, type: 'remitted', amountCents: -data.amountCents, balanceAfterCents: next, note: data.note ?? 'Remise de caisse', createdAt: now, createdBy: actor.caller.uid };
       tx.set(movementRef, movement);
       return next;

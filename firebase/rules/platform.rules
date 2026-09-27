@@ -10,7 +10,7 @@ match /settings/{docId} {
   // Réglages utiles aux apps sans connexion (vitrine, maintenance, pourboires…).
   allow read: if docId in ['general', 'branding', 'payments', 'maintenance', 'display', 'loyalty', 'referral']
     || (signedIn() && docId in ['orderRules', 'promotions', 'support'])
-    || (isAnyAdmin() && docId in ['merchantValidation', 'notificationDelivery', 'dispatch'])
+    || (isAnyAdmin() && docId in ['merchantValidation', 'notificationDelivery', 'dispatch', 'limits'])
     || isAdmin('settings.view');
   // Écriture : Cloud Functions uniquement (updatePlatformSettings, updateFinanceSettings, ...).
   allow write: if false;

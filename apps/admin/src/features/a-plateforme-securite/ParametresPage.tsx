@@ -4,15 +4,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { limit, orderBy, query } from 'firebase/firestore';
-import { ImageUp, Palette, Save, ShieldCheck, Timer, Trash2 } from 'lucide-react';
+import { Gauge, ImageUp, Palette, Save, ShieldCheck, Timer, Trash2 } from 'lucide-react';
 import { Badge, Button, Card, CardContent, CardFooter, CardHeader, EmptyState, FormField, Input, PageContainer, PageHeader, Select, Skeleton, Switch, Tabs, TabsContent, TabsList, TabsTrigger, formatDateTime, toast } from '@golink/ui';
-import { COLLECTIONS, CURRENCY_CODES, CURRENCY_LABELS, LOCALES, LOCALE_LABELS, SETTINGS_DOCS, type CurrencyCode, type SettingsHistoryEntry } from '@golink/shared';
+import { COLLECTIONS, CURRENCY_CODES, CURRENCY_LABELS, DEFAULT_LIMITS_SETTINGS, LOCALES, LOCALE_LABELS, SETTINGS_DOCS, type CurrencyCode, type SettingsHistoryEntry } from '@golink/shared';
 import { useDocumentTitle } from '@golink/web';
 import { useCan } from '@/auth/AdminAccess';
 import { collectionAt, docAt, errorMessage, toDate, useCollection, useDoc, useMutation } from '@/lib/firestore';
 import { updatePlatformSettings } from './api';
 import { ErrorPanel, RequirePermission } from './components';
-import { useGeneralSettings, useRetentionSettings, useSecurityPolicy } from './hooks';
+import { useGeneralSettings, useLimitsSettings, useRetentionSettings, useSecurityPolicy } from './hooks';
 import { PlateformeNav } from './nav';
 import { auditFieldLabel, formatAuditField } from '../acteurs-commun/audit-labels';
 import { uploadPublicImage } from '../affichage/shared';
@@ -251,6 +251,55 @@ function RetentionForm() {
   );
 }
 
+function LimitsForm() {
+  const can = useCan();
+  const limits = useLimitsSettings();
+  const [reason, setReason] = useState('');
+  const [form, setForm] = useState<Record<string, any> | null>(null);
+  useEffect(() => {
+    // settings/limits peut ne pas encore exister (premier réglage) : on part quand même des valeurs par défaut.
+    if (!form && !limits.loading) setForm((limits.data as unknown as Record<string, any>) ?? { ...DEFAULT_LIMITS_SETTINGS });
+  }, [limits.data, limits.loading, form]);
+  const save = useMutation((data: Record<string, unknown>) => updatePlatformSettings({ doc: 'limits', reason, data: data as any }), { success: 'Limites et seuils enregistrés.' });
+
+  if (limits.error) return <ErrorPanel error={limits.error} />;
+  if (!form) return <Skeleton className="h-96" />;
+  const exp = { ...DEFAULT_LIMITS_SETTINGS.exports, ...(form.exports ?? {}) };
+  const setExport = (k: string, v: number) => setForm((f) => ({ ...(f ?? {}), exports: { ...exp, [k]: v } }));
+
+  return (
+    <Card>
+      <CardHeader
+        icon={<Gauge />}
+        title="Limites et seuils"
+        description="Lignes maximales des exports et des imports, et alerte d'ancienneté des espèces des livreurs de commerce (non remises depuis N jours)."
+      />
+      <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <FormField label="Export CSV (lignes)" required><Input type="number" min={100} max={500_000} value={exp.csvMaxRows} onChange={(e) => setExport('csvMaxRows', Number(e.target.value))} /></FormField>
+        <FormField label="Export Excel (lignes)" required><Input type="number" min={100} max={500_000} value={exp.xlsxMaxRows} onChange={(e) => setExport('xlsxMaxRows', Number(e.target.value))} /></FormField>
+        <FormField label="Export PDF (lignes)" required><Input type="number" min={50} max={50_000} value={exp.pdfMaxRows} onChange={(e) => setExport('pdfMaxRows', Number(e.target.value))} /></FormField>
+        <FormField label="Export du journal d'audit (lignes)" required><Input type="number" min={100} max={500_000} value={exp.auditMaxRows} onChange={(e) => setExport('auditMaxRows', Number(e.target.value))} /></FormField>
+        <FormField label="Import de commerces (lignes)" required><Input type="number" min={10} max={2000} value={exp.importMaxRows} onChange={(e) => setExport('importMaxRows', Number(e.target.value))} /></FormField>
+        <FormField label="Alerte espèces non remises (jours)" required hint="Livreurs de commerce, voir Paiements > Espèces.">
+          <Input type="number" min={1} max={60} value={form.merchantCashAlertDays ?? DEFAULT_LIMITS_SETTINGS.merchantCashAlertDays} onChange={(e) => setForm({ ...form, merchantCashAlertDays: Number(e.target.value) })} />
+        </FormField>
+        <div className="sm:col-span-2 lg:col-span-3">
+          <ReasonField value={reason} onChange={setReason} />
+        </div>
+      </CardContent>
+      <CardFooter className="justify-end">
+        <Button
+          leftIcon={<Save />}
+          loading={save.loading}
+          disabled={!can('settings.edit') || reason.trim().length < 3}
+          onClick={() => void save.mutate({ exports: exp, merchantCashAlertDays: Number(form.merchantCashAlertDays ?? DEFAULT_LIMITS_SETTINGS.merchantCashAlertDays) })}
+        >
+          Enregistrer
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
 
 interface BrandingDoc {
   logo: { url: string; path?: string | null } | null;
@@ -413,6 +462,7 @@ export function ParametresPage() {
             <TabsTrigger value="branding">Marque</TabsTrigger>
             <TabsTrigger value="security">Sécurité</TabsTrigger>
             <TabsTrigger value="retention">Conservation</TabsTrigger>
+            <TabsTrigger value="limits">Limites et seuils</TabsTrigger>
             <TabsTrigger value="history">Historique</TabsTrigger>
           </TabsList>
           <TabsContent value="general" className="pt-4"><GeneralForm /></TabsContent>
@@ -441,6 +491,7 @@ export function ParametresPage() {
           <TabsContent value="branding" className="pt-4"><BrandingForm /></TabsContent>
           <TabsContent value="security" className="pt-4"><SecurityForm /></TabsContent>
           <TabsContent value="retention" className="pt-4"><RetentionForm /></TabsContent>
+          <TabsContent value="limits" className="pt-4"><LimitsForm /></TabsContent>
           <TabsContent value="history" className="pt-4"><SettingsHistory /></TabsContent>
         </Tabs>
       </RequirePermission>
