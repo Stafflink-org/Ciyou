@@ -26,6 +26,21 @@ export function isCurrencyCode(value: string): value is CurrencyCode {
   return (CURRENCY_CODES as readonly string[]).includes(value);
 }
 
+/** Devise habituelle d'un pays (repli sans lecture de base ; le document `countries/{id}` fait foi). */
+const DEFAULT_CURRENCY_BY_COUNTRY: Readonly<Record<string, CurrencyCode>> = {
+  FR: 'EUR',
+  BE: 'EUR',
+  LU: 'EUR',
+  DZ: 'DZD',
+  MA: 'MAD',
+  TN: 'TND',
+};
+
+/** « FR » → EUR, « DZ » → DZD… EUR si le pays est inconnu. */
+export function defaultCurrencyOfCountry(countryId: string | null | undefined): CurrencyCode {
+  return (countryId && DEFAULT_CURRENCY_BY_COUNTRY[countryId.toUpperCase()]) || 'EUR';
+}
+
 /** Facteur unités mineures par unité (EUR : 100, TND : 1 000). */
 export function minorUnitFactor(currency: CurrencyCode): number {
   return 10 ** CURRENCY_MINOR_DIGITS[currency];

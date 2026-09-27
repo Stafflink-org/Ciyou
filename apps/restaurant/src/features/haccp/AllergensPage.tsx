@@ -67,7 +67,7 @@ export function AllergensPage() {
         ) : list.length === 0 ? (
           <EmptyState icon={<Wheat />} title="Aucun plat à afficher" description="Les allergènes proviennent des fiches produits de la carte." />
         ) : (
-          <div className="max-h-[70vh] overflow-auto">
+          <div data-scroll-ok className="max-h-[70vh] overflow-auto">
             <table className="w-full min-w-[1080px] border-separate border-spacing-0 text-sm">
               <thead className="sticky top-0 z-20">
                 <tr>

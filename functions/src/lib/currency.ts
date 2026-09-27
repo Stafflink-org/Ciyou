@@ -1,14 +1,12 @@
 // Devise d'un marché : lue sur le document du pays (paramètre du super admin), avec
 // la devise habituelle du pays en repli. Tous les montants restent des entiers en
 // unités mineures de cette devise (centimes, millimes pour le dinar tunisien).
-import { COLLECTIONS, isCurrencyCode, type CurrencyCode } from '@golink/shared';
+import { COLLECTIONS, defaultCurrencyOfCountry, isCurrencyCode, type CurrencyCode } from '@golink/shared';
 import { db } from './admin';
-
-const DEFAULT_CURRENCY: Readonly<Record<string, CurrencyCode>> = { FR: 'EUR', BE: 'EUR', LU: 'EUR', DZ: 'DZD', MA: 'MAD', TN: 'TND' };
 
 /** Devise habituelle du pays (sans lecture de la base). */
 export function defaultCurrency(countryId: string | null | undefined): CurrencyCode {
-  return (countryId && DEFAULT_CURRENCY[countryId.toUpperCase()]) || 'EUR';
+  return defaultCurrencyOfCountry(countryId);
 }
 
 const cache = new Map<string, { at: number; currency: CurrencyCode }>();

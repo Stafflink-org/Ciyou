@@ -300,7 +300,7 @@ export function StocksPage() {
               className="sm:w-52"
             />
           </div>
-          <div className="max-w-full overflow-x-auto">
+          <div data-scroll-ok className="max-w-full overflow-x-auto">
             <SegmentedControl
               aria-label="Filtrer les stocks"
               size="sm"
@@ -352,7 +352,7 @@ export function StocksPage() {
         ) : (
           <>
             {/* Tableau (écrans moyens et plus) */}
-            <div className="hidden overflow-x-auto md:block">
+            <div data-scroll-ok className="hidden overflow-x-auto md:block">
               <table className="w-full min-w-[760px] text-left text-sm">
                 <thead className="bg-surface-2 font-mono text-3xs uppercase tracking-eyebrow text-fg-subtle">
                   <tr>

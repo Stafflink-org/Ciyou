@@ -407,7 +407,7 @@ export function ProductsPage() {
           />
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
             <Select aria-label="Filtrer par section" value={sectionFilter} onValueChange={setSectionFilter} options={sectionOptions} className="w-full sm:w-52" />
-            <div className="max-w-full overflow-x-auto">
+            <div data-scroll-ok className="max-w-full overflow-x-auto">
               <SegmentedControl
                 aria-label="Filtrer par état"
                 size="sm"
@@ -575,6 +575,7 @@ export function ProductsPage() {
           <div
             role="toolbar"
             aria-label="Actions sur la sélection"
+            data-scroll-ok
             className="pointer-events-auto flex max-w-full items-center gap-1 overflow-x-auto rounded-2xl border border-border bg-elevated p-1.5 shadow-xl"
           >
             <span className="num whitespace-nowrap px-2.5 text-sm font-medium text-fg">{plural(selection.size, 'sélectionné', 'sélectionnés')}</span>

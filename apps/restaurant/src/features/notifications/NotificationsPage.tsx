@@ -212,7 +212,7 @@ export function NotificationsPage() {
         </SettingsCard>
 
         <SettingsCard icon={<BellRing />} title="Alertes" description="Choisissez les événements qui méritent votre attention, et où les recevoir.">
-          <div className="-mx-5 overflow-x-auto">
+          <div data-scroll-ok className="-mx-5 overflow-x-auto">
             <table className="w-full min-w-[520px] text-sm">
               <thead>
                 <tr className="border-b border-border text-left">

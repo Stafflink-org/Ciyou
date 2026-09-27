@@ -207,7 +207,7 @@ export function DocumentsPage() {
       {docs.error && <ErrorCard error={docs.error} />}
 
       <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0">
+        <div data-scroll-ok className="-mx-4 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0">
           {(['all', ...COMPANY_DOCUMENT_CATEGORIES] as const).map((c) => {
             const count = c === 'all' ? visible.length : (counts.get(c) ?? 0);
             if (c !== 'all' && count === 0) return null;

@@ -24,6 +24,7 @@ import { syncClaims } from '../../lib/claims';
 import { APP_URLS } from '../../lib/config';
 import { loadLimitsSettings } from '../../lib/limits';
 import { requireAdmin } from '../../lib/permissions';
+import { currencyOfCountry } from '../../lib/currency';
 import {
   defaultWeeklyHours,
   loadMerchantDefaults,
@@ -156,8 +157,9 @@ export const importRestaurants = acteursCallable(
     await jobRef.set(job);
     report.jobId = jobRef.id;
 
-    // Valeurs initiales des réglages de commande (H3) : une lecture par ville distincte du lot.
+    // Valeurs initiales des réglages de commande (H3) et devise : une lecture par ville/pays distincte du lot.
     const merchantDefaultsByCity = new Map<string, Awaited<ReturnType<typeof loadMerchantDefaults>>>();
+    const currencyByCountry = new Map<string, Awaited<ReturnType<typeof currencyOfCountry>>>();
 
     for (const { line, row, city } of valid) {
       try {
@@ -166,6 +168,8 @@ export const importRestaurants = acteursCallable(
         const uid = user.uid;
         if (!merchantDefaultsByCity.has(city.id)) merchantDefaultsByCity.set(city.id, await loadMerchantDefaults(city.countryId, city.id));
         const merchantDefaults = merchantDefaultsByCity.get(city.id)!;
+        if (!currencyByCountry.has(city.countryId)) currencyByCountry.set(city.countryId, await currencyOfCountry(city.countryId));
+        const currency = currencyByCountry.get(city.countryId)!;
         if (!zonesByCity.has(city.id)) {
           const zs = await db.collection(COLLECTIONS.zones).where('cityId', '==', city.id).get();
           zonesByCity.set(city.id, zs.docs.map((d) => ({ ...(d.data() as Zone), id: d.id })));
@@ -187,6 +191,9 @@ export const importRestaurants = acteursCallable(
           cuisineIds: row.cuisineIds ?? [],
           createdBy: caller.uid,
           merchantDefaults,
+          currency,
+          // Compte créé avec un mot de passe provisoire inconnu : le lien ci-dessous est envoyé aussitôt.
+          ownerCredentialsDelivered: data.inviteOwners && !data.test && !isReservedAddress(row.ownerEmail),
         });
         const legal = newLegalDoc({
           legalName: row.legalName || row.name,

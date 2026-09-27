@@ -273,37 +273,35 @@ export function PromotionPage() {
             ) : redemptions.data.length === 0 ? (
               <EmptyState compact icon={<ShoppingBag />} title="Pas encore d’utilisation" description="Les commandes avec cette offre apparaîtront ici en temps réel." />
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Commande</TableHead>
-                      <TableHead className="text-right">Remise</TableHead>
-                      <TableHead>Statut</TableHead>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Commande</TableHead>
+                    <TableHead className="text-right">Remise</TableHead>
+                    <TableHead>Statut</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {redemptions.data.slice(0, 12).map((r) => (
+                    <TableRow key={r.id}>
+                      <TableCell className="whitespace-nowrap text-fg-muted">{formatDateTime(toDate(r.createdAt) ?? new Date())}</TableCell>
+                      <TableCell>
+                        <Link to={`/commandes/${r.orderId}`} className="font-mono text-sm text-primary-soft-fg hover:underline">
+                          {r.orderId}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-right font-mono num">−{formatEUR(r.discountCents, { cents: true })}</TableCell>
+                      <TableCell>
+                        <StatusBadge
+                          status={r.status}
+                          map={{ applied: { label: 'Appliquée', tone: 'success' }, reversed: { label: 'Annulée', tone: 'neutral' } }}
+                        />
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {redemptions.data.slice(0, 12).map((r) => (
-                      <TableRow key={r.id}>
-                        <TableCell className="whitespace-nowrap text-fg-muted">{formatDateTime(toDate(r.createdAt) ?? new Date())}</TableCell>
-                        <TableCell>
-                          <Link to={`/commandes/${r.orderId}`} className="font-mono text-sm text-primary-soft-fg hover:underline">
-                            {r.orderId}
-                          </Link>
-                        </TableCell>
-                        <TableCell className="text-right font-mono num">−{formatEUR(r.discountCents, { cents: true })}</TableCell>
-                        <TableCell>
-                          <StatusBadge
-                            status={r.status}
-                            map={{ applied: { label: 'Appliquée', tone: 'success' }, reversed: { label: 'Annulée', tone: 'neutral' } }}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                  ))}
+                </TableBody>
+              </Table>
             )}
           </Card>
         </div>

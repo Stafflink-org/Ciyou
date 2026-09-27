@@ -24,7 +24,7 @@ export function AbsenceCalendar({
     return <EmptyState compact icon={<CalendarDays />} title="Aucun salarié" description="Le calendrier se remplit avec les fiches de l’équipe." />;
   }
   return (
-    <div className="overflow-x-auto">
+    <div data-scroll-ok className="overflow-x-auto">
       <table className="w-full min-w-[980px] border-separate border-spacing-0 text-xs">
         <thead>
           <tr>

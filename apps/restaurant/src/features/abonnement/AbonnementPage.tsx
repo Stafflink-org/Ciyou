@@ -357,13 +357,13 @@ export function AbonnementPage() {
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
           <Card className="overflow-hidden">
-            <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
-              <h2 className="flex items-center gap-2 font-display text-md font-semibold tracking-tight text-fg">
-                <FileText className="size-4 text-fg-muted" />
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
+              <h2 className="flex min-w-0 items-center gap-2 font-display text-md font-semibold tracking-tight text-fg">
+                <FileText className="size-4 shrink-0 text-fg-muted" />
                 Factures d’abonnement
               </h2>
               {can('invoices.view') && (
-                <Button asChild variant="ghost" size="sm">
+                <Button asChild variant="ghost" size="sm" className="shrink-0">
                   <Link to="/factures">Toutes les factures</Link>
                 </Button>
               )}

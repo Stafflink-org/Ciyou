@@ -9,6 +9,7 @@ import {
   type BulkActionResult,
   type BulkRestaurantActionInput,
   type CommercialTermsInput,
+  type CurrencyCode,
   type OnboardingStatus,
   type PartnerDocumentType,
   type Restaurant,
@@ -25,7 +26,7 @@ import { callFunctionWithReason } from '@/lib/reason';
 // ------------------------------------------------------------------ Fonctions
 
 export const reviewRestaurantApplication = callFunctionWithReason<
-  { restaurantId: string; decision: ApplicationDecision; reason?: string | null; missingDocuments?: PartnerDocumentType[]; goLive?: boolean },
+  { restaurantId: string; decision: ApplicationDecision; reason?: string | null; missingDocuments?: PartnerDocumentType[]; goLive?: boolean; currency?: CurrencyCode },
   { onboardingStatus: string; status: string; emailSimulated: boolean }
 >('reviewRestaurantApplication', { title: 'Décision sur le dossier', description: 'Le motif est conservé dans le journal d’audit (et transmis au commerce en cas de refus).' });
 export const reviewDocument = callFunction<

@@ -357,7 +357,7 @@ export function PlanningPage() {
                 />
               </div>
               <div className="md:hidden">
-                <div className="flex gap-1.5 overflow-x-auto border-b border-border p-3 [scrollbar-width:none]">
+                <div data-scroll-ok className="flex gap-1.5 overflow-x-auto border-b border-border p-3 [scrollbar-width:none]">
                   {days.map((day) => {
                     const count = visibleShifts.filter((s) => s.date === day).length;
                     return (

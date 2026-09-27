@@ -15,6 +15,7 @@ import type {
 import type { PlanCode } from '../pricing/plans';
 import type { BillingMode } from '../pricing/types';
 import type { Bps, Cents } from '../pricing/money';
+import type { CurrencyCode } from '../pricing/currency';
 import type {
   ImageRef,
   LatLng,
@@ -141,6 +142,22 @@ export interface Restaurant extends Tracked, SoftDeletable, Localized {
   /** Retrait pour inactivité : date prévue tant qu'aucune commande n'arrive, puis retrait effectif. */
   inactivityRemovalDueAt?: Timestamp | null;
   removedForInactivityAt?: Timestamp | null;
+  /**
+   * Devise du compte de ce commerce (ISO 4217 : EUR, DZD, MAD, TND). Fixée à l'inscription
+   * d'après le pays, modifiable ensuite par le super admin (validation du dossier ou fiche
+   * restaurant, avec motif et audit). Absente sur les documents antérieurs à cette rubrique :
+   * utiliser `resolveRestaurantCurrency` (repli sur la devise du pays, puis EUR) plutôt que de
+   * lire ce champ directement. N'affecte que le formatage des montants déjà affichés pour ce
+   * commerce ; la devise réelle des paiements/commandes reste celle du pays (voir CONTRAT_MODULES.md).
+   */
+  currency?: CurrencyCode;
+  /**
+   * Le propriétaire a-t-il déjà défini lui-même un mot de passe (inscription en ligne avec mot
+   * de passe saisi, ou lien de définition déjà envoyé) ? `false`/absent : la validation du
+   * dossier (`reviewRestaurantApplication`) envoie un lien de définition de mot de passe au lieu
+   * du simple e-mail « Dossier validé ». Jamais modifiable par le client.
+   */
+  ownerCredentialsDelivered?: boolean;
 }
 
 /** restaurants/{rid}/private/commercial : conditions commerciales (écriture super admin). */
