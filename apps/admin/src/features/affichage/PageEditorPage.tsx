@@ -43,7 +43,7 @@ export function PageEditorPage() {
   const page = useDoc<ContentPage>(docAt(`${COLLECTIONS.pages}/${slug}`));
   const versionsQ = useMemo(() => query(collection(db, COLLECTIONS.pages, slug, SUBCOLLECTIONS.pages.versions), orderBy('version', 'desc'), limit(30)), [slug]);
   const versions = useCollection<ContentPageVersion>(versionsQ);
-  useDocumentTitle(`${page.data?.title.fr ?? 'Page'} · Affichage · GoLink Admin`);
+  useDocumentTitle(`${page.data?.title.fr ?? 'Page'} · Affichage · Ciyou Eats Admin`);
 
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');

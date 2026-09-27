@@ -115,7 +115,7 @@ export function ClientPage() {
   const full = can('personal_data.view');
   const user = useDoc<UserProfile>(userId ? docAt(paths.user(userId)) : null);
   const profile = user.data;
-  useDocumentTitle(`${profile?.displayName ?? 'Client'} · GoLink Admin`);
+  useDocumentTitle(`${profile?.displayName ?? 'Client'} · Ciyou Eats Admin`);
   const [dialog, setDialog] = useState<'credit' | 'block' | 'unblock' | 'delete' | null>(null);
 
   const priv = useDoc<UserPrivate>(userId ? docAt(`${COLLECTIONS.userPrivate}/${userId}`) : null);
@@ -363,7 +363,7 @@ export function ClientPage() {
                   </ul>
                 </Section>
               </Panel>
-              <Panel title="Moyens de paiement" icon={<CreditCard />} description="Toujours masqués : GoLink ne stocke jamais le numéro complet.">
+              <Panel title="Moyens de paiement" icon={<CreditCard />} description="Toujours masqués : Ciyou Eats ne stocke jamais le numéro complet.">
                 <Section loading={methods.loading} error={methods.error} empty={methods.data.length ? null : { icon: <CreditCard />, title: 'Aucune carte enregistrée' }}>
                   <ul className="divide-y divide-border">
                     {methods.data.map((m) => (
@@ -383,7 +383,7 @@ export function ClientPage() {
                   items={[
                     { label: 'Commerces favoris', value: formatNumber(favoriteRestaurants) },
                     { label: 'Produits favoris', value: formatNumber(favorites.data.length - favoriteRestaurants) },
-                    ...loyalty.data.map((acc) => ({ label: acc.scope === 'platform' ? 'Points GoLink' : `Points · ${loyaltyRestaurants.data.find((r) => r.id === acc.restaurantId)?.name ?? 'commerce'}`, value: `${formatNumber(acc.points)} pts`, hint: `${formatNumber(acc.lifetimePoints)} cumulés` })),
+                    ...loyalty.data.map((acc) => ({ label: acc.scope === 'platform' ? 'Points Ciyou Eats' : `Points · ${loyaltyRestaurants.data.find((r) => r.id === acc.restaurantId)?.name ?? 'commerce'}`, value: `${formatNumber(acc.points)} pts`, hint: `${formatNumber(acc.lifetimePoints)} cumulés` })),
                   ]}
                 />
               </Panel>
@@ -574,7 +574,7 @@ export function ClientPage() {
 
         <TabsContent value="notes">
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <Panel title="Notes internes" icon={<NotebookPen />} description="Visibles uniquement par l’équipe GoLink.">
+            <Panel title="Notes internes" icon={<NotebookPen />} description="Visibles uniquement par l’équipe Ciyou Eats.">
               <NotesPanel target={{ type: 'client', id: userId, label: profile.displayName }} />
             </Panel>
             <Panel title="Historique des actions" icon={<RefreshCw />}>

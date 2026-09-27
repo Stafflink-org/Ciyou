@@ -337,7 +337,7 @@ export function EmployeeFormSheet({
                   )}
                 />
               </FormField>
-              <FormField label="Compte GoLink relié" hint="Permet au salarié de voir son planning, de pointer et de demander ses absences.">
+              <FormField label="Compte Ciyou Eats relié" hint="Permet au salarié de voir son planning, de pointer et de demander ses absences.">
                 <Controller
                   control={control}
                   name="uid"

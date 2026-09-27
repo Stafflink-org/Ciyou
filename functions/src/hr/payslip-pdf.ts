@@ -196,7 +196,7 @@ export function renderPayslipPdf(input: PayslipPdfInput): Buffer {
   const footer = 'Dans votre intérêt et pour vous aider à faire valoir vos droits, conservez ce bulletin de paie sans limitation de durée.';
   pdf.line(LEFT, 806, RIGHT, 806, { color: PDF_COLORS.border, width: 0.5 });
   pdf.text(LEFT, 818, footer, { size: 7, color: PDF_COLORS.subtle });
-  pdf.text(LEFT, 828, 'Bulletin établi avec GoLink à partir des pointages et des absences enregistrés.', { size: 7, color: PDF_COLORS.subtle });
+  pdf.text(LEFT, 828, 'Bulletin établi avec Ciyou Eats à partir des pointages et des absences enregistrés.', { size: 7, color: PDF_COLORS.subtle });
   pdf.text(RIGHT, 828, `Réf. ${payslip.employeeId}-${payslip.period}`, { size: 7, color: PDF_COLORS.subtle, align: 'right' });
   return pdf.toBuffer();
 }

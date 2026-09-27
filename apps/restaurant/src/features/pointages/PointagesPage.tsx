@@ -18,7 +18,7 @@ import { entriesByEmployee, liveWorkedMinutes, useMyEntries, useMyWeekValidation
 const LEGAL_WEEK_MINUTES = 35 * 60;
 
 export function PointagesPage() {
-  useDocumentTitle('Pointages · GoLink Restaurant');
+  useDocumentTitle('Pointages · Ciyou Eats Restaurant');
   const can = useCan();
   const manage = can('timeclock.manage');
   const { member, restaurant } = useRestaurantAccess();

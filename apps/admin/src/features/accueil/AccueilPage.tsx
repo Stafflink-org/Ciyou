@@ -19,7 +19,7 @@ const getOverview = callFunction<PilotageOverviewInput, PilotageOverview>('getPi
 export function AccueilPage() {
   const { t, locale } = useTranslation('accueil');
   const today = useMemo(() => new Intl.DateTimeFormat(intlLocale(locale), { weekday: 'long', day: 'numeric', month: 'long' }), [locale]);
-  useDocumentTitle(`${t('docTitle')} · GoLink Admin`);
+  useDocumentTitle(`${t('docTitle')} · Ciyou Eats Admin`);
   const { admin, can } = useAdminAccess();
   const geo = useGeoScope();
   const state = usePilotageFilters('30d');

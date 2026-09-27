@@ -145,7 +145,7 @@ function EquipmentDialog({ open, onClose, equipment }: { open: boolean; onClose:
 }
 
 export function TemperaturesPage() {
-  useDocumentTitle('Températures · HACCP · GoLink Restaurant');
+  useDocumentTitle('Températures · HACCP · Ciyou Eats Restaurant');
   const can = useCan();
   const manage = can('haccp.manage');
   const { restaurantId } = useRestaurantAccess();

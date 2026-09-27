@@ -93,7 +93,7 @@ export const addCustomerNote = callable(
     const actor = await requireRestaurantAccess(request, data.restaurantId, 'customers.manage', 'customers.edit');
     const ref = customerRef(data.restaurantId, data.customerId);
     const noteRef = ref.collection(SUBCOLLECTIONS.customers.notes).doc();
-    const authorName = actor.kind === 'member' ? actor.member.displayName || actor.caller.name : `${actor.caller.name} (GoLink)`;
+    const authorName = actor.kind === 'member' ? actor.member.displayName || actor.caller.name : `${actor.caller.name} (Ciyou Eats)`;
 
     await db.runTransaction(async (tx) => {
       const snap = await tx.get(ref);

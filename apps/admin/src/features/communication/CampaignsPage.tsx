@@ -31,7 +31,7 @@ type Row = WithId<Campaign>;
 const col = createColumnHelper<Row>();
 
 export function CampaignsPage() {
-  useDocumentTitle('Notifications et envois · GoLink Admin');
+  useDocumentTitle('Notifications et envois · Ciyou Eats Admin');
   const navigate = useNavigate();
   const geo = useGeoScope();
   const names = useGeoNames();
@@ -181,7 +181,7 @@ export function CampaignsPage() {
             value={scope}
             onValueChange={(v) => setScope(v as typeof scope)}
             options={[
-              { value: 'platform', label: 'Envois GoLink', icon: <Send /> },
+              { value: 'platform', label: 'Envois Ciyou Eats', icon: <Send /> },
               { value: 'restaurant', label: 'Campagnes des restaurants', icon: <Store /> },
             ]}
           />

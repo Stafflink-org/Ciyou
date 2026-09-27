@@ -8,7 +8,7 @@ import { OpsTabs } from '../_operations/ui';
 import { useApplicationsQueue, usePendingDriverDocuments, useSubmittedChecks } from './lib';
 
 export function DriversShell({ title, description, actions, children, documentTitle }: { title: string; description: string; actions?: ReactNode; children: ReactNode; documentTitle: string }) {
-  useDocumentTitle(`${documentTitle} · GoLink Admin`);
+  useDocumentTitle(`${documentTitle} · Ciyou Eats Admin`);
   const { can } = useAdminAccess();
   const geo = useGeoScope();
   const validate = can('drivers.validate');

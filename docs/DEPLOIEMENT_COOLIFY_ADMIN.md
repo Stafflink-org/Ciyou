@@ -57,7 +57,7 @@ selon la version de Coolify) de l'application, avec exactement ces noms :
 
 | Nom | Où trouver la valeur | Obligatoire |
 |---|---|---|
-| `VITE_GOOGLE_MAPS_API_KEY` | Google Cloud Console → APIs & Services → Identifiants (projet `golink-9f16d`) → clé **« GoLink Web Maps »**. Copier la chaîne de clé (`AIza...`). | Non — sans elle, les cartes affichent un message « indisponible » au lieu de planter. Fortement recommandé. |
+| `VITE_GOOGLE_MAPS_API_KEY` | Google Cloud Console → APIs & Services → Identifiants (projet `golink-9f16d`) → clé **« Ciyou Eats Web Maps »**. Copier la chaîne de clé (`AIza...`). | Non — sans elle, les cartes affichent un message « indisponible » au lieu de planter. Fortement recommandé. |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | Tableau de bord Stripe → Développeurs → Clés API → **clé publiable** (`pk_live_...` en production, `pk_test_...` en test). | Non — sans elle, les écrans liés aux paiements/Connect se dégradent, mais l'admin reste utilisable. À renseigner avant l'ouverture réelle. |
 | `VITE_RESTAURANT_APP_URL` | URL du back-office restaurant une fois déployé (ex. `https://restaurant.mondomaine.fr`). Laisser vide tant qu'il n'est pas en ligne : le lien « Voir comme le restaurant » utilisera alors une valeur de repli locale, sans casser le reste de l'app. | Non. |
 

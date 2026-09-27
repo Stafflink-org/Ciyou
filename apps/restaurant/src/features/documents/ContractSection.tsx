@@ -50,7 +50,7 @@ export function ContractSection() {
             <p className="eyebrow">Contrat partenaire</p>
             <h2 className="mt-1 font-display text-lg font-semibold tracking-tight text-fg">{latest?.title.fr ?? 'Conditions partenaires'}</h2>
             {!latest ? (
-              <p className="mt-1 text-sm text-fg-muted">Aucune version publiée pour votre pays : GoLink vous contactera.</p>
+              <p className="mt-1 text-sm text-fg-muted">Aucune version publiée pour votre pays : Ciyou Eats vous contactera.</p>
             ) : upToDate ? (
               <p className="mt-1 text-sm text-fg-muted">
                 Version {latest.version} acceptée{acceptedAt ? ` le ${formatDate(acceptedAt)}` : ''}
@@ -92,7 +92,7 @@ function ContractDialog({ doc, mode, onClose }: { doc: WithId<LegalDocument>; mo
   const { restaurantId, restaurant } = useRestaurantAccess();
   const [agree, setAgree] = useState(false);
   const [signature, setSignature] = useState('');
-  const sign = useMutation(acceptPartnerContract, { success: (r) => `Contrat version ${r.version} signé. Une preuve est conservée par GoLink.` });
+  const sign = useMutation(acceptPartnerContract, { success: (r) => `Contrat version ${r.version} signé. Une preuve est conservée par Ciyou Eats.` });
 
   useEffect(() => {
     if (mode) {

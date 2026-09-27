@@ -7,5 +7,5 @@ export const APP_URLS = {
   driver: process.env.DRIVER_APP_URL ?? 'http://localhost:8081',
 } as const;
 
-export const PLATFORM_NAME = 'GoLink';
-export const EMAIL_SENDER_NAME = 'GoLink';
+export const PLATFORM_NAME = 'Ciyou Eats';
+export const EMAIL_SENDER_NAME = 'Ciyou Eats';

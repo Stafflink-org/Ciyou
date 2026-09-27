@@ -77,7 +77,7 @@ const HISTORY_LABELS: Record<Subscription['history'][number]['event'], string> =
 
 /** Cycle de vie des abonnements (cahier §17) : essai, renouvellement, changement, résiliation, offres. */
 export function SubscriptionsPage() {
-  useDocumentTitle('Abonnements · GoLink Admin');
+  useDocumentTitle('Abonnements · Ciyou Eats Admin');
   const geo = useGeoScope();
   const directory = useDirectory();
   const subs = useSubscriptions();

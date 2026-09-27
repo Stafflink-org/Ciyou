@@ -1,4 +1,4 @@
-// Notes internes (visibles uniquement par l'équipe GoLink) attachées à une entité :
+// Notes internes (visibles uniquement par l'équipe Ciyou Eats) attachées à une entité :
 // restaurant, groupe ou client. Écriture directe autorisée par les règles (auteur).
 import { useMemo, useState } from 'react';
 import { addDoc, deleteDoc, limit, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';

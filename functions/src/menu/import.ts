@@ -27,7 +27,7 @@ const row = z.object({
   compareAtPriceCents: z.number().int().min(0).max(MENU_LIMITS.maxPriceCents).nullish(),
   vatCategory: z
     .enum(VAT_CATEGORIES)
-    .refine((category) => isVatCategorySelectable(category), 'La vente d’alcool est interdite sur GoLink')
+    .refine((category) => isVatCategorySelectable(category), 'La vente d’alcool est interdite sur Ciyou Eats')
     .nullish(),
   available: z.boolean().nullish(),
   stock: z.number().int().min(0).max(99_999).nullish(),

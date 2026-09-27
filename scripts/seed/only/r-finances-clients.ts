@@ -1,6 +1,6 @@
 // Données complémentaires « Finances & clients » (exécution seule, idempotente) :
 //   npx tsx scripts/seed/only/r-finances-clients.ts
-// - avoirs GoLink (credit_note) rattachés aux factures de commissions des établissements de Maison Haddad ;
+// - avoirs Ciyou Eats (credit_note) rattachés aux factures de commissions des établissements de Maison Haddad ;
 // - notes internes CRM et un client bloqué avec motif ;
 // - préférences livreurs (un livreur écarté, un bloqué) et livreurs propres de Mina Kitchen,
 //   dont une invitation en attente.
@@ -210,7 +210,7 @@ async function seedCouriers(): Promise<number> {
   batch.update(couriers.doc('seed-driver-005'), {
     status: 'blocked',
     blockedReason: 'Comportement inapproprié signalé par deux clients.',
-    note: 'Signalement transmis au support GoLink.',
+    note: 'Signalement transmis au support Ciyou Eats.',
     updatedBy: 'seed-owner-mina-kitchen',
   });
   await batch.commit();

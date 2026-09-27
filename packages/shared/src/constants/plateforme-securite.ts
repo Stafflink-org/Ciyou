@@ -274,7 +274,7 @@ export const SERVICE_KEY_LABELS: Record<ServiceKey, string> = {
 };
 
 /** Émetteur affiché dans les applications d'authentification. */
-export const TOTP_ISSUER = 'GoLink Admin';
+export const TOTP_ISSUER = 'Ciyou Eats Admin';
 /** Paramètres TOTP (RFC 6238) : 6 chiffres, pas de 30 s, tolérance d'un pas. */
 export const TOTP_DIGITS = 6;
 export const TOTP_PERIOD_SECONDS = 30;

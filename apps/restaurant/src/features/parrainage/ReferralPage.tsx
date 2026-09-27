@@ -31,7 +31,7 @@ const STATUS: Record<ReferralStatus, { label: string; tone: 'success' | 'amber' 
 
 /** Parrainage entre commerces : lien à partager, suivi des commerces inscrits, budget publicitaire gagné. */
 export function ReferralPage() {
-  useDocumentTitle('Parrainage · GoLink Restaurant');
+  useDocumentTitle('Parrainage · Ciyou Eats Restaurant');
   const { restaurantId } = useRestaurantAccess();
   const [info, setInfo] = useState<LinkInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -72,7 +72,7 @@ export function ReferralPage() {
 
   return (
     <PageContainer>
-      <PageHeader eyebrow="Marketing" title="Parrainage" description="Faites inscrire un autre commerce sur GoLink : vous gagnez du budget publicitaire dès qu’il est en ligne." />
+      <PageHeader eyebrow="Marketing" title="Parrainage" description="Faites inscrire un autre commerce sur Ciyou Eats : vous gagnez du budget publicitaire dès qu’il est en ligne." />
       <div className="space-y-6">
         {error ? (
           <Card>
@@ -132,7 +132,7 @@ export function ReferralPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader title="J’ai été parrainé" description="Vous avez un code d’un autre commerce GoLink ? Enregistrez-le (une seule fois)." divided />
+          <CardHeader title="J’ai été parrainé" description="Vous avez un code d’un autre commerce Ciyou Eats ? Enregistrez-le (une seule fois)." divided />
           <CardContent className="space-y-3">
             <FormField label="Code de parrainage">
               <div className="flex flex-wrap items-center gap-2">

@@ -140,7 +140,7 @@ export interface CreditFromTicketInput {
   ticketId: string;
   amountCents: Cents;
   reason: string;
-  /** Imputation : commerce (défaut, décision client) ou geste commercial GoLink. */
+  /** Imputation : commerce (défaut, décision client) ou geste commercial Ciyou Eats. */
   chargedTo: 'restaurant' | 'platform';
   validityDays?: number | null;
 }

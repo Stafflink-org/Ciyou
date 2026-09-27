@@ -134,12 +134,12 @@ function validate(form: FormState, limits: ReturnType<typeof usePromotionSetting
     value = Math.round(pct * 100);
     if (!Number.isFinite(pct) || pct < 1) errors.value = 'Au moins 1 %.';
     else if (value > 10_000) errors.value = 'Au plus 100 %.';
-    else if (limits.capsEnabled && value > limits.restaurantMaxPercentBps) errors.value = `Maximum ${limits.restaurantMaxPercentBps / 100} % (règle GoLink).`;
+    else if (limits.capsEnabled && value > limits.restaurantMaxPercentBps) errors.value = `Maximum ${limits.restaurantMaxPercentBps / 100} % (règle Ciyou Eats).`;
   } else if (form.kind === 'fixed') {
     value = parsePriceInput(form.value) ?? -1;
     if (value < 50) errors.value = 'Au moins 0,50 €.';
     else if (value > 20_000) errors.value = 'Au plus 200 €.';
-    else if (limits.capsEnabled && value > limits.restaurantMaxFixedCents) errors.value = `Maximum ${formatEUR(limits.restaurantMaxFixedCents, { cents: true })} (règle GoLink).`;
+    else if (limits.capsEnabled && value > limits.restaurantMaxFixedCents) errors.value = `Maximum ${formatEUR(limits.restaurantMaxFixedCents, { cents: true })} (règle Ciyou Eats).`;
   }
   const minSubtotalCents = form.minSubtotal.trim() === '' ? 0 : (parsePriceInput(form.minSubtotal) ?? -1);
   if (minSubtotalCents < 0) errors.minSubtotal = 'Montant invalide.';
@@ -271,7 +271,7 @@ function PromotionFormBody({
         !submit
           ? 'Offre enregistrée.'
           : result.status === 'pending_review'
-            ? 'Offre envoyée à GoLink pour validation.'
+            ? 'Offre envoyée à Ciyou Eats pour validation.'
             : result.status === 'active'
               ? 'Offre mise en ligne.'
               : 'Offre enregistrée.',
@@ -289,7 +289,7 @@ function PromotionFormBody({
   }
 
   const canSubmit = !promotion || ['draft', 'rejected'].includes(promotion.status);
-  const submitLabel = limits.restaurantRequiresReview ? 'Soumettre à GoLink' : 'Mettre en ligne';
+  const submitLabel = limits.restaurantRequiresReview ? 'Soumettre à Ciyou Eats' : 'Mettre en ligne';
   const example = form.minSubtotal && fields.minSubtotalCents > 0 ? Math.max(fields.minSubtotalCents, 2500) : 2500;
   const exampleDiscount =
     form.kind === 'percentage'
@@ -303,7 +303,7 @@ function PromotionFormBody({
       <SheetHeader
         icon={<Tag />}
         title={promotion ? 'Modifier l’offre' : template ? 'Dupliquer l’offre' : 'Nouvelle offre'}
-        description={`Une remise financée par ${restaurant.name}, dans les règles fixées par GoLink.`}
+        description={`Une remise financée par ${restaurant.name}, dans les règles fixées par Ciyou Eats.`}
       />
       <SheetBody className="pb-8">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_240px]">
@@ -540,7 +540,7 @@ function PromotionFormBody({
               </div>
             )}
             <div className="rounded-xl border border-border p-3.5 text-xs leading-5 text-fg-muted">
-              <p className="mb-1 font-medium text-fg">Règles GoLink</p>
+              <p className="mb-1 font-medium text-fg">Règles Ciyou Eats</p>
               {promotionRulesText(limits)}
             </div>
           </aside>

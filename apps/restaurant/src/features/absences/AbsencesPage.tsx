@@ -50,7 +50,7 @@ function periodLabel(a: Pick<Absence, 'startDate' | 'endDate' | 'halfDayStart' |
 }
 
 export function AbsencesPage() {
-  useDocumentTitle('Absences · GoLink Restaurant');
+  useDocumentTitle('Absences · Ciyou Eats Restaurant');
   const can = useCan();
   const manage = can('absences.manage');
   const { restaurantId } = useRestaurantAccess();

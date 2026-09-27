@@ -57,7 +57,7 @@ const TEMPLATES: Array<{ id: string; name: string; kind: ChecklistKind; dueTime:
       ['Contrôler les DLC des préparations de la veille', true],
       ['Lavage des mains, tenue propre, cheveux protégés', true],
       ['Mise en place du passe et des emballages de livraison'],
-      ['Ouvrir le service sur la tablette GoLink et tester le son'],
+      ['Ouvrir le service sur la tablette Ciyou Eats et tester le son'],
     ]),
   },
   {
@@ -70,7 +70,7 @@ const TEMPLATES: Array<{ id: string; name: string; kind: ChecklistKind; dueTime:
       ['Réassort des sacs isothermes et des emballages'],
       ['Vérifier sauces, garnitures et accompagnements'],
       ['Zone de retrait livreurs propre et dégagée'],
-      ['Contrôler le temps de préparation affiché dans GoLink'],
+      ['Contrôler le temps de préparation affiché dans Ciyou Eats'],
     ]),
   },
   {
@@ -85,7 +85,7 @@ const TEMPLATES: Array<{ id: string; name: string; kind: ChecklistKind; dueTime:
       ['Vider et nettoyer la plonge'],
       ['Sortir les poubelles et nettoyer le local'],
       ['Couper le gaz, la hotte et les équipements', true],
-      ['Fermer le service GoLink et mettre la tablette en charge'],
+      ['Fermer le service Ciyou Eats et mettre la tablette en charge'],
     ]),
   },
 ];

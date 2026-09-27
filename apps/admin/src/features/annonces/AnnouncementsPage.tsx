@@ -230,7 +230,7 @@ function Composer({ announcement, onDone }: { announcement: Row | null; onDone: 
 type Tab = 'live' | 'scheduled' | 'past';
 
 export function AnnouncementsPage() {
-  useDocumentTitle('Annonces · GoLink Admin');
+  useDocumentTitle('Annonces · Ciyou Eats Admin');
   const geo = useGeoScope();
   const names = useGeoNames();
   const now = useNow();

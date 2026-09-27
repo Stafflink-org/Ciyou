@@ -38,7 +38,7 @@ const parsePresets = (text: string, currency: CurrencyCode = 'EUR') => {
 
 /** Moyens de paiement (cahier §14) : plateforme, pays et commerce ; pourboires et espèces. */
 export function MethodsPage() {
-  useDocumentTitle('Moyens de paiement · GoLink Admin');
+  useDocumentTitle('Moyens de paiement · Ciyou Eats Admin');
   const can = useCan();
   const geo = useGeoScope();
   const editable = can('payments.configure');
@@ -50,7 +50,7 @@ export function MethodsPage() {
       </PageHeader>
       <div className="space-y-6">
         <Callout tone="info" icon={<Lock />} title="Règles fixées par la direction">
-          Titres-restaurant non acceptés. Espèces possibles uniquement si la livraison est faite par un livreur salarié du commerce : avec un livreur indépendant GoLink, le paiement en ligne est obligatoire. Pourboires reversés à 100 % au livreur.
+          Titres-restaurant non acceptés. Espèces possibles uniquement si la livraison est faite par un livreur salarié du commerce : avec un livreur indépendant Ciyou Eats, le paiement en ligne est obligatoire. Pourboires reversés à 100 % au livreur.
         </Callout>
         <PlatformCard editable={editable} />
         <CountriesCard editable={editable} />
@@ -104,7 +104,7 @@ function PlatformCard({ editable }: { editable: boolean }) {
                     disabled={!editable || locked}
                     onCheckedChange={(v) => setDraft({ ...draft, methods: { ...draft.methods, [m]: v } })}
                     label={PAYMENT_METHOD_LABELS[m]}
-                    description={locked ? 'Non accepté sur GoLink' : m === 'cash' ? 'Seulement avec un livreur salarié du commerce' : undefined}
+                    description={locked ? 'Non accepté sur Ciyou Eats' : m === 'cash' ? 'Seulement avec un livreur salarié du commerce' : undefined}
                   />
                 );
               })}
@@ -198,7 +198,7 @@ function CountriesCard({ editable }: { editable: boolean }) {
                     </td>
                     {SHOWN.map((m) => <td key={m} className="px-2 py-3 text-center"><MethodDot on={Boolean(c.paymentMethods?.[m])} locked={DISABLED_PAYMENT_METHODS.includes(m)} /></td>)}
                     <td className="px-3 py-3 text-right font-mono text-fg-muted num">{c.pricing?.payment ? `${bps(c.pricing.payment.percentBps)} + ${formatMoney(c.pricing.payment.fixedCents, c.currency)}` : '—'}</td>
-                    <td className="px-3 py-3"><Badge size="sm" tone={c.pricing?.payment?.payer === 'restaurant' ? 'info' : 'neutral'}>{c.pricing?.payment?.payer === 'restaurant' ? 'Commerce' : 'GoLink'}</Badge></td>
+                    <td className="px-3 py-3"><Badge size="sm" tone={c.pricing?.payment?.payer === 'restaurant' ? 'info' : 'neutral'}>{c.pricing?.payment?.payer === 'restaurant' ? 'Commerce' : 'Ciyou Eats'}</Badge></td>
                     <td className="px-5 py-3 text-right">{editable && <Button size="xs" variant="ghost" leftIcon={<Pencil />} onClick={() => setEditing(c)}>Modifier</Button>}</td>
                   </tr>
                 ))}
@@ -263,7 +263,7 @@ function CountryDialog({ country, onClose }: { country: WithId<Country>; onClose
           onValueChange={(v) => setPayer(v as 'platform' | 'restaurant')}
           options={[
             { value: 'restaurant', label: 'Le commerce', description: 'Déduits de son reversement (décision de la direction).' },
-            { value: 'platform', label: 'GoLink', description: 'Pris sur la marge de la plateforme.' },
+            { value: 'platform', label: 'Ciyou Eats', description: 'Pris sur la marge de la plateforme.' },
           ]}
         />
       </FormField>
@@ -302,7 +302,7 @@ function RestaurantsCard({ editable }: { editable: boolean }) {
         cell: (info) => (
           <div className="min-w-0">
             <p className="truncate font-medium text-fg">{info.getValue()}</p>
-            <p className="text-xs text-fg-subtle">{info.row.original.deliveredBy === 'platform' ? 'Livré par GoLink' : info.row.original.deliveredBy === 'restaurant' ? 'Livre avec ses salariés' : 'GoLink et ses salariés'}</p>
+            <p className="text-xs text-fg-subtle">{info.row.original.deliveredBy === 'platform' ? 'Livré par Ciyou Eats' : info.row.original.deliveredBy === 'restaurant' ? 'Livre avec ses salariés' : 'Ciyou Eats et ses salariés'}</p>
           </div>
         ),
       }),

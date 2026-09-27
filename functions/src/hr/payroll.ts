@@ -415,14 +415,14 @@ export const sendPayslips = callable(
           title: 'Votre bulletin de paie est disponible',
           paragraphs: [
             `Bonjour ${employee.firstName},`,
-            `Votre bulletin de paie de ${month.toLowerCase()} établi par ${restaurant?.name ?? 'votre établissement'} est disponible dans votre espace GoLink.`,
+            `Votre bulletin de paie de ${month.toLowerCase()} établi par ${restaurant?.name ?? 'votre établissement'} est disponible dans votre espace Ciyou Eats.`,
           ],
           details: [
             { label: 'Période', value: month },
             { label: 'Net à payer', value: (payslip.netCents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) },
           ],
           cta: { label: 'Consulter mon bulletin', url: `${APP_URLS.restaurant}/equipe/paie` },
-          footerReason: `Vous recevez cet e-mail car ${restaurant?.name ?? 'votre employeur'} gère votre paie avec GoLink.`,
+          footerReason: `Vous recevez cet e-mail car ${restaurant?.name ?? 'votre employeur'} gère votre paie avec Ciyou Eats.`,
         });
         const result = await sendEmail({
           to: { email: employee.email, name: fullName(employee) },

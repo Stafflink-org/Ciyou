@@ -113,7 +113,7 @@ export function AuthLayout({ caption, headline, tagline, highlights = [], childr
           </div>
 
           <p className="mt-10 font-mono text-3xs uppercase tracking-eyebrow text-sidebar-muted/70">
-            © {year} GoLink · {t('auth.region')}
+            © {year} Ciyou Eats · {t('auth.region')}
           </p>
         </div>
       </aside>

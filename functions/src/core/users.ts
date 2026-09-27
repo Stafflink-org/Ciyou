@@ -39,7 +39,7 @@ async function applySignupBlocklist(uid: string, email: string | null, phone: st
     db
       .collection(COLLECTIONS.users)
       .doc(uid)
-      .set({ status: 'blocked', blockedReason: 'Inscription refusée : liste de blocage GoLink.', blockedAt: now, blockedBy: 'system', updatedAt: now, updatedBy: 'system' }, { merge: true }),
+      .set({ status: 'blocked', blockedReason: 'Inscription refusée : liste de blocage Ciyou Eats.', blockedAt: now, blockedBy: 'system', updatedAt: now, updatedBy: 'system' }, { merge: true }),
   ]);
   await writeAudit({
     actor: SYSTEM_ACTOR,

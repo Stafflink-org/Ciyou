@@ -399,7 +399,7 @@ function SettingsHistory() {
 }
 
 export function ParametresPage() {
-  useDocumentTitle('Paramètres · GoLink Admin');
+  useDocumentTitle('Paramètres · Ciyou Eats Admin');
   return (
     <PageContainer wide>
       <PageHeader eyebrow="Plateforme & sécurité" title="Paramètres plateforme" description="Identité, réglages régionaux, politique de sécurité et durées de conservation. Chaque changement est historisé avec l'ancienne valeur, la nouvelle et le motif.">

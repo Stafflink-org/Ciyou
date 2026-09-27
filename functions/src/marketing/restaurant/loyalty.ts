@@ -1,5 +1,5 @@
 // Programme de fidélité d'un établissement : règles de gain et paliers de
-// récompense, dans les limites du programme GoLink (settings/loyalty).
+// récompense, dans les limites du programme Ciyou Eats (settings/loyalty).
 import {
   COLLECTIONS,
   RESTAURANT_LOYALTY_RULES,
@@ -45,12 +45,12 @@ export const saveLoyaltyProgram = callable(schema, async (data, request) => {
   const restaurant = await loadRestaurant(data.restaurantId);
   if (data.enabled) {
     await assertFeatureAllowed(restaurant.id, 'loyalty');
-    await assertFeatureOn('loyalty', scopeOfRestaurant(restaurant, data.restaurantId), 'La fidélité est désactivée par GoLink pour cet établissement.');
+    await assertFeatureOn('loyalty', scopeOfRestaurant(restaurant, data.restaurantId), 'La fidélité est désactivée par Ciyou Eats pour cet établissement.');
   }
 
   const platform = (await db.collection(COLLECTIONS.settings).doc(SETTINGS_DOCS.loyalty).get()).data() as LoyaltySettings | undefined;
   if (data.enabled && platform && !platform.allowRestaurantPrograms) {
-    throw fail.precondition('Les programmes de fidélité des établissements sont momentanément désactivés par GoLink.');
+    throw fail.precondition('Les programmes de fidélité des établissements sont momentanément désactivés par Ciyou Eats.');
   }
   // Plafond du taux de retour, paramétrable par le super admin (valeur par défaut identique à l'ancienne constante).
   const maxReturnBps = platform?.maxRestaurantReturnBps ?? RULES.maxReturnBps;

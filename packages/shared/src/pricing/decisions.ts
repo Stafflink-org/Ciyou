@@ -47,7 +47,7 @@ export const CLIENT_DECISIONS = {
   tipsCourierShareBps: 10_000,
   /** Offre entreprises : non. */
   businessOfferEnabled: false,
-  /** Boutique propre des commerces : non (uniquement l'app GoLink). */
+  /** Boutique propre des commerces : non (uniquement l'app Ciyou Eats). */
   merchantWebshopEnabled: false,
   /** Espèces uniquement avec un livreur salarié du commerce. */
   cashRequiresMerchantCourier: true,

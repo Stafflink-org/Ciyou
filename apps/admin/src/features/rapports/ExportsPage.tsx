@@ -27,7 +27,7 @@ type ExportJob = BulkJob & { fileName?: string; truncated?: boolean };
 
 /** Exports CSV, Excel ou PDF filtrés de toutes les entités (cahier §4). */
 export function ExportsPage() {
-  useDocumentTitle('Exports · GoLink Admin');
+  useDocumentTitle('Exports · Ciyou Eats Admin');
   const { user } = useAuth();
   const { can } = useAdminAccess();
   const [preset, setPreset] = useState<ExportPreset | null>(null);

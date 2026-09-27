@@ -131,7 +131,7 @@ const REASON_MESSAGES: Record<string, string> = {
   code_unknown: 'Ce code de parrainage n’existe pas.',
   self: 'Vous ne pouvez pas utiliser votre propre code.',
   restaurant_missing: 'Commerce introuvable.',
-  referrer_inactive: 'Le commerce qui vous parraine n’est plus actif sur GoLink.',
+  referrer_inactive: 'Le commerce qui vous parraine n’est plus actif sur Ciyou Eats.',
   already_linked: 'Un code de parrainage est déjà enregistré pour ce commerce.',
 };
 

@@ -197,7 +197,7 @@ export const saveStaffRole = callable(roleSchema, async (data, request) => {
     const snap = await ref.get();
     if (!snap.exists) throw fail.notFound('Rôle');
     before = snap.data() as StaffRoleDefinition;
-    if (before.system) throw fail.forbidden('Les rôles fournis par GoLink ne sont pas modifiables.');
+    if (before.system) throw fail.forbidden('Les rôles fournis par Ciyou Eats ne sont pas modifiables.');
     const members = await membersCol(data.restaurantId).where('customRoleId', '==', roleId).get();
     const batch = db.batch();
     batch.update(ref, { name: data.name, description: data.description, permissions, updatedAt: now, updatedBy: uid });
@@ -248,7 +248,7 @@ export const deleteStaffRole = callable(
     const snap = await ref.get();
     if (!snap.exists) throw fail.notFound('Rôle');
     const role = snap.data() as StaffRoleDefinition;
-    if (role.system) throw fail.forbidden('Les rôles fournis par GoLink ne sont pas supprimables.');
+    if (role.system) throw fail.forbidden('Les rôles fournis par Ciyou Eats ne sont pas supprimables.');
     const members = await membersCol(data.restaurantId).where('customRoleId', '==', data.roleId).where('active', '==', true).limit(1).get();
     if (!members.empty) throw fail.precondition('Ce rôle est encore attribué : changez d’abord le rôle des membres concernés.');
     await ref.delete();

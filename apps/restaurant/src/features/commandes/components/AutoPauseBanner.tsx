@@ -1,5 +1,5 @@
 // Bandeau de pause automatique : après plusieurs commandes non acceptées
-// d'affilée, GoLink met l'établissement en pause (paramètre du super admin).
+// d'affilée, Ciyou Eats met l'établissement en pause (paramètre du super admin).
 import { useCallback } from 'react';
 import { PauseCircle, PlayCircle } from 'lucide-react';
 import { Button, toast } from '@golink/ui';

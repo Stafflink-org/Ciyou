@@ -1,4 +1,4 @@
-// « Voir comme le restaurant » (super admin) : un administrateur GoLink ouvre
+// « Voir comme le restaurant » (super admin) : un administrateur Ciyou Eats ouvre
 // l'espace d'un établissement en lecture seule via ?voir-comme=<id>, à condition
 // qu'une session ouverte par la Cloud Function startImpersonation soit active.
 // Les droits fournis ne contiennent que des permissions de consultation.
@@ -105,7 +105,7 @@ function ImpersonatedAccess({ restaurantId, children }: { restaurantId: string; 
       id: user.uid,
       uid: user.uid,
       restaurantId,
-      displayName: session.adminName ?? user.displayName ?? 'Équipe GoLink',
+      displayName: session.adminName ?? user.displayName ?? 'Équipe Ciyou Eats',
       email: user.email ?? '',
       role: 'custom',
       permissions: [...READ_ONLY_PERMISSIONS],
@@ -146,7 +146,7 @@ function ImpersonatedAccess({ restaurantId, children }: { restaurantId: string; 
 
 /**
  * Garde des routes connectées : membre du restaurant (cas normal) ou
- * administrateur GoLink en session « voir comme » (lecture seule).
+ * administrateur Ciyou Eats en session « voir comme » (lecture seule).
  */
 export function AccessGate({ children }: { children?: ReactNode }) {
   const { claims } = useAuth();
@@ -168,7 +168,7 @@ export function ImpersonationBanner() {
           <Eye className="size-4" />
         </span>
         <p className="min-w-0 flex-1 text-sm text-(--tone-fg)">
-          <strong className="font-semibold">Lecture seule</strong> · équipe GoLink sur l’espace de {active.restaurant.name}
+          <strong className="font-semibold">Lecture seule</strong> · équipe Ciyou Eats sur l’espace de {active.restaurant.name}
           {expires ? ` · fin à ${formatTime(expires)}` : ''}.
           <span className="hidden md:inline"> Aucune modification n’est possible ; l’accès est tracé au journal d’audit.</span>
         </p>

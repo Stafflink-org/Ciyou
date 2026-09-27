@@ -172,7 +172,7 @@ export function ProductEditorPage() {
   const [history, setHistory] = useState(false);
   const skipBlock = useRef(false);
 
-  useDocumentTitle(`${isNew ? 'Nouveau produit' : (product?.name ?? 'Produit')} · GoLink Restaurant`);
+  useDocumentTitle(`${isNew ? 'Nouveau produit' : (product?.name ?? 'Produit')} · Ciyou Eats Restaurant`);
 
   // Initialisation du formulaire (une fois les données chargées).
   useEffect(() => {
@@ -304,7 +304,7 @@ export function ProductEditorPage() {
   function validate(): Errors {
     const next: Errors = {};
     if (!draft.name.trim()) next.name = 'Donnez un nom au produit.';
-    if (draft.vatCategory === 'alcohol') next.vat = 'La vente d’alcool est interdite sur GoLink : choisissez un autre type.';
+    if (draft.vatCategory === 'alcohol') next.vat = 'La vente d’alcool est interdite sur Ciyou Eats : choisissez un autre type.';
     if (form!.vatOverride && !/^\d{1,2}([.,]\d{1,2})?$/.test(form!.vatOverride)) next.vatOverride = 'Taux invalide (ex. 5,5).';
     if (saleUnit === 'weight') {
       if (perKgCents === null || perKgCents <= 0) next.perKg = 'Indiquez le prix au kilo.';
@@ -520,7 +520,7 @@ export function ProductEditorPage() {
                 <div role="alert" className="tone-danger flex items-start gap-3 rounded-xl border border-(--tone-border) bg-(--tone-bg) p-3 text-sm text-(--tone-fg)">
                   <Ban className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                   <p>
-                    <span className="font-semibold">La vente d’alcool est interdite sur GoLink.</span>{' '}
+                    <span className="font-semibold">La vente d’alcool est interdite sur Ciyou Eats.</span>{' '}
                     {draft.vatCategory === 'alcohol'
                       ? 'Ce produit est classé « boisson alcoolisée » : changez son type pour pouvoir le vendre.'
                       : `Le terme « ${alcoholTerm} » a été repéré : le produit reste hors vente. S’il s’agit d’une boisson alcoolisée, retirez-le ; sinon, reformulez ou confirmez qu’il ne contient pas d’alcool servi.`}

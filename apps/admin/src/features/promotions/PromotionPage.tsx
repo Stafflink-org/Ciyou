@@ -75,7 +75,7 @@ export function PromotionPage() {
     success: (out) => ({ active: 'Offre en ligne', rejected: 'Offre refusée', paused: 'Offre mise en pause', ended: 'Offre arrêtée' })[out.status as 'active'] ?? 'Offre mise à jour',
   });
   const p = promo.data;
-  useDocumentTitle(`${p?.title.fr ?? 'Offre'} · Promotions · GoLink Admin`);
+  useDocumentTitle(`${p?.title.fr ?? 'Offre'} · Promotions · Ciyou Eats Admin`);
 
   const chart = useMemo(() => {
     // Période affichée : depuis le début de l'offre (au plus 26 semaines), par jour ou par semaine.
@@ -156,7 +156,7 @@ export function PromotionPage() {
     <PageContainer wide>
       <PageHeader
         breadcrumbs={[{ label: 'Promotions', href: '/promotions' }, { label: p.title.fr }]}
-        eyebrow={p.scope === 'restaurant' ? `Offre du restaurant · ${restaurant?.name ?? ''}` : `Offre GoLink · ${SCOPE_LABELS[p.scope]}`}
+        eyebrow={p.scope === 'restaurant' ? `Offre du restaurant · ${restaurant?.name ?? ''}` : `Offre Ciyou Eats · ${SCOPE_LABELS[p.scope]}`}
         title={p.title.fr}
         description={p.description?.fr ?? undefined}
         actions={
@@ -205,7 +205,7 @@ export function PromotionPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Utilisations" value={formatNumber(p.stats?.redemptions ?? 0)} icon={<ShoppingBag />} tone="info" footer={p.totalUsageLimit ? `sur ${formatNumber(p.totalUsageLimit)} autorisées` : 'Sans limite totale'} />
-        <StatCard label="Coût total des remises" value={formatEUR(cost.total, { cents: true })} icon={<BadgeEuro />} tone="amber" footer={`GoLink ${formatEUR(cost.platform, { cents: true })} · restaurants ${formatEUR(cost.restaurant, { cents: true })}`} />
+        <StatCard label="Coût total des remises" value={formatEUR(cost.total, { cents: true })} icon={<BadgeEuro />} tone="amber" footer={`Ciyou Eats ${formatEUR(cost.platform, { cents: true })} · restaurants ${formatEUR(cost.restaurant, { cents: true })}`} />
         <StatCard label="Ventes générées" value={formatEUR(p.stats?.ordersSubtotalCents ?? 0, { cents: true })} icon={<Store />} tone="success" footer={p.stats?.redemptions ? `Panier moyen ${formatPrice(Math.round((p.stats.ordersSubtotalCents ?? 0) / p.stats.redemptions))}` : 'Aucune commande'} />
         <StatCard label="Nouveaux clients" value={formatNumber(p.stats?.newCustomers ?? 0)} icon={<UserPlus />} tone="plum" footer={p.stats?.redemptions ? `${Math.round(((p.stats.newCustomers ?? 0) / p.stats.redemptions) * 100)} % des utilisations` : '—'} />
       </div>
@@ -237,7 +237,7 @@ export function PromotionPage() {
                       <TableHead>Commande</TableHead>
                       <TableHead>Restaurant</TableHead>
                       <TableHead className="text-right">Remise</TableHead>
-                      <TableHead className="text-right">Part GoLink</TableHead>
+                      <TableHead className="text-right">Part Ciyou Eats</TableHead>
                       <TableHead className="text-right">Part restaurant</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -314,7 +314,7 @@ export function PromotionPage() {
                 <div className="tone-teal bg-(--tone-solid)" style={{ width: `${(1 - share) * 100}%` }} />
               </div>
               <div className="flex justify-between text-xs text-fg-muted">
-                <span>GoLink {Math.round(share * 100)} %</span>
+                <span>Ciyou Eats {Math.round(share * 100)} %</span>
                 <span>Restaurants {p.restaurantShareBps && p.funding === 'shared' ? bpsLabel(p.restaurantShareBps) : `${Math.round((1 - share) * 100)} %`}</span>
               </div>
               <p className="text-xs text-fg-subtle">La part des restaurants est déduite de leur prochain reversement.</p>

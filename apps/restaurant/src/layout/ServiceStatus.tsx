@@ -33,7 +33,7 @@ interface ServiceState {
 
 /** État affiché : suspension, pause manuelle, hors horaires, affluence ou ouvert. */
 export function serviceState(restaurant: Restaurant): ServiceState {
-  if (restaurant.status === 'suspended') return { key: 'suspended', label: 'Suspendu par GoLink', short: 'Suspendu', tone: 'danger', pulse: false };
+  if (restaurant.status === 'suspended') return { key: 'suspended', label: 'Suspendu par Ciyou Eats', short: 'Suspendu', tone: 'danger', pulse: false };
   if (!restaurant.isOpen) return { key: 'paused', label: 'En pause', short: 'En pause', tone: 'amber', pulse: false };
   if (!restaurant.acceptingOrders) return { key: 'closed', label: 'Fermé', short: 'Fermé', tone: 'neutral', pulse: false };
   if (restaurant.busyExtraMinutes > 0) {

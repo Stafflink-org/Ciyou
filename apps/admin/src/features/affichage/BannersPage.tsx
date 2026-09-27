@@ -40,7 +40,7 @@ type LinkType = NonNullable<Banner['link']>['type'];
 const LINK_LABELS: Record<LinkType, string> = { restaurant: 'Restaurant', promotion: 'Promotion', page: 'Page d’information', url: 'Adresse web' };
 
 export function BannersPage() {
-  useDocumentTitle('Bannières · Affichage · GoLink Admin');
+  useDocumentTitle('Bannières · Affichage · Ciyou Eats Admin');
   const { cities } = useWorkingCity();
   const q = useMemo(() => query(collection(db, COLLECTIONS.banners), orderBy('order'), limit(200)), []);
   const { data, loading, error } = useCollection<Banner>(q);

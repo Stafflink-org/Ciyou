@@ -177,7 +177,7 @@ export const reviewRestaurantApplication = acteursCallable(
       data.decision === 'approve'
         ? await notifyRestaurantOwner(restaurant, {
             title: 'Dossier validé',
-            body: `${name} est validé par l’équipe GoLink.`,
+            body: `${name} est validé par l’équipe Ciyou Eats.`,
             category: 'account',
             email: applicationApprovedEmail({ restaurantName: name, live: after.status === 'active' }),
             templateKey: 'restaurant_approved',

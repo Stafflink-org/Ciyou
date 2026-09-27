@@ -1,4 +1,4 @@
-// Mise en page commune des e-mails GoLink : sobre, lisible sur mobile et
+// Mise en page commune des e-mails Ciyou Eats : sobre, lisible sur mobile et
 // compatible avec les principaux clients de messagerie (tableaux, styles en ligne).
 import { PLATFORM_NAME } from './config';
 

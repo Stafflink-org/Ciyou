@@ -13,7 +13,7 @@ import { HaccpHeader } from './layout';
 
 /** Tableau des 14 allergènes réglementaires, vue de la carte (source : fiches produits). */
 export function AllergensPage() {
-  useDocumentTitle('Allergènes · HACCP · GoLink Restaurant');
+  useDocumentTitle('Allergènes · HACCP · Ciyou Eats Restaurant');
   const { restaurantId, restaurant } = useRestaurantAccess();
   const can = useCan();
   const products = useCollection<Product>(query(collectionAt(paths.restaurantSub(restaurantId, 'products')), orderBy('name')));

@@ -43,10 +43,10 @@ const STATUS: Record<AccountStatus, { label: string; tone: Tone; title: string; 
   },
 };
 
-/** Décisions GoLink : commission sur les articles TTC, frais bancaires et remboursements à la charge du commerce. */
+/** Décisions Ciyou Eats : commission sur les articles TTC, frais bancaires et remboursements à la charge du commerce. */
 const PAYOUT_STEPS: Array<{ sign: '+' | '-' | '='; label: string; detail: string }> = [
   { sign: '+', label: 'Ventes encaissées', detail: 'Articles TTC payés par vos clients, et frais de livraison quand vos livreurs assurent la course.' },
-  { sign: '-', label: 'Commission GoLink', detail: 'Selon le mode (livraison GoLink, vos livreurs, retrait), sur les articles TTC hors livraison et pourboires.' },
+  { sign: '-', label: 'Commission Ciyou Eats', detail: 'Selon le mode (livraison Ciyou Eats, vos livreurs, retrait), sur les articles TTC hors livraison et pourboires.' },
   { sign: '-', label: 'Frais de paiement', detail: 'Frais bancaires des paiements en ligne.' },
   { sign: '-', label: 'Remboursements et ajustements', detail: 'Remboursements clients, à la charge de l’établissement, et commission due sur les ventes en espèces.' },
   { sign: '=', label: 'Versement sur votre compte', detail: 'Pourboires exclus : ils reviennent à 100 % au livreur.' },
@@ -68,7 +68,7 @@ export function VersementsPage() {
     <PageHeader
       eyebrow="Configuration"
       title="Compte de versement"
-      description="Là où GoLink vous reverse vos ventes, déduction faite des commissions. Les données bancaires sont conservées par Stripe, jamais par GoLink."
+      description="Là où Ciyou Eats vous reverse vos ventes, déduction faite des commissions. Les données bancaires sont conservées par Stripe, jamais par Ciyou Eats."
     />
   );
 
@@ -105,7 +105,7 @@ export function VersementsPage() {
       <div className="space-y-6">
         {data?.payoutsBlocked && (
           <Notice tone="danger" icon={<Lock />} title="Versements suspendus">
-            {data.payoutsBlockedReason ?? 'Contactez le support GoLink.'} Vos ventes restent enregistrées et seront reversées dès la levée du blocage.
+            {data.payoutsBlockedReason ?? 'Contactez le support Ciyou Eats.'} Vos ventes restent enregistrées et seront reversées dès la levée du blocage.
           </Notice>
         )}
 
@@ -127,7 +127,7 @@ export function VersementsPage() {
                 </div>
                 <p className="mt-1 max-w-2xl text-sm text-fg-muted">{meta.text}</p>
                 {!hasAccount && status === 'enabled' && (
-                  <p className="mt-1 text-xs text-fg-subtle">Compte activé par l’équipe GoLink.</p>
+                  <p className="mt-1 text-xs text-fg-subtle">Compte activé par l’équipe Ciyou Eats.</p>
                 )}
               </div>
             </div>
@@ -159,7 +159,7 @@ export function VersementsPage() {
         )}
 
         <div className="grid gap-4 md:grid-cols-3">
-          <InfoTile icon={<CalendarClock />} label="Calendrier" value={FREQUENCY[data?.payoutFrequency ?? 'weekly'] ?? 'Chaque semaine'} hint="Calendrier défini avec GoLink." />
+          <InfoTile icon={<CalendarClock />} label="Calendrier" value={FREQUENCY[data?.payoutFrequency ?? 'weekly'] ?? 'Chaque semaine'} hint="Calendrier défini avec Ciyou Eats." />
           <InfoTile
             icon={<Landmark />}
             label="Compte bancaire"
@@ -235,7 +235,7 @@ export function VersementsPage() {
           <div className="flex items-start gap-3">
             <Clock3 className="mt-0.5 size-4 shrink-0 text-fg-muted" />
             <div>
-              <p className="text-sm font-medium text-fg">Historique de vos virements GoLink</p>
+              <p className="text-sm font-medium text-fg">Historique de vos virements Ciyou Eats</p>
               <p className="text-xs text-fg-subtle">Montants reversés, commissions déduites et relevés téléchargeables.</p>
             </div>
           </div>

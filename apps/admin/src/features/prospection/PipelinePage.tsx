@@ -120,7 +120,7 @@ function ProspectCard({
 }
 
 export function PipelinePage() {
-  useDocumentTitle('Prospection · GoLink Admin');
+  useDocumentTitle('Prospection · Ciyou Eats Admin');
   const navigate = useNavigate();
   const { user } = useAuth();
   const { can } = useAdminAccess();

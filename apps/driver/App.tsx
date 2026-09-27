@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 export default function App() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>GoLink Livreur</Text>
+      <Text style={styles.title}>Ciyou Eats Livreur</Text>
       <Text>Interface en attente des maquettes.</Text>
       <StatusBar style="auto" />
     </View>

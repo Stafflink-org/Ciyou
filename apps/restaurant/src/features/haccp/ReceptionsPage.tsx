@@ -45,7 +45,7 @@ const CHECK_LABELS: Record<keyof HaccpReception['checks'], string> = {
 };
 
 export function ReceptionsPage() {
-  useDocumentTitle('Réceptions · HACCP · GoLink Restaurant');
+  useDocumentTitle('Réceptions · HACCP · Ciyou Eats Restaurant');
   const can = useCan();
   const manage = can('haccp.manage');
   const { restaurantId } = useRestaurantAccess();

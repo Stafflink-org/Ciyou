@@ -84,7 +84,7 @@ function Row({ employee, day, existing }: { employee: WithId<StaffDirectoryEntry
 }
 
 export function PersonnelPage() {
-  useDocumentTitle('Hygiène du personnel · HACCP · GoLink Restaurant');
+  useDocumentTitle('Hygiène du personnel · HACCP · Ciyou Eats Restaurant');
   const { restaurantId } = useRestaurantAccess();
   const today = todayIso();
   const [day, setDay] = useState(today);

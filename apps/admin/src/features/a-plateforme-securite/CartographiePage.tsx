@@ -40,7 +40,7 @@ function parseLines(text: string): string[] {
 }
 
 export function CartographiePage() {
-  useDocumentTitle('Cartographie · GoLink Admin');
+  useDocumentTitle('Cartographie · Ciyou Eats Admin');
   const can = useCan();
   const settings = useMapsSettings();
   const [reason, setReason] = useState('');

@@ -80,7 +80,7 @@ export interface CancelInput {
 
 /**
  * Annule une commande (toute origine). Le montant remboursé dépend de l'auteur :
- * le client selon la politique d'annulation, le restaurant et GoLink en totalité
+ * le client selon la politique d'annulation, le restaurant et Ciyou Eats en totalité
  * (sauf client absent, selon les règles).
  */
 export async function cancelOrderInternal(input: CancelInput): Promise<CancelOrderResult & { order: Order }> {

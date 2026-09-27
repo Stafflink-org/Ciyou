@@ -74,7 +74,7 @@ const TONE_MAP = { success: 'success', danger: 'danger', warning: 'amber', info:
 
 /** États du chiffre d'affaires : journal par jour et par commande, TVA par taux. */
 export function ChiffreAffairesPage() {
-  useDocumentTitle('États du chiffre d’affaires · GoLink Restaurant');
+  useDocumentTitle('États du chiffre d’affaires · Ciyou Eats Restaurant');
   const navigate = useNavigate();
   const { restaurant, restaurantId, can } = useRestaurantAccess();
   const [period, periodValue, setPeriod] = usePeriod();
@@ -295,7 +295,7 @@ export function ChiffreAffairesPage() {
         foot: ['Total', eur(vatTotal.ht), eur(vatTotal.vat), eur(vatTotal.ttc)],
         rightAligned: [1, 2, 3],
       });
-      pdf.paragraph(`TVA déductible sur les commissions GoLink de la période : ${eur(commissionVat)}.`);
+      pdf.paragraph(`TVA déductible sur les commissions Ciyou Eats de la période : ${eur(commissionVat)}.`);
     }
     pdf.heading('Synthèse par jour');
     pdf.table({
@@ -398,7 +398,7 @@ export function ChiffreAffairesPage() {
               title="Comment lire ces montants"
               className="h-fit"
             >
-              Le TTC correspond au prix des articles payés par vos clients, remises à votre charge déduites. Les frais de livraison, de service et les pourboires ne font pas partie de votre chiffre d’affaires. La TVA sur la commission GoLink figure sur vos factures mensuelles et reste déductible.
+              Le TTC correspond au prix des articles payés par vos clients, remises à votre charge déduites. Les frais de livraison, de service et les pourboires ne font pas partie de votre chiffre d’affaires. La TVA sur la commission Ciyou Eats figure sur vos factures mensuelles et reste déductible.
             </Callout>
           </div>
 

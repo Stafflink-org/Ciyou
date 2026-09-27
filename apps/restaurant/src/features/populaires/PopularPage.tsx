@@ -1,5 +1,5 @@
 // Produits mis en avant : vitrine ordonnée (glisser-déposer) affichée en tête de la
-// page du restaurant dans l'app GoLink, et classement des ventes pour la composer.
+// page du restaurant dans l'app Ciyou Eats, et classement des ventes pour la composer.
 import { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { Flame, ImageOff, Search, Sparkles, Star, StarOff, Trophy, X } from 'lucide-react';
@@ -16,7 +16,7 @@ import { Price, Thumb } from '../produits/menu/ui';
 const PAGE = 24;
 
 export function PopularPage() {
-  useDocumentTitle('Produits mis en avant · GoLink Restaurant');
+  useDocumentTitle('Produits mis en avant · Ciyou Eats Restaurant');
   const { restaurantId, restaurant } = useRestaurantAccess();
   const { user } = useAuth();
   const uid = user?.uid ?? '';
@@ -82,7 +82,7 @@ export function PopularPage() {
       <PageHeader
         eyebrow={`${restaurant.name} · Vitrine`}
         title="Produits mis en avant"
-        description="Mettez vos incontournables en avant : ils s’affichent en tête de votre page dans l’app GoLink. Les ventes vous guident, vous décidez de l’ordre."
+        description="Mettez vos incontournables en avant : ils s’affichent en tête de votre page dans l’app Ciyou Eats. Les ventes vous guident, vous décidez de l’ordre."
       />
 
       {/* Bandeau */}
@@ -169,7 +169,7 @@ export function PopularPage() {
 
           {showcase.length > 0 && (
             <div className="border-t border-border p-4">
-              <p className="mb-2.5 font-mono text-3xs uppercase tracking-eyebrow text-fg-subtle">Aperçu dans l’app GoLink</p>
+              <p className="mb-2.5 font-mono text-3xs uppercase tracking-eyebrow text-fg-subtle">Aperçu dans l’app Ciyou Eats</p>
               <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
                 {showcase.slice(0, 6).map((product) => (
                   <div key={product.id} className="w-36 shrink-0 overflow-hidden rounded-xl border border-border bg-surface-2">

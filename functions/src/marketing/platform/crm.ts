@@ -179,7 +179,7 @@ export const moveProspect = callable(moveSchema, async (data, request) => {
         (data.toStage === 'lost'
           ? `Perdu : ${data.lostReason}`
           : data.toStage === 'signed_up' && restaurantName
-            ? `Inscrit sur GoLink : ${restaurantName}.`
+            ? `Inscrit sur Ciyou Eats : ${restaurantName}.`
             : `Passage à l’étape « ${PROSPECT_STAGE_LABELS[data.toStage]} ».`),
       fromStage: p.stage,
       toStage: data.toStage,

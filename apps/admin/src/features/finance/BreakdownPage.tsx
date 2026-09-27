@@ -48,7 +48,7 @@ const SOURCE_LABELS: Record<OrderFinancials['commissionSource'], string> = {
 
 /** Répartition par commande (cahier §15) : qui reçoit quoi sur chaque commande livrée. */
 export function BreakdownPage() {
-  useDocumentTitle('Répartition par commande · GoLink Admin');
+  useDocumentTitle('Répartition par commande · Ciyou Eats Admin');
   const geo = useGeoScope();
   const directory = useDirectory();
   const [search, setSearch] = useState('');
@@ -97,7 +97,7 @@ export function BreakdownPage() {
                     <TableHead className="text-right">Commission HT</TableHead>
                     <TableHead className="text-right">Frais paiement</TableHead>
                     <TableHead className="text-right">Remises</TableHead>
-                    <TableHead className="text-right">Marge GoLink</TableHead>
+                    <TableHead className="text-right">Marge Ciyou Eats</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -168,7 +168,7 @@ function BreakdownSheet({ row, restaurantName }: { row: Row; restaurantName: str
           <h3 className="eyebrow mb-1">Client</h3>
           <div className="divide-y divide-border">
             <DetailRow label="Payé par le client" value={eur(s.customerPaidCents)} strong hint={PAYMENT_METHOD_LABELS[s.payment.method]} />
-            {s.platform.promoCostCents > 0 && <DetailRow label="Remise financée par GoLink" value={eur(s.platform.promoCostCents)} />}
+            {s.platform.promoCostCents > 0 && <DetailRow label="Remise financée par Ciyou Eats" value={eur(s.platform.promoCostCents)} />}
             {s.restaurant.discountFundedCents > 0 && <DetailRow label="Remise financée par le commerce" value={eur(s.restaurant.discountFundedCents)} />}
           </div>
         </section>
@@ -196,15 +196,15 @@ function BreakdownSheet({ row, restaurantName }: { row: Row; restaurantName: str
           </section>
         )}
         <section>
-          <h3 className="eyebrow mb-1">GoLink</h3>
+          <h3 className="eyebrow mb-1">Ciyou Eats</h3>
           <div className="divide-y divide-border">
             <DetailRow label="Commission HT" value={eur(s.platform.commissionHtCents)} />
             {s.platform.serviceFeeHtCents + s.platform.smallOrderFeeHtCents + s.platform.deliveryFeeHtCents > 0 && (
               <DetailRow label="Frais clients HT" value={eur(s.platform.serviceFeeHtCents + s.platform.smallOrderFeeHtCents + s.platform.deliveryFeeHtCents)} />
             )}
-            <DetailRow label="Frais de paiement Stripe" hint={s.payment.payer === 'restaurant' ? 'Refacturés au commerce' : 'À la charge de GoLink'} value={eur(s.payment.totalCents)} />
+            <DetailRow label="Frais de paiement Stripe" hint={s.payment.payer === 'restaurant' ? 'Refacturés au commerce' : 'À la charge de Ciyou Eats'} value={eur(s.payment.totalCents)} />
             <DetailRow label="TVA due" value={eur(s.platform.vatDueCents)} />
-            {refundsTotal > 0 && <DetailRow label="Remboursements (part GoLink)" value={`− ${eur(row.refunds.reduce((sum, r) => sum + r.platformCents, 0))}`} />}
+            {refundsTotal > 0 && <DetailRow label="Remboursements (part Ciyou Eats)" value={`− ${eur(row.refunds.reduce((sum, r) => sum + r.platformCents, 0))}`} />}
             <DetailRow label="Marge nette" value={eur(row.finalMarginCents)} strong tone={row.finalMarginCents < 0 ? 'danger' : undefined} />
           </div>
         </section>

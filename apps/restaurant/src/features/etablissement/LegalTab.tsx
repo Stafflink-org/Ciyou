@@ -123,7 +123,7 @@ export function LegalTab({ active }: { active: boolean }) {
                 {dac7 ? 'Dossier complet' : 'Informations manquantes'}
               </p>
               <p className="mt-1.5 text-sm leading-5 text-fg-muted">
-                GoLink déclare chaque année aux impôts les ventes réalisées par les établissements partenaires (directive européenne DAC7). Raison sociale, numéro
+                Ciyou Eats déclare chaque année aux impôts les ventes réalisées par les établissements partenaires (directive européenne DAC7). Raison sociale, numéro
                 d’immatriculation, adresse du siège et numéro fiscal sont requis.
               </p>
             </div>
@@ -154,7 +154,7 @@ export function LegalTab({ active }: { active: boolean }) {
           </>
         }
       >
-        <SettingsCard icon={<Building />} title="Société" description="Telle qu’elle figure sur votre extrait d’immatriculation. Utilisée sur les factures GoLink.">
+        <SettingsCard icon={<Building />} title="Société" description="Telle qu’elle figure sur votre extrait d’immatriculation. Utilisée sur les factures Ciyou Eats.">
           <div className="grid gap-5">
             <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_200px]">
               <FormField label="Raison sociale" required error={errors.legalName}>
@@ -222,7 +222,7 @@ export function LegalTab({ active }: { active: boolean }) {
           </div>
         </SettingsCard>
 
-        <SettingsCard icon={<UserRound />} title="Représentant légal" description="Gérant ou président : interlocuteur de GoLink pour le contrat.">
+        <SettingsCard icon={<UserRound />} title="Représentant légal" description="Gérant ou président : interlocuteur de Ciyou Eats pour le contrat.">
           <div className="grid gap-5 sm:grid-cols-2">
             <FormField label="Nom et prénom" required error={errors.managerName}>
               <Input value={draft.managerName} autoComplete="name" onChange={(e) => setDraft({ managerName: e.target.value })} />

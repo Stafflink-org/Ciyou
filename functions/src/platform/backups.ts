@@ -16,7 +16,7 @@ import { PLATFORM_HEAVY_RUNTIME, PLATFORM_SCHEDULE_RUNTIME, TIMEZONE, platformCa
 /** Alerte d'échec de sauvegarde (§31) : par e-mail aux super administrateurs, pas seulement dans l'historique. */
 async function notifyBackupFailure(backupId: string, error: string): Promise<void> {
   const admins = await db.collection(COLLECTIONS.admins).where('role', '==', 'super_admin').where('active', '==', true).get();
-  const subject = 'Échec de la sauvegarde GoLink';
+  const subject = 'Échec de la sauvegarde Ciyou Eats';
   const html = `<p>La sauvegarde <strong>${backupId}</strong> a échoué :</p><p>${error}</p>`;
   for (const doc of admins.docs) {
     const email = doc.get('email') as string | undefined;

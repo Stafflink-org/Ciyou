@@ -49,7 +49,7 @@ import { CityDialog, ClosureDialog, SurgeRuleDialog } from './dialogs';
 import { ZonesTab } from './ZonesTab';
 
 export function ZonesPage() {
-  useDocumentTitle('Zones et villes · GoLink Admin');
+  useDocumentTitle('Zones et villes · Ciyou Eats Admin');
   const params = useParams();
   const navigate = useNavigate();
   const geo = useGeoScope();

@@ -304,7 +304,7 @@ export const submitOrderClaim = callable(
     }
     // Acceptation automatique (réglage `autoAcceptMaxCents`) : contrôles propres et petit montant.
     if (autoAccept) {
-      await grantClaim(claimRef.id, claim.claimedCents, { type: 'system', uid: null, name: 'GoLink' }, 'Acceptation automatique : contrôles de la photo sans signal.', null);
+      await grantClaim(claimRef.id, claim.claimedCents, { type: 'system', uid: null, name: 'Ciyou Eats' }, 'Acceptation automatique : contrôles de la photo sans signal.', null);
     }
     return { claimId: claimRef.id, verdict, status: autoAccept ? ('accepted' as const) : claim.status, ticketId, ticketNumber, checks };
   },
@@ -335,7 +335,7 @@ async function grantClaim(claimId: string, amountCents: number, actor: EventActo
     const message: TicketMessage = {
       authorType: 'system',
       authorId: actor.uid ?? 'system',
-      authorName: actor.name ?? 'GoLink',
+      authorName: actor.name ?? 'Ciyou Eats',
       body: `Réclamation acceptée : ${euros(refund.amountCents)} remboursés. ${note}`,
       internal: false,
       attachments: [],
@@ -356,7 +356,7 @@ async function grantClaim(claimId: string, amountCents: number, actor: EventActo
   }
   await orderRef(claim.orderId).update({ 'flags.disputed': false, updatedAt: at }).catch(() => undefined);
   await writeAudit({
-    actor: auditActor ?? { uid: 'system', type: 'system', role: null, name: 'GoLink (automatique)' },
+    actor: auditActor ?? { uid: 'system', type: 'system', role: null, name: 'Ciyou Eats (automatique)' },
     action: 'claim.accepted',
     target: { type: 'order', id: claim.orderId, label: `${claim.orderNumber} · ${order.restaurantName}` },
     reason: note,
@@ -384,7 +384,7 @@ export const decideOrderClaim = callable(
     if (!claim) throw fail.notFound('Réclamation');
     if (admin.role !== 'super_admin' && admin.cityIds.length > 0 && !admin.cityIds.includes(claim.cityId)) throw fail.forbidden('Cette réclamation est hors de votre périmètre.');
     if (claim.status !== 'pending_review') throw fail.precondition('Cette réclamation a déjà été traitée.');
-    const actor: EventActor = { type: 'admin', uid: caller.uid, name: 'Support GoLink' };
+    const actor: EventActor = { type: 'admin', uid: caller.uid, name: 'Support Ciyou Eats' };
     const auditActor = actorFromCaller(caller, 'admin');
 
     if (data.decision === 'reject') {
@@ -393,7 +393,7 @@ export const decideOrderClaim = callable(
       if (claim.ticketId) {
         const ticketRef = db.collection(COLLECTIONS.supportTickets).doc(claim.ticketId);
         const body = `Réclamation refusée : ${data.reason}`;
-        await ticketRef.collection(SUBCOLLECTIONS.supportTickets.messages).add({ authorType: 'agent', authorId: caller.uid, authorName: `${admin.displayName.split(' ')[0]} (support GoLink)`, body, internal: false, attachments: [], action: null, createdAt: at } satisfies TicketMessage);
+        await ticketRef.collection(SUBCOLLECTIONS.supportTickets.messages).add({ authorType: 'agent', authorId: caller.uid, authorName: `${admin.displayName.split(' ')[0]} (support Ciyou Eats)`, body, internal: false, attachments: [], action: null, createdAt: at } satisfies TicketMessage);
         await ticketRef.update({ status: 'resolved', resolvedAt: at, lastMessageAt: at, lastMessagePreview: preview(body), unreadByRequester: FieldValue.increment(1), updatedAt: at });
       }
       await orderRef(claim.orderId).update({ 'flags.disputed': false, updatedAt: at }).catch(() => undefined);

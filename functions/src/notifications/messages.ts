@@ -119,7 +119,7 @@ async function sendTransactionalSms(phone: string, content: string, tag: string)
     const response = await fetch('https://api.brevo.com/v3/transactionalSMS/sms', {
       method: 'POST',
       headers: { 'api-key': BREVO_API_KEY.value(), 'content-type': 'application/json', accept: 'application/json' },
-      body: JSON.stringify({ sender: 'GoLink', recipient: phone.replace(/[^\d+]/g, ''), content, type: 'transactional', tag }),
+      body: JSON.stringify({ sender: 'Ciyou Eats', recipient: phone.replace(/[^\d+]/g, ''), content, type: 'transactional', tag }),
       signal: AbortSignal.timeout(10_000),
     });
     return response.ok ? { ok: true, error: null } : { ok: false, error: `${response.status}` };
@@ -186,7 +186,7 @@ export async function sendPlatformMessage(
         const tokens = await deviceTokens(target.uid);
         if (tokens.length === 0) {
           result.channels.push = 'skipped';
-          await writeLog({ ...base, channel: 'push', destinationMasked: 'Centre de notifications GoLink', status: 'queued', provider: 'fcm', error: 'Aucun appareil enregistré : message visible dans le centre de notifications.' });
+          await writeLog({ ...base, channel: 'push', destinationMasked: 'Centre de notifications Ciyou Eats', status: 'queued', provider: 'fcm', error: 'Aucun appareil enregistré : message visible dans le centre de notifications.' });
         } else {
           try {
             const res = await getMessaging().sendEachForMulticast({ tokens, notification: { title, body }, data: { type: key, inboxId } });
@@ -199,7 +199,7 @@ export async function sendPlatformMessage(
         }
       } else {
         result.channels.push = 'simulated';
-        await writeLog({ ...base, channel: 'push', destinationMasked: 'Centre de notifications GoLink', status: 'queued', provider: 'fcm', error: 'Mode simulation : push préparé, message déposé dans le centre de notifications.' });
+        await writeLog({ ...base, channel: 'push', destinationMasked: 'Centre de notifications Ciyou Eats', status: 'queued', provider: 'fcm', error: 'Mode simulation : push préparé, message déposé dans le centre de notifications.' });
       }
     }
 
@@ -208,11 +208,11 @@ export async function sendPlatformMessage(
         subject,
         ...renderEmail({
           preheader: body.slice(0, 120),
-          eyebrow: 'GoLink',
+          eyebrow: 'Ciyou Eats',
           title,
           paragraphs: body.split(/\n+/).filter(Boolean),
-          ...(options.ctaUrl ? { cta: { label: options.ctaLabel ?? 'Ouvrir GoLink', url: options.ctaUrl } } : {}),
-          footerReason: 'Message de service lié à votre compte GoLink.',
+          ...(options.ctaUrl ? { cta: { label: options.ctaLabel ?? 'Ouvrir Ciyou Eats', url: options.ctaUrl } } : {}),
+          footerReason: 'Message de service lié à votre compte Ciyou Eats.',
         }),
       };
       const reserved = RESERVED_DOMAIN.test(email.split('@')[1] ?? '');

@@ -136,7 +136,7 @@ export function TaskFormSheet({
               <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
             </FormField>
           </div>
-          <FormField label="Assignée à" hint="Seuls les membres disposant d’un compte GoLink peuvent être assignés.">
+          <FormField label="Assignée à" hint="Seuls les membres disposant d’un compte Ciyou Eats peuvent être assignés.">
             <Combobox
               multiple
               value={assignees}

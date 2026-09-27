@@ -40,7 +40,7 @@ const SOURCE_LABELS: Record<string, string> = {
 const column = createColumnHelper<WithId<HaccpNonConformity>>();
 
 export function NonConformitiesPage() {
-  useDocumentTitle('Non-conformités · HACCP · GoLink Restaurant');
+  useDocumentTitle('Non-conformités · HACCP · Ciyou Eats Restaurant');
   const can = useCan();
   const manage = can('haccp.manage');
   const { restaurantId } = useRestaurantAccess();

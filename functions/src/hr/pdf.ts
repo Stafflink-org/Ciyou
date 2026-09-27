@@ -167,7 +167,7 @@ export class PdfDocument {
     );
   }
 
-  /** Symbole GoLink : tuile orange arrondie portant un « G ». */
+  /** Symbole Ciyou Eats : tuile orange arrondie portant un « G ». */
   logo(x: number, y: number, size = 22): void {
     this.rect(x, y, size, size, { fill: PDF_COLORS.brand, radius: size * 0.28 });
     this.text(x + size / 2, y + size * 0.72, 'G', { size: size * 0.62, bold: true, color: PDF_COLORS.white, align: 'center' });
@@ -207,7 +207,7 @@ export class PdfDocument {
     const xref = Buffer.byteLength(out, 'latin1');
     out += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
     out += offsets.map((offset) => `${String(offset).padStart(10, '0')} 00000 n \n`).join('');
-    out += `trailer\n<< /Size ${objects.length + 1} /Root ${catalog} 0 R /Info << /Producer (GoLink) /Creator (GoLink) >> >>\nstartxref\n${xref}\n%%EOF\n`;
+    out += `trailer\n<< /Size ${objects.length + 1} /Root ${catalog} 0 R /Info << /Producer (Ciyou Eats) /Creator (Ciyou Eats) >> >>\nstartxref\n${xref}\n%%EOF\n`;
     return Buffer.from(out, 'latin1');
   }
 }

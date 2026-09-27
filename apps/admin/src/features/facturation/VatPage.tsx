@@ -28,7 +28,7 @@ const SERIES: Array<{ code: string; label: string }> = [
 
 /** Taux de TVA par pays et type de produit, numérotation continue et conservation (cahier §16). */
 export function VatPage() {
-  useDocumentTitle('TVA et numérotation · GoLink Admin');
+  useDocumentTitle('TVA et numérotation · Ciyou Eats Admin');
   const can = useCan();
   const geo = useGeoScope();
   const countries = geo.countries.filter((c) => !geo.countryId || c.id === geo.countryId);
@@ -47,7 +47,7 @@ export function VatPage() {
       </PageHeader>
 
       <div className="space-y-6">
-        <Callout tone="danger" icon={<Ban />} title="Vente d’alcool interdite sur GoLink">
+        <Callout tone="danger" icon={<Ban />} title="Vente d’alcool interdite sur Ciyou Eats">
           La catégorie « boisson alcoolisée » est verrouillée : aucun produit ne peut y être rattaché. Son taux reste affiché pour mémoire.
         </Callout>
 
@@ -77,7 +77,7 @@ export function VatPage() {
                   <CardContent className="space-y-3">
                     <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
                       <div>
-                        <dt className="text-xs text-fg-subtle">Taux normal (services GoLink)</dt>
+                        <dt className="text-xs text-fg-subtle">Taux normal (services Ciyou Eats)</dt>
                         <dd className="font-display text-xl font-semibold text-fg num">{vat ? bps(vat.standardBps) : '—'}</dd>
                       </div>
                       {(['food', 'soft_drink', 'grocery'] as const).map((cat) => (

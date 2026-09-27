@@ -236,7 +236,7 @@ export const translateTexts = platformCallable(translateSchema, async (input, re
 
   const settings = await loadSettings();
   if (!settings || !settings.enabled || !settings.configured) {
-    throw fail.precondition('La traduction automatique n’est pas configurée par l’équipe GoLink.');
+    throw fail.precondition('La traduction automatique n’est pas configurée par l’équipe Ciyou Eats.');
   }
   const targets = input.to.filter((t) => t !== input.from);
   const unsupported = targets.filter((t) => !settings.activeLocales.includes(t as Locale));
@@ -268,7 +268,7 @@ export const translateTexts = platformCallable(translateSchema, async (input, re
   }
 
   const key = await loadDecryptedKey();
-  if (!key) throw fail.precondition('La traduction automatique n’est pas configurée par l’équipe GoLink.');
+  if (!key) throw fail.precondition('La traduction automatique n’est pas configurée par l’équipe Ciyou Eats.');
   const config = { apiKey: key, region: settings.region, endpoint: settings.endpoint || DEFAULT_ENDPOINT };
 
   // 3) Un appel Azure par langue cible (les textes manquants ne sont pas les mêmes selon la langue).

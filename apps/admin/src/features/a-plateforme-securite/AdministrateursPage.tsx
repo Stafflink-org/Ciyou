@@ -233,7 +233,7 @@ function RoleMatrix() {
 }
 
 export function AdministrateursPage() {
-  useDocumentTitle('Administrateurs · GoLink Admin');
+  useDocumentTitle('Administrateurs · Ciyou Eats Admin');
   const can = useCan();
   const admins = useAdmins();
   const [editing, setEditing] = useState<(AdminUser & { id: string }) | null>(null);

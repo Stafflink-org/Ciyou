@@ -84,10 +84,10 @@ export function preview(text: string): string {
   return flat.length > 140 ? `${flat.slice(0, 137)}…` : flat;
 }
 
-/** Nom affiché d'un agent côté demandeur : prénom + « support GoLink ». */
+/** Nom affiché d'un agent côté demandeur : prénom + « support Ciyou Eats ». */
 export function agentPublicName(admin: AdminUser): string {
   const first = admin.displayName.split(' ')[0] || admin.displayName;
-  return `${first} (support GoLink)`;
+  return `${first} (support Ciyou Eats)`;
 }
 
 export function addTicketMessage(tx: Transaction, ticketId: string, message: Omit<TicketMessage, 'createdAt'>, at: Timestamp): DocumentReference {

@@ -142,7 +142,7 @@ export function promotionValueLabel(p: Pick<Promotion, 'kind' | 'value' | 'maxDi
   return 'Livraison offerte';
 }
 
-/** Part du coût d'une offre supportée par GoLink (0 à 1). */
+/** Part du coût d'une offre supportée par Ciyou Eats (0 à 1). */
 export function platformShare(p: Pick<Promotion, 'funding' | 'restaurantShareBps'>): number {
   if (p.funding === 'platform') return 1;
   if (p.funding === 'restaurant') return 0;

@@ -63,7 +63,7 @@ export function PayoutPage() {
   const can = useCan();
   const payoutState = useDoc<Payout>(docAt(`${COLLECTIONS.payouts}/${payoutId}`));
   const payout = payoutState.data;
-  useDocumentTitle(`${payout ? `Reversement ${payout.beneficiaryName}` : 'Reversement'} · GoLink Admin`);
+  useDocumentTitle(`${payout ? `Reversement ${payout.beneficiaryName}` : 'Reversement'} · Ciyou Eats Admin`);
 
   const entriesQuery = useMemo(() => query(collection(db, COLLECTIONS.ledgerEntries), where('payoutId', '==', payoutId), orderBy('createdAt', 'asc'), limit(3000)), [payoutId]);
   const entries = useCollection<LedgerEntry>(entriesQuery);
@@ -148,7 +148,7 @@ export function PayoutPage() {
       const pdf = await createPdf({
         title: 'Relevé de reversement',
         subtitle: [payout.beneficiaryName, `Période du ${day(payout.periodStart)} au ${day(payout.periodEnd)}`, `Réf. ${payoutId}`],
-        footer: generatedFooter('GoLink'),
+        footer: generatedFooter('Ciyou Eats'),
         caption: 'FINANCE',
       });
       if (payout.beneficiaryType === 'restaurant') {
@@ -249,7 +249,7 @@ export function PayoutPage() {
             <CardContent className="divide-y divide-border py-1">
               <DetailRow label={payout.beneficiaryType === 'restaurant' ? 'Ventes (articles, livraison propre)' : 'Gains de courses et bonus'} value={eur(payout.grossCents)} />
               {payout.tipsCents > 0 && <DetailRow label="Pourboires (100 % au livreur)" value={`+ ${eur(payout.tipsCents)}`} tone="success" />}
-              {payout.commissionCents > 0 && <DetailRow label="Commission GoLink TTC" value={`− ${eur(payout.commissionCents)}`} />}
+              {payout.commissionCents > 0 && <DetailRow label="Commission Ciyou Eats TTC" value={`− ${eur(payout.commissionCents)}`} />}
               {sumType(['payment_fee']) !== 0 && <DetailRow label="Frais de paiement" hint="Déduits du reversement (décision client)" value={`− ${eur(Math.abs(sumType(['payment_fee'])))}`} />}
               {payout.refundsChargedCents > 0 && <DetailRow label="Remboursements imputés" value={`− ${eur(payout.refundsChargedCents)}`} tone="danger" />}
               {payout.cashDeductedCents !== 0 && <DetailRow label="Espèces déjà encaissées" value={`− ${eur(payout.cashDeductedCents)}`} />}

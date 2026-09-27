@@ -30,7 +30,7 @@ const updateSettings = callFunctionWithReason<UpdateExperienceSettingsInput, { c
 const REQUESTERS: TicketRequesterType[] = ['client', 'restaurant', 'driver'];
 
 export function SettingsPage() {
-  useDocumentTitle('Motifs et délais · Support · GoLink Admin');
+  useDocumentTitle('Motifs et délais · Support · Ciyou Eats Admin');
   const { can } = useAdminAccess();
   const editable = can('support.configure');
   return (

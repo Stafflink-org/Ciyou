@@ -296,7 +296,7 @@ export function EmployeePage() {
   const [exitOpen, setExitOpen] = useState(false);
   const [exitDate, setExitDate] = useState(todayIso());
   const employee = state.data;
-  useDocumentTitle(`${employee ? `${employee.firstName} ${employee.lastName}` : 'Salarié'} · GoLink Restaurant`);
+  useDocumentTitle(`${employee ? `${employee.firstName} ${employee.lastName}` : 'Salarié'} · Ciyou Eats Restaurant`);
 
   const setStatus = useMutation(
     async (patch: Partial<Employee>) => {
@@ -472,7 +472,7 @@ export function EmployeePage() {
                   </p>
                   <div className="rounded-lg border border-border bg-surface-2 p-3 text-xs text-fg-muted">
                     {employee.uid
-                      ? 'Compte GoLink relié : le salarié consulte son planning, pointe et demande ses absences.'
+                      ? 'Compte Ciyou Eats relié : le salarié consulte son planning, pointe et demande ses absences.'
                       : 'Aucun compte relié : invitez le salarié depuis la rubrique Équipe puis reliez son compte à cette fiche.'}
                   </div>
                 </CardContent>

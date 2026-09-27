@@ -101,7 +101,7 @@ export function DriverPage() {
   const { driverId = '' } = useParams();
   const driverState = useDoc<Driver>(docAt(`${COLLECTIONS.drivers}/${driverId}`));
   const driver = driverState.data;
-  useDocumentTitle(`${driver ? `${driver.firstName} ${driver.lastName}` : 'Livreur'} · GoLink Admin`);
+  useDocumentTitle(`${driver ? `${driver.firstName} ${driver.lastName}` : 'Livreur'} · Ciyou Eats Admin`);
 
   if (driverState.loading) {
     return (
@@ -593,7 +593,7 @@ function InternalNotes({ driver }: { driver: WithId<Driver> }) {
   );
   return (
     <Card>
-      <CardHeader title="Notes internes" description="Visibles uniquement par l’équipe GoLink." icon={<NotebookPen />} divided />
+      <CardHeader title="Notes internes" description="Visibles uniquement par l’équipe Ciyou Eats." icon={<NotebookPen />} divided />
       <CardContent className="space-y-3">
         <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={2} maxLength={2000} placeholder="Ajouter une note…" aria-label="Nouvelle note" />
         <div className="flex justify-end">

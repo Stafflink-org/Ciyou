@@ -48,7 +48,7 @@ const TYPE_TONES: Partial<Record<LedgerEntry['type'], 'danger' | 'amber' | 'succ
 
 /** Grand livre (cahier §15 « Historique ») : chaque mouvement d'argent, consultable et exportable. */
 export function LedgerPage() {
-  useDocumentTitle('Grand livre · GoLink Admin');
+  useDocumentTitle('Grand livre · Ciyou Eats Admin');
   const can = useCan();
   const geo = useGeoScope();
   const directory = useDirectory();
@@ -70,7 +70,7 @@ export function LedgerPage() {
   const accountName = (e: LedgerEntry) => {
     if (e.accountType === 'restaurant') return directory.name('restaurant', e.accountId);
     if (e.accountType === 'driver' || e.accountType === 'driver_cash') return directory.name('driver', e.accountId);
-    if (e.accountType === 'platform') return 'GoLink';
+    if (e.accountType === 'platform') return 'Ciyou Eats';
     return e.accountId;
   };
 
@@ -121,7 +121,7 @@ export function LedgerPage() {
       };
       const name = `golink-grand-livre-${range.from}-${range.to}`;
       if (format === 'csv') downloadCsv(sheet, name);
-      else await downloadXlsx([sheet], name, { title: 'GoLink · Grand livre', subtitle: `${geo.label} · du ${day(range.from)} au ${day(range.to)}` });
+      else await downloadXlsx([sheet], name, { title: 'Ciyou Eats · Grand livre', subtitle: `${geo.label} · du ${day(range.from)} au ${day(range.to)}` });
       toast.success(`${plural(entries.length, 'mouvement')} exporté${entries.length > 1 ? 's' : ''}`);
       return true;
     } catch (error) {

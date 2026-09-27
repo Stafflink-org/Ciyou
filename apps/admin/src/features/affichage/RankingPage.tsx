@@ -69,7 +69,7 @@ function score(list: WithId<Restaurant>[], weights: Weights, center: { lat: numb
 }
 
 export function RankingPage() {
-  useDocumentTitle('Classement · Affichage · GoLink Admin');
+  useDocumentTitle('Classement · Affichage · Ciyou Eats Admin');
   const settings = useDoc<DisplaySettings>(docAt(paths.settings(SETTINGS_DOCS.display)));
   const { cityId, city, selector } = useWorkingCity();
   const restaurants = useCityRestaurants(cityId);

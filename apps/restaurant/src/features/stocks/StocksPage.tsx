@@ -40,7 +40,7 @@ type Filter = 'all' | 'tracked' | 'low' | 'out' | 'untracked';
 const COMMIT_DELAY = 900;
 
 export function StocksPage() {
-  useDocumentTitle('Ventes & stocks · GoLink Restaurant');
+  useDocumentTitle('Ventes & stocks · Ciyou Eats Restaurant');
   const { restaurantId, restaurant } = useRestaurantAccess();
   const { user } = useAuth();
   const uid = user?.uid ?? '';

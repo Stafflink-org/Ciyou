@@ -26,7 +26,7 @@ import { NonConformityDialog, ReadingDialog, ReceptionDialog } from './dialogs';
 import { HaccpHeader } from './layout';
 
 export function HaccpDashboardPage() {
-  useDocumentTitle('HACCP · GoLink Restaurant');
+  useDocumentTitle('HACCP · Ciyou Eats Restaurant');
   const equipments = useEquipments();
   const logs = useTemperatureLogs(30);
   const receptions = useReceptions(30);

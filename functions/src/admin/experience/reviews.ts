@@ -185,7 +185,7 @@ async function applyReviewModeration(
     for (const uid of await restaurantRecipients(review.restaurantId)) {
       await notify(uid, {
         title: 'Votre réponse à un avis a été masquée',
-        body: `La modération GoLink a masqué votre réponse : ${input.reason}.`,
+        body: `La modération Ciyou Eats a masqué votre réponse : ${input.reason}.`,
         category: 'account',
         link: null,
       });

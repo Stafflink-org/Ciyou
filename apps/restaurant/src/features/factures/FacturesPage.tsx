@@ -52,9 +52,9 @@ function periodText(invoice: Invoice): string {
 /** Signe comptable : un avoir vient en déduction. */
 const signed = (invoice: Invoice, cents: number) => (invoice.kind === 'credit_note' ? -cents : cents);
 
-/** Factures GoLink mensuelles (commissions, abonnement, mises en avant) et avoirs. */
+/** Factures Ciyou Eats mensuelles (commissions, abonnement, mises en avant) et avoirs. */
 export function FacturesPage() {
-  useDocumentTitle('Factures · GoLink Restaurant');
+  useDocumentTitle('Factures · Ciyou Eats Restaurant');
   const navigate = useNavigate();
   const { invoiceId } = useParams();
   const { restaurant, restaurantId } = useRestaurantAccess();
@@ -190,13 +190,13 @@ export function FacturesPage() {
       <PageHeader
         eyebrow="Finances"
         title="Factures"
-        description="Factures mensuelles de GoLink (commissions, abonnement, mises en avant) et avoirs. Conservées dix ans."
+        description="Factures mensuelles de Ciyou Eats (commissions, abonnement, mises en avant) et avoirs. Conservées dix ans."
         actions={
           <Button
             variant="secondary"
             leftIcon={<Download />}
             disabled={list.length === 0}
-            onClick={() => void downloadXlsx([sheetOf(list)], `factures-${restaurantId}-${year}`, { title: `Factures GoLink · ${restaurant.name}`, subtitle: `Année ${year}` }).then(() => toast.success('Récapitulatif téléchargé.'))}
+            onClick={() => void downloadXlsx([sheetOf(list)], `factures-${restaurantId}-${year}`, { title: `Factures Ciyou Eats · ${restaurant.name}`, subtitle: `Année ${year}` }).then(() => toast.success('Récapitulatif téléchargé.'))}
           >
             Récapitulatif {year}
           </Button>

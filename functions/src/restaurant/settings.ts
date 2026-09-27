@@ -225,7 +225,7 @@ export function fulfillmentModesOf(settings: Pick<RestaurantOrderSettings, 'deli
   return modes;
 }
 
-/** Moyens réellement proposés au client : choix du restaurant ∩ autorisations, avoir GoLink si paiement en ligne. */
+/** Moyens réellement proposés au client : choix du restaurant ∩ autorisations, avoir Ciyou Eats si paiement en ligne. */
 export function acceptedMethodsOf(settings: Pick<RestaurantPaymentSettings, 'online' | 'onDelivery' | 'onPickup' | 'methods'>, allowed: PaymentMethod[]): PaymentMethod[] {
   const online: PaymentMethod[] = ['card', 'apple_pay', 'google_pay'];
   const result: PaymentMethod[] = [];
@@ -250,7 +250,7 @@ function requiredPermission(section: Input['section']) {
 async function assertCuisines(ids: string[]): Promise<void> {
   const snaps = await db.getAll(...ids.map((id) => db.collection(COLLECTIONS.cuisineCategories).doc(id)));
   const unknown = snaps.filter((s) => !s.exists || s.get('active') === false);
-  if (unknown.length > 0) throw fail.invalid('Une des cuisines choisies n’est plus proposée par GoLink.');
+  if (unknown.length > 0) throw fail.invalid('Une des cuisines choisies n’est plus proposée par Ciyou Eats.');
 }
 
 async function cityZones(cityId: string) {
@@ -326,7 +326,7 @@ async function applySection(data: Input, actor: RestaurantActor, ctx: ConfigCont
       const zones = await cityZones(restaurant.cityId);
       const zoneIds = zonesContaining(data.location, zones);
       if (zones.length > 0 && zoneIds.length === 0) {
-        throw fail.invalid('Cette adresse est en dehors des zones desservies par GoLink dans votre ville. Contactez le support pour un déménagement.');
+        throw fail.invalid('Cette adresse est en dehors des zones desservies par Ciyou Eats dans votre ville. Contactez le support pour un déménagement.');
       }
       const address = {
         line1: data.line1,
@@ -376,7 +376,7 @@ async function applySection(data: Input, actor: RestaurantActor, ctx: ConfigCont
         managerEmail: data.managerEmail,
         managerPhone: data.managerPhone,
         managerBirthDate: data.managerBirthDate,
-        // Vente d'alcool interdite sur GoLink : aucune licence n'est enregistrée.
+        // Vente d'alcool interdite sur Ciyou Eats : aucune licence n'est enregistrée.
         alcoholLicenseNumber: null,
         taxIdentificationNumber: data.taxIdentificationNumber,
       };
@@ -390,7 +390,7 @@ async function applySection(data: Input, actor: RestaurantActor, ctx: ConfigCont
     case 'orders': {
       if (data.delivery && !ctx.isEnabled('delivery')) throw fail.precondition('La livraison n’est pas encore ouverte pour votre établissement.');
       if (data.pickup && !ctx.isEnabled('pickup')) throw fail.precondition('Le retrait n’est pas encore ouvert pour votre établissement.');
-      if (data.dineIn && !ctx.isEnabled('dine_in')) throw fail.precondition('La commande sur place n’est pas encore disponible sur GoLink.');
+      if (data.dineIn && !ctx.isEnabled('dine_in')) throw fail.precondition('La commande sur place n’est pas encore disponible sur Ciyou Eats.');
       if (data.scheduledOrders && !ctx.isEnabled('scheduled_orders')) throw fail.precondition('Les commandes programmées ne sont pas disponibles pour votre établissement.');
       if (!data.delivery && !data.pickup && !data.dineIn) throw fail.invalid('Activez au moins un mode de commande.');
       if (data.deliveredBy !== 'platform') {
@@ -457,8 +457,8 @@ async function applySection(data: Input, actor: RestaurantActor, ctx: ConfigCont
         throw fail.precondition('Les espèces ne sont acceptées que pour les commandes livrées par vos propres livreurs salariés.');
       }
       if (refused.length > 0) throw fail.precondition('Un des moyens de paiement choisis n’est pas autorisé pour votre établissement.');
-      // Tout paiement passe par GoLink : le paiement en ligne reste toujours ouvert.
-      if (!data.online) throw fail.invalid('Le paiement en ligne est obligatoire sur GoLink.');
+      // Tout paiement passe par Ciyou Eats : le paiement en ligne reste toujours ouvert.
+      if (!data.online) throw fail.invalid('Le paiement en ligne est obligatoire sur Ciyou Eats.');
       const normalized = {
         online: true,
         onDelivery: data.methods.cash,
@@ -496,7 +496,7 @@ async function applySection(data: Input, actor: RestaurantActor, ctx: ConfigCont
     }
 
     case 'pause': {
-      if (restaurant.status === 'suspended') throw fail.precondition('Votre établissement est suspendu par GoLink.');
+      if (restaurant.status === 'suspended') throw fail.precondition('Votre établissement est suspendu par Ciyou Eats.');
       const before = { isOpen: restaurant.isOpen, pausedUntil: restaurant.pausedUntil?.toMillis?.() ?? null };
       if (data.minutes === null) {
         await rRef.update({ isOpen: true, pausedUntil: null, pauseReason: null, updatedAt: now, updatedBy: uid });

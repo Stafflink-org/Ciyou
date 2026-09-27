@@ -10,7 +10,7 @@ import type {
 import type { Bps, Cents } from './money';
 import type { CurrencyCode } from './currency';
 
-/** Qui réalise la livraison : flotte GoLink ou livreurs propres du restaurant. */
+/** Qui réalise la livraison : flotte Ciyou Eats ou livreurs propres du restaurant. */
 export type DeliveredBy = 'platform' | 'restaurant';
 
 /** Qui supporte les frais de paiement (Stripe). */
@@ -95,7 +95,7 @@ export interface MarketPricingConfig {
     maxSurgeMultiplierBps: Bps;
   };
   commission: {
-    /** Livraison par la flotte GoLink. */
+    /** Livraison par la flotte Ciyou Eats. */
     platformDeliveryBps: Bps;
     /** Livraison par les livreurs du restaurant (marketplace). */
     restaurantDeliveryBps: Bps;
@@ -272,7 +272,7 @@ export interface SettlementInput {
   paymentMethod: PaymentMethod;
   /** Commission applicable (issue de resolveCommissionBps). */
   commissionBps: Bps;
-  /** Données de course (livraison par la flotte GoLink). */
+  /** Données de course (livraison par la flotte Ciyou Eats). */
   courier?: {
     distanceMeters: number;
     durationMinutes: number;

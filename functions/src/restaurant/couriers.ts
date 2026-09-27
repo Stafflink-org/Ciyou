@@ -1,4 +1,4 @@
-// Livreurs vus par un restaurant : livreurs GoLink ayant déjà livré (préférences :
+// Livreurs vus par un restaurant : livreurs Ciyou Eats ayant déjà livré (préférences :
 // disponible, écarté, bloqué) et livreurs propres de l'établissement (invitation,
 // statut, zones de livraison du restaurant).
 import {
@@ -101,7 +101,7 @@ const inviteOwnCourierSchema = z.object({
 });
 
 /**
- * Invite un livreur propre : compte GoLink (créé si besoin), profil livreur de type
+ * Invite un livreur propre : compte Ciyou Eats (créé si besoin), profil livreur de type
  * « restaurant » rattaché à l'établissement, fiche livreur du restaurant, e-mail
  * d'activation. Rejouable tant que l'invitation n'a pas été acceptée (renvoi).
  */
@@ -126,10 +126,10 @@ export const inviteOwnCourier = callable(
     ]);
     const existingRole = userSnap.exists ? (userSnap.data() as UserProfile).role : null;
     if (existingRole === 'admin' || existingRole === 'restaurant') {
-      throw fail.precondition('Cette adresse appartient à un compte professionnel GoLink. Utilisez une adresse personnelle du livreur.');
+      throw fail.precondition('Cette adresse appartient à un compte professionnel Ciyou Eats. Utilisez une adresse personnelle du livreur.');
     }
     if (driverSnap.exists && (driverSnap.data() as Driver).type === 'platform') {
-      throw fail.precondition('Ce livreur travaille déjà avec la flotte GoLink : il ne peut pas devenir livreur propre de l’établissement.');
+      throw fail.precondition('Ce livreur travaille déjà avec la flotte Ciyou Eats : il ne peut pas devenir livreur propre de l’établissement.');
     }
     if (courierSnap.exists) {
       const current = courierSnap.data() as RestaurantCourier;

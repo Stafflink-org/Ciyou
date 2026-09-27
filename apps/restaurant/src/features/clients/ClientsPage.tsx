@@ -43,7 +43,7 @@ const PROFILE_BADGES = [
 ] as const;
 
 export function ClientsPage() {
-  useDocumentTitle('Clients · GoLink Restaurant');
+  useDocumentTitle('Clients · Ciyou Eats Restaurant');
   const navigate = useNavigate();
   const { customerId } = useParams();
   const { restaurant, restaurantId, can } = useRestaurantAccess();
@@ -252,7 +252,7 @@ export function ClientsPage() {
             }
           />
           <p className="text-xs text-fg-subtle">
-            Par respect de la vie privée, GoLink ne communique ni l’e-mail ni le téléphone complet de vos clients. Pour les recontacter, utilisez la messagerie de la commande ou une campagne.
+            Par respect de la vie privée, Ciyou Eats ne communique ni l’e-mail ni le téléphone complet de vos clients. Pour les recontacter, utilisez la messagerie de la commande ou une campagne.
           </p>
         </div>
       )}

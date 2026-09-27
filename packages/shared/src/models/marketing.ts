@@ -220,7 +220,7 @@ export interface SalesCommission {
 export interface CrmSettings {
   /** Prime versée au commercial à l'inscription d'un restaurant démarché. */
   signupBonusCents: Cents;
-  /** Part du chiffre de commission GoLink reversée au commercial (points de base). */
+  /** Part du chiffre de commission Ciyou Eats reversée au commercial (points de base). */
   revenueShareBps: Bps;
   /** Durée de l'intéressement après l'inscription (mois). */
   revenueShareMonths: number;

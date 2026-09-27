@@ -30,7 +30,7 @@ const col = createColumnHelper<Hold>();
 
 /** Blocages de reversement (cahier §15) : fraude, litige, document manquant, impayé. */
 export function HoldsPage() {
-  useDocumentTitle('Blocages de reversement · GoLink Admin');
+  useDocumentTitle('Blocages de reversement · Ciyou Eats Admin');
   const can = useCan();
   const geo = useGeoScope();
   const directory = useDirectory();

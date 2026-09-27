@@ -27,7 +27,7 @@ function todayIso(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-/** Dépôt d'un justificatif : fichier privé, puis enregistrement pour vérification par GoLink. */
+/** Dépôt d'un justificatif : fichier privé, puis enregistrement pour vérification par Ciyou Eats. */
 export function UploadDialog({ requirement, onClose }: { requirement: DocumentRequirement | null; onClose: () => void }) {
   const { restaurantId } = useRestaurantAccess();
   const [files, setFiles] = useState<File[]>([]);
@@ -73,7 +73,7 @@ export function UploadDialog({ requirement, onClose }: { requirement: DocumentRe
         issuedAt: issuedAt || null,
         expiresAt: expiresAt || null,
       });
-      toast.success(`${label} envoyé : l’équipe GoLink le vérifie et vous tient informé.`);
+      toast.success(`${label} envoyé : l’équipe Ciyou Eats le vérifie et vous tient informé.`);
       onClose();
     } catch (error) {
       toast.error(errorMessage(error, 'Le dépôt a échoué. Réessayez.'));
@@ -115,7 +115,7 @@ export function UploadDialog({ requirement, onClose }: { requirement: DocumentRe
           {progress !== null && <ProgressBar value={progress * 100} label="Envoi sécurisé" valueLabel={`${Math.round(progress * 100)} %`} />}
           <p className="flex items-start gap-2 text-xs text-fg-subtle">
             <ShieldCheck className="mt-0.5 size-3.5 shrink-0" />
-            Fichier stocké de façon privée : seuls les responsables de l’établissement et l’équipe de vérification GoLink y ont accès.
+            Fichier stocké de façon privée : seuls les responsables de l’établissement et l’équipe de vérification Ciyou Eats y ont accès.
           </p>
         </DialogBody>
         <DialogFooter>

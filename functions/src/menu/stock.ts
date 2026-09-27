@@ -32,7 +32,7 @@ export interface AdjustStockResult {
 
 export const adjustStock = callable(schema, async (data, request): Promise<AdjustStockResult> => {
   const context = await requireMenuAccess(request, data.restaurantId, 'stock.edit');
-  await assertFeatureOn('stock_management', { restaurantId: data.restaurantId }, 'La gestion de stock est désactivée par GoLink.');
+  await assertFeatureOn('stock_management', { restaurantId: data.restaurantId }, 'La gestion de stock est désactivée par Ciyou Eats.');
   const uid = context.actor.caller.uid;
   const ids = [...new Set(data.items.map((item) => item.productId))];
   if (ids.length !== data.items.length) throw fail.invalid('Un même produit apparaît plusieurs fois dans l’ajustement.');

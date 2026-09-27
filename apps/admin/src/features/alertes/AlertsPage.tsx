@@ -59,7 +59,7 @@ function metricText(metric: NonNullable<PlatformAlert['metric']>): {
 
 /** Alertes par exception et file « à traiter » (cahier §1), avec traitement et historique. */
 export function AlertsPage() {
-  useDocumentTitle('Alertes · GoLink Admin');
+  useDocumentTitle('Alertes · Ciyou Eats Admin');
   const { can } = useAdminAccess();
   const geo = useGeoScope();
   const [params, setParams] = useSearchParams();

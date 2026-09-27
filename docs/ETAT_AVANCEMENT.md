@@ -1,4 +1,4 @@
-# État d'avancement — GoLink
+# État d'avancement — Ciyou Eats
 
 ## Contrôle final du super admin — 27/09/2026 (tâche `final-control-admin`, avant mise en production 15h)
 

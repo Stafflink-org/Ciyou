@@ -263,7 +263,7 @@ async function identityChecks(now: Timestamp): Promise<{ requested: number; expi
         countryId: null,
         cityId: (driverSnap.data() as Driver).cityId,
       });
-      await notifyDriver({ id: driverId, data: driverSnap.data() as Driver }, { title: 'Compte suspendu', body: 'Votre vérification d’identité est restée sans réponse : votre compte est suspendu. Contactez le support GoLink.', category: 'account', templateKey: 'driver_identity_check_expired' });
+      await notifyDriver({ id: driverId, data: driverSnap.data() as Driver }, { title: 'Compte suspendu', body: 'Votre vérification d’identité est restée sans réponse : votre compte est suspendu. Contactez le support Ciyou Eats.', category: 'account', templateKey: 'driver_identity_check_expired' });
     }),
   );
   const drivers = await db.collection(COLLECTIONS.drivers).where('status', '==', 'active').where('type', '==', 'platform').get();

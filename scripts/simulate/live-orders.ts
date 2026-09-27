@@ -262,7 +262,7 @@ async function main(): Promise<void> {
   if (!SIM_CITIES.includes(city)) throw new Error(`Pas de comptes de démonstration pour la ville ${restaurant.cityId}.`);
   const origin: LatLng = restaurant.address.geo ? { lat: restaurant.address.geo.latitude, lng: restaurant.address.geo.longitude } : { lat: 0, lng: 0 };
   const deadline = Date.now() + durationMinutes * 60_000;
-  log(`Simulation GoLink · ${restaurant.name} (${restaurant.cityId}) · ${placeOrders ? `${count} commande(s)` : 'livreurs seulement'}${autopilot ? ' · pilote automatique' : ''}`);
+  log(`Simulation Ciyou Eats · ${restaurant.name} (${restaurant.cityId}) · ${placeOrders ? `${count} commande(s)` : 'livreurs seulement'}${autopilot ? ' · pilote automatique' : ''}`);
   if (!restaurant.isOpen) log('Attention : l’établissement a mis ses commandes en pause, placeOrder les refusera.');
 
   // Livreurs simulés : connexion, mise en ligne près du restaurant.

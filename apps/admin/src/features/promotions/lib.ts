@@ -34,7 +34,7 @@ export function usePromotionCovers() {
   );
 }
 
-/** Coût des remises accordées, réparti entre GoLink et les restaurants (centimes). */
+/** Coût des remises accordées, réparti entre Ciyou Eats et les restaurants (centimes). */
 export function promotionCost(p: Pick<Promotion, 'funding' | 'restaurantShareBps' | 'stats'>) {
   const total = p.stats?.discountCents ?? 0;
   const platform = Math.round(total * platformShare(p));

@@ -56,7 +56,7 @@ const col = createColumnHelper<WithId<SponsoredPlacement>>();
 const SLOTS = Object.keys(SLOT_LABELS) as SponsoredSlot[];
 
 export function SponsoredPage() {
-  useDocumentTitle('Mise en avant payante · Affichage · GoLink Admin');
+  useDocumentTitle('Mise en avant payante · Affichage · Ciyou Eats Admin');
   const scope = useScopeFilter();
   const offersQ = useMemo(() => query(collection(db, COLLECTIONS.sponsoredOffers), orderBy('order'), limit(100)), []);
   const offers = useCollection<SponsoredOffer>(offersQ);

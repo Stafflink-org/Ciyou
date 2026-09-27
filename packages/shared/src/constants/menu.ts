@@ -83,7 +83,7 @@ export const MENU_ISSUE_DOC_SUFFIX: Record<MenuIssueType, string> = {
 
 // ------------------------------------------------------------------ Alcool
 /**
- * La vente d'alcool est interdite sur GoLink (décision client) : ces termes, repérés
+ * La vente d'alcool est interdite sur Ciyou Eats (décision client) : ces termes, repérés
  * dans le nom ou la description d'un produit, déclenchent un signalement qualité
  * « Mention d'alcool à vérifier ». Comparaison sur le texte normalisé (sans accents).
  */

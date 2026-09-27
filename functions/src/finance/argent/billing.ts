@@ -49,8 +49,8 @@ export function feeLedgerEntries(input: {
 }): Array<{ id: string; entry: LedgerEntry & { test?: boolean } }> {
   const base = { countryId: input.countryId, cityId: input.cityId, accountType: 'restaurant' as const, accountId: input.restaurantId, currency: input.currency, vatCents: null, invoiceId: input.invoiceId, subscriptionId: input.subscriptionId, payoutId: null, bookingDate: input.bookingDate, createdAt: input.issuedAt, createdBy: 'system', ...(input.test ? { test: true } : {}) };
   const out: Array<{ id: string; entry: LedgerEntry & { test?: boolean } }> = [];
-  if (input.subscriptionTtcCents !== 0) out.push({ id: `${input.invoiceId}-abo`, entry: { ...base, type: 'subscription_fee', amountCents: -input.subscriptionTtcCents, description: 'Abonnement GoLink' } });
-  if (input.sponsoredTtcCents !== 0) out.push({ id: `${input.invoiceId}-pub`, entry: { ...base, type: 'sponsored_placement', amountCents: -input.sponsoredTtcCents, description: 'Mises en avant GoLink' } });
+  if (input.subscriptionTtcCents !== 0) out.push({ id: `${input.invoiceId}-abo`, entry: { ...base, type: 'subscription_fee', amountCents: -input.subscriptionTtcCents, description: 'Abonnement Ciyou Eats' } });
+  if (input.sponsoredTtcCents !== 0) out.push({ id: `${input.invoiceId}-pub`, entry: { ...base, type: 'sponsored_placement', amountCents: -input.sponsoredTtcCents, description: 'Mises en avant Ciyou Eats' } });
   return out;
 }
 

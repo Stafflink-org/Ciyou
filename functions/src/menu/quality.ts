@@ -58,7 +58,7 @@ async function syncIssues(restaurantId: string, cityId: string, productId: strin
     missing_description: `« ${name} » n’a pas de description détaillée.`,
     allergens_missing: `Les allergènes de « ${name} » ne sont pas déclarés.`,
     price_outlier: `Le prix de « ${name} » semble inhabituel.`,
-    alcohol_suspected: `« ${name} » semble contenir de l’alcool, dont la vente est interdite sur GoLink.`,
+    alcohol_suspected: `« ${name} » semble contenir de l’alcool, dont la vente est interdite sur Ciyou Eats.`,
     empty_section: '',
   };
   PRODUCT_ISSUES.forEach((type, index) => {

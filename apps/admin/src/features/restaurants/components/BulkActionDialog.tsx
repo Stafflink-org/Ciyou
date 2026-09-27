@@ -119,7 +119,7 @@ export function BulkActionDialog({
             <>
               <p className="text-sm text-fg-muted">Taux négociés en pourcentage des articles TTC (hors livraison et pourboires). Laissez vide pour reprendre le taux de la formule.</p>
               <div className="grid gap-3 sm:grid-cols-3">
-                <FormField label="Livraison GoLink">
+                <FormField label="Livraison Ciyou Eats">
                   <Input inputMode="decimal" value={platform} onChange={(e) => setPlatform(e.target.value)} trailing="%" placeholder="30" />
                 </FormField>
                 <FormField label="Livreurs du commerce">

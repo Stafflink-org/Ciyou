@@ -102,7 +102,7 @@ function ReasonField({ value, onChange }: { value: string; onChange: (v: string)
 }
 
 export function MarchesPage() {
-  useDocumentTitle('Multi-pays · GoLink Admin');
+  useDocumentTitle('Multi-pays · Ciyou Eats Admin');
   const can = useCan();
   const countries = useCountries();
   const [countryId, setCountryId] = useState<string | null>(null);

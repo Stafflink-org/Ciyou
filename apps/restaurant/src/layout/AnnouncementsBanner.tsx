@@ -1,4 +1,4 @@
-// Annonces de l'équipe GoLink affichées en haut du back-office (nouveauté,
+// Annonces de l'équipe Ciyou Eats affichées en haut du back-office (nouveauté,
 // maintenance, changement de conditions), ciblées par pays, ville et formule.
 import { useMemo, useState, type ReactElement } from 'react';
 import { Link } from 'react-router';
@@ -63,7 +63,7 @@ export function AnnouncementsBanner() {
   const shown = expanded ? visible : visible.slice(0, 1);
 
   return (
-    <div className="mx-auto w-full max-w-(--container-page) space-y-2 px-4 pt-4 sm:px-6 lg:px-8" aria-label="Annonces GoLink" role="region">
+    <div className="mx-auto w-full max-w-(--container-page) space-y-2 px-4 pt-4 sm:px-6 lg:px-8" aria-label="Annonces Ciyou Eats" role="region">
       {shown.map((a) => {
         const meta = TONES[a.severity];
         const internal = a.link?.startsWith('/');

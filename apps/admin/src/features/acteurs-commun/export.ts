@@ -41,7 +41,7 @@ export function downloadCsv(sheet: ExportSheet, filename: string) {
 export async function downloadXlsx(sheet: ExportSheet, filename: string) {
   const ExcelJS = (await import('exceljs')).default;
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = 'GoLink';
+  workbook.creator = 'Ciyou Eats';
   const ws = workbook.addWorksheet(sheet.name.slice(0, 31));
   ws.columns = sheet.columns.map((c) => ({ header: c.header, width: Math.max(12, Math.min(40, c.header.length + 6)) }));
   sheet.rows.forEach((row) => ws.addRow(row.map((v, i) => cellValue(v, sheet.columns[i]?.kind))));

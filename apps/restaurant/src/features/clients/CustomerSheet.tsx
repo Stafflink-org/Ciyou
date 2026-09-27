@@ -123,7 +123,7 @@ export function CustomerSheet({ customer }: { customer: WithId<RestaurantCustome
 
   return (
     <>
-      <SheetHeader title={customer.displayName} description={customer.phoneMasked ?? 'Coordonnées masquées par GoLink'} icon={<Avatar name={customer.displayName} size="sm" />} />
+      <SheetHeader title={customer.displayName} description={customer.phoneMasked ?? 'Coordonnées masquées par Ciyou Eats'} icon={<Avatar name={customer.displayName} size="sm" />} />
       <SheetBody className="space-y-5">
         <div className="flex flex-wrap items-center gap-1.5">
           <StatusPill tone={customer.blocked ? 'danger' : 'success'}>{customer.blocked ? 'Bloqué' : 'Actif'}</StatusPill>

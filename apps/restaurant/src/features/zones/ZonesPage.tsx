@@ -47,7 +47,7 @@ function zoneToDraft(zone: StoredZone): ZoneDraft {
 
 /**
  * Zones de livraison du commerce : rayon ou tracé libre sur la carte, frais, minimum
- * et délai par zone. Elles s'appliquent à toutes les livraisons (livreurs GoLink ou
+ * et délai par zone. Elles s'appliquent à toutes les livraisons (livreurs Ciyou Eats ou
  * livreurs du commerce) ; hors zone active, l'adresse n'est pas livrée.
  */
 export function ZonesPage() {
@@ -176,7 +176,7 @@ export function ZonesPage() {
         <Notice
           tone="info"
           icon={<Bike />}
-          title={ownDrivers ? 'Vos zones s’appliquent à toutes vos livraisons' : 'Vos zones s’appliquent aussi aux livraisons GoLink'}
+          title={ownDrivers ? 'Vos zones s’appliquent à toutes vos livraisons' : 'Vos zones s’appliquent aussi aux livraisons Ciyou Eats'}
           action={
             <Button asChild size="sm" variant="secondary">
               <Link to="/reglages-commandes">Qui livre ?</Link>
@@ -184,8 +184,8 @@ export function ZonesPage() {
           }
         >
           {activeCount > 0
-            ? 'Frais et minimum de la zone sont appliqués au client, que la course soit assurée par un livreur GoLink ou par vos livreurs. Une adresse hors de vos zones actives ne peut pas être livrée.'
-            : 'Sans zone active, la grille de frais par défaut de GoLink s’applique. Créez vos zones pour fixer vous-même frais et minimum.'}
+            ? 'Frais et minimum de la zone sont appliqués au client, que la course soit assurée par un livreur Ciyou Eats ou par vos livreurs. Une adresse hors de vos zones actives ne peut pas être livrée.'
+            : 'Sans zone active, la grille de frais par défaut de Ciyou Eats s’applique. Créez vos zones pour fixer vous-même frais et minimum.'}
         </Notice>
         <p className="flex items-center gap-1.5 text-xs text-fg-subtle">
           <Info className="size-3.5" />
@@ -259,7 +259,7 @@ export function ZonesPage() {
                 className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-lg border border-border bg-elevated px-2.5 py-1.5 text-xs font-medium text-fg shadow-md hover:bg-surface-2"
               >
                 {showPlatform ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-                {showPlatform ? 'Masquer les zones GoLink' : 'Afficher les zones GoLink'}
+                {showPlatform ? 'Masquer les zones Ciyou Eats' : 'Afficher les zones Ciyou Eats'}
               </button>
               )}
             </div>
@@ -276,7 +276,7 @@ export function ZonesPage() {
             )}
             {showPlatform && mapsAvailable && !mapFailed && (
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-0 w-5 border-t border-dashed border-fg-subtle" /> Zones desservies par GoLink
+                <span className="h-0 w-5 border-t border-dashed border-fg-subtle" /> Zones desservies par Ciyou Eats
               </span>
             )}
             {(!mapsAvailable || mapFailed) && <span>Carte indisponible : le tracé libre est désactivé, les zones en rayon restent modifiables.</span>}

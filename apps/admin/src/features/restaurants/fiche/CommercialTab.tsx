@@ -133,7 +133,7 @@ function CommercialForm({ restaurant, commercial, plans, editable }: { restauran
         </div>
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           {[
-            { label: 'Livraison GoLink', value: plan?.commission.platformDeliveryBps },
+            { label: 'Livraison Ciyou Eats', value: plan?.commission.platformDeliveryBps },
             { label: 'Livreurs du commerce', value: plan?.commission.restaurantDeliveryBps },
             { label: 'Retrait', value: plan?.commission.pickupBps },
           ].map((item) => (
@@ -153,7 +153,7 @@ function CommercialForm({ restaurant, commercial, plans, editable }: { restauran
         </label>
         {negotiate && (
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-4">
-            <FormField label="Livraison GoLink">
+            <FormField label="Livraison Ciyou Eats">
               <Input disabled={disabled} inputMode="decimal" trailing="%" value={rates.platform} onChange={(e) => setRates((r) => ({ ...r, platform: e.target.value }))} />
             </FormField>
             <FormField label="Livreurs du commerce">
@@ -196,7 +196,7 @@ function CommercialForm({ restaurant, commercial, plans, editable }: { restauran
             {METHODS.map((m) => {
               const blocked = m === 'cash' && !cashAllowed;
               return (
-                <Tooltip key={m} content={blocked ? 'Le commerce livre avec GoLink : paiement en ligne obligatoire' : PAYMENT_METHOD_LABELS[m]}>
+                <Tooltip key={m} content={blocked ? 'Le commerce livre avec Ciyou Eats : paiement en ligne obligatoire' : PAYMENT_METHOD_LABELS[m]}>
                   <label className={`flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm ${blocked ? 'opacity-50' : 'text-fg'}`}>
                     <Checkbox
                       disabled={disabled || blocked}
@@ -313,7 +313,7 @@ export function CommercialTab({ restaurant }: { restaurant: WithId<Restaurant> }
             })}
           </ol>
         )}
-        <p className="mt-4 text-xs text-fg-subtle">Ordre des taux : livraison GoLink · livreurs du commerce · retrait.</p>
+        <p className="mt-4 text-xs text-fg-subtle">Ordre des taux : livraison Ciyou Eats · livreurs du commerce · retrait.</p>
       </Panel>
     </div>
   );

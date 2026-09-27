@@ -23,8 +23,8 @@ import type { DriverRuntime } from './people';
 import type { RestaurantRuntime } from './restaurants';
 
 const PLATFORM_PARTY: Record<'FR' | 'LU', InvoiceParty> = {
-  FR: { type: 'platform', id: 'golink-fr', name: 'GoLink SAS', address: '4 Place Darche, 54400 Longwy', vatNumber: 'FR 12 912 345 678', registrationNumber: 'RCS Briey 912 345 678', email: 'facturation@golink.fr' },
-  LU: { type: 'platform', id: 'golink-lu', name: 'GoLink Luxembourg SARL', address: '12 Rue du Fossé, L-1536 Luxembourg', vatNumber: 'LU 34567890', registrationNumber: 'RCS Luxembourg B 281 234', email: 'facturation@golink.lu' },
+  FR: { type: 'platform', id: 'golink-fr', name: 'Ciyou Eats SAS', address: '4 Place Darche, 54400 Longwy', vatNumber: 'FR 12 912 345 678', registrationNumber: 'RCS Briey 912 345 678', email: 'facturation@golink.fr' },
+  LU: { type: 'platform', id: 'golink-lu', name: 'Ciyou Eats Luxembourg SARL', address: '12 Rue du Fossé, L-1536 Luxembourg', vatNumber: 'LU 34567890', registrationNumber: 'RCS Luxembourg B 281 234', email: 'facturation@golink.lu' },
 };
 
 function line(label: string, quantity: number, unitHtCents: number, vatRateBps: number): InvoiceLine {
@@ -290,7 +290,7 @@ export function seedFinance(ctx: SeedContext, orders: SeededOrder[], restaurants
         issuedAt: ts(issuedAt),
         dueAt: null,
         paidAt: ts(issuedAt),
-        legalMentions: ['Autofacturation : facture émise par GoLink au nom et pour le compte du prestataire.', 'TVA non applicable, article 293 B du CGI.'],
+        legalMentions: ['Autofacturation : facture émise par Ciyou Eats au nom et pour le compte du prestataire.', 'TVA non applicable, article 293 B du CGI.'],
         retainUntil: `${year + 10}-12-31`,
       };
       w.set(w.doc(`${COLLECTIONS.invoices}/liv-${d.uid}-${month}`), statement);

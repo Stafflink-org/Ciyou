@@ -184,7 +184,7 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   google_pay: 'Google Pay',
   cash: 'Espèces',
   meal_voucher: 'Titres-restaurant',
-  wallet: 'Avoir GoLink',
+  wallet: 'Avoir Ciyou Eats',
 };
 
 export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
@@ -278,7 +278,7 @@ export const DRIVER_AVAILABILITY_LABELS: Record<DriverAvailability, string> = {
 };
 
 export const DRIVER_TYPE_LABELS: Record<DriverType, string> = {
-  platform: 'Livreur GoLink',
+  platform: 'Livreur Ciyou Eats',
   restaurant: 'Livreur salarié du commerce',
 };
 
@@ -345,7 +345,7 @@ export const PROMOTION_KIND_LABELS: Record<PromotionKind, string> = {
 };
 
 export const PROMOTION_FUNDING_LABELS: Record<PromotionFunding, string> = {
-  platform: 'GoLink',
+  platform: 'Ciyou Eats',
   restaurant: 'Restaurant',
   shared: 'Partagé',
 };

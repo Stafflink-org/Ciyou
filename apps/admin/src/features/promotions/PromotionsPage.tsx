@@ -35,7 +35,7 @@ export function PromotionsLayout({ actions, children, pending }: { actions?: Rea
       <PageHeader
         eyebrow={`Croissance · ${geo.label}`}
         title="Promotions"
-        description="Offres GoLink et des restaurants : portée, conditions, financement, ciblage et résultats."
+        description="Offres Ciyou Eats et des restaurants : portée, conditions, financement, ciblage et résultats."
         actions={actions}
       >
         <RouteTabs
@@ -55,7 +55,7 @@ type View = 'all' | 'live' | 'review' | 'platform' | 'restaurant' | 'closed';
 const col = createColumnHelper<PromotionRow>();
 
 export function PromotionsPage() {
-  useDocumentTitle('Promotions · GoLink Admin');
+  useDocumentTitle('Promotions · Ciyou Eats Admin');
   const navigate = useNavigate();
   const { can } = useAdminAccess();
   const canEdit = can('promotions.edit');
@@ -180,7 +180,7 @@ export function PromotionsPage() {
           return (
             <div className="whitespace-nowrap text-right">
               <p className="num font-mono text-sm text-fg">{formatEUR(getValue(), { cents: true })}</p>
-              {c.platform > 0 && <p className="num text-2xs text-fg-muted">GoLink {formatEUR(c.platform, { cents: true })}</p>}
+              {c.platform > 0 && <p className="num text-2xs text-fg-muted">Ciyou Eats {formatEUR(c.platform, { cents: true })}</p>}
             </div>
           );
         },
@@ -198,7 +198,7 @@ export function PromotionsPage() {
     { value: 'all', label: 'Toutes', count: scoped.length },
     { value: 'live', label: 'Actives' },
     { value: 'review', label: 'À valider', count: pending.length || undefined },
-    { value: 'platform', label: 'GoLink' },
+    { value: 'platform', label: 'Ciyou Eats' },
     { value: 'restaurant', label: 'Restaurants' },
     { value: 'closed', label: 'Terminées' },
   ];
@@ -218,7 +218,7 @@ export function PromotionsPage() {
         <StatCard label="Offres en ligne" value={formatNumber(kpis.live)} icon={<TicketPercent />} tone="brand" loading={loading} footer={`${pending.length} en attente de validation`} />
         <StatCard label="Utilisations" value={formatNumber(kpis.redemptions)} icon={<ShoppingBag />} tone="info" loading={loading} footer={`${formatNumber(kpis.newCustomers)} nouveaux clients recrutés`} />
         <StatCard
-          label="Coût des remises pour GoLink"
+          label="Coût des remises pour Ciyou Eats"
           value={formatEUR(kpis.platformCost, { cents: true })}
           icon={<BadgeEuro />}
           tone="amber"

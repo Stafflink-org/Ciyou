@@ -28,7 +28,7 @@ async function onChargeRefunded(charge: Stripe.Charge): Promise<void> {
     providerChargeId: charge.id,
     updatedAt: Timestamp.now(),
   });
-  // Remboursements GoLink confirmés par Stripe.
+  // Remboursements Ciyou Eats confirmés par Stripe.
   for (const refund of charge.refunds?.data ?? []) {
     const snap = await db.collection(COLLECTIONS.refunds).where('providerRefundId', '==', refund.id).limit(1).get();
     const r = snap.docs[0];

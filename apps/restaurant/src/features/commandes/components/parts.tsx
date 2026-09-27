@@ -202,7 +202,7 @@ export function CourierLine({ order }: { order: Order }) {
   }
   return (
     <span className="inline-flex items-center gap-1.5 text-xs text-fg-subtle">
-      <Bike className="size-3.5" /> {d.deliveredBy === 'restaurant' ? 'Livraison par vos livreurs' : 'Un livreur GoLink sera appelé avant la fin de préparation'}
+      <Bike className="size-3.5" /> {d.deliveredBy === 'restaurant' ? 'Livraison par vos livreurs' : 'Un livreur Ciyou Eats sera appelé avant la fin de préparation'}
     </span>
   );
 }

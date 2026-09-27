@@ -21,11 +21,11 @@ import { ActionDialog, Callout, ErrorPanel } from '../argent-commun/components';
 import { bps, parseEuros, toEurosInput } from '../argent-commun/format';
 import { PaiementsNav } from './nav';
 
-const PAYER_LABELS = { restaurant: 'Commerce', courier: 'Livreur', platform: 'GoLink' } as const;
+const PAYER_LABELS = { restaurant: 'Commerce', courier: 'Livreur', platform: 'Ciyou Eats' } as const;
 
 /** Frais et remboursements (cahier §14) : règles de remboursement, prise en charge des frais. */
 export function RulesPage() {
-  useDocumentTitle('Frais et remboursements · GoLink Admin');
+  useDocumentTitle('Frais et remboursements · Ciyou Eats Admin');
   const can = useCan();
   const geo = useGeoScope();
   const refunds = useDoc<RefundSettings>(docAt(`${COLLECTIONS.settings}/${SETTINGS_DOCS.refunds}`));
@@ -73,14 +73,14 @@ export function RulesPage() {
                     onValueChange={(v) => setDraft({ ...draft, method: v as 'original_payment' | 'wallet_credit' })}
                     options={[
                       { value: 'original_payment', label: 'Sur le moyen de paiement d’origine' },
-                      { value: 'wallet_credit', label: 'En avoir GoLink' },
+                      { value: 'wallet_credit', label: 'En avoir Ciyou Eats' },
                     ]}
                   />
                 </FormField>
                 <FormField label="Montant maximal d’un avoir" hint="Un avoir manuel ne peut pas dépasser ce montant, même pour un responsable.">
                   <Input inputMode="decimal" disabled={!editable} value={draft.maxCredit} trailing="€" invalid={maxCredit === null} onChange={(e) => setDraft({ ...draft, maxCredit: e.target.value })} />
                 </FormField>
-                <FormField label="Validité d’un avoir GoLink">
+                <FormField label="Validité d’un avoir Ciyou Eats">
                   <Input type="number" min={1} disabled={!editable} value={draft.validity} trailing="jours" invalid={validity === null} onChange={(e) => setDraft({ ...draft, validity: e.target.value })} />
                 </FormField>
                 {toDate(refunds.data?.updatedAt) && <p className="text-xs text-fg-subtle">Modifié le {formatDateTime(toDate(refunds.data?.updatedAt) as Date)}</p>}
@@ -153,7 +153,7 @@ export function RulesPage() {
                       <p className="font-medium text-fg">{c.name}</p>
                       <p className="text-xs text-fg-subtle">{c.pricing?.payment ? `${bps(c.pricing.payment.percentBps)} + ${formatMoney(c.pricing.payment.fixedCents, c.currency)} par paiement, + ${bps(c.pricing.payment.connectPercentBps)} Connect` : 'Non renseigné'}</p>
                     </div>
-                    <Badge tone={c.pricing?.payment?.payer === 'restaurant' ? 'info' : 'neutral'}>{c.pricing?.payment?.payer === 'restaurant' ? 'Déduits du reversement du commerce' : 'Pris en charge par GoLink'}</Badge>
+                    <Badge tone={c.pricing?.payment?.payer === 'restaurant' ? 'info' : 'neutral'}>{c.pricing?.payment?.payer === 'restaurant' ? 'Déduits du reversement du commerce' : 'Pris en charge par Ciyou Eats'}</Badge>
                   </li>
                 ))}
               </ul>
