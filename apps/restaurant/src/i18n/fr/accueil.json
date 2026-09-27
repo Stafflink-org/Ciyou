@@ -1,0 +1,139 @@
+{
+  "docTitle": "Accueil",
+  "greeting": {
+    "day": "Bonjour",
+    "evening": "Bonsoir"
+  },
+  "moment": {
+    "before": "avant le service",
+    "lunch": "service du midi",
+    "between": "entre deux services",
+    "evening": "service du soir"
+  },
+  "actions": {
+    "live": "Suivi en direct",
+    "openService": "Ouvrir le service"
+  },
+  "live": {
+    "eyebrow": "Service en direct",
+    "none": "Aucune commande en cours",
+    "inProgress_one": "{{count}} commande en cours",
+    "inProgress_other": "{{count}} commandes en cours",
+    "late_one": "{{count}} préparation en retard",
+    "late_other": "{{count}} préparations en retard",
+    "calmTitle": "Le comptoir est calme",
+    "calmDescription": "Les nouvelles commandes s’afficheront ici en temps réel, avec une alerte sonore dans la rubrique Commandes.",
+    "items_one": "{{count}} article",
+    "items_other": "{{count}} articles",
+    "couriersOnTheWay": "Des livreurs sont en route : suivez-les dans",
+    "trackingLink": "le suivi en direct"
+  },
+  "lanes": {
+    "new": "Nouvelles",
+    "kitchen": "En cuisine",
+    "ready": "Prêtes",
+    "delivery": "En livraison"
+  },
+  "fulfillment": {
+    "delivery": "Livraison",
+    "pickup": "À emporter",
+    "dine_in": "Sur place"
+  },
+  "kpi": {
+    "salesToday": "Ventes du jour",
+    "deliveredToday": "Commandes livrées aujourd’hui",
+    "ordersToday": "Commandes du jour",
+    "avgPrep": "Préparation moyenne",
+    "rating": "Note moyenne",
+    "vsSameHour": "vs {{day}}. dernier à la même heure",
+    "weekFooter": "Semaine : {{amount}} ({{change}})",
+    "newPeriod": "nouvelle période",
+    "ordersFooter": "{{week}} sur 7 jours · {{cancelled}}",
+    "cancelledToday_one": "{{count}} annulée aujourd’hui",
+    "cancelledToday_other": "{{count}} annulées aujourd’hui",
+    "vsAvg7": "vs moyenne 7 jours",
+    "avg7": "moyenne sur 7 jours",
+    "minutes": "{{value}} min",
+    "prepFooter": "Temps annoncé par défaut : {{minutes}} min",
+    "prepFooterBusy": "Temps annoncé par défaut : {{minutes}} min (+{{extra}} affluence)",
+    "ratingCount": "{{count}} avis clients",
+    "noReview": "Aucun avis pour le moment"
+  },
+  "charts": {
+    "last7": "7 derniers jours",
+    "salesWeek": "Ventes de la semaine",
+    "ordersWeek": "Commandes de la semaine",
+    "summaryMoney": "{{current}} · semaine précédente {{previous}}",
+    "summaryOrders": "{{current}} commandes · semaine précédente {{previous}}",
+    "thisWeek": "Cette semaine",
+    "previousWeek": "Semaine précédente",
+    "todayEyebrow": "Aujourd’hui",
+    "peakHours": "Heures de pointe",
+    "peakHoursDescription": "Commandes reçues par heure, comparées au même jour la semaine dernière.",
+    "today": "Aujourd’hui",
+    "lastWeek": "Semaine dernière",
+    "hour": "{{h}} h",
+    "hourRange": "{{from}}-{{to}} h"
+  },
+  "best": {
+    "eyebrow": "Votre carte",
+    "title": "Meilleures ventes",
+    "products": "Produits",
+    "none": "Pas encore de ventes",
+    "noneDescription": "Vos plats les plus commandés apparaîtront ici.",
+    "sold": "{{count}} vendus"
+  },
+  "stock": {
+    "eyebrow": "Santé de la carte",
+    "title": "Alertes de stock",
+    "action": "Stocks",
+    "none": "Aucun stock bas",
+    "noneDescription": "Les produits suivis sont au-dessus de leur seuil d’alerte.",
+    "outOfStock": "Rupture : retiré de la vente",
+    "remaining": "Plus que {{count}} en stock",
+    "threshold": "seuil {{count}}"
+  },
+  "team": {
+    "title": "Équipe",
+    "planned_one": "{{count}} créneau planifié aujourd’hui",
+    "planned_other": "{{count}} créneaux planifiés aujourd’hui",
+    "onDuty": "En service maintenant",
+    "nobody": "Personne n’est indiqué en service.",
+    "slot": "Créneau"
+  },
+  "reviews": {
+    "eyebrow": "Vos clients",
+    "title": "Derniers avis",
+    "none": "Aucun avis récent",
+    "noneDescription": "Les avis publiés par vos clients apparaîtront ici.",
+    "noComment": "Note sans commentaire.",
+    "stars": "{{value}} sur 5"
+  },
+  "service": {
+    "suspended": "Suspendu par GoLink",
+    "suspendedShort": "Suspendu",
+    "paused": "En pause",
+    "closed": "Fermé",
+    "busy": "Affluence · +{{minutes}} min",
+    "busyShort": "+{{minutes}} min",
+    "open": "Ouvert",
+    "receiving": "Réception des commandes",
+    "receivingState": "Réception des commandes : {{state}}",
+    "rushHint": "Affluence : délai de préparation allongé",
+    "plusMinutes": "+{{minutes}} minutes",
+    "pause": "Mettre en pause",
+    "outsideHours": "Hors des horaires d’ouverture : les commandes reprendront au prochain créneau.",
+    "toastOpen": "Commandes ouvertes.",
+    "toastRush": "Mode affluence : +{{minutes}} min de préparation.",
+    "toastPaused": "Nouvelles commandes en pause."
+  },
+  "status": {
+    "handedOver": "Remise",
+    "readyAtCounter": "Prête au comptoir",
+    "received": "Reçue"
+  },
+  "shell": {
+    "establishments": "Établissements",
+    "switchTo": "Passer à {{name}}"
+  }
+}

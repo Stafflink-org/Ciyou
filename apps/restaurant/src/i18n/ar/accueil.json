@@ -1,0 +1,155 @@
+{
+  "docTitle": "الرئيسية",
+  "greeting": {
+    "day": "مرحباً",
+    "evening": "مساء الخير"
+  },
+  "moment": {
+    "before": "قبل الخدمة",
+    "lunch": "خدمة الغداء",
+    "between": "بين الخدمتين",
+    "evening": "خدمة العشاء"
+  },
+  "actions": {
+    "live": "التتبع المباشر",
+    "openService": "فتح الخدمة"
+  },
+  "live": {
+    "eyebrow": "الخدمة المباشرة",
+    "none": "لا توجد طلبات جارية",
+    "inProgress_zero": "لا توجد طلبات جارية",
+    "inProgress_one": "طلب واحد قيد التنفيذ",
+    "inProgress_two": "طلبان قيد التنفيذ",
+    "inProgress_few": "{{count}} طلبات قيد التنفيذ",
+    "inProgress_many": "{{count}} طلباً قيد التنفيذ",
+    "inProgress_other": "{{count}} طلب قيد التنفيذ",
+    "late_one": "تحضير واحد متأخر",
+    "late_two": "تحضيران متأخران",
+    "late_few": "{{count}} تحضيرات متأخرة",
+    "late_many": "{{count}} تحضيراً متأخراً",
+    "late_other": "{{count}} تحضير متأخر",
+    "calmTitle": "الكاونتر هادئ",
+    "calmDescription": "ستظهر الطلبات الجديدة هنا في الوقت الفعلي، مع تنبيه صوتي في قسم الطلبات.",
+    "items_one": "منتج واحد",
+    "items_two": "منتجان",
+    "items_few": "{{count}} منتجات",
+    "items_many": "{{count}} منتجاً",
+    "items_other": "{{count}} منتج",
+    "couriersOnTheWay": "الموصّلون في الطريق: تابعهم في",
+    "trackingLink": "التتبع المباشر"
+  },
+  "lanes": {
+    "new": "جديدة",
+    "kitchen": "في المطبخ",
+    "ready": "جاهزة",
+    "delivery": "قيد التوصيل"
+  },
+  "fulfillment": {
+    "delivery": "توصيل",
+    "pickup": "سفري",
+    "dine_in": "في المكان"
+  },
+  "kpi": {
+    "salesToday": "مبيعات اليوم",
+    "deliveredToday": "الطلبات المسلّمة اليوم",
+    "ordersToday": "طلبات اليوم",
+    "avgPrep": "متوسط التحضير",
+    "rating": "متوسط التقييم",
+    "vsSameHour": "مقارنةً بيوم {{day}} الماضي في الساعة نفسها",
+    "weekFooter": "الأسبوع: {{amount}} ({{change}})",
+    "newPeriod": "فترة جديدة",
+    "ordersFooter": "{{week}} خلال 7 أيام · {{cancelled}}",
+    "cancelledToday_one": "طلب ملغى واحد اليوم",
+    "cancelledToday_two": "طلبان ملغيان اليوم",
+    "cancelledToday_few": "{{count}} طلبات ملغاة اليوم",
+    "cancelledToday_many": "{{count}} طلباً ملغى اليوم",
+    "cancelledToday_other": "{{count}} طلب ملغى اليوم",
+    "vsAvg7": "مقارنةً بمتوسط 7 أيام",
+    "avg7": "متوسط 7 أيام",
+    "minutes": "{{value}} د",
+    "prepFooter": "الوقت المعلن افتراضياً: {{minutes}} د",
+    "prepFooterBusy": "الوقت المعلن افتراضياً: {{minutes}} د (+{{extra}} ازدحام)",
+    "ratingCount": "{{count}} تقييم من العملاء",
+    "noReview": "لا توجد تقييمات حتى الآن"
+  },
+  "charts": {
+    "last7": "آخر 7 أيام",
+    "salesWeek": "مبيعات الأسبوع",
+    "ordersWeek": "طلبات الأسبوع",
+    "summaryMoney": "{{current}} · الأسبوع السابق {{previous}}",
+    "summaryOrders": "{{current}} طلب · الأسبوع السابق {{previous}}",
+    "thisWeek": "هذا الأسبوع",
+    "previousWeek": "الأسبوع السابق",
+    "todayEyebrow": "اليوم",
+    "peakHours": "ساعات الذروة",
+    "peakHoursDescription": "الطلبات المستلمة في كل ساعة، مقارنةً باليوم نفسه من الأسبوع الماضي.",
+    "today": "اليوم",
+    "lastWeek": "الأسبوع الماضي",
+    "hour": "{{h}} س",
+    "hourRange": "{{from}}-{{to}} س"
+  },
+  "best": {
+    "eyebrow": "قائمتك",
+    "title": "الأكثر مبيعاً",
+    "products": "المنتجات",
+    "none": "لا مبيعات بعد",
+    "noneDescription": "ستظهر هنا أطباقك الأكثر طلباً.",
+    "sold": "{{count}} مبيعة"
+  },
+  "stock": {
+    "eyebrow": "صحة القائمة",
+    "title": "تنبيهات المخزون",
+    "action": "المخزون",
+    "none": "لا يوجد مخزون منخفض",
+    "noneDescription": "المنتجات المتتبَّعة فوق حد التنبيه.",
+    "outOfStock": "نفد المخزون: تم سحبه من البيع",
+    "remaining": "متبقٍ {{count}} فقط في المخزون",
+    "threshold": "الحد {{count}}"
+  },
+  "team": {
+    "title": "الفريق",
+    "planned_one": "وردية واحدة مجدولة اليوم",
+    "planned_two": "ورديتان مجدولتان اليوم",
+    "planned_few": "{{count}} ورديات مجدولة اليوم",
+    "planned_many": "{{count}} وردية مجدولة اليوم",
+    "planned_other": "{{count}} وردية مجدولة اليوم",
+    "onDuty": "في الخدمة الآن",
+    "nobody": "لا أحد مسجّل في الخدمة.",
+    "slot": "وردية"
+  },
+  "reviews": {
+    "eyebrow": "عملاؤك",
+    "title": "آخر التقييمات",
+    "none": "لا توجد تقييمات حديثة",
+    "noneDescription": "ستظهر هنا التقييمات التي ينشرها عملاؤك.",
+    "noComment": "تقييم بدون تعليق.",
+    "stars": "{{value}} من 5"
+  },
+  "service": {
+    "suspended": "معلّق من GoLink",
+    "suspendedShort": "معلّق",
+    "paused": "متوقف مؤقتاً",
+    "closed": "مغلق",
+    "busy": "ازدحام · +{{minutes}} د",
+    "busyShort": "+{{minutes}} د",
+    "open": "مفتوح",
+    "receiving": "استقبال الطلبات",
+    "receivingState": "استقبال الطلبات: {{state}}",
+    "rushHint": "ازدحام: إطالة مدة التحضير",
+    "plusMinutes": "+{{minutes}} دقيقة",
+    "pause": "إيقاف مؤقت",
+    "outsideHours": "خارج ساعات العمل: ستُستأنف الطلبات في الفترة التالية.",
+    "toastOpen": "تم فتح الطلبات.",
+    "toastRush": "وضع الازدحام: +{{minutes}} د تحضير.",
+    "toastPaused": "الطلبات الجديدة متوقفة مؤقتاً."
+  },
+  "status": {
+    "handedOver": "تم التسليم",
+    "readyAtCounter": "جاهزة في الكاونتر",
+    "received": "مستلمة"
+  },
+  "shell": {
+    "establishments": "المنشآت",
+    "switchTo": "التبديل إلى {{name}}"
+  }
+}
