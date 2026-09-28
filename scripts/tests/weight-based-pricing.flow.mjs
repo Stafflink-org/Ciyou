@@ -156,7 +156,7 @@ async function placeAndAccept(lines, extra = {}) {
 
 async function scenarioWeightOrder() {
   // Poids réel demandé (480 g) différent du poids par défaut (300 g).
-  const result = await place([{ productId: 'wbp-fromage', quantity: 1, weightGrams: 480 }]);
+  const result = await placeAndAccept([{ productId: 'wbp-fromage', quantity: 1, weightGrams: 480 }]);
   check('poids.commande_ok', Boolean(result?.orderId), JSON.stringify(result));
   if (!result?.orderId) return;
   created.orders.add(result.orderId);
@@ -201,7 +201,7 @@ async function scenarioWeightBounds() {
 }
 
 async function scenarioVariablePrice() {
-  const result = await place([{ productId: 'wbp-panier', quantity: 1 }]);
+  const result = await placeAndAccept([{ productId: 'wbp-panier', quantity: 1 }]);
   check('variable.commande_plafond_preautorise', result?.totalCents === 1500, `attendu 1500 obtenu ${result?.totalCents}`);
   if (!result?.orderId) return;
   created.orders.add(result.orderId);
@@ -215,7 +215,7 @@ async function scenarioVariablePrice() {
   check('variable.ajustement_remboursement', adjust?.refundCents === 350, `attendu 350 obtenu ${adjust?.refundCents}`);
 
   // Un second panier : refus si le commerce tente de dépasser le plafond pré-autorisé.
-  const result2 = await place([{ productId: 'wbp-panier', quantity: 1 }]);
+  const result2 = await placeAndAccept([{ productId: 'wbp-panier', quantity: 1 }]);
   created.orders.add(result2.orderId);
   const order2 = await db.doc(`orders/${result2.orderId}`).get();
   const line2 = order2.get('items')?.[0];
@@ -223,7 +223,7 @@ async function scenarioVariablePrice() {
 }
 
 async function scenarioUnitNotAffected() {
-  const result = await place([{ productId: 'wbp-unite', quantity: 2 }]);
+  const result = await placeAndAccept([{ productId: 'wbp-unite', quantity: 2 }]);
   check('unite.commande_ok', Boolean(result?.orderId), JSON.stringify(result));
   if (!result?.orderId) return;
   created.orders.add(result.orderId);
