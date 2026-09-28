@@ -2,7 +2,7 @@
 // portabilité, rectification, effacement, opposition. Sans cet écran, seule l'équipe
 // support pouvait ouvrir une demande pour le compte du commerce.
 import { useState } from 'react';
-import { ShieldQuestion } from 'lucide-react';
+import { Download, ShieldQuestion } from 'lucide-react';
 import {
   Button,
   Card,
@@ -22,7 +22,7 @@ import {
 import { GDPR_REQUEST_STATUS_LABELS, GDPR_REQUEST_TYPE_LABELS, type GdprRequestStatus, type GdprRequestType } from '@golink/shared';
 import { useRestaurantAccess } from '@/auth/RestaurantAccess';
 import { errorMessage, toDate, useMutation } from '@/lib/firestore';
-import { submitGdprRequest } from '../parametres/kit/api';
+import { getGdprExportLink, submitGdprRequest } from '../parametres/kit/api';
 import { LoadError } from '../parametres/kit/ui';
 import { useGdprRequests } from './hooks';
 
@@ -82,7 +82,10 @@ export function GdprSection() {
                     {dueAt ? ` · réponse attendue avant le ${formatDate(dueAt)}` : ''}
                   </p>
                 </div>
-                <StatusPill tone={STATUS_TONE[r.status]}>{GDPR_REQUEST_STATUS_LABELS[r.status]}</StatusPill>
+                <div className="flex items-center gap-2">
+                  {r.status === 'completed' && r.export ? <DownloadExportButton requestId={r.id} /> : null}
+                  <StatusPill tone={STATUS_TONE[r.status]}>{GDPR_REQUEST_STATUS_LABELS[r.status]}</StatusPill>
+                </div>
               </li>
             );
           })}
@@ -91,6 +94,29 @@ export function GdprSection() {
 
       <GdprDialog restaurantId={restaurantId} open={open} onClose={() => setOpen(false)} />
     </Card>
+  );
+}
+
+/** Téléchargement de l'export via un lien signé (15 minutes), jamais un fichier public. */
+function DownloadExportButton({ requestId }: { requestId: string }) {
+  const [loading, setLoading] = useState(false);
+
+  const download = async () => {
+    setLoading(true);
+    try {
+      const result = await getGdprExportLink({ requestId });
+      if (result) window.open(result.url, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      toast.error(errorMessage(error, 'Le lien de téléchargement n’a pas pu être généré.'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button variant="ghost" size="sm" leftIcon={<Download className="size-4" />} loading={loading} onClick={() => void download()}>
+      Télécharger
+    </Button>
   );
 }
 
