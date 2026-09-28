@@ -11,7 +11,7 @@ import { errorMessage } from '@/lib/firestore';
 import { menuFunctions, updateProducts, useProducts, useSections, type MenuProduct } from '../produits/menu/data';
 import { matches, plural, saleState } from '../produits/menu/helpers';
 import { DragHandle, SortableHint, useSortable } from '../produits/menu/sortable';
-import { Price, Thumb } from '../produits/menu/ui';
+import { Price, saleUnitSuffix, Thumb } from '../produits/menu/ui';
 
 const PAGE = 24;
 
@@ -155,7 +155,7 @@ export function PopularPage() {
                         )}
                       </p>
                     </div>
-                    <Price cents={product.priceCents} />
+                    <Price cents={product.saleUnit === 'weight' ? (product.pricePerKgCents ?? product.priceCents) : product.priceCents} suffix={saleUnitSuffix(product)} />
                     {canEdit && (
                       <IconButton label={`Retirer ${product.name} de la vitrine`} variant="danger" size="sm" loading={busy === product.id} onClick={() => void toggle(product)}>
                         <StarOff />
@@ -281,7 +281,7 @@ export function PopularPage() {
                           <span className="num shrink-0 font-mono text-2xs text-fg-subtle">{formatNumber(product.salesCount ?? 0)} ventes</span>
                         </div>
                       </div>
-                      <Price cents={product.priceCents} className="hidden sm:inline" />
+                      <Price cents={product.saleUnit === 'weight' ? (product.pricePerKgCents ?? product.priceCents) : product.priceCents} suffix={saleUnitSuffix(product)} className="hidden sm:inline" />
                       <Tooltip content={product.featured ? 'Retirer de la vitrine' : full ? `Vitrine complète (${MENU_LIMITS.featured} produits)` : 'Mettre en avant'} disabled={!canEdit}>
                         <span className="inline-flex">
                           <Button

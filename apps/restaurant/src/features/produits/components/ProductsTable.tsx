@@ -6,7 +6,7 @@ import { MENU_ISSUE_LABELS } from '@golink/shared';
 import { createColumnHelper, DataTable, formatNumber, Tooltip, type DataTableBulkAction } from '@golink/ui';
 import type { MenuProduct, Section } from '../menu/data';
 import { productIssues, saleState } from '../menu/helpers';
-import { Dot, Price, StockPill, Thumb } from '../menu/ui';
+import { Dot, Price, saleUnitSuffix, StockPill, Thumb } from '../menu/ui';
 
 const column = createColumnHelper<MenuProduct>();
 
@@ -43,7 +43,12 @@ export function ProductsTable({
       }),
       column.accessor('priceCents', {
         header: 'Prix',
-        cell: ({ getValue }) => <Price cents={getValue()} />,
+        cell: ({ row }) => (
+          <Price
+            cents={row.original.saleUnit === 'weight' ? (row.original.pricePerKgCents ?? row.original.priceCents) : row.original.priceCents}
+            suffix={saleUnitSuffix(row.original)}
+          />
+        ),
         meta: { align: 'right' },
       }),
       column.accessor((row) => row.stock ?? -1, {

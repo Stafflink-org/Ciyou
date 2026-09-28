@@ -32,6 +32,7 @@ import {
   isAcceptanceExpired,
   isCashAllowed,
   isHourlyGuaranteeEnabled,
+  lineTotalCents,
   merchantInactivityAction,
   resolveBillingMode,
   shouldAutoPauseMerchant,
@@ -306,6 +307,7 @@ function allocateRules() {
     commercial_gesture: {},
     platform_error: {},
     payment_issue: {},
+    weight_adjustment: {},
   };
 }
 
@@ -481,6 +483,24 @@ test('décisions : vente au poids et taux de TVA propre à la ligne', () => {
   );
   assert.equal(q.subtotalCents, 968 + 1500);
   assert.deepEqual(q.itemsVat.map((l) => l.rateBps), [550, 2000]);
+});
+
+test('décisions : prix variable pré-autorisé au montant maximal, article à l’unité non affecté', () => {
+  // Prix variable (ex. panier de fruits pesé au marché) : le devis retient le plafond pré-autorisé ;
+  // le prix final, toujours inférieur ou égal, est fixé par le commerce à la préparation.
+  const q = computeQuote(
+    {
+      fulfillment: 'pickup',
+      lines: [
+        { unitPriceCents: 1200, saleUnit: 'variable', quantity: 1, vatCategory: 'grocery' },
+        { unitPriceCents: 850, quantity: 2, vatCategory: 'food' },
+      ],
+    },
+    DFR,
+  );
+  assert.equal(q.subtotalCents, 1200 + 850 * 2);
+  // Article à l'unité classique : montant inchangé, non affecté par la vente au poids/prix variable.
+  assert.equal(lineTotalCents({ unitPriceCents: 850, quantity: 2, vatCategory: 'food' }), 1700);
 });
 
 test('décisions : alcool interdit, détection par mots-clés FR/EN/AR', () => {

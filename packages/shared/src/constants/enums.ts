@@ -144,6 +144,7 @@ export const ORDER_EVENT_TYPES = values([
   'driver_arrived',
   'customer_called',
   'customer_absent',
+  'item_weight_adjusted',
 ]);
 export type OrderEventType = (typeof ORDER_EVENT_TYPES)[number];
 

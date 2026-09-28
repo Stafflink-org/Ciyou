@@ -17,6 +17,12 @@ export interface CartLineInput {
   quantity: number;
   options?: CartOptionInput[];
   comment?: string | null;
+  /**
+   * Vente au poids (`Product.saleUnit === 'weight'`) : poids réellement souhaité, en grammes
+   * (obligatoire pour cet article, dans les bornes `minWeightGrams`/`maxWeightGrams` du produit).
+   * Ignoré pour les autres modes de vente. Le prix est recalculé côté serveur : prix au kg × poids.
+   */
+  weightGrams?: number | null;
 }
 
 export interface PlaceOrderInput {
@@ -130,4 +136,26 @@ export interface ReportOrderIssueInput {
 export interface ReportOrderIssueResult {
   ticketId: string;
   ticketNumber: string;
+}
+
+/**
+ * Ajustement à la préparation d'un article vendu au poids ou à prix variable
+ * (cahier weight-based-pricing) : le commerce entre le poids réellement pesé, ou fixe le
+ * prix final (plafonné au prix variable maximal pré-autorisé à la commande). Le client ne
+ * paie jamais plus que le montant autorisé : un écart à la baisse est remboursé automatiquement,
+ * un écart à la hausse est absorbé par le commerce (même principe que le retrait d'un article
+ * indisponible, cf. `reportItemUnavailable`).
+ */
+export interface AdjustOrderItemWeightInput {
+  orderId: string;
+  lineId: string;
+  /** Article `weight` : poids réellement pesé (grammes). */
+  actualWeightGrams?: number;
+  /** Article `variable` : prix final fixé par le commerce (centimes), ≤ `variablePriceMaxCents` du produit. */
+  actualPriceCents?: number;
+}
+
+export interface AdjustOrderItemWeightResult {
+  finalTotalCents: Cents;
+  refundCents: Cents;
 }

@@ -4,6 +4,7 @@ import {
   COLLECTIONS,
   DEFAULT_ORDER_RULES,
   DEFAULT_PRICING_BY_COUNTRY,
+  DEFAULT_REFUND_LIABILITY,
   SETTINGS_DOCS,
   SUBCOLLECTIONS,
   memberHasPermission,
@@ -80,6 +81,9 @@ export async function loadOrderRules(market: Market): Promise<OrderRules> {
     lateCredit: { ...DEFAULT_ORDER_RULES.lateCredit, ...merged.lateCredit },
     merchantInactivity: { ...DEFAULT_ORDER_RULES.merchantInactivity!, ...(merged.merchantInactivity ?? {}) },
     claims: { ...DEFAULT_ORDER_RULES.claims!, ...(merged.claims ?? {}) },
+    // Une cause de remboursement ajoutée après coup (ex. `weight_adjustment`) doit rester couverte
+    // même si `settings/orderRules` porte déjà un `refundLiability` complet enregistré avant son ajout.
+    refundLiability: { ...DEFAULT_REFUND_LIABILITY, ...(merged.refundLiability ?? {}) },
     lateToleranceMinutes: merged.lateToleranceMinutes ?? DEFAULT_ORDER_RULES.lateToleranceMinutes ?? 0,
     alcohol: { ...DEFAULT_ORDER_RULES.alcohol, enabled: false, locked: true },
   };

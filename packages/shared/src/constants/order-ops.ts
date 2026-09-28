@@ -74,4 +74,5 @@ export const ORDER_EVENT_TYPE_LABELS: Record<OrderEventType, string> = {
   driver_arrived: 'Livreur arrivé chez le client',
   customer_called: 'Client appelé',
   customer_absent: 'Client absent',
+  item_weight_adjusted: 'Poids ou prix ajusté',
 };
