@@ -7,10 +7,13 @@ import {
   SUBCOLLECTIONS,
   adminHasPermission,
   type AdminUser,
+  type LedgerEntry,
+  type OrderFinancials,
   type Prospect,
   type ProspectActivity,
   type SalesCommission,
 } from '@golink/shared';
+import { logger } from 'firebase-functions/v2';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { db, Timestamp } from '../../lib/admin';
 import { actorFromCaller, writeAudit } from '../../lib/audit';
@@ -18,6 +21,7 @@ import { callable } from '../../lib/callable';
 import { fail } from '../../lib/errors';
 import { assertAdminCovers, requireAdmin } from '../../lib/permissions';
 import { z, zEmail, zId, zPhone, zReason } from '../../lib/validation';
+import { monthBounds, previousMonth, rangeBounds } from '../../finance/argent/common';
 import { loadCrmSettings, pushInApp } from './common';
 
 const SOURCES = ['field', 'inbound', 'referral', 'event', 'import', 'other'] as const;
@@ -285,7 +289,28 @@ export const decideSalesCommission = callable(
       const c = snap.data() as SalesCommission | undefined;
       if (!c) throw fail.notFound('Commission');
       if (!allowed[data.decision].includes(c.status)) throw fail.precondition('Cette commission a déjà changé de statut.');
-      tx.update(ref, { status: next[data.decision], ...(data.decision === 'pay' ? { paidAt: Timestamp.now() } : {}) });
+      const restaurantSnap = data.decision === 'pay' && c.restaurantId ? await tx.get(db.collection(COLLECTIONS.restaurants).doc(c.restaurantId)) : null;
+      const now = Timestamp.now();
+      tx.update(ref, { status: next[data.decision], ...(data.decision === 'pay' ? { paidAt: now } : {}) });
+      // Trace comptable du versement : sortie plateforme, rattachée au commercial et au commerce concerné.
+      if (data.decision === 'pay') {
+        const entry: LedgerEntry = {
+          accountType: 'platform',
+          accountId: 'golink',
+          type: 'sales_commission',
+          amountCents: -c.amountCents,
+          currency: 'EUR',
+          orderId: null,
+          description: `Commission ${c.basis === 'signup_bonus' ? 'd’inscription' : 'd’intéressement'} versée à ${c.salesRepId} (${c.restaurantId})`,
+          reason: `commission ${ref.id}`,
+          bookingDate: new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(now.toDate()),
+          countryId: (restaurantSnap?.get('countryId') as string | undefined) ?? 'FR',
+          cityId: (restaurantSnap?.get('cityId') as string | undefined) ?? null,
+          createdAt: now,
+          createdBy: caller.uid,
+        };
+        tx.set(db.collection(COLLECTIONS.ledgerEntries).doc(), entry);
+      }
       return c;
     });
     await writeAudit({
@@ -328,4 +353,66 @@ export const prospectFollowUpReminders = onSchedule({ schedule: '0 8 * * 1-6', t
       `relances-${day}`,
     );
   }
+});
+
+/**
+ * Intéressement (`revenue_share`) des commerciaux sur le chiffre de commission du mois donné
+ * des restaurants qu'ils ont signés, tant que ce restaurant reste dans la fenêtre
+ * `revenueShareMonths` suivant son inscription. Sans effet si `revenueShareBps` ou
+ * `revenueShareMonths` valent 0 (réglage désactivé). Idempotent (un document par prospect et par mois).
+ */
+export async function runSalesRevenueShare(month: string): Promise<{ month: string; created: number }> {
+  const crm = await loadCrmSettings();
+  let created = 0;
+  if (crm.revenueShareBps <= 0 || crm.revenueShareMonths <= 0) return { month, created };
+
+  const { first, last } = monthBounds(month);
+  const { start, end } = rangeBounds(first, last);
+  const [y, m] = month.split('-').map(Number) as [number, number];
+
+  const finSnap = await db.collection(COLLECTIONS.orderFinancials).where('deliveredAt', '>=', Timestamp.fromDate(start)).where('deliveredAt', '<', Timestamp.fromDate(end)).get();
+  const commissionByRestaurant = new Map<string, number>();
+  for (const doc of finSnap.docs) {
+    const fin = doc.data() as OrderFinancials;
+    const ht = fin.settlement.restaurant.commissionHtCents;
+    if (ht > 0) commissionByRestaurant.set(fin.restaurantId, (commissionByRestaurant.get(fin.restaurantId) ?? 0) + ht);
+  }
+  if (commissionByRestaurant.size === 0) return { month, created };
+
+  const prospectsSnap = await db.collection(COLLECTIONS.prospects).where('stage', '==', 'signed_up').get();
+  for (const doc of prospectsSnap.docs) {
+    const p = doc.data() as Prospect;
+    if (!p.restaurantId || !p.signedUpAt) continue;
+    const commissionHtCents = commissionByRestaurant.get(p.restaurantId);
+    if (!commissionHtCents) continue;
+    const signedAt = p.signedUpAt.toDate();
+    const elapsedMonths = (y - (signedAt.getFullYear())) * 12 + (m - (signedAt.getMonth() + 1));
+    if (elapsedMonths < 0 || elapsedMonths >= crm.revenueShareMonths) continue; // hors fenêtre d'intéressement
+    const amountCents = Math.round((commissionHtCents * crm.revenueShareBps) / 10_000);
+    if (amountCents <= 0) continue;
+    const commissionRef = db.collection(COLLECTIONS.salesCommissions).doc(`commission-revshare-${doc.id}-${month}`);
+    const already = await commissionRef.get();
+    if (already.exists) continue; // idempotent (nouvel essai après échec partiel)
+    const c: SalesCommission = {
+      salesRepId: p.ownerId,
+      restaurantId: p.restaurantId,
+      prospectId: doc.id,
+      basis: 'revenue_share',
+      amountCents,
+      period: month,
+      status: 'pending',
+      createdAt: Timestamp.now(),
+      paidAt: null,
+    };
+    await commissionRef.set(c);
+    created += 1;
+  }
+  return { month, created };
+}
+
+/** Le 2 de chaque mois à 6 h : intéressement des commerciaux sur les commissions du mois écoulé. */
+export const computeSalesRevenueShare = onSchedule({ schedule: '0 6 2 * *', timeZone: 'Europe/Paris' }, async () => {
+  const month = previousMonth();
+  const result = await runSalesRevenueShare(month);
+  logger.info('Intéressement commercial mensuel calculé', { month, created: result.created });
 });

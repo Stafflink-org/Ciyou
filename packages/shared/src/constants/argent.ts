@@ -22,6 +22,7 @@ export const LEDGER_ENTRY_TYPE_LABELS: Record<LedgerEntryType, string> = {
   manual_adjustment: 'Ajustement manuel',
   payout: 'Reversement',
   payout_reversal: 'Reversement annulé',
+  sales_commission: 'Commission commerciale',
 };
 
 export const LEDGER_ACCOUNT_TYPE_LABELS: Record<LedgerAccountType, string> = {

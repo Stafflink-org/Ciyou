@@ -206,6 +206,7 @@ function SessionsCard() {
                     <p className="text-xs text-fg-subtle">
                       Ouverte le {formatDateTime(toDate(s.createdAt) ?? new Date())}
                       {state === 'Ouverte' ? ` · active ${formatRelative(toDate(s.lastSeenAt) ?? new Date())}` : ''}
+                      {s.approximateLocation ? ` · ${s.approximateLocation}` : ''}
                       {s.mfaVerifiedAt ? ' · double authentification vérifiée' : ''}
                       {s.revokedAt && s.revokeReason ? ` · ${s.revokeReason}` : ''}
                     </p>

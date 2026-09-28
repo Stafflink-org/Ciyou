@@ -132,6 +132,22 @@ export function ipHashOf(request: CallableRequest<unknown>): string | null {
   return ip ? sha256(ip).slice(0, 32) : null;
 }
 
+/**
+ * Localisation approximative de la session (§27 « localisation approximative »), déduite des
+ * en-têtes posés par l'infrastructure Google (front-end commun aux fonctions et à l'hébergement),
+ * jamais d'un appel externe ni d'une adresse IP en clair. Absente si l'en-tête n'est pas transmis
+ * (environnement de test, émulateur) : dans ce cas la session garde une localisation inconnue
+ * plutôt qu'une valeur inventée.
+ */
+export function approximateLocationOf(request: CallableRequest<unknown>): string | null {
+  const country = request.rawRequest?.get('x-appengine-country');
+  const region = request.rawRequest?.get('x-appengine-region');
+  const city = request.rawRequest?.get('x-appengine-city');
+  if (!country || country === 'ZZ') return null;
+  const parts = [city ? city.replace(/\b\w/g, (c) => c.toUpperCase()) : null, region ? region.toUpperCase() : null, country.toUpperCase()].filter(Boolean);
+  return parts.length ? parts.join(', ') : null;
+}
+
 /** Appareil lisible déduit du navigateur (« Windows · Chrome »). */
 export function describeDevice(userAgent: string): string {
   const ua = userAgent.toLowerCase();
