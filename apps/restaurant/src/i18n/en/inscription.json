@@ -1,0 +1,70 @@
+{
+  "title": "Sign up · GoLink Restaurant",
+  "eyebrow": "Become a partner",
+  "heading": "Register your business",
+  "description": "Free, with no commitment. Your application is reviewed as soon as your documents are uploaded; if it is complete and compliant, it is approved automatically.",
+  "sections": {
+    "business": "Your business",
+    "legal": "Company",
+    "account": "Your account"
+  },
+  "fields": {
+    "country": "Country",
+    "businessName": "Business name",
+    "businessPhone": "Business phone",
+    "address": "Address",
+    "postalCode": "Postal code",
+    "city": "City",
+    "legalName": "Legal name",
+    "registration": "Registration number",
+    "vat": "VAT number (optional)",
+    "firstName": "Manager’s first name",
+    "lastName": "Manager’s last name",
+    "email": "Business e-mail",
+    "phone": "Manager’s phone",
+    "password": "Password",
+    "passwordHint": "At least 10 characters, with at least one letter and one digit.",
+    "referral": "Referral code (optional)",
+    "referralHint": "Filled in automatically if you came from a GoLink merchant’s link."
+  },
+  "countries": {
+    "FR": "France",
+    "BE": "Belgium",
+    "LU": "Luxembourg",
+    "DZ": "Algeria",
+    "MA": "Morocco",
+    "TN": "Tunisia"
+  },
+  "registrationLabels": {
+    "FR": "SIRET (14 digits)",
+    "BE": "BCE enterprise number",
+    "LU": "RCS number (e.g. B123456)",
+    "DZ": "NIF or trade register",
+    "MA": "ICE or trade register",
+    "TN": "Tax identification number"
+  },
+  "registrationOk": "Number is valid.",
+  "terms": "I have read and accept GoLink’s partner terms, and I certify that the information entered is accurate.",
+  "submit": "Create my account",
+  "haveAccount": "Already a partner?",
+  "login": "Sign in",
+  "errors": {
+    "required": "Required field.",
+    "email": "Invalid e-mail address.",
+    "phone": "Invalid phone number.",
+    "postalCode": "Invalid postal code.",
+    "password": "At least 10 characters, with a letter and a digit.",
+    "terms": "You must accept the partner terms.",
+    "failed": "Sign-up could not be completed. Check the fields and try again."
+  },
+  "done": {
+    "title": "Your application is registered",
+    "text": "We sent a confirmation e-mail to {{email}}. Sign in to upload your documents (business registration extract, ID, bank details) and accept the partner contract: your business is then approved.",
+    "cta": "Go to my space"
+  },
+  "waitlist": {
+    "title": "We are not in your city yet",
+    "text": "GoLink opens city by city. Your request is saved: we will contact you at {{email}} as soon as {{city}} opens.",
+    "cta": "Back to sign in"
+  }
+}
