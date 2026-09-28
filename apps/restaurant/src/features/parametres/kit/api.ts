@@ -183,6 +183,12 @@ export const acceptPartnerContract = callFunction<
   { version: string }
 >('acceptPartnerContract');
 
+/** Dépôt d'une demande RGPD par l'établissement lui-même (accès, portabilité, rectification, effacement, opposition). */
+export const submitGdprRequest = callFunction<
+  { restaurantId: string; type: 'access' | 'portability' | 'rectification' | 'erasure' | 'objection'; notes: string | null },
+  { requestId: string; dueAt: number }
+>('submitGdprRequest');
+
 export const changePlan = callFunction<
   { restaurantId: string; planCode: PlanCode; reason: string | null },
   { status: 'applied' | 'scheduled' | 'cancelled'; planCode: PlanCode; effectiveAt: number | null; trial: boolean }

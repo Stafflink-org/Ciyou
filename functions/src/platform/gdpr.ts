@@ -22,7 +22,7 @@ import { auth, db, FieldValue, storage, Timestamp } from '../lib/admin';
 import { actorFromCaller, writeAudit } from '../lib/audit';
 import { fail } from '../lib/errors';
 import { currentPublishedLegalDocument } from '../lib/legal';
-import { requireAuth } from '../lib/permissions';
+import { requireAuth, requireRestaurantAccess } from '../lib/permissions';
 import { z, zEmail, zId, zReason } from '../lib/validation';
 import { PLATFORM_SCHEDULE_RUNTIME, TIMEZONE, platformCallable, recordSettingsChange, requireSecureAdmin } from './runtime';
 
@@ -121,6 +121,76 @@ export const receiveGdprRequest = platformCallable(
       action: 'gdpr_request.received',
       target: { type: data.subjectType, id: data.subjectId ?? data.email, label: data.email },
       reason: data.reason,
+      sensitive: true,
+      request,
+    });
+    return { requestId: ref.id, dueAt: record.dueAt.toMillis() };
+  },
+);
+
+/**
+ * Dépôt d'une demande RGPD par la personne elle-même (et non par l'équipe support) :
+ * un commerce authentifié pour son propre établissement, ou tout compte authentifié
+ * pour ses propres données. Une seule demande ouverte à la fois par sujet.
+ */
+export const submitGdprRequest = platformCallable(
+  z.object({
+    type: z.enum(['access', 'portability', 'rectification', 'erasure', 'objection']),
+    /** Renseigné pour une demande déposée par un commerce, pour son propre établissement. */
+    restaurantId: zId.nullish(),
+    notes: z.string().trim().max(1000).nullable(),
+  }),
+  async (data, request) => {
+    const caller = requireAuth(request);
+    let subjectType: GdprRequest['subjectType'];
+    let subjectId: string;
+    let email: string;
+    if (data.restaurantId) {
+      await requireRestaurantAccess(request, data.restaurantId, 'settings.manage');
+      subjectType = 'restaurant';
+      subjectId = data.restaurantId;
+      const restaurant = await db.collection(COLLECTIONS.restaurants).doc(data.restaurantId).get();
+      email = (restaurant.data()?.email as string | undefined) ?? caller.email ?? '';
+    } else if (caller.claims.role === 'driver') {
+      subjectType = 'driver';
+      subjectId = caller.uid;
+      email = caller.email ?? '';
+    } else {
+      subjectType = 'client';
+      subjectId = caller.uid;
+      email = caller.email ?? '';
+    }
+    const open = await db
+      .collection(COLLECTIONS.gdprRequests)
+      .where('subjectId', '==', subjectId)
+      .where('status', 'in', ['received', 'identity_check', 'in_progress'])
+      .limit(1)
+      .get();
+    if (!open.empty) throw fail.invalid('Une demande est déjà en cours de traitement pour ce compte.');
+    const now = Timestamp.now();
+    const ref = db.collection(COLLECTIONS.gdprRequests).doc();
+    const record: Omit<GdprRequest, 'createdAt' | 'updatedAt'> = {
+      type: data.type,
+      subjectType,
+      subjectId,
+      email,
+      status: 'received',
+      receivedAt: now,
+      dueAt: Timestamp.fromMillis(now.toMillis() + GDPR_DEADLINE_DAYS * DAY_MS),
+      completedAt: null,
+      assigneeId: null,
+      export: null,
+      retainedData: [],
+      notes: data.notes,
+      createdBy: caller.uid,
+      updatedBy: caller.uid,
+    };
+    await ref.set({ ...record, createdAt: now, updatedAt: now });
+    await writeAudit({
+      actor: actorFromCaller(caller),
+      action: 'gdpr_request.submitted',
+      target: { type: subjectType, id: subjectId, label: email },
+      reason: 'Demande déposée par la personne elle-même (auto-service)',
       sensitive: true,
       request,
     });
