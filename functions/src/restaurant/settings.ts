@@ -64,7 +64,7 @@ const profileSchema = z.object({
   priceLevel: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
   labels: z.array(z.enum(Object.keys(RESTAURANT_LABELS) as [keyof typeof RESTAURANT_LABELS])).max(9),
   allergenNotice: optionalText(400),
-  /** Interrupteur « Visible dans l'application GoLink » : masque le commerce sans changer son statut. */
+  /** Interrupteur « Visible dans l'application Ciyou Eats » : masque le commerce sans changer son statut. */
   visibleInApp: z.boolean().default(true),
 });
 

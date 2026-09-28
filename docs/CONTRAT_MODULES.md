@@ -93,6 +93,7 @@ interface ModuleNav<G> {
   badge?: () => number | string | null | undefined; // hook, appelé à chaque rendu, ordre fixe
   href?: string;                                     // défaut : chemin de la première route
   keywords?: string[];
+  hidden?: boolean;   // absent de la sidebar, présent dans ⌘K/fil d'Ariane/route directe (hubs)
 }
 interface AppModule<G, P> { id: string; nav: ModuleNav<G>; routes: RouteObject[]; permission?: P }
 ```
@@ -110,6 +111,34 @@ Groupes disponibles (`app/navigation.ts`) :
 - Super admin : `pilotage`, `acteurs`, `operations`, `argent`, `croissance`, `plateforme`.
 
 Ajouter un groupe reste exceptionnel et se fait uniquement dans `app/navigation.ts`.
+
+### 3.1 bis Regrouper des rubriques dans un hub (`nav.hidden`)
+
+Un hub (Paiement, Marketing, Paramètres) est une page normale (son propre `features/<id>/module.tsx`)
+qui **affiche les rubriques existantes sans dupliquer leur code** : onglets (Paiement) ou cartes
+(Marketing), chacun rendant le composant déjà exporté par la rubrique agrégée. Les rubriques
+agrégées passent `nav.hidden: true` : elles disparaissent de la sidebar mais restent inchangées
+partout ailleurs — palette ⌘K, fil d'Ariane, permission, et surtout leur **route directe**
+(`/finances`, `/virements/:payoutId`…), qui continue de fonctionner pour les liens déjà partagés et
+les favoris (elles s'affichent alors seules, avec leur propre en-tête).
+
+Pour un onglet intégré dans un hub (Paiement), qui ne doit pas répéter son propre `PageHeader` /
+`PageContainer` à côté de celui du hub, envelopper le rendu des onglets dans `<HubEmbedProvider>`
+(`@golink/ui`) : `PageHeader` et `PageContainer` deviennent alors des passe-plats (seuls `actions`
+et le contenu de `PageHeader` restent affichés). Rien ne change hors de ce contexte.
+
+Hubs actuels de `apps/restaurant` (plan V2 §3, lot D) :
+
+| Hub | Route | Présentation | Rubriques agrégées (`nav.hidden: true`) |
+|---|---|---|---|
+| Paiement | `/paiement` (onglet actif : `?onglet=`) | onglets (`HubEmbedProvider`) | `finances`, `chiffre-affaires`, `virements`, `factures`, `versements`, `abonnement` ; nouvel onglet `commissions` (`features/paiement/CommissionsTab.tsx`, lecture `order.restaurantSettlement`, aucun taux figé dans le code) |
+| Marketing | `/marketing` | cartes (navigation classique) | `promotions`, `campagnes`, `fidelite`, `populaires`, `avis`, `reseaux-sociaux`, `modeles`, `annonces` |
+| Paramètres (déjà existant) | `/parametres` | tuiles regroupées en 4 sections (Établissement, Service, Encaissement, Préférences) | `etablissement`, `utilisateurs`, `documents`, `reglages-commandes`, `horaires`, `zones`, `paiements`, `notifications` |
+| Assistance (groupe `messagerie`, pas de page hub) | — | 2 entrées de menu inchangées | aucune (`messages` et `support` restent visibles, avec leurs pastilles) |
+
+Les groupes de sidebar `finances` et `messagerie` gardent leurs identifiants (modules déjà groupés
+dessus) ; seuls leurs libellés changent (`nav:groups.*` dans `i18n/<locale>/nav.json`) : Finances →
+« Paiement », Messagerie → « Assistance ».
 
 ### 3.2 Contexte disponible dans une page
 

@@ -123,6 +123,7 @@ export function ReviewsPage() {
         eyebrow="Réputation"
         title="Avis clients"
         description="Répondez publiquement à vos clients, repérez ce qu’ils aiment et signalez les avis abusifs à la modération Ciyou Eats."
+        breadcrumbs={[{ label: 'Marketing', href: '/marketing' }, { label: 'Avis clients' }]}
       />
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">

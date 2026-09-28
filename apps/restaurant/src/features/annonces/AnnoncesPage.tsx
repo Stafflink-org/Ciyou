@@ -137,6 +137,7 @@ export function AnnoncesPage() {
         eyebrow="Marketing"
         title="Offres sur vos plats"
         description="« 1 acheté, 1 offert » ou « le 2ᵉ à -50 % » sur un plat précis : appliquées automatiquement, à votre charge, sans code à saisir."
+        breadcrumbs={[{ label: 'Marketing', href: '/marketing' }, { label: 'Offres sur vos plats' }]}
         actions={createButton}
       />
 

@@ -316,7 +316,7 @@ export interface SupportSettings {
   autoCloseResolvedAfterDays?: number;
   /** Horaires du support (décision client : 24/7). */
   alwaysOn?: boolean;
-  /** Message affiché aux commerces en tête de « Support GoLink » (ex. « assistance 24 h/24, 7 j/7 »). */
+  /** Message affiché aux commerces en tête de « Support Ciyou Eats » (ex. « assistance 24 h/24, 7 j/7 »). */
   merchantNotice?: SupportMerchantNotice | null;
   updatedAt: Timestamp;
   updatedBy: string;

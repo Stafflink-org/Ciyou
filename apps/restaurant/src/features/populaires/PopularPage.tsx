@@ -83,6 +83,7 @@ export function PopularPage() {
         eyebrow={`${restaurant.name} · Vitrine`}
         title="Produits mis en avant"
         description="Mettez vos incontournables en avant : ils s’affichent en tête de votre page dans l’app Ciyou Eats. Les ventes vous guident, vous décidez de l’ordre."
+        breadcrumbs={[{ label: 'Marketing', href: '/marketing' }, { label: 'Produits mis en avant' }]}
       />
 
       {/* Bandeau */}
