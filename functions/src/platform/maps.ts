@@ -199,7 +199,16 @@ export const testMapsConnection = platformCallable(testSchema, async (input, req
   const result = await callGeocoding(apiKey);
   const error = result.ok ? null : messageFromGoogleStatus(result.googleStatus);
   if (!input.apiKey) {
-    await mapsSettingsRef().set({ status: result.ok ? 'configured' : 'error', lastError: error, lastTestAt: Timestamp.now(), lastTestOk: result.ok }, { merge: true });
+    // REQUEST_DENIED depuis un appel serveur est ambigu pour une clé restreinte par référent
+    // HTTP (web) ou par identité d'app (mobile) : ce refus est ATTENDU pour une clé qui
+    // fonctionne très bien depuis un navigateur/app autorisé, faute d'en-tête Referer ou de
+    // contexte d'app côté serveur. On ne fait donc jamais régresser le statut affiché
+    // (« Configurée » → « Erreur ») sur ce seul signal, pour ne pas alarmer inutilement —
+    // seuls des refus non ambigus (réseau, quota, requête invalide) le font.
+    const ambiguous = result.googleStatus === 'REQUEST_DENIED';
+    const patch: Record<string, unknown> = { lastError: error, lastTestAt: Timestamp.now(), lastTestOk: result.ok };
+    if (result.ok || !ambiguous) patch.status = result.ok ? 'configured' : 'error';
+    await mapsSettingsRef().set(patch, { merge: true });
   }
   return { ok: result.ok, error };
 }, { ...PLATFORM_RUNTIME, ...SECRET_OPTIONS, timeoutSeconds: 15 });
