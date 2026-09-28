@@ -37,6 +37,7 @@ const GeoScopeContext = createContext<GeoScope | null>(null);
 export function GeoScopeProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { admin } = useAdminAccess();
+  const { t } = useTranslation();
   const countriesQuery = useMemo(() => query(collection(db, COLLECTIONS.countries), orderBy('name')), []);
   const citiesQuery = useMemo(() => query(collection(db, COLLECTIONS.cities), orderBy('name')), []);
   const allCountries = useCollection<Country>(countriesQuery).data;
@@ -72,10 +73,10 @@ export function GeoScopeProvider({ children }: { children: ReactNode }) {
       : country
         ? country.name
         : global
-          ? 'i18n:geo.allMarkets'
+          ? t('nav:geo.allMarkets')
           : cityScoped && cities.length === 1
-            ? (cities[0]?.name ?? 'i18n:geo.myScope')
-            : 'i18n:geo.myScope';
+            ? (cities[0]?.name ?? t('nav:geo.myScope'))
+            : t('nav:geo.myScope');
 
     return {
       countries,
@@ -87,7 +88,7 @@ export function GeoScopeProvider({ children }: { children: ReactNode }) {
       cityIds,
       global,
     };
-  }, [admin, allCountries, allCities, stored, setStored]);
+  }, [admin, allCountries, allCities, stored, setStored, t]);
 
   return <GeoScopeContext.Provider value={value}>{children}</GeoScopeContext.Provider>;
 }
