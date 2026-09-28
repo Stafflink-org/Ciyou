@@ -27,7 +27,7 @@ import { actorFromCaller, writeAudit } from '../../lib/audit';
 import { fail } from '../../lib/errors';
 import { requireAdmin } from '../../lib/permissions';
 import { z, zReason } from '../../lib/validation';
-import { chunk, monthBounds, parisDay, rangeBounds, zMonth } from './common';
+import { chunk, loadCountry, monthBounds, parisDay, rangeBounds, zMonth } from './common';
 import { ARGENT_HEAVY_RUNTIME, argentCallable } from './runtime';
 
 const zCountry = z.string().trim().length(2).toUpperCase();
@@ -271,6 +271,9 @@ const ACCOUNTS: Record<string, string> = {
   '512': 'Banque (Stripe)',
 };
 
+// JournalLib (FEC) : libellé des 3 journaux utilisés par l'export (Ventes, Achats, Banque).
+const JOURNAL_LIBS: Record<string, string> = { VT: 'Ventes', AC: 'Achats', BQ: 'Banque' };
+
 export const exportAccounting = argentCallable(
   z.object({ month: z.string().regex(zMonth, 'Mois invalide'), countryId: zCountry, reason: zReason }),
   async (data, request): Promise<AccountingExportResult> => {
@@ -278,9 +281,31 @@ export const exportAccounting = argentCallable(
     const { first, last } = monthBounds(data.month);
     const { start, end } = rangeBounds(first, last);
     const lines: AccountingLine[] = [];
+    // EcritureNum (FEC) : numéro de séquence continue, partagé par toutes les lignes d'une même
+    // pièce (une écriture = un ensemble de lignes équilibré) ; ValidDate : date de validation,
+    // toujours la date d'émission de l'export (les écritures ne sont jamais modifiées après coup).
+    const ecritureNums = new Map<string, number>();
+    let nextEcritureNum = 1;
+    const validDate = parisDay(new Date());
     const push = (journal: string, date: string, piece: string, account: string, thirdParty: string | null, label: string, debit: number, credit: number): void => {
       if (debit === 0 && credit === 0) return;
-      lines.push({ journal, date, piece, account, accountLabel: ACCOUNTS[account] ?? account, thirdParty, label, debitCents: debit, creditCents: credit });
+      const key = `${journal}|${piece}`;
+      if (!ecritureNums.has(key)) ecritureNums.set(key, nextEcritureNum++);
+      lines.push({
+        journal,
+        journalLib: JOURNAL_LIBS[journal] ?? journal,
+        ecritureNum: ecritureNums.get(key) as number,
+        date,
+        pieceDate: date,
+        validDate,
+        piece,
+        account,
+        accountLabel: ACCOUNTS[account] ?? account,
+        thirdParty,
+        label,
+        debitCents: debit,
+        creditCents: credit,
+      });
     };
 
     // Ventes : factures émises par Ciyou Eats (commissions, abonnements, mises en avant, avoirs).
@@ -368,7 +393,9 @@ export const exportAccounting = argentCallable(
     };
     await db.collection(COLLECTIONS.taxReports).doc(reportId).set(report);
     await writeAudit({ actor: actorFromCaller(caller, 'admin'), action: 'accounting.exported', target: { type: 'other', id: reportId, label: `Export comptable ${data.countryId} ${data.month}` }, reason: data.reason, after: { lines: lines.length, ...totals }, countryId: data.countryId, request, sensitive: true });
-    return { reportId, month: data.month, countryId: data.countryId, lines, totals };
+    const country = await loadCountry(data.countryId);
+    const issuer = { legalName: country?.billingEntity?.legalName ?? 'Ciyou Eats', registrationNumber: country?.billingEntity?.registrationNumber || null };
+    return { reportId, month: data.month, countryId: data.countryId, lines, totals, issuer };
   },
   { ...ARGENT_HEAVY_RUNTIME },
 );

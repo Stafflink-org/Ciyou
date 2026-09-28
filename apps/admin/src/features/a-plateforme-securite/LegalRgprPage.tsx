@@ -2,7 +2,7 @@
 // public, avec ré-acceptation, et demandes d'exercice de droits (délai légal d'un mois).
 import { useMemo, useState } from 'react';
 import { collection, query as fsQuery, where } from 'firebase/firestore';
-import { FileCheck, Plus, ScaleIcon } from 'lucide-react';
+import { Download, FileCheck, Plus, ScaleIcon } from 'lucide-react';
 import {
   Badge,
   Button,
@@ -26,6 +26,7 @@ import {
   TabsTrigger,
   Textarea,
   formatDateTime,
+  toast,
 } from '@golink/ui';
 import {
   COLLECTIONS,
@@ -41,8 +42,8 @@ import {
 import { useDocumentTitle } from '@golink/web';
 import { useCan } from '@/auth/AdminAccess';
 import { db } from '@/lib/firebase';
-import { toDate, useCollection, useMutation } from '@/lib/firestore';
-import { handleGdprRequest, receiveGdprRequest, saveLegalDocument } from './api';
+import { errorMessage, toDate, useCollection, useMutation } from '@/lib/firestore';
+import { getGdprExportLink, handleGdprRequest, receiveGdprRequest, saveLegalDocument } from './api';
 import { ErrorPanel, RequirePermission } from './components';
 import { useGdprRequests, useLegalDocuments } from './hooks';
 import { PlateformeNav } from './nav';
@@ -138,6 +139,7 @@ function GdprDialog({ request, onOpenChange }: { request: (GdprRequest & { id: s
           <FormField label="Statut" required><Select value={status} onValueChange={(v) => setStatus(v as GdprRequestStatus)} options={(['identity_check', 'in_progress', 'completed', 'rejected'] as const).map((s) => ({ value: s, label: GDPR_REQUEST_STATUS_LABELS[s] }))} /></FormField>
           <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} placeholder="Note (visible dans la fiche de la demande)" maxLength={1000} />
           {status === 'completed' && request.type === 'erasure' && <p className="text-xs text-fg-subtle">Anonymise le profil et désactive le compte, en conservant les données requises par la loi (factures, litiges).</p>}
+          {request.export ? <GdprExportDownload requestId={request.id} /> : null}
         </DialogBody>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Annuler</Button>
@@ -145,6 +147,27 @@ function GdprDialog({ request, onOpenChange }: { request: (GdprRequest & { id: s
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Lien signé vers l'export déjà déposé (vérification ou renvoi assisté, jamais un fichier public). */
+function GdprExportDownload({ requestId }: { requestId: string }) {
+  const [loading, setLoading] = useState(false);
+  const download = async () => {
+    setLoading(true);
+    try {
+      const result = await getGdprExportLink({ requestId });
+      window.open(result.url, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      toast.error(errorMessage(error, 'Le lien de téléchargement n’a pas pu être généré.'));
+    } finally {
+      setLoading(false);
+    }
+  };
+  return (
+    <Button variant="secondary" size="sm" leftIcon={<Download className="size-4" />} loading={loading} onClick={() => void download()}>
+      Télécharger l’export
+    </Button>
   );
 }
 

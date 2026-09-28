@@ -67,6 +67,8 @@ export const saveLegalDocument = callFunction<
 >('saveLegalDocument');
 export const receiveGdprRequest = callFunctionWithReason<{ type: string; subjectType: string; subjectId?: string | null; email: string; notes: string | null }, { requestId: string; dueAt: number }>('receiveGdprRequest', { title: 'Enregistrer la demande RGPD', description: 'Indiquez l’origine de la demande (courrier, appel, e-mail).' });
 export const handleGdprRequest = callFunction<{ requestId: string; status: string; note: string | null }, { status: string }>('handleGdprRequest');
+/** Lien signé (15 minutes) vers l'export RGPD déjà traité, pour vérification ou renvoi assisté. */
+export const getGdprExportLink = callFunction<{ requestId: string }, { url: string; name: string; expiresInMinutes: number }>('getGdprExportLink');
 export const previewRetentionRun = callFunction<void, { inactiveAccounts: number; trashToPurge: number }>('previewRetentionRun');
 
 // §30 Santé et maintenance
@@ -89,6 +91,11 @@ export const getBackupDownloadLinks = callFunction<
 >('getBackupDownloadLinks');
 export const restoreFromTrash = callFunction<{ trashId: string; reason: string }, { restored: boolean; path: string }>('restoreFromTrash');
 export const purgeTrashItem = callFunction<{ trashId: string; reason: string }, { purged: boolean }>('purgeTrashItem');
+/** Export complémentaire lisible (JSON par ligne) d'une sélection de collections, avec liens signés. */
+export const exportReadableCollections = callFunctionWithReason<
+  { collections: string[] },
+  { exportId: string; files: Array<{ name: string; url: string; count: number; truncated: boolean }> }
+>('exportReadableCollections', { title: 'Exporter des collections en JSON lisible' });
 
 // Journal d'audit (§27), export
 export const exportAuditLogs = callFunctionWithReason<

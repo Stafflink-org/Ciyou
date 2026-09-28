@@ -105,13 +105,17 @@ export const onProductWritten = onDocumentWritten(
     const after = event.data?.after;
     const before = event.data?.before;
 
-    // Suppression (mise en corbeille) : anomalies closes, indicateur recalculé.
+    // Suppression (mise en corbeille) : anomalies closes, indicateur recalculé, compteur décrémenté
+    // (base de la limite de formule `maxProducts`, vérifiée par les règles Firestore à la création).
     if (!after?.exists) {
       const restaurant = await restaurantRef(restaurantId).get();
       await syncIssues(restaurantId, String(restaurant.get('cityId') ?? ''), productId, '', new Set());
       await syncAllergensComplete(restaurantId);
+      if (before?.exists) await restaurantRef(restaurantId).update({ productsCount: FieldValue.increment(-1) });
       return;
     }
+    // Création (y compris restauration depuis la corbeille) : compteur incrémenté.
+    if (!before?.exists) await restaurantRef(restaurantId).update({ productsCount: FieldValue.increment(1) });
 
     const product = after.data() as Product;
     const patch: Record<string, unknown> = {};

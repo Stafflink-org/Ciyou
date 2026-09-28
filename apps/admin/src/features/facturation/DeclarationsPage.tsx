@@ -10,7 +10,7 @@ import { db } from '@/lib/firebase';
 import { errorMessage, toDate, useCollection, useMutation } from '@/lib/firestore';
 import { exportAccounting, generateTaxReport, markTaxReportSubmitted } from '../argent-commun/api';
 import { ActionDialog, Callout, DetailRow, ErrorPanel, Money } from '../argent-commun/components';
-import { downloadCsv, downloadXlsx, type Sheet as ExportSheet } from '../argent-commun/export';
+import { downloadCsv, downloadFec, downloadXlsx, type Sheet as ExportSheet } from '../argent-commun/export';
 import { bps, eur, monthLabel, plural, previousMonth } from '../argent-commun/format';
 import { TAX_REPORT_STATUS } from '../argent-commun/status';
 import { FacturationNav } from './nav';
@@ -34,7 +34,7 @@ export function DeclarationsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<Row | null>(null);
   const [reference, setReference] = useState('');
-  const [exporting, setExporting] = useState<null | 'csv' | 'xlsx'>(null);
+  const [exporting, setExporting] = useState<null | 'csv' | 'xlsx' | 'fec'>(null);
 
   const q = useMemo(() => (allowed ? query(collection(db, COLLECTIONS.taxReports), orderBy('updatedAt', 'desc'), limit(200)) : null), [allowed]);
   const reports = useCollection<TaxReport>(q);
@@ -43,12 +43,20 @@ export function DeclarationsPage() {
   const generate = useMutation(generateTaxReport, { success: 'Déclaration calculée' });
   const submit = useMutation(markTaxReportSubmitted, { success: 'Déclaration marquée comme transmise' });
 
-  async function runExport(format: 'csv' | 'xlsx') {
+  async function runExport(format: 'csv' | 'xlsx' | 'fec') {
     setExporting(format);
     try {
       const result = await exportAccounting({ month: exportMonth, countryId });
       if (!result.lines.length) {
         toast.info(`Aucune écriture pour ${monthLabel(exportMonth).toLowerCase()}.`);
+        return;
+      }
+      if (format === 'fec') {
+        // Dernier jour du mois exporté (clôture), sans passage par un fuseau UTC.
+        const lastDay = new Date(Number(exportMonth.slice(0, 4)), Number(exportMonth.slice(5, 7)), 0).getDate();
+        const closingDay = `${exportMonth}-${String(lastDay).padStart(2, '0')}`;
+        downloadFec(result.lines, (result.issuer.registrationNumber ?? '000000000').replace(/\D/g, ''), closingDay);
+        toast.success(`${plural(result.lines.length, 'écriture')} exportée${result.lines.length > 1 ? 's' : ''} au format FEC.`);
         return;
       }
       const sheet: ExportSheet = {
@@ -163,11 +171,14 @@ export function DeclarationsPage() {
             </CardContent>
           </Card>
           <Card>
-            <CardHeader title="Export comptable" description="Écritures du mois (ventes, achats de prestations, reversements) au format FEC." icon={<FileSpreadsheet />} divided />
+            <CardHeader title="Export comptable" description="Écritures du mois (ventes, achats de prestations, reversements) : format FEC réglementaire pour l'expert-comptable, ou tableur pour une lecture rapide." icon={<FileSpreadsheet />} divided />
             <CardContent className="space-y-3">
               <FormField label="Mois">
                 <Input type="month" value={exportMonth} max={new Date().toISOString().slice(0, 7)} onChange={(e) => e.target.value && setExportMonth(e.target.value)} />
               </FormField>
+              <Button size="sm" variant="primary" className="w-full" loading={exporting === 'fec'} disabled={Boolean(exporting)} onClick={() => void runExport('fec')}>
+                Export FEC (.txt)
+              </Button>
               <div className="grid grid-cols-2 gap-2">
                 <Button size="sm" variant="secondary" loading={exporting === 'xlsx'} disabled={Boolean(exporting)} onClick={() => void runExport('xlsx')}>Excel</Button>
                 <Button size="sm" variant="secondary" loading={exporting === 'csv'} disabled={Boolean(exporting)} onClick={() => void runExport('csv')}>CSV</Button>

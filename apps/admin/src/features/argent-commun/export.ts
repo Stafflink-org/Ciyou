@@ -56,6 +56,63 @@ export function downloadCsv(sheet: Sheet, fileName: string): void {
   triggerDownload(new Blob([`﻿${lines.join('\r\n')}`], { type: 'text/csv;charset=utf-8' }), `${fileName}.csv`);
 }
 
+/**
+ * Export FEC (Fichier des Écritures Comptables), article A47 A-1 du Livre des
+ * procédures fiscales : fichier texte à plat, 18 colonnes dans cet ordre exact,
+ * séparateur tabulation, une ligne d'en-tête, encodage UTF-8, dates AAAAMMDD,
+ * montants en décimal à point (jamais de virgule ni de séparateur de milliers),
+ * nom de fichier `<SIREN>FEC<AAAAMMDD clôture>.txt`.
+ */
+const FEC_COLUMNS = [
+  'JournalCode', 'JournalLib', 'EcritureNum', 'EcritureDate', 'CompteNum', 'CompteLib',
+  'CompAuxNum', 'CompAuxLib', 'PieceRef', 'PieceDate', 'EcritureLib', 'Debit', 'Credit',
+  'EcritureLet', 'DateLet', 'ValidDate', 'Montantdevise', 'Idevise',
+] as const;
+
+export interface FecLine {
+  journal: string;
+  journalLib: string;
+  ecritureNum: number;
+  date: string; // AAAA-MM-JJ
+  account: string;
+  accountLabel: string;
+  thirdParty: string | null;
+  piece: string;
+  pieceDate: string; // AAAA-MM-JJ
+  label: string;
+  debitCents: number;
+  creditCents: number;
+  validDate: string; // AAAA-MM-JJ
+}
+
+const fecDate = (isoDay: string): string => isoDay.replace(/-/g, '');
+const fecAmount = (cents: number): string => (cents / 100).toFixed(2);
+
+export function downloadFec(lines: FecLine[], siren: string, closingDay: string): void {
+  const rows = lines.map((l) => [
+    l.journal,
+    l.journalLib,
+    String(l.ecritureNum),
+    fecDate(l.date),
+    l.account,
+    l.accountLabel,
+    '',
+    l.thirdParty ?? '',
+    l.piece,
+    fecDate(l.pieceDate),
+    l.label,
+    fecAmount(l.debitCents),
+    fecAmount(l.creditCents),
+    '',
+    '',
+    fecDate(l.validDate),
+    '',
+    '',
+  ]);
+  const content = [FEC_COLUMNS.join('\t'), ...rows.map((row) => row.join('\t'))].join('\r\n');
+  triggerDownload(new Blob([content], { type: 'text/plain;charset=utf-8' }), `${siren}FEC${fecDate(closingDay)}.txt`);
+}
+
 const EXCEL_FORMATS: Record<CellKind, string | undefined> = {
   text: undefined,
   money: '#,##0.00 "€";[Red]-#,##0.00 "€"',

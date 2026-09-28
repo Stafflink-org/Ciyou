@@ -169,11 +169,26 @@ export interface VatReportLine {
   vatCents: Cents;
 }
 
-/** Écriture de l'export comptable (format proche du FEC). */
+/**
+ * Écriture de l'export comptable, conforme aux 18 champs réglementaires du FEC
+ * (article A47 A-1 du Livre des procédures fiscales) : JournalCode, JournalLib,
+ * EcritureNum, EcritureDate, CompteNum, CompteLib, CompAuxNum, CompAuxLib, PieceRef,
+ * PieceDate, EcritureLib, Debit, Credit, EcritureLet, DateLet, ValidDate,
+ * Montantdevise, Idevise.
+ */
 export interface AccountingLine {
   journal: string;
+  /** JournalLib : libellé du journal (Ventes, Achats, Banque…). */
+  journalLib: string;
+  /** EcritureNum : numéro de séquence continue de l'écriture (partagée par les lignes d'une même pièce). */
+  ecritureNum: number;
+  /** EcritureDate au format FEC AAAAMMDD. */
   date: string;
   piece: string;
+  /** PieceDate au format FEC AAAAMMDD (date de la pièce justificative). */
+  pieceDate: string;
+  /** ValidDate au format FEC AAAAMMDD (date de validation, écritures non modifiables dès l'émission). */
+  validDate: string;
   account: string;
   accountLabel: string;
   thirdParty: string | null;
@@ -188,6 +203,8 @@ export interface AccountingExportResult {
   countryId: string;
   lines: AccountingLine[];
   totals: { debitCents: Cents; creditCents: Cents; invoices: number; payouts: number };
+  /** Identité de l'entité facturante du pays (FEC : nom du fichier `<SIREN>FEC<clôture>.txt`). */
+  issuer: { legalName: string; registrationNumber: string | null };
 }
 
 // ------------------------------------------------------------ Abonnements

@@ -97,6 +97,8 @@ export interface Restaurant extends Tracked, SoftDeletable, Localized {
   /** Score qualité 0-100 (annulations, refus, retards, avis). */
   qualityScore: number;
   allergensComplete: boolean;
+  /** Nombre de produits actifs (hors corbeille), tenu à jour par `onProductWritten` : base de la limite `maxProducts` de la formule. */
+  productsCount?: number;
   /** Toujours false : vente d'alcool interdite (décision client). Champ conservé pour la compatibilité. */
   sellsAlcohol: boolean;
   acceptedPaymentMethods: PaymentMethod[];
