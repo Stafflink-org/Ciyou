@@ -1,6 +1,6 @@
 # Ciyou Eats
 
-Plateforme de livraison (France, Luxembourg) : commande client, restaurants partenaires, livreurs suivis en temps réel.
+Plateforme de livraison (France, Luxembourg, Belgique, Algérie) : commande client, restaurants partenaires, livreurs suivis en temps réel.
 
 ## Applications
 
