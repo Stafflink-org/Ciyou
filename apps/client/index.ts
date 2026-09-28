@@ -1,3 +1,5 @@
+// Doit être importé avant tout le reste (gestes natifs, react-navigation).
+import 'react-native-gesture-handler';
 import { registerRootComponent } from 'expo';
 
 import App from './App';
