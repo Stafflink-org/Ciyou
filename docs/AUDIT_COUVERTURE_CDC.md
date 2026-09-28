@@ -2027,8 +2027,8 @@ Principaux trous, par priorité :
 
 **P1**
 
-- `onDocumentUploaded` : accepter `siret_notice` comme équivalent du Kbis (aligner sur `REQUIRED_RESTAURANT_DOCUMENTS`), sinon dossiers coincés en « Documents manquants ».
-- `bulkRestaurantAction` : encapsuler dans un `try/finally` pour clore le job (`failed`) et auditer l'échec ; nettoyer les 3 jobs `running` orphelins.
+- ✅ **DÉJÀ RÉSOLU (recompté 28/09, `cdc-p2-rest`)** `onDocumentUploaded` accepte déjà `siret_notice` comme équivalent du Kbis : `REQUIRED_RESTAURANT_DOCUMENTS` (`packages/shared/src/models/admin-actors.ts:88-92`) groupe `registration: ['kbis', 'siret_notice']`, utilisé par `restaurant/documents.ts:150` et `restaurant/auto-validation.ts:78-98` (y compris la fraîcheur : règle différente pour un avis SIRET sans date d'émission). Mention obsolète de l'annexe, rien à faire.
+- ✅ **CORRIGÉ (28/09, `cdc-p2-rest`)** `bulkRestaurantAction` (`functions/src/admin/acteurs/bulk.ts`) encapsulé : toute erreur non rattrapée (ex. transaction `set_feature` sur une fonctionnalité verrouillée) clôt désormais le job en `failed` avec audit (`sensitive:true`) avant de relancer l'erreur à l'appelant, au lieu de le laisser bloqué à `running`. `npx tsc --noEmit -p functions` vert. Déployé (`functions:bulkRestaurantAction`, `Deploy complete!`). Les 3 jobs `running` orphelins trouvés (49 à 53 h, 0 commerce traité) ont été clos en `failed` avec motif explicite (script ponctuel via `scripts/lib/admin.mjs`, écriture du seul statut du job technique, pas de donnée métier).
 - « Voir comme » : appliquer la lecture seule et l'échéance côté serveur (règles ou jeton), incrémenter/journaliser les consultations, clôturer les sessions expirées.
 - Export groupé : passer par une fonction (contrôle `exports.run`, audit, plafond) au lieu de l'export navigateur non tracé.
 - Corrections de produits par l'équipe : passer par une Cloud Function auditée avec motif ; ne pas forcer `allergensDeclared`.
@@ -2045,13 +2045,13 @@ Principaux trous, par priorité :
 
 - Délais de relance des documents, seuils/pondérations du score et du prix aberrant paramétrables ; producteur `empty_section` ; incohérence du compteur « allergènes incomplets » ; import de 500 lignes vs limite de 300 s.
 - Pièces exigées paramétrables par pays (hors France), titre de séjour « si concerné », relances des pièces avec e-mail, délais et fréquences (relances 30/7 j, 5 %, 30 j, 48 h, avertissement 30 j) en paramètres.
-- Plafond d'avoir et paliers de risque en paramètres ; appliquer la validité par défaut des avoirs ; unifier les deux chemins de crédit ; rembourser ou reporter le solde d'avoir à la suppression.
+- ✅ **DÉJÀ RÉSOLU (recompté 28/09, `cdc-p2-rest`)** Plafond d'avoir : `settings/refunds.maxCreditCents` déjà paramétrable (`functions/src/admin/experience/common.ts::maxCreditOf`, défaut 500 €) ; les deux chemins de crédit sont déjà unifiés sur `refundLimitOf` (agent > rôle `adminRoles.defaultRefundLimitCents` > seuil plateforme `settings/refunds.approvalThresholdCents`), utilisé aussi bien par `creditFromTicket` que par `admin/acteurs/customers.ts::creditCustomer`. Reste ouvert : paliers de risque en paramètres, validité par défaut des avoirs réellement appliquée, remboursement/report du solde d'avoir à la suppression du compte (non vérifiés ce tour).
 
 ## §8-§13
 
 **P1**
 
-- Corriger `hourOf` (utiliser `formatToParts` ou `hourCycle` + `parseInt`) ; sans cela les anomalies par heure sont inopérantes.
+- ✅ **DÉJÀ RÉSOLU (recompté 28/09, `cdc-p2-rest`)** `hourOf` (`functions/src/admin/operations/orders.ts:182-186`) déjà corrigé avec `formatToParts`/`hourCycle:'h23'` (fait en `cdc-fix-b`, doublon obsolète dans cette liste).
 - Étendre la surveillance planifiée aux retards et aux zones / heures (aujourd'hui uniquement annulation et refus par commerce).
 - Recherche / filtre par livreur (nom) et par client dans l'interface (sélecteurs branchés sur `driverId` / `customerId` déjà acceptés par `listOrdersAdmin`) ; ajouter le nom du livreur aux `searchKeywords` à l'attribution.
 - Seuil de retard (tolérance en minutes) réglable ; aujourd'hui tout dépassement d'une minute compte comme retard.
@@ -2162,13 +2162,13 @@ Principaux trous, par priorité :
 
 **P1**
 
-- détection réclamations répétées ; commandes fictives (restaurant) ; taux de remboursement réel (remboursements / commandes) ; seuils réglables (paramètres) plutôt que constantes.
-- dépôt d'une demande RGPD par la personne (`submitGdprRequest`) et remise sécurisée de l'export (lien signé à durée limitée) ; export plus complet ; délai légal réglable.
-- journal de consentements par utilisateur (`setConsent` inexistante), vue par utilisateur, consentement cookies.
-- rendre les versions publiées réellement figées côté fonction ; unifier les deux éditeurs légaux.
-- vraies sondes notifications (FCM/file d'envoi) et géolocalisation (fraîcheur des positions livreurs) ; taux d'erreur ; notification (push/e-mail) aux super administrateurs en cas de panne.
-- saisie de `message`, `storeUrls`, `until` dans l'UI ; maintenance « plateforme entière » en un geste ; fin automatique de maintenance à `until`.
-- export complet lisible et téléchargeable (par collection), sélection de collections dans l'UI ; durée de rétention des sauvegardes.
+- détection réclamations répétées ; commandes fictives (restaurant) ; taux de remboursement réel (remboursements / commandes) ; seuils réglables (paramètres) plutôt que constantes. *(non traité ce tour, gros chantier de détection)*
+- **RESTE OUVERT (recompté 28/09, `cdc-p2-rest`)** dépôt d'une demande RGPD par la personne elle-même : seule `receiveGdprRequest` existe (`functions/src/platform/gdpr.ts:88`, réservée à `requireSecureAdmin('gdpr.handle')` — un agent saisit la demande reçue par un autre canal) ; aucune fonction en libre-service pour le client/livreur/restaurant lui-même (bloqué en pratique par l'absence des apps client/livreur, mais même le back-office restaurant n'a pas ce self-service). Remise sécurisée de l'export (lien signé à durée limitée), export plus complet, délai légal réglable : non vérifiés ce tour.
+- ✅ **DÉJÀ RÉSOLU (recompté 28/09, `cdc-p2-rest`)** journal de consentements par utilisateur : `setConsent` existe bel et bien (`functions/src/platform/gdpr.ts:279-295`, appelable depuis n'importe quel compte authentifié), écrit `users/{uid}.consents` ET une ligne d'historique dans la sous-collection `users/{uid}/consents` (clé, accordé/refusé, horodatage, user-agent). Cookies couverts par la clé `analytics_cookies` de `CONSENT_KEYS` (`packages/shared/src/constants/enums.ts:424`). Mention obsolète de l'annexe (contredite par l'entrée équivalente déjà marquée corrigée en §18-21). Vue par utilisateur dans l'UI admin non vérifiée ce tour.
+- ✅ **DÉJÀ RÉSOLU (recompté 28/09, `cdc-p2-rest`)** Versions publiées réellement figées : `saveLegalDocument` (`functions/src/platform/gdpr.ts:52-56`) refuse déjà la modification du titre, du contenu et du numéro de version une fois `status:'published'` (nouvelle version obligatoire). Unifier les deux éditeurs légaux : non vérifié ce tour.
+- vraies sondes notifications (FCM/file d'envoi) et géolocalisation (fraîcheur des positions livreurs) ; taux d'erreur ; notification (push/e-mail) aux super administrateurs en cas de panne. *(non traité ce tour)*
+- ✅ **CORRIGÉ (28/09, `cdc-p2-rest`)** Saisie de `message`, `storeUrls`, `until` dans l'UI : les fonctions (`setMaintenanceMode`, `updateAppVersion`, `functions/src/platform/health.ts`) acceptaient déjà ces champs, mais `SanteMaintenancePage.tsx` les codait en dur à `null` côté écran. Ajout des champs manquants (bascule + sélecteur date/heure pour la fin de maintenance, message et liens App Store/Play Store pour la mise à jour forcée). Fin automatique de maintenance à `until` : **déjà fonctionnelle côté serveur** (`functions/src/lib/platform-status.ts::assertNotInMaintenance` ignore une maintenance dont `until` est dépassé, sans tâche planifiée nécessaire) — seul le réglage de `until` manquait dans l'UI, maintenant possible. `npx tsc --noEmit -p apps/admin/tsconfig.app.json` vert ; testé réel (connexion `superadmin@golink.test`, serveur dev dédié port 5174/`VITE_CACHE_DIR=node_modules/.vite-cdcrest`, un seul Chrome headless fermé après coup) : dialogue « Maintenance · App client » affiche le nouveau champ « Fin prévue (optionnel) », capture `.smoke/maintenance-dialog.png` (non versionnée). Reste ouvert : maintenance « plateforme entière » en un geste (aujourd'hui une app à la fois, ce qui est explicite et sûr mais demande 4 clics).
+- export complet lisible et téléchargeable (par collection), sélection de collections dans l'UI ; durée de rétention des sauvegardes. *(non traité ce tour)*
 
 **P2**
 
