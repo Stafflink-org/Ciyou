@@ -1,0 +1,2898 @@
+{
+ "onda-pasta-club": {
+  "sections": [
+   {
+    "name": "Pâtes"
+   },
+   {
+    "name": "Plats principaux"
+   },
+   {
+    "name": "Salades"
+   },
+   {
+    "name": "Entrées"
+   },
+   {
+    "name": "Accompagnements"
+   },
+   {
+    "name": "Desserts"
+   },
+   {
+    "name": "Boissons fraîches"
+   },
+   {
+    "name": "Petites assiettes"
+   }
+  ],
+  "optionGroups": [
+   {
+    "key": "g12100",
+    "name": "Personnalisez vos pâtes",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o12100",
+      "name": "Parmesan supplémentaire",
+      "priceCents": 150
+     },
+     {
+      "key": "o12101",
+      "name": "Pesto maison",
+      "priceCents": 150
+     },
+     {
+      "key": "o12102",
+      "name": "Huile pimentée",
+      "priceCents": 50
+     },
+     {
+      "key": "o12103",
+      "name": "Sans fromage",
+      "priceCents": 0
+     }
+    ]
+   },
+   {
+    "key": "g12110",
+    "name": "Personnalisez votre café ou boisson",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o12110",
+      "name": "Lait végétal",
+      "priceCents": 60
+     },
+     {
+      "key": "o12111",
+      "name": "Sirop vanille",
+      "priceCents": 50
+     },
+     {
+      "key": "o12112",
+      "name": "Crème fouettée",
+      "priceCents": 100
+     },
+     {
+      "key": "o12136",
+      "name": "Lait d’avoine",
+      "priceCents": 60
+     },
+     {
+      "key": "o12137",
+      "name": "Double espresso",
+      "priceCents": 120
+     },
+     {
+      "key": "o12138",
+      "name": "Un trait de citron",
+      "priceCents": 0
+     },
+     {
+      "key": "o12139",
+      "name": "Un peu plus sucré",
+      "priceCents": 0
+     }
+    ]
+   },
+   {
+    "key": "g12112",
+    "name": "Un extra gourmand",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o12112",
+      "name": "Crème fouettée",
+      "priceCents": 100
+     },
+     {
+      "key": "o12114",
+      "name": "Coulis de fruits rouges",
+      "priceCents": 100
+     },
+     {
+      "key": "o12115",
+      "name": "Pistaches concassées",
+      "priceCents": 120
+     },
+     {
+      "key": "o12125",
+      "name": "Confiture artisanale",
+      "priceCents": 80
+     },
+     {
+      "key": "o12126",
+      "name": "Miel local",
+      "priceCents": 80
+     }
+    ]
+   }
+  ],
+  "products": [
+   {
+    "key": "p10200",
+    "name": "Tagliatelles citron-parmesan",
+    "section": "Pâtes",
+    "priceCents": 1600,
+    "stock": 10,
+    "description": "Tagliatelles fraîches, beurre citronné, parmesan affiné et poivre noir.",
+    "groups": [
+     "g12100"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10201",
+    "name": "Rigatoni au pesto de pistache",
+    "section": "Pâtes",
+    "priceCents": 1750,
+    "stock": 17,
+    "description": "Pesto de basilic maison, pistaches torréfiées et pecorino.",
+    "groups": [
+     "g12100"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10202",
+    "name": "Ravioli ricotta-épinards",
+    "section": "Pâtes",
+    "priceCents": 1700,
+    "stock": 24,
+    "description": "Ravioli façonnés à la main, ricotta crémeuse et beurre de sauge.",
+    "groups": [
+     "g12100"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10203",
+    "name": "Lasagnes du dimanche",
+    "section": "Plats principaux",
+    "priceCents": 1800,
+    "stock": 31,
+    "description": "Bœuf mijoté, béchamel légère et gratin de parmesan.",
+    "groups": [
+     "g12100"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10204",
+    "name": "Gnocchis alla sorrentina",
+    "section": "Pâtes",
+    "priceCents": 1650,
+    "stock": 14,
+    "description": "Gnocchis moelleux, tomate confite, mozzarella et basilic.",
+    "groups": [
+     "g12100"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10205",
+    "name": "Salade de roquette",
+    "section": "Salades",
+    "priceCents": 800,
+    "stock": 21,
+    "description": "Roquette fraîche, copeaux de parmesan et vinaigrette balsamique.",
+    "groups": [
+     "g12100"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10206",
+    "name": "Burrata des Pouilles",
+    "section": "Entrées",
+    "priceCents": 1100,
+    "stock": 28,
+    "description": "Burrata fondante, tomates anciennes et huile d’olive.",
+    "groups": [
+     "g12100"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10207",
+    "name": "Focaccia romarin",
+    "section": "Accompagnements",
+    "priceCents": 500,
+    "stock": 11,
+    "description": "Focaccia dorée au romarin, fleur de sel et huile d’olive.",
+    "groups": [
+     "g12100"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10208",
+    "name": "Tiramisu au verre",
+    "section": "Desserts",
+    "priceCents": 750,
+    "stock": 18,
+    "description": "Crème mascarpone, biscuit imbibé de café et cacao.",
+    "groups": [
+     "g12112"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10209",
+    "name": "Panna cotta vanille",
+    "section": "Desserts",
+    "priceCents": 650,
+    "stock": 25,
+    "description": "Panna cotta à la vanille, coulis de fruits rouges.",
+    "groups": [
+     "g12112"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10210",
+    "name": "Limonade maison",
+    "section": "Boissons fraîches",
+    "priceCents": 400,
+    "stock": 8,
+    "description": "Citron pressé, eau pétillante et sirop léger.",
+    "groups": [
+     "g12110"
+    ],
+    "vat": "soft_drink"
+   },
+   {
+    "key": "p10211",
+    "name": "Arancini, trois pièces",
+    "section": "Petites assiettes",
+    "priceCents": 800,
+    "stock": 15,
+    "description": "Boulettes de riz croustillantes au cœur de mozzarella.",
+    "groups": [
+     "g12100"
+    ],
+    "vat": "food"
+   }
+  ]
+ },
+ "kumo-ramen": {
+  "sections": [
+   {
+    "name": "Ramen"
+   },
+   {
+    "name": "Petites assiettes"
+   },
+   {
+    "name": "Accompagnements"
+   },
+   {
+    "name": "Entrées"
+   },
+   {
+    "name": "Riz"
+   },
+   {
+    "name": "Desserts"
+   },
+   {
+    "name": "Thé"
+   },
+   {
+    "name": "Nouilles"
+   }
+  ],
+  "optionGroups": [
+   {
+    "key": "g13104",
+    "name": "Personnalisez votre ramen",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o13104",
+      "name": "Œuf mariné",
+      "priceCents": 150
+     },
+     {
+      "key": "o13105",
+      "name": "Nouilles supplémentaires",
+      "priceCents": 200
+     },
+     {
+      "key": "o13106",
+      "name": "Bouillon pimenté",
+      "priceCents": 50
+     },
+     {
+      "key": "o13107",
+      "name": "Sans oignon nouveau",
+      "priceCents": 0
+     }
+    ]
+   },
+   {
+    "key": "g13110",
+    "name": "Personnalisez votre café ou boisson",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o13110",
+      "name": "Lait végétal",
+      "priceCents": 60
+     },
+     {
+      "key": "o13111",
+      "name": "Sirop vanille",
+      "priceCents": 50
+     },
+     {
+      "key": "o13112",
+      "name": "Crème fouettée",
+      "priceCents": 100
+     },
+     {
+      "key": "o13136",
+      "name": "Lait d’avoine",
+      "priceCents": 60
+     },
+     {
+      "key": "o13137",
+      "name": "Double espresso",
+      "priceCents": 120
+     },
+     {
+      "key": "o13138",
+      "name": "Un trait de citron",
+      "priceCents": 0
+     },
+     {
+      "key": "o13139",
+      "name": "Un peu plus sucré",
+      "priceCents": 0
+     }
+    ]
+   },
+   {
+    "key": "g13112",
+    "name": "Un extra gourmand",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o13112",
+      "name": "Crème fouettée",
+      "priceCents": 100
+     },
+     {
+      "key": "o13114",
+      "name": "Coulis de fruits rouges",
+      "priceCents": 100
+     },
+     {
+      "key": "o13115",
+      "name": "Pistaches concassées",
+      "priceCents": 120
+     },
+     {
+      "key": "o13125",
+      "name": "Confiture artisanale",
+      "priceCents": 80
+     },
+     {
+      "key": "o13126",
+      "name": "Miel local",
+      "priceCents": 80
+     }
+    ]
+   }
+  ],
+  "products": [
+   {
+    "key": "p10300",
+    "name": "Tonkotsu ramen",
+    "section": "Ramen",
+    "priceCents": 1650,
+    "stock": 11,
+    "description": "Bouillon de porc mijoté douze heures, chashu, œuf mariné et ciboule.",
+    "groups": [
+     "g13104"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10301",
+    "name": "Ramen miso épicé",
+    "section": "Ramen",
+    "priceCents": 1700,
+    "stock": 18,
+    "description": "Bouillon miso corsé, huile pimentée, maïs doux et sésame.",
+    "groups": [
+     "g13104"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10302",
+    "name": "Shoyu ramen au poulet",
+    "section": "Ramen",
+    "priceCents": 1600,
+    "stock": 25,
+    "description": "Bouillon soja parfumé, poulet rôti, bambou et nori.",
+    "groups": [
+     "g13104"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10303",
+    "name": "Ramen végétal sésame",
+    "section": "Ramen",
+    "priceCents": 1550,
+    "stock": 8,
+    "description": "Bouillon de légumes, tofu grillé, pak choï et sésame.",
+    "groups": [
+     "g13104"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10304",
+    "name": "Gyozas au poulet",
+    "section": "Petites assiettes",
+    "priceCents": 800,
+    "stock": 15,
+    "description": "Six raviolis grillés, poulet fermier et sauce ponzu.",
+    "groups": [
+     "g13104"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10305",
+    "name": "Gyozas aux légumes",
+    "section": "Petites assiettes",
+    "priceCents": 750,
+    "stock": 22,
+    "description": "Six raviolis dorés garnis de légumes croquants.",
+    "groups": [
+     "g13104"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10306",
+    "name": "Poulet karaage",
+    "section": "Accompagnements",
+    "priceCents": 900,
+    "stock": 29,
+    "description": "Poulet mariné au gingembre, frit minute et citron frais.",
+    "groups": [
+     "g13104"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10307",
+    "name": "Edamame au sel",
+    "section": "Entrées",
+    "priceCents": 500,
+    "stock": 12,
+    "description": "Fèves de soja vapeur, sel de mer et pointe de citron.",
+    "groups": [
+     "g13104"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10308",
+    "name": "Onigiri saumon",
+    "section": "Riz",
+    "priceCents": 600,
+    "stock": 19,
+    "description": "Riz vinaigré façonné à la main, saumon et algue nori.",
+    "groups": [
+     "g13104"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10309",
+    "name": "Mochi glacé, deux pièces",
+    "section": "Desserts",
+    "priceCents": 600,
+    "stock": 26,
+    "description": "Deux mochis glacés aux parfums du moment.",
+    "groups": [
+     "g13112"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10310",
+    "name": "Thé vert glacé",
+    "section": "Thé",
+    "priceCents": 400,
+    "stock": 9,
+    "description": "Thé vert japonais infusé à froid, légèrement citronné.",
+    "groups": [
+     "g13110"
+    ],
+    "vat": "soft_drink"
+   },
+   {
+    "key": "p10311",
+    "name": "Nouilles yakisoba",
+    "section": "Nouilles",
+    "priceCents": 1450,
+    "stock": 16,
+    "description": "Nouilles sautées, légumes de saison et sauce maison.",
+    "groups": [
+     "g13104"
+    ],
+    "vat": "food"
+   }
+  ]
+ },
+ "lune-coffee": {
+  "sections": [
+   {
+    "name": "Viennoiseries"
+   },
+   {
+    "name": "Pâtisseries"
+   },
+   {
+    "name": "Petit-déjeuner"
+   },
+   {
+    "name": "Brunch"
+   },
+   {
+    "name": "Café"
+   },
+   {
+    "name": "Jus"
+   }
+  ],
+  "optionGroups": [
+   {
+    "key": "g14108",
+    "name": "Garnitures brunch",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o14108",
+      "name": "Avocat supplémentaire",
+      "priceCents": 200
+     },
+     {
+      "key": "o14109",
+      "name": "Œuf fermier",
+      "priceCents": 150
+     },
+     {
+      "key": "o14113",
+      "name": "Granola en plus",
+      "priceCents": 150
+     },
+     {
+      "key": "o14127",
+      "name": "Fromage frais",
+      "priceCents": 120
+     }
+    ]
+   },
+   {
+    "key": "g14110",
+    "name": "Personnalisez votre café ou boisson",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o14110",
+      "name": "Lait végétal",
+      "priceCents": 60
+     },
+     {
+      "key": "o14111",
+      "name": "Sirop vanille",
+      "priceCents": 50
+     },
+     {
+      "key": "o14112",
+      "name": "Crème fouettée",
+      "priceCents": 100
+     },
+     {
+      "key": "o14136",
+      "name": "Lait d’avoine",
+      "priceCents": 60
+     },
+     {
+      "key": "o14137",
+      "name": "Double espresso",
+      "priceCents": 120
+     },
+     {
+      "key": "o14138",
+      "name": "Un trait de citron",
+      "priceCents": 0
+     },
+     {
+      "key": "o14139",
+      "name": "Un peu plus sucré",
+      "priceCents": 0
+     }
+    ]
+   },
+   {
+    "key": "g14112",
+    "name": "Un extra gourmand",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o14112",
+      "name": "Crème fouettée",
+      "priceCents": 100
+     },
+     {
+      "key": "o14114",
+      "name": "Coulis de fruits rouges",
+      "priceCents": 100
+     },
+     {
+      "key": "o14115",
+      "name": "Pistaches concassées",
+      "priceCents": 120
+     },
+     {
+      "key": "o14125",
+      "name": "Confiture artisanale",
+      "priceCents": 80
+     },
+     {
+      "key": "o14126",
+      "name": "Miel local",
+      "priceCents": 80
+     }
+    ]
+   }
+  ],
+  "products": [
+   {
+    "key": "p10400",
+    "name": "Bun brioché à la cardamome",
+    "section": "Viennoiseries",
+    "priceCents": 550,
+    "stock": 12,
+    "description": "Brioche feuilletée, sucre à la cardamome et beurre fermier.",
+    "groups": [
+     "g14112"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10401",
+    "name": "Cookie chocolat-tahini",
+    "section": "Pâtisseries",
+    "priceCents": 450,
+    "stock": 19,
+    "description": "Chocolat noir, tahini toasté et pointe de fleur de sel.",
+    "groups": [
+     "g14112"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10402",
+    "name": "Bol mangue et granola",
+    "section": "Petit-déjeuner",
+    "priceCents": 1000,
+    "stock": 26,
+    "description": "Yaourt fermier, mangue fraîche, granola et fleur d’oranger.",
+    "groups": [
+     "g14108"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10403",
+    "name": "Tartine avocat",
+    "section": "Brunch",
+    "priceCents": 1200,
+    "stock": 9,
+    "description": "Pain au levain, avocat mûr, citron et œuf mollet.",
+    "groups": [
+     "g14108"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10404",
+    "name": "Pancakes aux fruits rouges",
+    "section": "Brunch",
+    "priceCents": 1300,
+    "stock": 16,
+    "description": "Pancakes moelleux, fruits rouges et sirop d’érable.",
+    "groups": [
+     "g14108"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10405",
+    "name": "Croissant pur beurre",
+    "section": "Viennoiseries",
+    "priceCents": 220,
+    "stock": 23,
+    "description": "Croissant façonné et cuit sur place, pur beurre AOP.",
+    "groups": [
+     "g14112"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10406",
+    "name": "Granola maison",
+    "section": "Petit-déjeuner",
+    "priceCents": 800,
+    "stock": 30,
+    "description": "Avoine croustillante, noisettes, graines et yaourt nature.",
+    "groups": [
+     "g14108"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10407",
+    "name": "Cappuccino",
+    "section": "Café",
+    "priceCents": 450,
+    "stock": 13,
+    "description": "Double espresso de spécialité et lait velouté.",
+    "groups": [
+     "g14110"
+    ],
+    "vat": "soft_drink"
+   },
+   {
+    "key": "p10408",
+    "name": "Flat white",
+    "section": "Café",
+    "priceCents": 480,
+    "stock": 20,
+    "description": "Espresso équilibré, lait texturé et cacao léger.",
+    "groups": [
+     "g14110"
+    ],
+    "vat": "soft_drink"
+   },
+   {
+    "key": "p10409",
+    "name": "Cake citron-pavot",
+    "section": "Pâtisseries",
+    "priceCents": 500,
+    "stock": 27,
+    "description": "Cake moelleux au citron frais et graines de pavot.",
+    "groups": [
+     "g14112"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10410",
+    "name": "Jus orange-carotte",
+    "section": "Jus",
+    "priceCents": 550,
+    "stock": 10,
+    "description": "Oranges pressées minute, carotte et gingembre frais.",
+    "groups": [
+     "g14110"
+    ],
+    "vat": "soft_drink"
+   },
+   {
+    "key": "p10411",
+    "name": "Œufs brouillés et brioche",
+    "section": "Brunch",
+    "priceCents": 1100,
+    "stock": 17,
+    "description": "Œufs fermiers crémeux servis avec brioche toastée.",
+    "groups": [
+     "g14108"
+    ],
+    "vat": "food"
+   }
+  ]
+ },
+ "beldi-bowls": {
+  "sections": [
+   {
+    "name": "Bowls"
+   },
+   {
+    "name": "Plats principaux"
+   },
+   {
+    "name": "Salades"
+   },
+   {
+    "name": "Petites assiettes"
+   },
+   {
+    "name": "Entrées"
+   },
+   {
+    "name": "Desserts"
+   },
+   {
+    "name": "Thé"
+   },
+   {
+    "name": "Vegan"
+   }
+  ],
+  "optionGroups": [
+   {
+    "key": "g15110",
+    "name": "Personnalisez votre café ou boisson",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o15110",
+      "name": "Lait végétal",
+      "priceCents": 60
+     },
+     {
+      "key": "o15111",
+      "name": "Sirop vanille",
+      "priceCents": 50
+     },
+     {
+      "key": "o15112",
+      "name": "Crème fouettée",
+      "priceCents": 100
+     },
+     {
+      "key": "o15136",
+      "name": "Lait d’avoine",
+      "priceCents": 60
+     },
+     {
+      "key": "o15137",
+      "name": "Double espresso",
+      "priceCents": 120
+     },
+     {
+      "key": "o15138",
+      "name": "Un trait de citron",
+      "priceCents": 0
+     },
+     {
+      "key": "o15139",
+      "name": "Un peu plus sucré",
+      "priceCents": 0
+     }
+    ]
+   },
+   {
+    "key": "g15112",
+    "name": "Un extra gourmand",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o15112",
+      "name": "Crème fouettée",
+      "priceCents": 100
+     },
+     {
+      "key": "o15114",
+      "name": "Coulis de fruits rouges",
+      "priceCents": 100
+     },
+     {
+      "key": "o15115",
+      "name": "Pistaches concassées",
+      "priceCents": 120
+     },
+     {
+      "key": "o15125",
+      "name": "Confiture artisanale",
+      "priceCents": 80
+     },
+     {
+      "key": "o15126",
+      "name": "Miel local",
+      "priceCents": 80
+     }
+    ]
+   },
+   {
+    "key": "g15136",
+    "name": "Sauce et garniture au choix",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o15132",
+      "name": "Piment frais",
+      "priceCents": 50
+     },
+     {
+      "key": "o15133",
+      "name": "Cacahuètes grillées",
+      "priceCents": 80
+     },
+     {
+      "key": "o15134",
+      "name": "Sauce tahini citronnée",
+      "priceCents": 80
+     },
+     {
+      "key": "o15135",
+      "name": "Tofu grillé en plus",
+      "priceCents": 200
+     },
+     {
+      "key": "o15140",
+      "name": "Herbes fraîches en supplément",
+      "priceCents": 80
+     }
+    ]
+   }
+  ],
+  "products": [
+   {
+    "key": "p10500",
+    "name": "Bowl poulet chermoula",
+    "section": "Bowls",
+    "priceCents": 1500,
+    "stock": 13,
+    "description": "Poulet mariné à la chermoula, semoule complète et légumes rôtis.",
+    "groups": [
+     "g15136"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10501",
+    "name": "Bowl falafels et houmous",
+    "section": "Bowls",
+    "priceCents": 1350,
+    "stock": 20,
+    "description": "Falafels aux herbes, houmous maison, crudités et pita.",
+    "groups": [
+     "g15136"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10502",
+    "name": "Couscous végétal du marché",
+    "section": "Plats principaux",
+    "priceCents": 1600,
+    "stock": 27,
+    "description": "Légumes de saison mijotés, semoule fine et pois chiches.",
+    "groups": [
+     "g15136"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10503",
+    "name": "Bowl kefta grillée",
+    "section": "Bowls",
+    "priceCents": 1650,
+    "stock": 10,
+    "description": "Keftas de bœuf aux épices, boulgour et sauce yaourt.",
+    "groups": [
+     "g15136"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10504",
+    "name": "Salade d’orange à la cannelle",
+    "section": "Salades",
+    "priceCents": 700,
+    "stock": 17,
+    "description": "Orange fraîche, cannelle, menthe et eau de fleur d’oranger.",
+    "groups": [
+     "g15136"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10505",
+    "name": "Carottes au cumin",
+    "section": "Petites assiettes",
+    "priceCents": 650,
+    "stock": 24,
+    "description": "Carottes fondantes, cumin toasté, coriandre et citron.",
+    "groups": [
+     "g15136"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10506",
+    "name": "Houmous et pain pita",
+    "section": "Entrées",
+    "priceCents": 800,
+    "stock": 31,
+    "description": "Pois chiches, tahini crémeux, huile d’olive et pita chaude.",
+    "groups": [
+     "g15136"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10507",
+    "name": "Briouates aux légumes",
+    "section": "Petites assiettes",
+    "priceCents": 850,
+    "stock": 14,
+    "description": "Feuilletés croustillants aux légumes et herbes fraîches.",
+    "groups": [
+     "g15136"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10508",
+    "name": "Tajine de poulet citron",
+    "section": "Plats principaux",
+    "priceCents": 1750,
+    "stock": 21,
+    "description": "Poulet fondant, citron confit, olives et semoule.",
+    "groups": [
+     "g15136"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10509",
+    "name": "Baklava pistache",
+    "section": "Desserts",
+    "priceCents": 600,
+    "stock": 28,
+    "description": "Feuilletage au miel, pistaches et fleur d’oranger.",
+    "groups": [
+     "g15112"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10510",
+    "name": "Thé à la menthe",
+    "section": "Thé",
+    "priceCents": 400,
+    "stock": 11,
+    "description": "Thé vert infusé à la menthe fraîche, servi légèrement sucré.",
+    "groups": [
+     "g15110"
+    ],
+    "vat": "soft_drink"
+   },
+   {
+    "key": "p10511",
+    "name": "Bowl légumes rôtis",
+    "section": "Vegan",
+    "priceCents": 1300,
+    "stock": 18,
+    "description": "Légumes de saison, quinoa, graines et sauce tahini citronnée.",
+    "groups": [
+     "g15136"
+    ],
+    "vat": "food"
+   }
+  ]
+ },
+ "santo-smash": {
+  "sections": [
+   {
+    "name": "Burgers"
+   },
+   {
+    "name": "Vegan"
+   },
+   {
+    "name": "Frites"
+   },
+   {
+    "name": "Accompagnements"
+   },
+   {
+    "name": "Salades"
+   },
+   {
+    "name": "Desserts"
+   },
+   {
+    "name": "Boissons fraîches"
+   }
+  ],
+  "optionGroups": [
+   {
+    "key": "g16110",
+    "name": "Personnalisez votre café ou boisson",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o16110",
+      "name": "Lait végétal",
+      "priceCents": 60
+     },
+     {
+      "key": "o16111",
+      "name": "Sirop vanille",
+      "priceCents": 50
+     },
+     {
+      "key": "o16112",
+      "name": "Crème fouettée",
+      "priceCents": 100
+     },
+     {
+      "key": "o16136",
+      "name": "Lait d’avoine",
+      "priceCents": 60
+     },
+     {
+      "key": "o16137",
+      "name": "Double espresso",
+      "priceCents": 120
+     },
+     {
+      "key": "o16138",
+      "name": "Un trait de citron",
+      "priceCents": 0
+     },
+     {
+      "key": "o16139",
+      "name": "Un peu plus sucré",
+      "priceCents": 0
+     }
+    ]
+   },
+   {
+    "key": "g16112",
+    "name": "Un extra gourmand",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o16112",
+      "name": "Crème fouettée",
+      "priceCents": 100
+     },
+     {
+      "key": "o16114",
+      "name": "Coulis de fruits rouges",
+      "priceCents": 100
+     },
+     {
+      "key": "o16115",
+      "name": "Pistaches concassées",
+      "priceCents": 120
+     },
+     {
+      "key": "o16125",
+      "name": "Confiture artisanale",
+      "priceCents": 80
+     },
+     {
+      "key": "o16126",
+      "name": "Miel local",
+      "priceCents": 80
+     }
+    ]
+   },
+   {
+    "key": "g16116",
+    "name": "Suppléments burger",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o16116",
+      "name": "Cheddar affiné",
+      "priceCents": 150
+     },
+     {
+      "key": "o16117",
+      "name": "Bacon fumé",
+      "priceCents": 200
+     },
+     {
+      "key": "o16118",
+      "name": "Pickles supplémentaires",
+      "priceCents": 80
+     },
+     {
+      "key": "o16119",
+      "name": "Sauce barbecue maison",
+      "priceCents": 80
+     }
+    ]
+   }
+  ],
+  "products": [
+   {
+    "key": "p10600",
+    "name": "Santo Smash classique",
+    "section": "Burgers",
+    "priceCents": 1450,
+    "stock": 14,
+    "description": "Bœuf français smashé, cheddar affiné, pickles et sauce maison.",
+    "groups": [
+     "g16116"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10601",
+    "name": "Double smash bacon",
+    "section": "Burgers",
+    "priceCents": 1800,
+    "stock": 21,
+    "description": "Deux steaks smashés, bacon fumé, cheddar et oignons confits.",
+    "groups": [
+     "g16116"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10602",
+    "name": "Burger poulet croustillant",
+    "section": "Burgers",
+    "priceCents": 1500,
+    "stock": 28,
+    "description": "Poulet fermier pané, salade croquante et mayo citronnée.",
+    "groups": [
+     "g16116"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10603",
+    "name": "Burger végétal",
+    "section": "Vegan",
+    "priceCents": 1550,
+    "stock": 11,
+    "description": "Galette végétale, avocat, pickles et sauce poivron fumé.",
+    "groups": [
+     "g16116"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10604",
+    "name": "Frites maison",
+    "section": "Frites",
+    "priceCents": 550,
+    "stock": 18,
+    "description": "Pommes de terre françaises coupées et frites à la commande.",
+    "groups": [
+     "g16116"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10605",
+    "name": "Frites cheddar",
+    "section": "Frites",
+    "priceCents": 700,
+    "stock": 25,
+    "description": "Frites croustillantes nappées de cheddar fondu.",
+    "groups": [
+     "g16116"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10606",
+    "name": "Tenders de poulet",
+    "section": "Accompagnements",
+    "priceCents": 900,
+    "stock": 8,
+    "description": "Aiguillettes marinées, panure légère et sauce ranch.",
+    "groups": [
+     "g16116"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10607",
+    "name": "Salade coleslaw",
+    "section": "Salades",
+    "priceCents": 500,
+    "stock": 15,
+    "description": "Chou et carotte finement émincés, sauce fraîche maison.",
+    "groups": [
+     "g16116"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10608",
+    "name": "Onion rings",
+    "section": "Accompagnements",
+    "priceCents": 650,
+    "stock": 22,
+    "description": "Rondelles d’oignon en pâte légère, dorées minute.",
+    "groups": [
+     "g16116"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10609",
+    "name": "Brownie chocolat",
+    "section": "Desserts",
+    "priceCents": 600,
+    "stock": 29,
+    "description": "Brownie fondant au chocolat noir et noix de pécan.",
+    "groups": [
+     "g16112"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10610",
+    "name": "Milkshake vanille",
+    "section": "Boissons fraîches",
+    "priceCents": 650,
+    "stock": 12,
+    "description": "Glace artisanale à la vanille mixée avec du lait frais.",
+    "groups": [
+     "g16110"
+    ],
+    "vat": "soft_drink"
+   },
+   {
+    "key": "p10611",
+    "name": "Limonade artisanale",
+    "section": "Boissons fraîches",
+    "priceCents": 400,
+    "stock": 19,
+    "description": "Citron pressé, eau pétillante et sucre de canne.",
+    "groups": [
+     "g16110"
+    ],
+    "vat": "soft_drink"
+   }
+  ]
+ },
+ "nami-sushi-bar": {
+  "sections": [
+   {
+    "name": "Sushis"
+   },
+   {
+    "name": "Makis"
+   },
+   {
+    "name": "Riz"
+   },
+   {
+    "name": "Petites assiettes"
+   },
+   {
+    "name": "Entrées"
+   },
+   {
+    "name": "Poissons"
+   },
+   {
+    "name": "Soupes"
+   },
+   {
+    "name": "Desserts"
+   },
+   {
+    "name": "Thé"
+   }
+  ],
+  "optionGroups": [
+   {
+    "key": "g17110",
+    "name": "Personnalisez votre café ou boisson",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o17110",
+      "name": "Lait végétal",
+      "priceCents": 60
+     },
+     {
+      "key": "o17111",
+      "name": "Sirop vanille",
+      "priceCents": 50
+     },
+     {
+      "key": "o17112",
+      "name": "Crème fouettée",
+      "priceCents": 100
+     },
+     {
+      "key": "o17136",
+      "name": "Lait d’avoine",
+      "priceCents": 60
+     },
+     {
+      "key": "o17137",
+      "name": "Double espresso",
+      "priceCents": 120
+     },
+     {
+      "key": "o17138",
+      "name": "Un trait de citron",
+      "priceCents": 0
+     },
+     {
+      "key": "o17139",
+      "name": "Un peu plus sucré",
+      "priceCents": 0
+     }
+    ]
+   },
+   {
+    "key": "g17112",
+    "name": "Un extra gourmand",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o17112",
+      "name": "Crème fouettée",
+      "priceCents": 100
+     },
+     {
+      "key": "o17114",
+      "name": "Coulis de fruits rouges",
+      "priceCents": 100
+     },
+     {
+      "key": "o17115",
+      "name": "Pistaches concassées",
+      "priceCents": 120
+     },
+     {
+      "key": "o17125",
+      "name": "Confiture artisanale",
+      "priceCents": 80
+     },
+     {
+      "key": "o17126",
+      "name": "Miel local",
+      "priceCents": 80
+     }
+    ]
+   },
+   {
+    "key": "g17120",
+    "name": "Accompagnements sushi",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o17120",
+      "name": "Gingembre mariné",
+      "priceCents": 80
+     },
+     {
+      "key": "o17121",
+      "name": "Wasabi",
+      "priceCents": 50
+     },
+     {
+      "key": "o17122",
+      "name": "Riz vinaigré supplémentaire",
+      "priceCents": 200
+     },
+     {
+      "key": "o17123",
+      "name": "Sauce soja sans gluten",
+      "priceCents": 50
+     }
+    ]
+   }
+  ],
+  "products": [
+   {
+    "key": "p10700",
+    "name": "Plateau découverte",
+    "section": "Sushis",
+    "priceCents": 2100,
+    "stock": 15,
+    "description": "Assortiment de nigiris et makis préparés à la commande.",
+    "groups": [
+     "g17120"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10701",
+    "name": "Maki saumon avocat",
+    "section": "Makis",
+    "priceCents": 900,
+    "stock": 22,
+    "description": "Riz vinaigré, saumon frais et avocat mûr, six pièces.",
+    "groups": [
+     "g17120"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10702",
+    "name": "California thon-ciboulette",
+    "section": "Sushis",
+    "priceCents": 1000,
+    "stock": 29,
+    "description": "Thon, avocat et ciboulette roulés dans le riz, six pièces.",
+    "groups": [
+     "g17120"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10703",
+    "name": "Nigiri saumon",
+    "section": "Sushis",
+    "priceCents": 1100,
+    "stock": 12,
+    "description": "Six bouchées de riz vinaigré surmontées de saumon frais.",
+    "groups": [
+     "g17120"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10704",
+    "name": "Chirashi saumon",
+    "section": "Riz",
+    "priceCents": 1800,
+    "stock": 19,
+    "description": "Bol de riz vinaigré, saumon, avocat et sésame.",
+    "groups": [
+     "g17120"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10705",
+    "name": "Maki concombre",
+    "section": "Makis",
+    "priceCents": 700,
+    "stock": 26,
+    "description": "Maki végétarien au concombre croquant, six pièces.",
+    "groups": [
+     "g17120"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10706",
+    "name": "Gyozas légumes",
+    "section": "Petites assiettes",
+    "priceCents": 800,
+    "stock": 9,
+    "description": "Raviolis grillés aux légumes, servis avec ponzu.",
+    "groups": [
+     "g17120"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10707",
+    "name": "Salade d’algues wakamé",
+    "section": "Entrées",
+    "priceCents": 600,
+    "stock": 16,
+    "description": "Algues wakamé assaisonnées au sésame et vinaigre de riz.",
+    "groups": [
+     "g17120"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10708",
+    "name": "Sashimi assortiment",
+    "section": "Poissons",
+    "priceCents": 1900,
+    "stock": 23,
+    "description": "Tranches de poisson cru du jour, découpées au couteau.",
+    "groups": [
+     "g17120"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10709",
+    "name": "Soupe miso",
+    "section": "Soupes",
+    "priceCents": 450,
+    "stock": 30,
+    "description": "Bouillon miso, tofu soyeux, wakamé et ciboule.",
+    "groups": [
+     "g17120"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10710",
+    "name": "Dorayaki",
+    "section": "Desserts",
+    "priceCents": 600,
+    "stock": 13,
+    "description": "Deux pancakes japonais garnis de pâte de haricots rouges.",
+    "groups": [
+     "g17112"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10711",
+    "name": "Thé hojicha",
+    "section": "Thé",
+    "priceCents": 400,
+    "stock": 20,
+    "description": "Thé vert torréfié du Japon, aux notes douces et boisées.",
+    "groups": [
+     "g17110"
+    ],
+    "vat": "soft_drink"
+   }
+  ]
+ },
+ "rue-12-bakery": {
+  "sections": [
+   {
+    "name": "Viennoiseries"
+   },
+   {
+    "name": "Pains"
+   },
+   {
+    "name": "Pâtisseries"
+   },
+   {
+    "name": "Plats"
+   },
+   {
+    "name": "Café"
+   }
+  ],
+  "optionGroups": [
+   {
+    "key": "g18110",
+    "name": "Personnalisez votre café ou boisson",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o18110",
+      "name": "Lait végétal",
+      "priceCents": 60
+     },
+     {
+      "key": "o18111",
+      "name": "Sirop vanille",
+      "priceCents": 50
+     },
+     {
+      "key": "o18112",
+      "name": "Crème fouettée",
+      "priceCents": 100
+     },
+     {
+      "key": "o18136",
+      "name": "Lait d’avoine",
+      "priceCents": 60
+     },
+     {
+      "key": "o18137",
+      "name": "Double espresso",
+      "priceCents": 120
+     },
+     {
+      "key": "o18138",
+      "name": "Un trait de citron",
+      "priceCents": 0
+     },
+     {
+      "key": "o18139",
+      "name": "Un peu plus sucré",
+      "priceCents": 0
+     }
+    ]
+   },
+   {
+    "key": "g18112",
+    "name": "Un extra gourmand",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o18112",
+      "name": "Crème fouettée",
+      "priceCents": 100
+     },
+     {
+      "key": "o18114",
+      "name": "Coulis de fruits rouges",
+      "priceCents": 100
+     },
+     {
+      "key": "o18115",
+      "name": "Pistaches concassées",
+      "priceCents": 120
+     },
+     {
+      "key": "o18125",
+      "name": "Confiture artisanale",
+      "priceCents": 80
+     },
+     {
+      "key": "o18126",
+      "name": "Miel local",
+      "priceCents": 80
+     }
+    ]
+   },
+   {
+    "key": "g18124",
+    "name": "À tartiner",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o18124",
+      "name": "Beurre demi-sel",
+      "priceCents": 50
+     },
+     {
+      "key": "o18125",
+      "name": "Confiture artisanale",
+      "priceCents": 80
+     },
+     {
+      "key": "o18126",
+      "name": "Miel local",
+      "priceCents": 80
+     },
+     {
+      "key": "o18127",
+      "name": "Fromage frais",
+      "priceCents": 120
+     }
+    ]
+   }
+  ],
+  "products": [
+   {
+    "key": "p10800",
+    "name": "Croissant pur beurre",
+    "section": "Viennoiseries",
+    "priceCents": 220,
+    "stock": 16,
+    "description": "Croissant feuilleté au beurre AOP, façonné chaque matin.",
+    "groups": [
+     "g18112"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10801",
+    "name": "Pain au chocolat",
+    "section": "Viennoiseries",
+    "priceCents": 240,
+    "stock": 23,
+    "description": "Pâte feuilletée pur beurre et chocolat noir intense.",
+    "groups": [
+     "g18112"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10802",
+    "name": "Baguette tradition",
+    "section": "Pains",
+    "priceCents": 150,
+    "stock": 30,
+    "description": "Baguette au levain, croûte dorée et mie alvéolée.",
+    "groups": [
+     "g18124"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10803",
+    "name": "Pain de campagne",
+    "section": "Pains",
+    "priceCents": 550,
+    "stock": 13,
+    "description": "Pain au levain naturel, farine de meule et longue fermentation.",
+    "groups": [
+     "g18124"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10804",
+    "name": "Chausson aux pommes",
+    "section": "Viennoiseries",
+    "priceCents": 350,
+    "stock": 20,
+    "description": "Feuilletage doré garni de compote de pommes maison.",
+    "groups": [
+     "g18112"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10805",
+    "name": "Flan vanille",
+    "section": "Pâtisseries",
+    "priceCents": 450,
+    "stock": 27,
+    "description": "Flan pâtissier crémeux à la vanille de Madagascar.",
+    "groups": [
+     "g18112"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10806",
+    "name": "Tartelette citron",
+    "section": "Pâtisseries",
+    "priceCents": 550,
+    "stock": 10,
+    "description": "Pâte sablée, crème citron acidulée et meringue légère.",
+    "groups": [
+     "g18112"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10807",
+    "name": "Brioche tressée",
+    "section": "Pains",
+    "priceCents": 600,
+    "stock": 17,
+    "description": "Brioche pur beurre, mie filante et sucre perlé.",
+    "groups": [
+     "g18124"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10808",
+    "name": "Cookie chocolat noir",
+    "section": "Pâtisseries",
+    "priceCents": 400,
+    "stock": 24,
+    "description": "Cookie épais, chocolat noir et éclats de noisette.",
+    "groups": [
+     "g18112"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10809",
+    "name": "Éclair au café",
+    "section": "Pâtisseries",
+    "priceCents": 500,
+    "stock": 31,
+    "description": "Pâte à choux, crème pâtissière au café et glaçage fondant.",
+    "groups": [
+     "g18112"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10810",
+    "name": "Quiche poireaux-comté",
+    "section": "Plats",
+    "priceCents": 750,
+    "stock": 14,
+    "description": "Quiche artisanale aux poireaux fondants et comté affiné.",
+    "groups": [
+     "g18124"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10811",
+    "name": "Café filtre",
+    "section": "Café",
+    "priceCents": 350,
+    "stock": 21,
+    "description": "Café de spécialité fraîchement moulu, torréfaction locale.",
+    "groups": [
+     "g18110"
+    ],
+    "vat": "soft_drink"
+   }
+  ]
+ },
+ "casa-arepa": {
+  "sections": [
+   {
+    "name": "Arepas"
+   },
+   {
+    "name": "Street food"
+   },
+   {
+    "name": "Petites assiettes"
+   },
+   {
+    "name": "Accompagnements"
+   },
+   {
+    "name": "Bowls"
+   },
+   {
+    "name": "Desserts"
+   },
+   {
+    "name": "Jus"
+   },
+   {
+    "name": "Boissons fraîches"
+   }
+  ],
+  "optionGroups": [
+   {
+    "key": "g19110",
+    "name": "Personnalisez votre café ou boisson",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o19110",
+      "name": "Lait végétal",
+      "priceCents": 60
+     },
+     {
+      "key": "o19111",
+      "name": "Sirop vanille",
+      "priceCents": 50
+     },
+     {
+      "key": "o19112",
+      "name": "Crème fouettée",
+      "priceCents": 100
+     },
+     {
+      "key": "o19136",
+      "name": "Lait d’avoine",
+      "priceCents": 60
+     },
+     {
+      "key": "o19137",
+      "name": "Double espresso",
+      "priceCents": 120
+     },
+     {
+      "key": "o19138",
+      "name": "Un trait de citron",
+      "priceCents": 0
+     },
+     {
+      "key": "o19139",
+      "name": "Un peu plus sucré",
+      "priceCents": 0
+     }
+    ]
+   },
+   {
+    "key": "g19112",
+    "name": "Un extra gourmand",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o19112",
+      "name": "Crème fouettée",
+      "priceCents": 100
+     },
+     {
+      "key": "o19114",
+      "name": "Coulis de fruits rouges",
+      "priceCents": 100
+     },
+     {
+      "key": "o19115",
+      "name": "Pistaches concassées",
+      "priceCents": 120
+     },
+     {
+      "key": "o19125",
+      "name": "Confiture artisanale",
+      "priceCents": 80
+     },
+     {
+      "key": "o19126",
+      "name": "Miel local",
+      "priceCents": 80
+     }
+    ]
+   },
+   {
+    "key": "g19128",
+    "name": "Garnitures pour arepa",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o19128",
+      "name": "Fromage vénézuélien",
+      "priceCents": 150
+     },
+     {
+      "key": "o19129",
+      "name": "Avocat et coriandre",
+      "priceCents": 180
+     },
+     {
+      "key": "o19130",
+      "name": "Sauce guasacaca",
+      "priceCents": 80
+     },
+     {
+      "key": "o19132",
+      "name": "Piment frais",
+      "priceCents": 50
+     }
+    ]
+   }
+  ],
+  "products": [
+   {
+    "key": "p10900",
+    "name": "Arepa reina pepiada",
+    "section": "Arepas",
+    "priceCents": 1350,
+    "stock": 17,
+    "description": "Galette de maïs garnie de poulet effiloché, avocat et citron vert.",
+    "groups": [
+     "g19128"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10901",
+    "name": "Arepa pabellón",
+    "section": "Arepas",
+    "priceCents": 1500,
+    "stock": 24,
+    "description": "Bœuf mijoté, haricots noirs, banane plantain et fromage frais.",
+    "groups": [
+     "g19128"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10902",
+    "name": "Arepa végétarienne",
+    "section": "Arepas",
+    "priceCents": 1200,
+    "stock": 31,
+    "description": "Haricots noirs, avocat, tomate et fromage vénézuélien.",
+    "groups": [
+     "g19128"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10903",
+    "name": "Arepa jambon-fromage",
+    "section": "Arepas",
+    "priceCents": 1150,
+    "stock": 14,
+    "description": "Galette de maïs chaude, jambon rôti et fromage fondant.",
+    "groups": [
+     "g19128"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10904",
+    "name": "Empanadas au bœuf",
+    "section": "Street food",
+    "priceCents": 850,
+    "stock": 21,
+    "description": "Deux chaussons de maïs garnis de bœuf mijoté aux épices.",
+    "groups": [
+     "g19128"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10905",
+    "name": "Empanadas fromage",
+    "section": "Street food",
+    "priceCents": 800,
+    "stock": 28,
+    "description": "Deux chaussons dorés au fromage fondant.",
+    "groups": [
+     "g19128"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10906",
+    "name": "Tequeños",
+    "section": "Petites assiettes",
+    "priceCents": 800,
+    "stock": 11,
+    "description": "Bâtonnets de fromage en pâte croustillante, sauce guasacaca.",
+    "groups": [
+     "g19128"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10907",
+    "name": "Patacones et guacamole",
+    "section": "Accompagnements",
+    "priceCents": 750,
+    "stock": 18,
+    "description": "Bananes plantain frites et guacamole frais à la coriandre.",
+    "groups": [
+     "g19128"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10908",
+    "name": "Bowl pabellón",
+    "section": "Bowls",
+    "priceCents": 1600,
+    "stock": 25,
+    "description": "Riz, bœuf mijoté, haricots noirs et banane plantain dorée.",
+    "groups": [
+     "g19128"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10909",
+    "name": "Tres leches",
+    "section": "Desserts",
+    "priceCents": 700,
+    "stock": 8,
+    "description": "Gâteau moelleux imbibé de trois laits et cannelle.",
+    "groups": [
+     "g19112"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10910",
+    "name": "Jus de goyave",
+    "section": "Jus",
+    "priceCents": 500,
+    "stock": 15,
+    "description": "Goyave mûre mixée avec de l’eau fraîche et un trait de citron.",
+    "groups": [
+     "g19110"
+    ],
+    "vat": "soft_drink"
+   },
+   {
+    "key": "p10911",
+    "name": "Chicha à la cannelle",
+    "section": "Boissons fraîches",
+    "priceCents": 550,
+    "stock": 22,
+    "description": "Boisson crémeuse au riz, cannelle et vanille.",
+    "groups": [
+     "g19110"
+    ],
+    "vat": "soft_drink"
+   }
+  ]
+ },
+ "le-petit-pho": {
+  "sections": [
+   {
+    "name": "Soupes"
+   },
+   {
+    "name": "Nouilles"
+   },
+   {
+    "name": "Sandwichs"
+   },
+   {
+    "name": "Vegan"
+   },
+   {
+    "name": "Petites assiettes"
+   },
+   {
+    "name": "Entrées"
+   },
+   {
+    "name": "Bowls"
+   },
+   {
+    "name": "Riz"
+   },
+   {
+    "name": "Salades"
+   },
+   {
+    "name": "Desserts"
+   },
+   {
+    "name": "Thé"
+   }
+  ],
+  "optionGroups": [
+   {
+    "key": "g20110",
+    "name": "Personnalisez votre café ou boisson",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o20110",
+      "name": "Lait végétal",
+      "priceCents": 60
+     },
+     {
+      "key": "o20111",
+      "name": "Sirop vanille",
+      "priceCents": 50
+     },
+     {
+      "key": "o20112",
+      "name": "Crème fouettée",
+      "priceCents": 100
+     },
+     {
+      "key": "o20136",
+      "name": "Lait d’avoine",
+      "priceCents": 60
+     },
+     {
+      "key": "o20137",
+      "name": "Double espresso",
+      "priceCents": 120
+     },
+     {
+      "key": "o20138",
+      "name": "Un trait de citron",
+      "priceCents": 0
+     },
+     {
+      "key": "o20139",
+      "name": "Un peu plus sucré",
+      "priceCents": 0
+     }
+    ]
+   },
+   {
+    "key": "g20112",
+    "name": "Un extra gourmand",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o20112",
+      "name": "Crème fouettée",
+      "priceCents": 100
+     },
+     {
+      "key": "o20114",
+      "name": "Coulis de fruits rouges",
+      "priceCents": 100
+     },
+     {
+      "key": "o20115",
+      "name": "Pistaches concassées",
+      "priceCents": 120
+     },
+     {
+      "key": "o20125",
+      "name": "Confiture artisanale",
+      "priceCents": 80
+     },
+     {
+      "key": "o20126",
+      "name": "Miel local",
+      "priceCents": 80
+     }
+    ]
+   },
+   {
+    "key": "g20132",
+    "name": "Sauces et extras vietnamiens",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o20131",
+      "name": "Sauce nuoc-mâm à part",
+      "priceCents": 0
+     },
+     {
+      "key": "o20132",
+      "name": "Piment frais",
+      "priceCents": 50
+     },
+     {
+      "key": "o20133",
+      "name": "Cacahuètes grillées",
+      "priceCents": 80
+     },
+     {
+      "key": "o20135",
+      "name": "Tofu grillé en plus",
+      "priceCents": 200
+     },
+     {
+      "key": "o20140",
+      "name": "Herbes fraîches en supplément",
+      "priceCents": 80
+     }
+    ]
+   }
+  ],
+  "products": [
+   {
+    "key": "p11000",
+    "name": "Pho bò traditionnel",
+    "section": "Soupes",
+    "priceCents": 1600,
+    "stock": 18,
+    "description": "Bouillon de bœuf mijoté, nouilles de riz, herbes et pousses de soja.",
+    "groups": [
+     "g20132"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p11001",
+    "name": "Pho gà au poulet",
+    "section": "Soupes",
+    "priceCents": 1500,
+    "stock": 25,
+    "description": "Bouillon clair au gingembre, poulet tendre et coriandre fraîche.",
+    "groups": [
+     "g20132"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p11002",
+    "name": "Bún bò sauté",
+    "section": "Nouilles",
+    "priceCents": 1550,
+    "stock": 8,
+    "description": "Vermicelles de riz, bœuf citronnelle, crudités et cacahuètes.",
+    "groups": [
+     "g20132"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p11003",
+    "name": "Bánh mì poulet citronnelle",
+    "section": "Sandwichs",
+    "priceCents": 1200,
+    "stock": 15,
+    "description": "Baguette croustillante, poulet mariné, pickles et coriandre.",
+    "groups": [
+     "g20132"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p11004",
+    "name": "Bánh mì tofu grillé",
+    "section": "Vegan",
+    "priceCents": 1150,
+    "stock": 22,
+    "description": "Tofu mariné, légumes croquants, coriandre et sauce soja.",
+    "groups": [
+     "g20132"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p11005",
+    "name": "Nems au porc",
+    "section": "Petites assiettes",
+    "priceCents": 800,
+    "stock": 29,
+    "description": "Quatre nems dorés, porc fermier et sauce nuoc-mâm maison.",
+    "groups": [
+     "g20132"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p11006",
+    "name": "Rouleaux de printemps",
+    "section": "Entrées",
+    "priceCents": 750,
+    "stock": 12,
+    "description": "Deux rouleaux frais aux herbes, vermicelles et crevettes.",
+    "groups": [
+     "g20132"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p11007",
+    "name": "Bo bun végétarien",
+    "section": "Bowls",
+    "priceCents": 1400,
+    "stock": 19,
+    "description": "Vermicelles, tofu grillé, légumes frais et sauce cacahuète.",
+    "groups": [
+     "g20132"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p11008",
+    "name": "Riz sauté aux légumes",
+    "section": "Riz",
+    "priceCents": 1300,
+    "stock": 26,
+    "description": "Riz parfumé sauté au wok, légumes de saison et œuf fermier.",
+    "groups": [
+     "g20132"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p11009",
+    "name": "Salade de papaye verte",
+    "section": "Salades",
+    "priceCents": 900,
+    "stock": 9,
+    "description": "Papaye croquante, menthe fraîche, citron vert et cacahuètes.",
+    "groups": [
+     "g20132"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p11010",
+    "name": "Perles de coco",
+    "section": "Desserts",
+    "priceCents": 600,
+    "stock": 16,
+    "description": "Deux bouchées de riz gluant fourrées aux haricots mungo.",
+    "groups": [
+     "g20112"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p11011",
+    "name": "Thé glacé au jasmin",
+    "section": "Thé",
+    "priceCents": 400,
+    "stock": 23,
+    "description": "Thé au jasmin infusé à froid et citron frais.",
+    "groups": [
+     "g20110"
+    ],
+    "vat": "soft_drink"
+   }
+  ]
+ },
+ "mina-kitchen": {
+  "sections": [
+   {
+    "name": "Mezze à partager"
+   },
+   {
+    "name": "Assiettes chaudes"
+   },
+   {
+    "name": "Wraps"
+   },
+   {
+    "name": "Accompagnements"
+   },
+   {
+    "name": "Desserts"
+   },
+   {
+    "name": "Boissons"
+   }
+  ],
+  "optionGroups": [
+   {
+    "key": "g1",
+    "name": "Sauces au choix",
+    "min": 0,
+    "max": 1,
+    "multiple": false,
+    "options": [
+     {
+      "key": "o1",
+      "name": "Sauce tahini",
+      "priceCents": 0
+     },
+     {
+      "key": "o2",
+      "name": "Harissa douce",
+      "priceCents": 0
+     },
+     {
+      "key": "o3",
+      "name": "Yaourt aux herbes",
+      "priceCents": 150
+     }
+    ]
+   },
+   {
+    "key": "g2",
+    "name": "Suppléments",
+    "min": 0,
+    "max": 3,
+    "multiple": true,
+    "options": [
+     {
+      "key": "o4",
+      "name": "Halloumi grillé",
+      "priceCents": 350
+     },
+     {
+      "key": "o5",
+      "name": "Poulet rôti",
+      "priceCents": 400
+     },
+     {
+      "key": "o6",
+      "name": "Pain plat",
+      "priceCents": 200
+     }
+    ]
+   },
+   {
+    "key": "g3",
+    "name": "Cuisson",
+    "min": 1,
+    "max": 1,
+    "multiple": false,
+    "options": [
+     {
+      "key": "o7",
+      "name": "À point",
+      "priceCents": 0
+     },
+     {
+      "key": "o8",
+      "name": "Bien cuit",
+      "priceCents": 0
+     }
+    ]
+   }
+  ],
+  "products": [
+   {
+    "key": "p1",
+    "name": "Houmous maison et pita",
+    "section": "Mezze à partager",
+    "priceCents": 750,
+    "stock": 40,
+    "description": "Pois chiches, tahini, citron et huile d’olive, pita chaude.",
+    "groups": [
+     "g2"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p2",
+    "name": "Moutabal fumé",
+    "section": "Mezze à partager",
+    "priceCents": 750,
+    "stock": null,
+    "description": "Caviar d’aubergine brûlée, tahini et grains de grenade.",
+    "groups": [
+     "g2"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p3",
+    "name": "Muhammara aux noix",
+    "section": "Mezze à partager",
+    "priceCents": 800,
+    "stock": null,
+    "description": "Poivrons rôtis, noix, mélasse de grenade et cumin.",
+    "groups": [
+     "g2"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p4",
+    "name": "Planche mezze Mina",
+    "section": "Mezze à partager",
+    "priceCents": 1900,
+    "stock": 14,
+    "description": "Houmous, moutabal, muhammara, pickles, olives, falafels et pita pour deux.",
+    "groups": [
+     "g2"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p5",
+    "name": "Falafels croustillants",
+    "section": "Mezze à partager",
+    "priceCents": 700,
+    "stock": null,
+    "description": "Six falafels aux herbes fraîches, sauce tahini.",
+    "groups": [
+     "g1"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p6",
+    "name": "Taboulé libanais",
+    "section": "Mezze à partager",
+    "priceCents": 750,
+    "stock": null,
+    "description": "Persil plat, menthe, boulgour fin, tomate et citron.",
+    "groups": [],
+    "vat": "food"
+   },
+   {
+    "key": "p7",
+    "name": "Fattouche",
+    "section": "Mezze à partager",
+    "priceCents": 850,
+    "stock": null,
+    "description": "Salade croquante, pain grillé, sumac et mélasse de grenade.",
+    "groups": [],
+    "vat": "food"
+   },
+   {
+    "key": "p8",
+    "name": "Assiette poulet za’atar",
+    "section": "Assiettes chaudes",
+    "priceCents": 1550,
+    "stock": 28,
+    "description": "Poulet rôti au za’atar, labneh fouetté, herbes et pain plat.",
+    "groups": [
+     "g1",
+     "g2"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p9",
+    "name": "Assiette chawarma de poulet",
+    "section": "Assiettes chaudes",
+    "priceCents": 1500,
+    "stock": null,
+    "description": "Poulet mariné aux sept épices, riz aux vermicelles et toum.",
+    "groups": [
+     "g1",
+     "g2"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p10",
+    "name": "Kefta d’agneau grillée",
+    "section": "Assiettes chaudes",
+    "priceCents": 1750,
+    "stock": 18,
+    "description": "Brochettes d’agneau au persil, oignons rôtis et boulgour.",
+    "groups": [
+     "g3",
+     "g1",
+     "g2"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p11",
+    "name": "Chou-fleur rôti au tahini",
+    "section": "Assiettes chaudes",
+    "priceCents": 1200,
+    "stock": null,
+    "description": "Chou-fleur rôti, tahini, mélasse de grenade et amandes grillées.",
+    "groups": [
+     "g2"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p12",
+    "name": "Halloumi grillé, grenade et menthe",
+    "section": "Assiettes chaudes",
+    "priceCents": 1350,
+    "stock": null,
+    "description": "Halloumi doré, salade d’herbes, grenade et pain plat.",
+    "groups": [
+     "g2"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p13",
+    "name": "Wrap chawarma poulet",
+    "section": "Wraps",
+    "priceCents": 1050,
+    "stock": null,
+    "description": "Pain libanais, poulet mariné, pickles, frites et toum.",
+    "groups": [
+     "g1",
+     "g2"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p14",
+    "name": "Wrap falafel",
+    "section": "Wraps",
+    "priceCents": 950,
+    "stock": null,
+    "description": "Falafels, houmous, crudités et sauce tahini.",
+    "groups": [
+     "g1",
+     "g2"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p15",
+    "name": "Frites au za’atar",
+    "section": "Accompagnements",
+    "priceCents": 450,
+    "stock": null,
+    "description": "Frites maison relevées au za’atar et au sumac.",
+    "groups": [
+     "g1"
+    ],
+    "vat": "food"
+   },
+   {
+    "key": "p16",
+    "name": "Riz aux vermicelles",
+    "section": "Accompagnements",
+    "priceCents": 400,
+    "stock": null,
+    "description": "Riz parfumé aux vermicelles dorés au beurre.",
+    "groups": [],
+    "vat": "food"
+   },
+   {
+    "key": "p17",
+    "name": "Baklava pistache",
+    "section": "Desserts",
+    "priceCents": 600,
+    "stock": 24,
+    "description": "Trois feuilletés au miel, pistaches et fleur d’oranger.",
+    "groups": [],
+    "vat": "food"
+   },
+   {
+    "key": "p18",
+    "name": "Mouhalabieh fleur d’oranger",
+    "section": "Desserts",
+    "priceCents": 550,
+    "stock": 12,
+    "description": "Crème de lait à la fleur d’oranger, pistaches concassées.",
+    "groups": [],
+    "vat": "food"
+   },
+   {
+    "key": "p19",
+    "name": "Cookie chocolat-tahini",
+    "section": "Desserts",
+    "priceCents": 450,
+    "stock": 3,
+    "description": "Cookie moelleux au chocolat noir et au tahini.",
+    "groups": [],
+    "vat": "food"
+   },
+   {
+    "key": "p20",
+    "name": "Citronnade à la menthe",
+    "section": "Boissons",
+    "priceCents": 450,
+    "stock": null,
+    "description": "Citron pressé, menthe fraîche et eau de fleur d’oranger.",
+    "groups": [],
+    "vat": "soft_drink"
+   },
+   {
+    "key": "p21",
+    "name": "Ayran maison",
+    "section": "Boissons",
+    "priceCents": 350,
+    "stock": null,
+    "description": "Yaourt battu, eau fraîche et une pincée de sel.",
+    "groups": [],
+    "vat": "soft_drink"
+   },
+   {
+    "key": "p22",
+    "name": "Thé à la menthe",
+    "section": "Boissons",
+    "priceCents": 350,
+    "stock": null,
+    "description": "Thé vert infusé à la menthe fraîche.",
+    "groups": [],
+    "vat": "soft_drink"
+   }
+  ]
+ }
+}
