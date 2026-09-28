@@ -235,6 +235,12 @@ function assertContent(data: SaveInput) {
   if (data.audience.userType !== 'client' && data.audience.segment && data.audience.segment !== 'all') {
     throw fail.invalid('Les segments de fidélité ne concernent que les clients.');
   }
+  // Un envoi qui pointe vers une offre est par nature promotionnel : le drapeau « message de
+  // service » (audience.marketing = false) ne doit pas permettre de contourner le consentement
+  // marketing ni la plage horaire des envois promotionnels.
+  if (data.link?.type === 'promotion' && !data.audience.marketing) {
+    throw fail.invalid('Un envoi lié à une offre est promotionnel : cochez « message promotionnel » pour respecter le consentement des destinataires.');
+  }
 }
 
 function assertQuietHours(data: SaveInput, at: Date) {

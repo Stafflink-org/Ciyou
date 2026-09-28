@@ -7,5 +7,5 @@ export { publishAnnouncement } from './announcements';
 export { updateMessageTemplate } from './templates';
 export { decideReferral, onFirstOrderReferral, onRestaurantActivatedReferral } from './referrals';
 export { applyReferralCode, applyRestaurantReferralCode, getRestaurantReferralLink } from './referral-links';
-export { decideSalesCommission, getSalesTeam, logProspectActivity, moveProspect, prospectFollowUpReminders, saveProspect } from './crm';
+export { computeSalesRevenueShare, decideSalesCommission, getSalesTeam, logProspectActivity, moveProspect, prospectFollowUpReminders, saveProspect } from './crm';
 export { expireLoyalty, redeemLoyaltyPoints } from './loyalty';
