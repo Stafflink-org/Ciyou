@@ -8,6 +8,7 @@ export default defineModule({
     label: 'États du CA',
     icon: <ChartColumn />,
     order: 20,
+    hidden: true, // regroupé dans le hub Paiement (features/paiement)
     keywords: ['chiffre d’affaires', 'journal', 'TVA', 'comptabilité', 'ventes par jour'],
   },
   permission: 'finance.view',

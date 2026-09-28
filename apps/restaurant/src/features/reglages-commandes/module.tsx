@@ -9,6 +9,7 @@ export default defineModule({
     icon: <ClipboardList />,
     order: 30,
     keywords: ['préparation', 'acceptation automatique', 'retrait', 'livraison', 'sur place', 'programmées', 'minimum'],
+    hidden: true, // regroupé dans le hub Paramètres (features/parametres)
   },
   permission: 'settings.manage',
   routes: [{ path: 'reglages-commandes', lazy: () => import('./ReglagesCommandesPage').then((m) => ({ Component: m.ReglagesCommandesPage })) }],

@@ -8,6 +8,7 @@ export default defineModule({
     label: 'Abonnement',
     icon: <Gem />,
     order: 100,
+    hidden: true, // regroupé dans le hub Paiement (features/paiement)
     keywords: ['formule', 'basic', 'pro', 'premium', 'commission', 'factures d’abonnement'],
   },
   permission: 'finance.view',

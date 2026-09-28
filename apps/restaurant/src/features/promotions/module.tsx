@@ -3,7 +3,14 @@ import { defineModule } from '@/app/define-module';
 
 export default defineModule({
   id: 'promotions',
-  nav: { group: 'marketing', label: 'Codes promo', icon: <BadgePercent />, order: 10, keywords: ['promotion', 'remise', 'réduction', 'offre', 'code'] },
+  nav: {
+    group: 'marketing',
+    label: 'Codes promo',
+    icon: <BadgePercent />,
+    order: 10,
+    keywords: ['promotion', 'remise', 'réduction', 'offre', 'code'],
+    hidden: true, // regroupé dans le hub Marketing (features/marketing)
+  },
   permission: 'marketing.manage',
   routes: [
     { path: 'promotions', lazy: () => import('./PromotionsPage').then((m) => ({ Component: m.PromotionsPage })) },

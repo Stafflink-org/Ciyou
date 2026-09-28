@@ -71,7 +71,7 @@ import { z, zId } from '../lib/validation';
 import { addEvent, isOpenAt, loadMarket, loadOrderRules, localClock, orderRef, pricingFor, SYSTEM_EVENT_ACTOR } from './context';
 import { loadGroupRule, loadPlan, resolveOrderCommission } from './commission';
 import { loadPromotionByCode, loadPromotionRules, pickAutomaticPromotion } from './promotions';
-import { authorizePayment, CardRefusedError, recordRefusedPayment, retrieveCardFingerprint, STRIPE_METHODS, type Authorization } from './payment';
+import { authorizePayment, captureAuthorizedIntent, CardRefusedError, recordRefusedPayment, retrieveCardFingerprint, STRIPE_METHODS, type Authorization } from './payment';
 import { hashValue, isBlocked } from '../platform/fraud';
 import { assertMinimumVersion, assertNotInMaintenance } from '../lib/platform-status';
 import { assertLegalReaccepted } from '../lib/legal';
@@ -596,11 +596,28 @@ export const placeOrder = callable(
       }
     }
 
+    // Acceptation automatique (réglage restaurant `autoAccept`) : l'encaissement doit être déclenché
+    // ici, exactement comme à l'acceptation manuelle (cf. transitions.ts::acceptOrder) — sinon le
+    // paiement reste seulement autorisé (bloqué sur la carte du client) et n'est jamais capturé.
+    // Si l'encaissement échoue, la commande est quand même créée mais PAS acceptée automatiquement :
+    // l'autorisation reste valide, le restaurant devra l'accepter manuellement (nouvel essai d'encaissement).
+    let capturedProviderChargeId: string | null = null;
+    let autoAcceptCaptureFailed = false;
+    if (orderSettings?.autoAccept === true && !scheduledFor && authorization && authorization.status === 'authorized' && authorization.intentId) {
+      const captured = await captureAuthorizedIntent(authorization.intentId, `order-capture-${uid}-${data.clientRequestId}`, `${restaurant.id}/${uid}/${data.clientRequestId}`);
+      if (captured.status === 'failed') {
+        autoAcceptCaptureFailed = true;
+      } else {
+        authorization = { ...authorization, status: captured.status };
+        capturedProviderChargeId = captured.providerChargeId;
+      }
+    }
+
     // ---------------------------------------------------------------- Écriture
     const prepMinutes = (orderSettings?.prepMinutes ?? restaurant.prepMinutes ?? rules.defaultPrepMinutes) + (restaurant.busyExtraMinutes ?? 0);
     const customerName = profile ? publicDisplayName(profile.firstName, profile.lastName) : caller.name;
     const paymentReady = !authorization || authorization.status === 'authorized' || authorization.status === 'paid';
-    const autoAccept = orderSettings?.autoAccept === true && !scheduledFor && paymentReady;
+    const autoAccept = orderSettings?.autoAccept === true && !scheduledFor && paymentReady && !autoAcceptCaptureFailed;
 
     let result: PlaceOrderResult;
     try {
@@ -789,7 +806,7 @@ export const placeOrder = callable(
           status: paymentStatus,
           provider: method === 'cash' ? 'cash' : method === 'wallet' ? 'wallet' : 'stripe',
           providerIntentId: authorization?.intentId ?? null,
-          providerChargeId: null,
+          providerChargeId: capturedProviderChargeId,
           cardFingerprint: authorization?.fingerprint ?? null,
           cardLabel: authorization?.label ?? null,
           feeCents: settlement.payment.totalCents,

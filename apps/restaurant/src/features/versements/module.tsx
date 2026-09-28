@@ -8,6 +8,7 @@ export default defineModule({
     label: 'Compte de versement',
     icon: <Landmark />,
     order: 90,
+    hidden: true, // regroupé dans le hub Paiement (features/paiement)
     keywords: ['stripe', 'iban', 'banque', 'versements', 'virements', 'reversements'],
   },
   permission: 'finance.view',

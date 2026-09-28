@@ -114,6 +114,7 @@ export function CampaignsPage() {
         eyebrow="Marketing"
         title="Campagnes"
         description="Parlez à vos clients au bon moment : une notification ou un e-mail, envoyé tout de suite ou programmé."
+        breadcrumbs={[{ label: 'Marketing', href: '/marketing' }, { label: 'Campagnes' }]}
         actions={createButton}
       />
 

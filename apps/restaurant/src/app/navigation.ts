@@ -7,9 +7,9 @@ export const NAV_GROUPS = [
   { id: 'carte', label: 'Carte & menu' },
   { id: 'clients', label: 'Clients & livreurs' },
   { id: 'equipe', label: 'Équipe & RH' },
-  { id: 'finances', label: 'Finances' },
+  { id: 'finances', label: 'Paiement' },
   { id: 'marketing', label: 'Marketing' },
-  { id: 'messagerie', label: 'Messagerie' },
+  { id: 'messagerie', label: 'Assistance' },
   { id: 'configuration', label: 'Configuration' },
 ] as const satisfies readonly NavGroupDefinition[];
 

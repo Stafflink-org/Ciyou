@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { Dialog as DialogPrimitive } from 'radix-ui';
 import { Bell, ChevronsUpDown, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Search, X } from 'lucide-react';
 import { cn } from '../lib/cn';
+import { useHubEmbed } from '../lib/hub-embed';
 import { IconButton } from './button';
 import { Avatar, Breadcrumbs, Kbd, type BreadcrumbItem } from './display';
 import {
@@ -568,6 +569,9 @@ export function AppShell({
 
 /** Conteneur de page : largeur maximale et marges cohérentes. */
 export function PageContainer({ className, children, wide }: { className?: string; children: ReactNode; wide?: boolean }) {
+  // Intégré dans un hub : la largeur et les marges sont déjà posées par le PageContainer du hub.
+  const embedded = useHubEmbed();
+  if (embedded) return <div className={className}>{children}</div>;
   return (
     <div className={cn('mx-auto w-full px-4 py-6 sm:px-6 lg:px-8 lg:py-8', wide ? 'max-w-(--container-page)' : 'max-w-7xl', className)}>
       {children}

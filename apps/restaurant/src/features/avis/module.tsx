@@ -9,6 +9,7 @@ export default defineModule({
     label: 'Avis clients',
     icon: <Star />,
     order: 40,
+    hidden: true, // regroupé dans le hub Marketing (features/marketing)
     badge: useUnansweredReviewsCount,
     keywords: ['note', 'étoiles', 'réputation', 'commentaire', 'réponse'],
   },
