@@ -1,14 +1,8 @@
 # Déploiement — Stafflink-org/Ciyou
 
-Document de suivi du dépôt [Stafflink-org/Ciyou](https://github.com/Stafflink-org/Ciyou) : historique des PR, état réel de mise en production, accès de test.
+Document de suivi du dépôt [Stafflink-org/Ciyou](https://github.com/Stafflink-org/Ciyou) : historique des PR, accès de test.
 
-## 1. État de mise en production
-
-**Rien n'est encore déployé en ligne pour Ciyou à ce jour.** Le code est sur `main` du dépôt, testé localement (voir §3). Priorité confirmée : **le back-office super admin (`apps/admin`) en premier**, les autres apps (`apps/restaurant`, `apps/client`, `apps/driver`) restent dans le dépôt mais ne sont pas encore construites/déployées.
-
-À mettre à jour ici dès qu'un premier déploiement réel a lieu : URL, date, résultat des tests post-déploiement.
-
-## 2. Historique des PR (une par fonctionnalité, fusionnées dans l'ordre chronologique réel)
+## 1. Historique des PR (une par fonctionnalité, fusionnées dans l'ordre chronologique réel)
 
 | PR | Date | Contenu |
 |---|---|---|
@@ -39,9 +33,7 @@ Document de suivi du dépôt [Stafflink-org/Ciyou](https://github.com/Stafflink-
 | [#29](https://github.com/Stafflink-org/Ciyou/pull/29) | 28/09 | App client mobile : lot 1, fondations |
 | [#30](https://github.com/Stafflink-org/Ciyou/pull/30) | 28/09 | README : marchés étendus (Belgique, Algérie) |
 
-État fonctionnel détaillé du super admin (ce qui est fait, ligne par ligne du cahier client) : voir `docs/AUDIT_COUVERTURE_CDC.md` et `docs/ETAT_AVANCEMENT.md`.
-
-## 3. Accès de test (base Firebase partagée)
+## 2. Accès de test (base Firebase partagée)
 
 Le backend (authentification, base de données, fonctions serveur) est **un seul projet Firebase partagé par toutes les apps** : `golink-9f16d`, région `europe-west1`.
 
@@ -49,19 +41,7 @@ Le backend (authentification, base de données, fonctions serveur) est **un seul
 
 Pour que l'équipe puisse consulter/tester directement dans la console Firebase (Firestore, Auth, Functions, logs), chaque personne concernée doit être invitée comme membre du projet — rôle Éditeur pour développer, Lecteur pour consulter seulement. Cette invitation se fait depuis la [console Firebase](https://console.firebase.google.com/project/golink-9f16d/settings/iam) ou la [console Google Cloud IAM](https://console.cloud.google.com/iam-admin/iam?project=golink-9f16d), par le propriétaire/administrateur du compte du projet.
 
-### Tester en local contre la vraie base
-
-```bash
-npm install
-npm run dev:admin        # http://localhost:5174 — back-office super admin
-npm run dev:restaurant   # http://localhost:5173 — back-office restaurant
-```
-
-Ces commandes démarrent un serveur de développement branché sur `golink-9f16d` (pas un émulateur) : les données et connexions sont réelles.
-
 ### Comptes de test
-
-Les mots de passe ne sont **jamais commités** (fichier local `.test-accounts.local.md`, régénéré par `npm run seed`). Comptes disponibles par rôle :
 
 | Rôle | E-mail |
 |---|---|
@@ -73,5 +53,3 @@ Les mots de passe ne sont **jamais commités** (fichier local `.test-accounts.lo
 | Propriétaire (groupe Maison Haddad, 3 établissements) | `mina.haddad@golink.test` |
 | Manager de Mina Kitchen | `sofia.martin@golink.test` |
 | Employé cuisine de Mina Kitchen | `youssef.karim@golink.test` |
-
-Mots de passe transmis séparément (jamais dans un dépôt public). `npm run seed` régénère un jeu de données de démonstration complet (destructeur avec `--reset`).
