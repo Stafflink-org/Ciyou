@@ -90,8 +90,11 @@ function measureInPage(scope) {
   const rootEl = scope ? document.querySelector(scope) : document.body;
   if (!rootEl) return { vw, docScroll: 0, issues: [] };
   const docScroll = Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - vw;
+  // Technique « sr-only » (visible seulement des lecteurs d'écran) : caché même si w/h ≈ 1px, y compris
+  // via une variante responsive (ex. `max-sm:sr-only`) dont le nom de classe ne correspond pas au sélecteur `.sr-only`.
+  const isSrOnly = (el, r, cs) => r.width <= 1 && r.height <= 1 && cs.overflowX === 'hidden' && cs.overflowY === 'hidden' && (cs.position === 'absolute' || cs.position === 'fixed');
   const visible = (el, r, cs) => !el.closest('[data-stacked] thead') &&
-    r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && cs.display !== 'none' && !el.closest('[aria-hidden="true"], .sr-only, [hidden]');
+    r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && cs.display !== 'none' && !isSrOnly(el, r, cs) && !el.closest('[aria-hidden="true"], .sr-only, [hidden]');
   const clippers = (el) => {
     const list = [];
     for (let p = el.parentElement; p && p !== document.documentElement; p = p.parentElement) {
@@ -265,9 +268,16 @@ try {
   await boot();
 
   const settle = (ms = 700) => new Promise((r) => setTimeout(r, ms));
+  const settleDialogAnimations = () =>
+    page
+      .evaluate(() => Promise.all([...document.querySelectorAll('[role=dialog]')].flatMap((d) => d.getAnimations().map((a) => a.finished.catch(() => {})))))
+      .catch(() => {});
   const setWidth = async (w) => {
     await page.setViewport({ width: w, height: w < 600 ? 844 : w < 1000 ? 1024 : 900 });
     await settle(450);
+    // Un redimensionnement peut relancer l'animation d'entrée/sortie d'une modale déjà ouverte
+    // (route-driven, ex. /clients/:id) : on la laisse se terminer avant de mesurer.
+    await settleDialogAnimations();
   };
   const shotOf = async (name) => {
     if (!shots) return null;
@@ -381,6 +391,9 @@ try {
         await page.goto(`${base}${t.url}`, { waitUntil: 'networkidle2', timeout: 60_000 });
         await page.evaluate(applyThemeInPage, theme, isAdmin);
         await settle(1200);
+        // Une modale/tiroir ouvert par la route elle-même (ex. /factures/:id) peut encore être
+        // en pleine animation d'entrée sous charge machine : on attend qu'elle se termine avant de mesurer.
+        await settleDialogAnimations();
         if (opts.stress || opts.rtl) {
           await page.evaluate(stressInPage, opts.rtl ? 'rtl' : 'stress');
           await settle(300);
@@ -419,6 +432,11 @@ try {
         if (withDialogs && theme === 'default') {
           for (const w of [widths[0], widths[widths.length - 2] ?? widths[0], widths[widths.length - 1]]) {
             await setWidth(w);
+            // Une modale/tiroir déjà ouverte (piloté par la route elle-même, ex. /clients/:id) est
+            // déjà couverte par les mesures normales de la page : cliquer un bouton de la page en dessous
+            // (recouverte par l'overlay) la fermerait et on la mesurerait à tort en pleine animation de sortie.
+            const alreadyOpen = await page.evaluate(() => Boolean(document.querySelector('[role=dialog]:not([data-state="closed"])')));
+            if (alreadyOpen) continue;
             const labels = await page.$$eval('main button, main a[role=button]', (bs) =>
               bs
                 .filter((b) => b.offsetParent && !b.disabled && b.type !== 'submit')
@@ -434,13 +452,13 @@ try {
               await el.click().catch(() => {});
               await settle(700);
               const dlg = await page.evaluate(() => {
-                const d = document.querySelector('[role=dialog]');
+                const d = document.querySelector('[role=dialog]:not([data-state="closed"])');
                 if (!d) return null;
                 const r = d.getBoundingClientRect();
                 return { right: r.right, left: r.left, top: r.top, bottom: r.bottom, vw: document.documentElement.clientWidth, vh: window.innerHeight };
               });
               if (dlg) {
-                const m = await page.evaluate(measureInPage, '[role=dialog]');
+                const m = await page.evaluate(measureInPage, '[role=dialog]:not([data-state="closed"])');
                 const outside = dlg.right > dlg.vw + 1 || dlg.left < -1 || dlg.bottom > dlg.vh + 1 || dlg.top < -1;
                 const issues = m.issues.filter((i) => i.type !== 'hors-fenetre-overlay' || outside);
                 if (outside) issues.push({ type: 'modale-hors-ecran', el: 'dialog', detail: JSON.stringify(dlg) });

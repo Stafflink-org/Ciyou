@@ -282,7 +282,7 @@ export function HorairesPage() {
               const isToday = day.day === today.day;
               return (
                 <div key={day.day} className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 md:flex-row md:items-start md:gap-6">
-                  <div className="flex w-full items-center justify-between gap-3 md:w-44 md:shrink-0 md:justify-start md:pt-1.5">
+                  <div className="flex w-full flex-wrap items-center justify-between gap-y-2 gap-x-3 md:w-52 md:shrink-0 md:flex-nowrap md:justify-start md:pt-1.5">
                     <div className="flex items-center gap-3">
                       <Switch
                         checked={day.open}

@@ -146,10 +146,10 @@ export function PopularPage() {
                       <Link to={`/produits/${product.id}`} className="block truncate text-sm font-medium text-fg hover:text-primary-soft-fg">
                         {product.name}
                       </Link>
-                      <p className="flex items-center gap-2 text-xs text-fg-subtle">
-                        <span>{plural(product.salesCount ?? 0, 'vente')}</span>
+                      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-fg-subtle">
+                        <span className="shrink-0">{plural(product.salesCount ?? 0, 'vente')}</span>
                         {state.label !== 'En ligne' && (
-                          <Badge tone={state.tone} size="sm">
+                          <Badge tone={state.tone} size="sm" className="shrink-0">
                             {state.label}
                           </Badge>
                         )}
@@ -274,8 +274,8 @@ export function PopularPage() {
                       <Thumb image={product.image} alt={product.name} size="sm" className="hidden sm:block" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-fg">{product.name}</p>
-                        <div className="mt-1 flex items-center gap-2">
-                          <div className="h-1.5 w-full max-w-[140px] overflow-hidden rounded-full bg-surface-3" aria-hidden="true">
+                        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <div className="h-1.5 min-w-10 flex-1 max-w-[140px] overflow-hidden rounded-full bg-surface-3" aria-hidden="true">
                             <div className="h-full rounded-full bg-primary" style={{ width: `${Math.max(2, share * 100)}%` }} />
                           </div>
                           <span className="num shrink-0 font-mono text-2xs text-fg-subtle">{formatNumber(product.salesCount ?? 0)} ventes</span>
