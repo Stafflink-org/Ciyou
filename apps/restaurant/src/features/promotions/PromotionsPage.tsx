@@ -190,6 +190,7 @@ export function PromotionsPage() {
         eyebrow="Marketing"
         title="Codes promo et offres"
         description="Des remises bien pensées pour attirer de nouveaux clients et faire revenir les habitués, dans les règles fixées par Ciyou Eats."
+        breadcrumbs={[{ label: 'Marketing', href: '/marketing' }, { label: 'Codes promo' }]}
         actions={createButton}
       />
 

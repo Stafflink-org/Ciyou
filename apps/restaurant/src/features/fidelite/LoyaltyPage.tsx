@@ -237,6 +237,7 @@ function LoyaltyEditor({
         eyebrow="Marketing"
         title="Programme de fidélité"
         description={`Une raison de revenir chez ${restaurantName} : vos clients cumulent des points à chaque commande et débloquent vos récompenses.`}
+        breadcrumbs={[{ label: 'Marketing', href: '/marketing' }, { label: 'Fidélité' }]}
         actions={statusBadge}
       />
 

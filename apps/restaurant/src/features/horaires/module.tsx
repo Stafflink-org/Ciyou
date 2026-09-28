@@ -9,6 +9,7 @@ export default defineModule({
     icon: <Clock3 />,
     order: 20,
     keywords: ['ouverture', 'fermeture', 'jours fériés', 'créneaux', 'pause', 'congés'],
+    hidden: true, // regroupé dans le hub Paramètres (features/parametres)
   },
   permission: 'settings.manage',
   routes: [{ path: 'horaires', lazy: () => import('./HorairesPage').then((m) => ({ Component: m.HorairesPage })) }],

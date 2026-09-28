@@ -4,6 +4,7 @@ import { Check, ChevronRight } from 'lucide-react';
 import { cn } from '../lib/cn';
 import { initials } from '../lib/format';
 import { toneClass, type Tone } from '../lib/tones';
+import { useHubEmbed } from '../lib/hub-embed';
 
 /* ----------------------------------------------------------------- Avatar */
 
@@ -298,6 +299,18 @@ export interface PageHeaderProps {
 }
 
 export function PageHeader({ title, description, eyebrow, breadcrumbs, actions, children, className }: PageHeaderProps) {
+  // Intégré dans un hub à onglets : le titre est déjà porté par le hub, seuls les
+  // actions et le contenu (filtres, périodes) restent affichés.
+  const embedded = useHubEmbed();
+  if (embedded) {
+    if (!actions && !children) return null;
+    return (
+      <div className={cn('mb-6 space-y-4', className)}>
+        {actions && <div className="flex flex-wrap items-center justify-end gap-2">{actions}</div>}
+        {children}
+      </div>
+    );
+  }
   return (
     <header className={cn('mb-6 space-y-4', className)}>
       {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}

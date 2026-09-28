@@ -9,6 +9,7 @@ export default defineModule({
     icon: <BellRing />,
     order: 60,
     keywords: ['son', 'alertes', 'e-mails', 'sms', 'sonnerie'],
+    hidden: true, // regroupé dans le hub Paramètres (features/parametres)
   },
   permission: 'settings.manage',
   routes: [{ path: 'notifications', lazy: () => import('./NotificationsPage').then((m) => ({ Component: m.NotificationsPage })) }],

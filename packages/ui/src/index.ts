@@ -10,6 +10,7 @@ export * from './lib/field';
 export * from './lib/button-variants';
 export * from './lib/chart-colors';
 export * from './lib/use-command-shortcut';
+export * from './lib/hub-embed';
 
 export * from './components/app-shell';
 export * from './components/badge';

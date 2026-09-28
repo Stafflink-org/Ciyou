@@ -9,6 +9,7 @@ export default defineModule({
     icon: <Store />,
     order: 10,
     keywords: ['profil', 'adresse', 'logo', 'photos', 'siret', 'tva', 'mentions légales', 'allergènes'],
+    hidden: true, // regroupé dans le hub Paramètres (features/parametres)
   },
   permission: 'settings.manage',
   routes: [{ path: 'etablissement', lazy: () => import('./EtablissementPage').then((m) => ({ Component: m.EtablissementPage })) }],
