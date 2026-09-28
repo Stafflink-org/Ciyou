@@ -24,7 +24,9 @@ match /restaurantGroups/{groupId} {
 }
 
 match /restaurants/{rid} {
-  allow read: if resource.data.status == 'active'
+  // Interrupteur « Visible dans l'application GoLink » (§A2) : masque le commerce du catalogue
+  // public sans changer son statut ; toujours visible pour son équipe et le super admin.
+  allow read: if (resource.data.status == 'active' && resource.data.get('visibleInApp', true) != false)
     || isRestaurantMember(rid)
     || isAdminIn('restaurants.view', resource.data.cityId);
   allow update: if (can(rid, 'settings.manage') && onlyChanges(restaurantProfileFields())
@@ -94,6 +96,14 @@ match /restaurants/{rid} {
         || can(rid, 'stock.edit') && onlyChanges(['stock', 'available', 'updatedAt', 'updatedBy'])
       ) && updatedNow();
     allow delete: if false;
+  }
+
+  // Offres automatiques sur un plat (§B1) : lecture publique (fiche produit, panier), écriture par
+  // Cloud Function uniquement (saveProductOffer, toggleProductOffer, deleteProductOffer, et la
+  // désactivation par l'équipe Ciyou Eats).
+  match /productOffers/{offerId} {
+    allow read: if true;
+    allow write: if false;
   }
 
   match /options/{optionId} {
