@@ -52,7 +52,7 @@ Le backend (authentification, base de données, fonctions serveur) est **un seul
 
 ### Accès console Firebase
 
-Pour que l'équipe puisse consulter/tester directement dans la console Firebase (Firestore, Auth, Functions, logs), il faut être invité comme membre du projet. **En attente : indiquez le ou les e-mails à inviter**, avec le rôle souhaité (Éditeur pour développer, Lecteur pour consulter seulement).
+Pour que l'équipe puisse consulter/tester directement dans la console Firebase (Firestore, Auth, Functions, logs), chaque personne concernée doit être invitée comme membre du projet — rôle Éditeur pour développer, Lecteur pour consulter seulement. Cette invitation se fait depuis la [console Firebase](https://console.firebase.google.com/project/golink-9f16d/settings/iam) ou la [console Google Cloud IAM](https://console.cloud.google.com/iam-admin/iam?project=golink-9f16d), par le propriétaire/administrateur du compte du projet.
 
 ### Tester en local contre la vraie base
 
