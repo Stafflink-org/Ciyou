@@ -1,0 +1,20 @@
+rules_version = '2';
+
+// GoLink — règles Firestore.
+// Rôles portés par les custom claims Firebase Auth (posés côté Cloud Functions uniquement) :
+//   role: 'client' | 'driver' | 'restaurant' | 'admin'
+//   restaurantId: identifiant du restaurant pour les comptes 'restaurant'
+// Base : tout est refusé tant qu'une collection n'a pas sa règle explicite.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function role() { return signedIn() ? request.auth.token.get('role', '') : ''; }
+    function isAdmin() { return role() == 'admin'; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

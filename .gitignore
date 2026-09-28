@@ -1,0 +1,36 @@
+node_modules/
+dist/
+build/
+.expo/
+web-build/
+*.tsbuildinfo
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+
+# Cloud Functions (compilé)
+functions/lib/
+
+# Expo : dossiers natifs générés par prebuild
+apps/*/ios/
+apps/*/android/
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Secrets / clés
+*.jks
+*.p8
+*.p12
+*.key
+*.pem
+*.mobileprovision
+service-account*.json
+
+.vscode/
+.idea/
