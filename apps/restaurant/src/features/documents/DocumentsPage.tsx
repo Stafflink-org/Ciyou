@@ -32,6 +32,7 @@ import { errorMessage, toDate } from '@/lib/firestore';
 import { privateFileUrl } from '../parametres/kit/storage';
 import { LoadError, Notice } from '../parametres/kit/ui';
 import { ContractSection } from './ContractSection';
+import { GdprSection } from './GdprSection';
 import {
   daysUntil,
   requirementState,
@@ -230,6 +231,8 @@ export function DocumentsPage() {
             </>
           )}
         </Card>
+
+        <GdprSection />
       </div>
 
       <UploadDialog requirement={upload} onClose={() => setUpload(null)} />

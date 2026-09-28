@@ -83,6 +83,10 @@ export const saveIncident = callFunction<
 // §31 Données et sauvegardes
 export const runManualBackup = callFunctionWithReason<{ collections: string[] | null }, { backupId: string }>('runManualBackup', { title: 'Lancer une sauvegarde manuelle' });
 export const checkBackupStatus = callFunction<{ backupId: string }, { status: string }>('checkBackupStatus');
+export const getBackupDownloadLinks = callFunction<
+  { backupId: string },
+  { files: Array<{ name: string; url: string; sizeBytes: number | null }>; truncated: boolean }
+>('getBackupDownloadLinks');
 export const restoreFromTrash = callFunction<{ trashId: string; reason: string }, { restored: boolean; path: string }>('restoreFromTrash');
 export const purgeTrashItem = callFunction<{ trashId: string; reason: string }, { purged: boolean }>('purgeTrashItem');
 

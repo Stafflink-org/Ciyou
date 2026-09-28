@@ -199,7 +199,7 @@ export interface TrashItem {
 
 /** backups/{id} : export géré Firestore (sauvegarde planifiée ou manuelle). */
 export interface Backup {
-  kind: 'scheduled' | 'manual';
+  kind: 'scheduled' | 'manual' | 'downloadable';
   status: 'running' | 'completed' | 'failed';
   bucketPath: string;
   collections: string[] | null;
@@ -208,6 +208,8 @@ export interface Backup {
   finishedAt?: Timestamp | null;
   error?: string | null;
   requestedBy: string;
+  /** Renseigné pour un export « téléchargeable » (kind: 'downloadable') : chemin dans le bucket applicatif (Storage), lisible par un administrateur habilité. */
+  downloadPath?: string | null;
 }
 
 /** backupRestores/{id} : restauration outillée d'une sauvegarde (§31), double confirmation exigée. */

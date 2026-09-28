@@ -321,7 +321,9 @@ service cloud.firestore {
 
     // Dépôt d'une demande : Cloud Function submitGdprRequest (calcul de l'échéance, vérification d'identité).
     match /gdprRequests/{requestId} {
-      allow read: if isSelf(resource.data.get('subjectId', '')) || isAdmin('gdpr.handle');
+      allow read: if isSelf(resource.data.get('subjectId', ''))
+        || (resource.data.get('subjectType', '') == 'restaurant' && can(resource.data.get('subjectId', ''), 'settings.manage'))
+        || isAdmin('gdpr.handle');
       allow update: if isAdmin('gdpr.handle')
         && onlyChanges(['status', 'assigneeId', 'notes', 'retainedData', 'completedAt', 'updatedAt', 'updatedBy'])
         && updatedNow();
