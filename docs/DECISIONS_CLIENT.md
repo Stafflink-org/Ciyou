@@ -66,4 +66,4 @@ Réponses du client aux questions de l'annexe du cahier super admin et au questi
 | Langues | **Français, anglais, arabe** (arabe = écriture de droite à gauche). |
 | Pays | **France, Belgique, Luxembourg, Algérie, Maroc, Tunisie.** Multi-devises (EUR, DZD, MAD, TND) ; Stripe n'étant pas disponible partout, prévoir des moyens de paiement locaux par pays. |
 | Lancement | **Ville par ville.** Seules les villes actives sont visibles et opérables ; les autres restent en attente. |
-| Numéro de commande | Le cahier prend l'exemple « SL- » (marque de la maquette d'origine). GoLink est la marque exploitée : le préfixe reste **`GL-`** (`formatOrderNumber`, `packages/shared/src/utils/ids.ts`) ; aucune autre marque n'est jamais utilisée dans le produit (cf. § « marque GoLink uniquement »). |
+| Numéro de commande | Le cahier prend l'exemple « SL- » (marque de la maquette d'origine). Ciyou Eats est la marque exploitée : le préfixe reste **`GL-`** (`formatOrderNumber`, `packages/shared/src/utils/ids.ts`) ; aucune autre marque n'est jamais utilisée dans le produit (cf. § « marque Ciyou Eats uniquement »). |

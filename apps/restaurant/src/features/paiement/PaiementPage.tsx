@@ -7,7 +7,7 @@
 import { Suspense, lazy, useMemo, type ComponentType, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router';
 import { BadgePercent, Banknote, ChartColumn, FileText, Gem, Landmark, Wallet } from 'lucide-react';
-import { HubEmbedProvider, PageContainer, PageHeader, Skeleton, Tabs, TabsContent, TabsList, TabsTrigger } from '@golink/ui';
+import { HubEmbedProvider, PageContainer, PageHeader, Skeleton, Tabs, TabsList, TabsTrigger } from '@golink/ui';
 import { AccessDeniedPanel, useDocumentTitle } from '@golink/web';
 import type { RestaurantPermission } from '@golink/shared';
 import { useCan, useRestaurantAccess } from '@/auth/RestaurantAccess';
@@ -49,7 +49,7 @@ function TabFallback() {
 
 /** Hub « Paiement » : onglets agrégeant les rubriques financières existantes. */
 export function PaiementPage() {
-  useDocumentTitle('Paiement · GoLink Restaurant');
+  useDocumentTitle('Paiement · Ciyou Eats Restaurant');
   const { restaurant } = useRestaurantAccess();
   const can = useCan();
   const [params, setParams] = useSearchParams();

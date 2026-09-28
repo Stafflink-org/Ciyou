@@ -90,6 +90,7 @@ export function SocialPage() {
         eyebrow="Marketing"
         title="Réseaux sociaux"
         description="Vos comptes, votre lien de commande et des visuels prêts à publier pour faire connaître votre carte au-delà de l’application."
+        breadcrumbs={[{ label: 'Marketing', href: '/marketing' }, { label: 'Réseaux sociaux' }]}
       />
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <ShareLinkCard />

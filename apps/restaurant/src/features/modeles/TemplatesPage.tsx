@@ -80,6 +80,7 @@ export function TemplatesPage() {
         eyebrow="Marketing"
         title="Modèles"
         description="Vos réponses types pour gagner du temps, et les messages envoyés automatiquement à chaque étape d’une commande."
+        breadcrumbs={[{ label: 'Marketing', href: '/marketing' }, { label: 'Modèles' }]}
       />
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="mb-6">

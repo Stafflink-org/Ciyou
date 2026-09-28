@@ -47,11 +47,11 @@ export interface ReplyTemplate extends Tracked {
 export const PRODUCT_OFFER_KINDS = ['bogo', 'half_second'] as const;
 export type ProductOfferKind = (typeof PRODUCT_OFFER_KINDS)[number];
 
-/** Statut calculé d'une offre (jamais stocké) : en ligne, programmée, en pause, terminée, désactivée par GoLink. */
+/** Statut calculé d'une offre (jamais stocké) : en ligne, programmée, en pause, terminée, désactivée par Ciyou Eats. */
 export const PRODUCT_OFFER_STATUSES = ['live', 'scheduled', 'paused', 'ended', 'disabled'] as const;
 export type ProductOfferStatus = (typeof PRODUCT_OFFER_STATUSES)[number];
 
-/** Désactivation d'une offre par l'équipe GoLink (abus, plat non conforme…) : le commerce ne peut pas la réactiver. */
+/** Désactivation d'une offre par l'équipe Ciyou Eats (abus, plat non conforme…) : le commerce ne peut pas la réactiver. */
 export interface ProductOfferModeration {
   reason: string;
   by: string;
@@ -81,7 +81,7 @@ export interface ProductOffer extends Tracked {
   endDay: string | null;
   /** Mise en pause par le commerce. */
   active: boolean;
-  /** Désactivation par GoLink (prime sur `active`). */
+  /** Désactivation par Ciyou Eats (prime sur `active`). */
   disabledByPlatform?: ProductOfferModeration | null;
   /** Compteurs tenus par les fonctions de commande. */
   ordersCount?: number;
