@@ -18,7 +18,18 @@ import {
   TimeInput,
   toast,
 } from '@golink/ui';
-import { PARTNER_DOCUMENT_LABELS, type ApplicationDecision, type PartnerDocumentType, type Restaurant, type WithId } from '@golink/shared';
+import {
+  CURRENCY_CODES,
+  CURRENCY_LABELS,
+  PARTNER_DOCUMENT_LABELS,
+  resolveRestaurantCurrency,
+  type ApplicationDecision,
+  type CurrencyCode,
+  type PartnerDocumentType,
+  type Restaurant,
+  type WithId,
+} from '@golink/shared';
+import { useGeoScope } from '@/layout/GeoScope';
 import { env } from '@/lib/env';
 import { useMutation } from '@/lib/firestore';
 import { reactivateRestaurant, reviewRestaurantApplication, startImpersonation, suspendRestaurant } from '../lib';
@@ -215,13 +226,16 @@ export function DecisionDialog({
   const [reason, setReason] = useState('');
   const [missing, setMissing] = useState<PartnerDocumentType[]>(suggestedMissing);
   const [goLive, setGoLive] = useState(true);
+  const scope = useGeoScope();
+  const country = scope.countries.find((c) => c.id === restaurant.countryId) ?? null;
+  const [currency, setCurrency] = useState<CurrencyCode>(() => resolveRestaurantCurrency(restaurant, country, restaurant.countryId) as CurrencyCode);
   const run = useMutation(reviewRestaurantApplication, {
     success: (r) => (r.onboardingStatus === 'approved' ? 'Dossier validé' : r.onboardingStatus === 'rejected' ? 'Dossier refusé' : 'Demande de documents envoyée'),
   });
   if (!decision) return null;
   const meta = DECISIONS[decision];
   const needsReason = decision !== 'approve';
-  const blocked = (needsReason && reason.trim().length < 3) || (decision === 'documents_missing' && missing.length === 0);
+  const blocked = (needsReason && reason.trim().length < 3) || (decision === 'documents_missing' && missing.length === 0) || (decision === 'approve' && !currency);
 
   return (
     <Dialog open={Boolean(decision)} onOpenChange={(o) => !run.loading && onOpenChange(o)}>
@@ -238,6 +252,11 @@ export function DecisionDialog({
           }
         />
         <DialogBody className="space-y-4">
+          {decision === 'approve' && (
+            <FormField label="Devise du compte" required hint="Pré-remplie selon le pays du commerce ; utilisée pour le formatage des montants qui lui sont propres.">
+              <Select value={currency} onValueChange={(v) => setCurrency(v as CurrencyCode)} options={CURRENCY_CODES.map((c) => ({ value: c, label: `${CURRENCY_LABELS[c]} (${c})` }))} />
+            </FormField>
+          )}
           {decision === 'approve' && restaurant.status === 'onboarding' && (
             <label className="flex items-start gap-3 rounded-xl border border-border bg-surface-2 px-4 py-3">
               <Checkbox checked={goLive} onCheckedChange={(v) => setGoLive(v === true)} className="mt-0.5" aria-label="Mettre en ligne" />
@@ -275,7 +294,7 @@ export function DecisionDialog({
             disabled={blocked}
             onClick={() =>
               void run
-                .mutate({ restaurantId: restaurant.id, decision, reason: reason.trim() || null, missingDocuments: missing, goLive })
+                .mutate({ restaurantId: restaurant.id, decision, reason: reason.trim() || null, missingDocuments: missing, goLive, currency: decision === 'approve' ? currency : undefined })
                 .then((r) => {
                   if (r) {
                     setReason('');

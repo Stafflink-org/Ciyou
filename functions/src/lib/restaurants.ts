@@ -10,6 +10,7 @@ import {
   slugify,
   type City,
   type Country,
+  type CurrencyCode,
   type LatLng,
   type MerchantDefaults,
   type OrderRules,
@@ -90,6 +91,10 @@ export interface NewRestaurantInput {
   createdBy: string;
   /** Valeurs initiales (préparation, minimum) — `loadMerchantDefaults(countryId, cityId)` ; repli si omises. */
   merchantDefaults?: MerchantDefaults;
+  /** Devise du compte (`currencyOfCountry(countryId)`) ; repli EUR si omise. */
+  currency?: CurrencyCode;
+  /** Le propriétaire a-t-il déjà (ou va-t-il aussitôt) reçu de quoi accéder à son compte ? Défaut : true (inscription en ligne). */
+  ownerCredentialsDelivered?: boolean;
 }
 
 export function newRestaurantDoc(input: NewRestaurantInput): Restaurant {
@@ -144,6 +149,8 @@ export function newRestaurantDoc(input: NewRestaurantInput): Restaurant {
     searchKeywords: buildSearchKeywords(input.name, input.address.city, input.address.postalCode, input.email, input.phone),
     launchedAt: null,
     suspension: null,
+    currency: input.currency ?? 'EUR',
+    ownerCredentialsDelivered: input.ownerCredentialsDelivered ?? true,
     deletedAt: null,
     deletedBy: null,
     deleteReason: null,

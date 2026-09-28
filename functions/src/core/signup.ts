@@ -40,6 +40,7 @@ import {
 import { linkRestaurantReferral } from '../marketing/platform/referral-links';
 import { isBlocked } from '../platform/fraud';
 import { assertNotInMaintenance } from '../lib/platform-status';
+import { currencyOfCountry } from '../lib/currency';
 import { EMAIL_SECRETS } from '../lib/secrets';
 import { z, zEmail, zName, zPassword, zPhone } from '../lib/validation';
 
@@ -202,7 +203,7 @@ export const restaurantSignup = callable(
     };
     const terms = await currentTermsVersion(countryId);
     const managerName = `${data.owner.firstName} ${data.owner.lastName}`;
-    const merchantDefaults = await loadMerchantDefaults(countryId, city.id);
+    const [merchantDefaults, currency] = await Promise.all([loadMerchantDefaults(countryId, city.id), currencyOfCountry(countryId)]);
 
     const restaurantRef = db.collection(COLLECTIONS.restaurants).doc();
     const restaurant = newRestaurantDoc({
@@ -220,6 +221,9 @@ export const restaurantSignup = callable(
       cuisineIds: data.restaurant.cuisineIds,
       createdBy: uid,
       merchantDefaults,
+      currency,
+      // Session déjà ouverte, ou mot de passe choisi à l'instant : le propriétaire a déjà ses accès.
+      ownerCredentialsDelivered: true,
     });
     const hours: RestaurantHours = { ...defaultWeeklyHours(city.timezone), updatedAt: Timestamp.now(), updatedBy: uid };
     const now = Timestamp.now();

@@ -20,7 +20,7 @@
 //   --dialogs=false        n'ouvre pas les modales
 // Sorties : .smoke/overflow-<app>.json (rapport) et .smoke/overflow-<app>/*.jpg (captures).
 // Mots de passe : lus dans .test-accounts.local.md, jamais recopiés.
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
@@ -258,6 +258,8 @@ async function boot1() {
 const isDead = (e) => /Session closed|detached|Target closed|Connection closed|Protocol error/i.test(String(e?.message ?? e));
 const report = { app, base, widths, themes, stress: Boolean(opts.stress), rtl: Boolean(opts.rtl), startedAt: new Date().toISOString(), pages: [], summary: {} };
 const consoleErrors = new Set();
+const partialReportFile = join(root, '.smoke', `overflow-${app}-${email.split('@')[0]}${variant}.partial.json`);
+const saveProgress = () => { try { writeFileSync(partialReportFile, JSON.stringify(report, null, 1)); } catch {} };
 
 try {
   await boot();
@@ -466,6 +468,7 @@ try {
         }
       }
       report.pages.push(entry);
+      saveProgress();
       const n = entry.measures.reduce((a, m) => a + m.issues.length + (m.docScroll > 1 ? 1 : 0), 0) + entry.dialogs.reduce((a, d) => a + d.issues.length, 0);
       console.log(`${theme.padEnd(7)} ${t.url.padEnd(38)} défauts=${n}${entry.error ? ' ERREUR ' + entry.error : ''}`);
       break;
@@ -475,31 +478,35 @@ try {
 
   // Coquille : menu mobile et palette ⌘K.
   const shell = [];
-  if (withDialogs) {
-    await page.goto(`${base}/`, { waitUntil: 'networkidle2', timeout: 60_000 });
-    await page.evaluate(applyThemeInPage, 'default', isAdmin);
-    for (const w of [widths[widths.length - 2] ?? 390, widths[widths.length - 1]]) {
-      await setWidth(w);
-      const btn = await page.evaluateHandle(() => [...document.querySelectorAll('header button, button[aria-label]')].find((b) => /menu|navigation/i.test(b.getAttribute('aria-label') || '') && b.offsetParent));
-      const el = btn.asElement();
-      if (el) {
-        await el.click();
+  try {
+    if (withDialogs) {
+      await page.goto(`${base}/`, { waitUntil: 'networkidle2', timeout: 60_000 });
+      await page.evaluate(applyThemeInPage, 'default', isAdmin);
+      for (const w of [widths[widths.length - 2] ?? 390, widths[widths.length - 1]]) {
+        await setWidth(w);
+        const btn = await page.evaluateHandle(() => [...document.querySelectorAll('header button, button[aria-label]')].find((b) => /menu|navigation/i.test(b.getAttribute('aria-label') || '') && b.offsetParent));
+        const el = btn.asElement();
+        if (el) {
+          await el.click();
+          await settle(600);
+          const m = await page.evaluate(measureInPage, null);
+          shell.push({ what: 'menu-mobile', width: w, docScroll: m.docScroll, issues: m.issues });
+          await page.keyboard.press('Escape');
+          await settle(300);
+        }
+        await page.keyboard.down('Control');
+        await page.keyboard.press('k');
+        await page.keyboard.up('Control');
         await settle(600);
-        const m = await page.evaluate(measureInPage, null);
-        shell.push({ what: 'menu-mobile', width: w, docScroll: m.docScroll, issues: m.issues });
-        await page.keyboard.press('Escape');
-        await settle(300);
-      }
-      await page.keyboard.down('Control');
-      await page.keyboard.press('k');
-      await page.keyboard.up('Control');
-      await settle(600);
-      if (await page.$('[role=dialog]')) {
-        const m = await page.evaluate(measureInPage, '[role=dialog]');
-        shell.push({ what: 'palette', width: w, docScroll: m.docScroll, issues: m.issues });
-        await page.keyboard.press('Escape');
+        if (await page.$('[role=dialog]')) {
+          const m = await page.evaluate(measureInPage, '[role=dialog]');
+          shell.push({ what: 'palette', width: w, docScroll: m.docScroll, issues: m.issues });
+          await page.keyboard.press('Escape');
+        }
       }
     }
+  } catch (error) {
+    console.log(`  coquille (menu/palette) ignorée après erreur : ${String(error.message ?? error).slice(0, 100)}`);
   }
   report.shell = shell;
 } finally {
@@ -534,6 +541,7 @@ report.summary = { pagesAudited: report.pages.length, pagesWithDefects: [...page
 report.finishedAt = new Date().toISOString();
 const reportFile = join(root, '.smoke', `overflow-${app}-${email.split('@')[0]}${variant}.json`);
 writeFileSync(reportFile, JSON.stringify(report, null, 1));
+try { rmSync(partialReportFile); } catch {}
 console.log(JSON.stringify(report.summary, null, 1));
 console.log('Rapport :', reportFile);
 process.exitCode = total > 0 ? 1 : 0;

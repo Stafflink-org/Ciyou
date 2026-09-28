@@ -505,7 +505,7 @@ function BalancesTable({ employees, absences, loading }: { employees: WithId<Emp
   if (loading) return <Skeleton className="h-64" />;
   return (
     <Card className="overflow-hidden">
-      <div className="overflow-x-auto">
+      <div data-scroll-ok className="overflow-x-auto">
         <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-surface-2">
             <tr className="text-left">

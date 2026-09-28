@@ -66,7 +66,7 @@ export function OrdersLayout({
         </div>
       )}
 
-      <nav aria-label="Vues des commandes" className="mb-5 flex items-center gap-5 overflow-x-auto border-b border-border [scrollbar-width:none]">
+      <nav data-scroll-ok aria-label="Vues des commandes" className="mb-5 flex items-center gap-5 overflow-x-auto border-b border-border [scrollbar-width:none]">
         {TABS.map((tab) => (
           <NavLink
             key={tab.to}

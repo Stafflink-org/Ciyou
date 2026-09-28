@@ -359,7 +359,7 @@ export function ChiffreAffairesPage() {
                 ) : vatRows.length === 0 ? (
                   <EmptyState compact title="Aucune vente taxable" description="Aucune commande livrée sur la période." />
                 ) : (
-                  <div className="overflow-x-auto">
+                  <div data-scroll-ok className="overflow-x-auto">
                     <table className="w-full min-w-[480px] text-sm">
                       <thead>
                         <tr className="border-b border-border text-left font-mono text-3xs uppercase tracking-eyebrow text-fg-subtle">

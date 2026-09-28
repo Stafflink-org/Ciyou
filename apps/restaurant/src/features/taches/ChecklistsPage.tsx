@@ -244,7 +244,7 @@ export function ChecklistsPage() {
       {templates.data.length > 0 && (
         <Card className="mt-6">
           <CardHeader icon={<CalendarDays />} title="Sept derniers jours" description="Suivi de réalisation par checklist." divided />
-          <div className="overflow-x-auto">
+          <div data-scroll-ok className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-sm">
               <thead>
                 <tr className="bg-surface-2">

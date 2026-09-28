@@ -9,9 +9,11 @@ import {
   STAFF_ROLES,
   buildSearchKeywords,
   canTransition,
+  defaultCurrencyOfCountry,
   encodeGeohash,
   formatBps,
   formatCountdown,
+  formatMoney,
   formatOrderNumber,
   formatPrice,
   haversineMeters,
@@ -23,12 +25,23 @@ import {
   nextOrderStatus,
   parseOrderNumber,
   parsePriceInput,
+  resolveRestaurantCurrency,
   slugify,
   toDayKey,
 } from '../src';
 
 const NBSP = ' ';
 const NNBSP = ' ';
+
+test('devise du compte d’un restaurant (repli pays puis EUR)', () => {
+  assert.equal(resolveRestaurantCurrency({ currency: 'MAD' }, { currency: 'EUR' }, 'FR'), 'MAD', 'la devise du restaurant l’emporte');
+  assert.equal(resolveRestaurantCurrency({ currency: undefined }, { currency: 'DZD' }, 'DZ'), 'DZD', 'à défaut, celle du pays');
+  assert.equal(resolveRestaurantCurrency({}, null, 'TN'), 'TND', 'à défaut, celle habituelle du pays (sans document pays)');
+  assert.equal(resolveRestaurantCurrency(null, null, null), 'EUR', 'à défaut de tout, EUR');
+  assert.equal(defaultCurrencyOfCountry('MA'), 'MAD');
+  assert.equal(defaultCurrencyOfCountry('inconnu'), 'EUR');
+  assert.equal(formatMoney(12_500, 'TND').includes('12,500'), true, 'le dinar tunisien a 3 décimales');
+});
 
 test('formats de prix fr-FR', () => {
   assert.equal(formatPrice(1250).replace(NNBSP, NBSP), `12,50${NBSP}€`);

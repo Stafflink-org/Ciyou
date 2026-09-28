@@ -1,6 +1,22 @@
 // Configuration d'un établissement : contrôles partagés par le back-office
 // restaurant (validation immédiate) et les Cloud Functions (validation qui fait foi).
 import type { TimeRange, WeeklyHours } from '../models/common';
+import { defaultCurrencyOfCountry, type CurrencyCode } from '../pricing/currency';
+
+// ------------------------------------------------------------------ Devise du commerce
+
+/**
+ * Devise à utiliser pour formater les montants de CE commerce : celle fixée sur sa fiche
+ * (super admin), sinon celle du pays, sinon EUR. Ne jamais lire `restaurant.currency`
+ * directement (absent sur les documents créés avant cette rubrique).
+ */
+export function resolveRestaurantCurrency(
+  restaurant: { currency?: CurrencyCode | null } | null | undefined,
+  country?: { currency?: CurrencyCode | null } | null,
+  countryId?: string | null,
+): CurrencyCode {
+  return restaurant?.currency ?? country?.currency ?? defaultCurrencyOfCountry(countryId);
+}
 
 // ------------------------------------------------------------------ Mentions de l'établissement
 
