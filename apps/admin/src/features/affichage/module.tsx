@@ -11,7 +11,7 @@ export default defineModule({
     label: 'Affichage app client',
     icon: <Smartphone />,
     order: 110,
-    keywords: ['accueil', 'bannières', 'catégories', 'cuisines', 'classement', 'sponsorisé', 'mise en avant', 'pages', 'FAQ', 'CGU', 'mentions légales', 'confidentialité'],
+    keywords: ['accueil', 'bannières', 'catégories', 'cuisines', 'classement', 'sponsorisé', 'mise en avant', 'pages', 'FAQ', 'CGU', 'mentions légales', 'confidentialité', 'offres', 'plats', 'annonces'],
   },
   permission: 'display.edit',
   routes: [
@@ -20,6 +20,7 @@ export default defineModule({
     { path: 'affichage/categories', lazy: page(() => import('./CategoriesPage'), (m) => m.CategoriesPage) },
     { path: 'affichage/classement', lazy: page(() => import('./RankingPage'), (m) => m.RankingPage) },
     { path: 'affichage/sponsorise', lazy: page(() => import('./SponsoredPage'), (m) => m.SponsoredPage) },
+    { path: 'affichage/offres-plats', lazy: page(() => import('./OffresPlatsPage'), (m) => m.OffresPlatsPage) },
     { path: 'affichage/pages', lazy: page(() => import('./PagesPage'), (m) => m.PagesPage) },
     { path: 'affichage/pages/:slug', lazy: page(() => import('./PageEditorPage'), (m) => m.PageEditorPage) },
     { path: 'affichage/legal/:documentId', lazy: page(() => import('./LegalEditorPage'), (m) => m.LegalEditorPage) },

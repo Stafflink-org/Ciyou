@@ -55,6 +55,7 @@ const CAUSE_LABELS: Record<RefundCause, string> = {
   commercial_gesture: 'Geste commercial',
   platform_error: 'Erreur de la plateforme',
   payment_issue: 'Problème de paiement',
+  weight_adjustment: 'Ajustement poids/prix variable',
 };
 
 function adminActor(admin: AdminUser, uid: string): EventActor {

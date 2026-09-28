@@ -196,3 +196,12 @@ export const deleteProductOffer = callable(
     return { offerId: ref.id, status: 'deleted' as const };
   },
 );
+
+/** Le restaurant est chargé pour la désactivation admin (§H1, functions/src/admin/experience/display.ts). */
+export async function loadRestaurantForOfferModeration(restaurantId: string): Promise<RestaurantDoc> {
+  return loadRestaurant(restaurantId);
+}
+
+export function productOffersRef(restaurantId: string) {
+  return offersRef(restaurantId);
+}

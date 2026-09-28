@@ -19,7 +19,7 @@ import {
 import type { MenuProduct } from '../menu/data';
 import { productIssues, saleState, scheduleSummary } from '../menu/helpers';
 import { DragHandle, type SortableApi } from '../menu/sortable';
-import { Price, StockPill, Thumb } from '../menu/ui';
+import { Price, saleUnitSuffix, StockPill, Thumb } from '../menu/ui';
 
 export interface ProductRowActions {
   onToggleAvailable: (product: MenuProduct, available: boolean) => void;
@@ -78,7 +78,11 @@ export function ProductRow({ product, hideName, canEdit, canStock, selected, onS
             )}
           </div>
           <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-fg-subtle">
-            <span className="num font-mono font-medium text-fg sm:hidden">{formatEUR(product.priceCents, { cents: true })}</span>
+            <span className="num font-mono font-medium text-fg sm:hidden">
+              {product.saleUnit === 'variable' && 'env. '}
+              {formatEUR(product.saleUnit === 'weight' ? (product.pricePerKgCents ?? product.priceCents) : product.priceCents, { cents: true })}
+              {product.saleUnit === 'weight' && ' /kg'}
+            </span>
             {state.label !== 'En ligne' && (
               <Badge tone={state.tone} size="sm">
                 {state.label}
@@ -118,7 +122,11 @@ export function ProductRow({ product, hideName, canEdit, canStock, selected, onS
         <StockPill product={product} />
       </div>
       <div className="hidden w-[4.5rem] text-right sm:block">
-        <Price cents={product.priceCents} className={cn(!product.available && 'text-fg-muted')} />
+        <Price
+          cents={product.saleUnit === 'weight' ? (product.pricePerKgCents ?? product.priceCents) : product.priceCents}
+          suffix={saleUnitSuffix(product)}
+          className={cn(!product.available && 'text-fg-muted')}
+        />
         {product.compareAtPriceCents ? (
           <span className="num block font-mono text-2xs text-fg-subtle line-through">{formatEUR(product.compareAtPriceCents, { cents: true })}</span>
         ) : null}

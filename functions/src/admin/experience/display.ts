@@ -10,6 +10,7 @@ import {
   type ContentPage,
   type ContentPageVersion,
   type LegalDocument,
+  type ProductOffer,
   type Restaurant,
   type RestaurantCommercial,
   type SponsoredOffer,
@@ -25,6 +26,7 @@ import { z, zId, zReason } from '../../lib/validation';
 import { EXPERIENCE_RUNTIME, euros, experienceCallable, parisDay } from './common';
 import { recordSettingsChange } from '../../platform/runtime';
 import { recomputeRankingScores } from './ranking';
+import { loadRestaurantForOfferModeration, productOffersRef } from '../../marketing/restaurant/offers';
 
 const DAY = 86_400_000;
 
@@ -455,3 +457,37 @@ export const saveSponsoredOffer = experienceCallable(offerSchema, async (data, r
   });
   return { offerId: ref.id };
 });
+
+// ------------------------------------------------------------------ Offres sur un plat (§H1)
+// Désactivation par Ciyou Eats d'une offre automatique créée par un commerce (abus, plat non
+// conforme…) : le commerce ne peut alors plus la modifier ni la relancer (functions/src/marketing/
+// restaurant/offers.ts). La liste par restaurant est la même collection lue en collectionGroup
+// côté admin (apps/admin/src/features/affichage/OffresPlatsPage.tsx), lecture publique par les règles.
+
+export const disableProductOffer = experienceCallable(
+  z.object({ restaurantId: zId, offerId: zId, disabled: z.boolean(), reason: zReason }),
+  async (data, request) => {
+    const { caller, admin } = await requireAdmin(request, 'display.edit');
+    const restaurant = await loadRestaurantForOfferModeration(data.restaurantId);
+    assertAdminCovers(admin, restaurant.cityId);
+    const ref = productOffersRef(data.restaurantId).doc(data.offerId);
+    const snap = await ref.get();
+    if (!snap.exists) throw fail.notFound('Offre');
+    const current = snap.data() as ProductOffer;
+    const now = Timestamp.now();
+    const moderation = data.disabled ? { reason: data.reason, by: caller.uid, byName: caller.name ?? null, at: now } : null;
+    await ref.update({ disabledByPlatform: moderation, updatedAt: now, updatedBy: caller.uid });
+    await writeAudit({
+      actor: actorFromCaller(caller, 'admin'),
+      countryId: restaurant.countryId,
+      cityId: restaurant.cityId,
+      action: data.disabled ? 'product_offer.disabled_by_platform' : 'product_offer.reenabled_by_platform',
+      target: { type: 'productOffer', id: ref.id, label: current.title },
+      reason: data.reason,
+      before: { disabledByPlatform: current.disabledByPlatform ?? null },
+      after: { disabledByPlatform: moderation },
+      request,
+    });
+    return { offerId: ref.id, disabled: data.disabled };
+  },
+);

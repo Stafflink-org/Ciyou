@@ -15,6 +15,7 @@ import {
   SUBCOLLECTIONS,
   buildSearchKeywords,
   checkProductAlcohol,
+  computeProductOffersDiscount,
   effectiveMinOrderCents,
   computeQuote,
   computeSettlement,
@@ -26,6 +27,7 @@ import {
   isPointInPolygon,
   maskPhone,
   publicDisplayName,
+  productOfferStatus,
   type Counter,
   type FeatureKey,
   type MenuOption,
@@ -40,6 +42,7 @@ import {
   type PlaceOrderInput,
   type PlaceOrderResult,
   type Product,
+  type ProductOffer,
   type Promotion,
   type PromotionInput,
   type PromotionRedemption,
@@ -92,6 +95,8 @@ const schema = z.object({
           .max(40)
           .optional(),
         comment: z.string().trim().max(200).nullish(),
+        /** Vente au poids : poids réellement souhaité (grammes), requis pour un article `weight`. */
+        weightGrams: z.number().positive().max(100_000).optional(),
       }),
     )
     .min(1, 'Votre panier est vide.')
@@ -335,23 +340,77 @@ export const placeOrder = callable(
       }
       if (chosen.some((o) => !product.optionGroupIds.includes(o.groupId))) throw fail.invalid('Option invalide pour cet article.');
       const optionsPriceCents = snapshotOptions.reduce((s, o) => s + o.priceCents * o.quantity, 0);
+
+      // Vente au poids ou à prix variable (cahier weight-based-pricing) : le prix affiché sur la
+      // carte n'est qu'indicatif, le montant réellement dû se calcule ici (et sera confirmé par le
+      // commerce à la préparation via adjustOrderItemWeight).
+      const saleUnit = product.saleUnit ?? 'unit';
+      let weightGrams: number | null = null;
+      let unitPriceCents = product.priceCents;
+      if (saleUnit === 'weight') {
+        const requested = line.weightGrams ?? product.minWeightGrams ?? product.weightStepGrams ?? null;
+        if (!requested || requested <= 0) throw fail.invalid(`Indiquez le poids souhaité pour « ${product.name} ».`);
+        if (product.minWeightGrams != null && requested < product.minWeightGrams) {
+          throw fail.invalid(`« ${product.name} » : ${requested} g est inférieur au poids minimum (${product.minWeightGrams} g).`);
+        }
+        if (product.maxWeightGrams != null && requested > product.maxWeightGrams) {
+          throw fail.invalid(`« ${product.name} » : ${requested} g dépasse le poids maximum (${product.maxWeightGrams} g).`);
+        }
+        weightGrams = Math.round(requested);
+        // Même calcul que `lineUnitPriceCents` (moteur de tarification) : prix au kg × poids réel.
+        unitPriceCents = Math.round(((product.pricePerKgCents ?? 0) * weightGrams) / 1000);
+      } else if (saleUnit === 'variable') {
+        // Montant maximal pré-autorisé : le prix final, toujours inférieur ou égal, est fixé par le
+        // commerce à la préparation (adjustOrderItemWeight) et l'écart est remboursé automatiquement.
+        unitPriceCents = product.variablePriceMaxCents ?? product.priceCents;
+      }
+
       return {
         lineId: `l${index + 1}`,
         productId: line.productId,
         name: product.name,
         imageUrl: product.image?.thumbUrl ?? product.image?.url ?? null,
-        unitPriceCents: product.priceCents,
+        unitPriceCents,
         quantity: line.quantity,
         options: snapshotOptions,
         optionsPriceCents,
-        totalCents: (product.priceCents + optionsPriceCents) * line.quantity,
+        totalCents: (unitPriceCents + optionsPriceCents) * line.quantity,
         vatCategory: product.vatCategory,
         containsAlcohol: false,
+        saleUnit: saleUnit !== 'unit' ? saleUnit : undefined,
+        pricePerKgCents: saleUnit === 'weight' ? (product.pricePerKgCents ?? null) : undefined,
+        weightGrams: saleUnit === 'weight' ? weightGrams : undefined,
         comment: line.comment || null,
         adjustment: null,
       };
     });
     const containsAlcohol = false;
+
+    // ---------------------------------------------------------------- Offres sur un plat (B4)
+    // « 1 acheté, 1 offert » / « le 2e à -50 % » (functions/src/marketing/restaurant/offers.ts),
+    // financées à 100 % par le commerce. En concurrence avec une promotion (code ou automatique) :
+    // seule la remise la plus avantageuse pour le client s'applique au final (pas de cumul, voir plus bas).
+    const cartProductIds = new Set(items.map((i) => i.productId));
+    const offersSnap = cartProductIds.size
+      ? await restaurantRef.collection(SUBCOLLECTIONS.restaurants.productOffers).where('active', '==', true).get()
+      : null;
+    const offerToday = serviceAt.toISOString().slice(0, 10);
+    const offerByProductId = new Map<string, { id: string; offer: ProductOffer }>();
+    for (const snap of offersSnap?.docs ?? []) {
+      const offer = snap.data() as ProductOffer;
+      if (!cartProductIds.has(offer.productId)) continue;
+      if (productOfferStatus(offer, offerToday) !== 'live') continue;
+      const existing = offerByProductId.get(offer.productId);
+      // Une seule offre par plat en principe ; en cas de doublon, « offert » prime déjà dans
+      // computeProductOffersDiscount, on privilégie donc la lecture d'une offre bogo ici aussi.
+      if (!existing || offer.kind === 'bogo') offerByProductId.set(offer.productId, { id: snap.id, offer });
+    }
+    const offerDiscountResult = offerByProductId.size
+      ? computeProductOffersDiscount(
+          items.map((i) => ({ productId: i.productId, unitPriceCents: i.unitPriceCents, quantity: i.quantity })),
+          [...offerByProductId.values()].map(({ offer }) => ({ productId: offer.productId, kind: offer.kind })),
+        )
+      : { totalDiscountCents: 0, byProduct: {} as Record<string, number>, appliedOfferProductIds: [] as string[] };
 
     // ---------------------------------------------------------------- Pourboire
     // Réglage de la plateforme (settings/payments.tips) : activation et plafond ; le plafond du pays s'applique aussi au devis.
@@ -415,7 +474,21 @@ export const placeOrder = callable(
         return trial.ok && !trial.issues.includes('promo_minimum_not_reached') ? trial.discount.totalCents : 0;
       });
     }
-    const promotionInput = promotion ? promotionInputOf(promotion) : undefined;
+    let promotionInput = promotion ? promotionInputOf(promotion) : undefined;
+    // Offre sur un plat vs promotion : seule la plus avantageuse pour le client s'applique (§B4).
+    // L'offre est toujours financée à 100 % par le commerce (`funding: 'restaurant'`), comme la
+    // remise elle-même (packages/shared/src/pricing/product-offers.ts).
+    let appliedProductOffer = false;
+    if (offerDiscountResult.totalDiscountCents > 0) {
+      const offerPromotionInput: PromotionInput = { kind: 'fixed', value: offerDiscountResult.totalDiscountCents, maxDiscountCents: null, funding: 'restaurant', restaurantShareBps: 10_000 };
+      const offerQuote = runQuote(offerPromotionInput);
+      const promoQuote = promotionInput ? runQuote(promotionInput) : null;
+      if (offerQuote.ok && (!promoQuote || !promoQuote.ok || promoQuote.issues.includes('promo_minimum_not_reached') || offerQuote.discount.totalCents > promoQuote.discount.totalCents)) {
+        appliedProductOffer = true;
+        promotionInput = offerPromotionInput;
+        promotion = null; // l'offre l'emporte : pas de code/promo auto appliqué (pas de rédemption promo à écrire).
+      }
+    }
     const quote = runQuote(promotionInput);
     if (!quote.ok) {
       const blocking = quote.issues.find((i) => QUOTE_MESSAGES[i] || i === 'below_minimum_order');
@@ -756,6 +829,18 @@ export const placeOrder = callable(
             'stats.ordersSubtotalCents': FieldValue.increment(quote.subtotalCents),
             ...(order.flags.firstOrder ? { 'stats.newCustomers': FieldValue.increment(1) } : {}),
           });
+        }
+        if (appliedProductOffer && quote.discount.totalCents > 0) {
+          // Une offre par plat concerné (§B4) : compteurs tenus par la fonction (visibles côté commerce et super admin, H1).
+          for (const productId of offerDiscountResult.appliedOfferProductIds) {
+            const matched = offerByProductId.get(productId);
+            const discountForProduct = offerDiscountResult.byProduct[productId] ?? 0;
+            if (!matched || discountForProduct <= 0) continue;
+            tx.update(restaurantRef.collection(SUBCOLLECTIONS.restaurants.productOffers).doc(matched.id), {
+              ordersCount: FieldValue.increment(1),
+              discountTotalCents: FieldValue.increment(discountForProduct),
+            });
+          }
         }
         if (walletSnap && walletAppliedCents > 0) {
           const balanceAfter = ((walletSnap.get('walletBalanceCents') as number | undefined) ?? 0) - walletAppliedCents;
