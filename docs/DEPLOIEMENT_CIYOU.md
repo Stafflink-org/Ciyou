@@ -39,8 +39,6 @@ Document de suivi du dépôt [Stafflink-org/Ciyou](https://github.com/Stafflink-
 | [#29](https://github.com/Stafflink-org/Ciyou/pull/29) | 28/09 | App client mobile : lot 1, fondations |
 | [#30](https://github.com/Stafflink-org/Ciyou/pull/30) | 28/09 | README : marchés étendus (Belgique, Algérie) |
 
-*(PR #1 : import initial en un seul bloc, retiré immédiatement après coup — voir son commentaire. Le contenu réel de `main` correspond aux PR #2 à #30 ci-dessus.)*
-
 État fonctionnel détaillé du super admin (ce qui est fait, ligne par ligne du cahier client) : voir `docs/AUDIT_COUVERTURE_CDC.md` et `docs/ETAT_AVANCEMENT.md`.
 
 ## 3. Accès de test (base Firebase partagée)
