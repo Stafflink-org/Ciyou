@@ -1,12 +1,17 @@
 // Données et sauvegardes (cahier §31) : export Firestore planifié vers un bucket de
 // sauvegarde, historique des opérations, et corbeille avec restauration documentée.
 import { useState } from 'react';
-import { Archive, DatabaseBackup, RotateCcw, Trash2 } from 'lucide-react';
+import { Archive, DatabaseBackup, Download, RotateCcw, Trash2 } from 'lucide-react';
 import {
   Badge,
   Button,
   Card,
   CardContent,
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
   EmptyState,
   PageContainer,
   PageHeader,
@@ -16,12 +21,13 @@ import {
   TabsList,
   TabsTrigger,
   formatDateTime,
+  toast,
 } from '@golink/ui';
 import type { Backup, TrashItem } from '@golink/shared';
 import { useDocumentTitle } from '@golink/web';
 import { useCan } from '@/auth/AdminAccess';
-import { toDate, useMutation } from '@/lib/firestore';
-import { checkBackupStatus, purgeTrashItem, restoreFromTrash, runManualBackup } from './api';
+import { errorMessage, toDate, useMutation } from '@/lib/firestore';
+import { checkBackupStatus, getBackupDownloadLinks, purgeTrashItem, restoreFromTrash, runManualBackup } from './api';
 import { ActionDialog, Callout, ErrorPanel, RequirePermission } from './components';
 import { useBackups, useTrash } from './hooks';
 import { PlateformeNav } from './nav';
@@ -33,6 +39,14 @@ function BackupsTab() {
   const backups = useBackups();
   const run = useMutation(() => runManualBackup({ collections: null }), { success: 'Sauvegarde lancée.' });
   const refresh = useMutation((id: string) => checkBackupStatus({ backupId: id }), {});
+  const [downloadFiles, setDownloadFiles] = useState<Array<{ name: string; url: string; sizeBytes: number | null }> | null>(null);
+  const links = useMutation((id: string) => getBackupDownloadLinks({ backupId: id }), { errorToast: false });
+
+  const openDownload = async (id: string) => {
+    const result = await links.mutate(id);
+    if (result) setDownloadFiles(result.files);
+    else toast.error(errorMessage(links.error, 'Téléchargement indisponible.'));
+  };
 
   return (
     <div className="space-y-4">
@@ -62,6 +76,11 @@ function BackupsTab() {
                   <div className="flex items-center gap-2">
                     <Badge tone={BACKUP_STATUS_TONE[b.status]}>{b.status === 'running' ? 'En cours' : b.status === 'completed' ? 'Terminée' : 'Échouée'}</Badge>
                     {b.status === 'running' && can('backups.manage') && <Button size="sm" variant="ghost" onClick={() => void refresh.mutate(b.id)}>Actualiser</Button>}
+                    {b.status === 'completed' && can('backups.manage') && (
+                      <Button size="sm" variant="ghost" leftIcon={<Download />} loading={links.loading} onClick={() => void openDownload(b.id)}>
+                        Télécharger
+                      </Button>
+                    )}
                   </div>
                 </li>
               ))}
@@ -69,6 +88,39 @@ function BackupsTab() {
           </CardContent>
         </Card>
       )}
+
+      <Dialog open={downloadFiles !== null} onOpenChange={(open) => !open && setDownloadFiles(null)}>
+        <DialogContent>
+          <DialogHeader
+            icon={<Download />}
+            title="Fichiers de la sauvegarde"
+            description="Liens valables 15 minutes. La sauvegarde native Firestore produit plusieurs fichiers (métadonnées et données par lot) : téléchargez-les tous pour une restauration hors plateforme."
+          />
+          <DialogBody className="max-h-[50vh] space-y-2 overflow-y-auto">
+            {downloadFiles?.length ? (
+              downloadFiles.map((f) => (
+                <a
+                  key={f.name}
+                  href={f.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-sm hover:bg-surface-2"
+                >
+                  <span className="min-w-0 truncate">{f.name}</span>
+                  <span className="shrink-0 text-xs text-fg-subtle">{f.sizeBytes ? `${Math.max(1, Math.round(f.sizeBytes / 1024))} Ko` : ''}</span>
+                </a>
+              ))
+            ) : (
+              <p className="text-sm text-fg-muted">Aucun fichier.</p>
+            )}
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDownloadFiles(null)}>
+              Fermer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

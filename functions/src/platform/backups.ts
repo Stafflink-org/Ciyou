@@ -5,7 +5,7 @@ import { COLLECTIONS, type Backup, type BackupRestore, type TrashItem } from '@g
 import { v1 } from '@google-cloud/firestore';
 import { logger } from 'firebase-functions/v2';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { db, FieldValue, Timestamp } from '../lib/admin';
+import { db, FieldValue, storage, Timestamp } from '../lib/admin';
 import { actorFromCaller, writeAudit } from '../lib/audit';
 import { sendEmail } from '../lib/brevo';
 import { fail } from '../lib/errors';
@@ -138,6 +138,49 @@ export const checkBackupStatus = platformCallable(
     }
   },
   { secrets: EMAIL_SECRETS },
+);
+
+/**
+ * Export « téléchargeable » (§31) : liens signés (15 min) vers les fichiers de la
+ * sauvegarde native, pour un téléchargement direct par le super admin (jusque-là,
+ * seul l'état de la sauvegarde était consultable, jamais son contenu). Les fichiers
+ * restent dans le bucket de sauvegarde dédié (`BACKUP_BUCKET`) ; rien n'est copié.
+ */
+export const getBackupDownloadLinks = platformCallable(
+  z.object({ backupId: zId }),
+  async (data, request) => {
+    const { caller } = await requireSecureAdmin(request, 'backups.manage');
+    const ref = db.collection(COLLECTIONS.backups).doc(data.backupId);
+    const snap = await ref.get();
+    if (!snap.exists) throw fail.notFound('Sauvegarde');
+    const backup = snap.data() as Backup;
+    if (backup.status !== 'completed') throw fail.precondition('Seule une sauvegarde terminée avec succès peut être téléchargée.');
+    const [files] = await storage
+      .bucket(BACKUP_BUCKET)
+      .getFiles({ prefix: `${data.backupId}/` })
+      .catch((error: unknown) => {
+        logger.error('Liste des fichiers de sauvegarde impossible', { backupId: data.backupId, error: String(error) });
+        throw fail.unavailable('Bucket de sauvegarde introuvable ou inaccessible.');
+      });
+    if (files.length === 0) throw fail.notFound('Aucun fichier trouvé pour cette sauvegarde.');
+    const limited = files.slice(0, 300);
+    const links = await Promise.all(
+      limited.map(async (file: (typeof files)[number]) => {
+        const [url] = await file.getSignedUrl({ action: 'read', expires: Date.now() + 15 * 60_000 });
+        const [meta] = await file.getMetadata().catch(() => [{ size: undefined }]);
+        return { name: file.name.slice(`${data.backupId}/`.length) || file.name, url, sizeBytes: meta?.size ? Number(meta.size) : null };
+      }),
+    );
+    await writeAudit({
+      actor: actorFromCaller(caller, 'admin'),
+      action: 'backup.download_links_issued',
+      target: { type: 'other', id: data.backupId, label: 'Liens de téléchargement de sauvegarde' },
+      reason: 'Consultation du super admin',
+      sensitive: true,
+      request,
+    });
+    return { files: links, truncated: files.length > limited.length };
+  },
 );
 
 // ------------------------------------------------------------------ Restauration outillée

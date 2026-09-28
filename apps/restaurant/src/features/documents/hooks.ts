@@ -5,6 +5,7 @@ import {
   COLLECTIONS,
   RESTAURANT_PRIVATE_DOCS,
   paths,
+  type GdprRequest,
   type LegalDocument,
   type PartnerDocument,
   type PartnerDocumentType,
@@ -99,6 +100,19 @@ export function usePartnerContract(enabled = true) {
 export function useRestaurantLegal(enabled = true) {
   const { restaurantId } = useRestaurantAccess();
   return useDoc<RestaurantLegal>(enabled ? docAt(`${paths.restaurant(restaurantId)}/private/${RESTAURANT_PRIVATE_DOCS.legal}`) : null);
+}
+
+/** Demandes RGPD déposées par l'établissement lui-même (§29, auto-service), les plus récentes d'abord. */
+export function useGdprRequests() {
+  const { restaurantId } = useRestaurantAccess();
+  return useCollection<GdprRequest>(
+    query(
+      collection(db, COLLECTIONS.gdprRequests),
+      where('subjectType', '==', 'restaurant'),
+      where('subjectId', '==', restaurantId),
+      orderBy('receivedAt', 'desc'),
+    ),
+  );
 }
 
 /** Pièces à reprendre (manquantes, refusées, expirées) et contrat à signer : pastille du menu. */
