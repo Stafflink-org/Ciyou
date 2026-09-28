@@ -1,5 +1,27 @@
 # État d'avancement — Ciyou Eats
 
+## Retotalisation du questionnaire client — 28/09/2026 (tâche `qr-retotal`)
+
+**Tâche d'audit pur (aucune correction de code)** : les 36 réponses de `golink-maquette/specs/super-admin/questions-reponses-client.txt` n'avaient jamais été recomptées une par une depuis l'audit initial du 26/09, malgré les corrections réelles apportées entre-temps par `cdc-fix-b/c/d/e/p1`, `cdc-p2-g5-g6`, `cdc-p2-rest`, `cdc-p2-final` et `stripe-autoaccept-fix`. Les anciennes annotations posées entre `cdc-fix-b` et `cdc-fix-c` n'avaient pas été mises à jour avec les correctifs ultérieurs, et le tableau bilan de l'annexe I, volet 1 (`docs/AUDIT_COUVERTURE_CDC.md`) restait figé à l'état de l'audit initial.
+
+**Méthode** : lecture intégrale des 36 réponses et de l'annexe I volet 1 d'origine, puis pour chacune, vérification directe dans le code actuel (`functions/src`, `packages/shared/src`, `firebase/rules`, `apps/*`) avec référence fichier/ligne, en croisant avec l'état déjà retotalisé des annexes C à H par les tâches `cdc-fix-*`/`cdc-p2-*`. Aucun fichier de code touché.
+
+**Résultat chiffré** : **22 COMPLET / 14 PARTIEL / 0 ABSENT / 0 FAUX sur 36** (contre 12 COMPLET / 19 PARTIEL / 2 ABSENT / 3 FAUX à l'audit initial du 26/09). **11 réponses ont changé de statut** depuis l'audit initial, toutes vérifiées directement dans le code, aucune supposition :
+- **FAUX → COMPLET (3)** : n° 11 (impayés, `cdc-fix-c`), n° 18 (inactivité 15/30 j, `cdc-fix-b`), n° 25 (client absent, `cdc-fix-b`).
+- **ABSENT → COMPLET (2)** : n° 14 (validation automatique, `cdc-fix-b`), n° 31 (réclamation avec photo, `cdc-fix-b`).
+- **PARTIEL → COMPLET (6)** : n° 3 (priorité de commission pays/ville/formule), n° 10 (essai gratuit et renouvellement), n° 17 (promos automatiques et ciblage), n° 20 (bonus de pointe et gains livreurs, `cdc-fix-e`), n° 27 (pourboires) — toutes `cdc-fix-c` sauf n° 20.
+- Les 20 réponses restantes n'ont pas changé de colonne de statut, mais 6 d'entre elles ont un progrès réel non déterminant pour la case (n° 1, 8, 9, 29, 30, 36 — détail dans l'annexe I).
+
+**Les 14 réponses encore PARTIEL et leur raison exacte** (aucune ABSENT ni FAUX restante) : n° 1 (reversement livreurs bloqué faute d'app livreur pour activer le compte Stripe Connect, prestataire local DZ/MA/TN absent), n° 8 (limite du nombre de produits par formule non appliquée, aucun prix Stripe), n° 9 (`commitmentMonths` stocké mais lu par aucune fonction), n° 12 (vente au poids non reliée au passage de commande réel, 0 produit au poids en base), n° 19 (classement calculé mais aucune app pour l'afficher, compteurs vues/clics/commandes jamais incrémentés), n° 21 (validation manuelle réelle, inscription en ligne du livreur impossible faute d'app), n° 22 et n° 23 (aucune contrainte serveur bloquante, mais aucun écran livreur pour déclarer véhicule/distance), n° 29 (moteur de fidélité plateforme réel mais éteint par défaut, programmes restaurant non appliqués), n° 30 (parrainage commerce désormais fonctionnel de bout en bout, parcours livreur toujours bloqué), n° 33/34 (outil support complet côté équipe, aucune app client/livreur pour ouvrir un ticket, aucun planning d'astreinte réel), n° 35 (i18n fr/en/ar seulement sur le tronc commun, la majorité des écrans de rubrique restent en français), n° 36 (6 pays acceptés à l'inscription mais aucun prestataire de paiement local contractualisé pour DZ/MA/TN, contrats partenaires limités à FR/LU).
+
+**Cause structurelle commune à la majorité des PARTIEL restants** (déjà documentée par les tâches précédentes, confirmée ici encore) : l'absence des applications mobiles client et livreur (`apps/client`, `apps/driver` restent des coquilles vides). Elle conditionne à elle seule 8 des 14 réponses encore PARTIEL (n° 1, 19, 21, 22, 23, 29 volet restaurant non concerné, 30, 33/34).
+
+**Aucun bug de code nouveau détecté** pendant cette relecture qui n'était pas déjà documenté dans les annexes C à H existantes.
+
+**Mise à jour des documents** : `docs/AUDIT_COUVERTURE_CDC.md` — annexe I volet 1 entièrement retotalisée (statut, preuve fichier/ligne et commentaire pour les 36 réponses, nouveau tableau bilan) ; les deux résumés qui pointaient encore vers l'ancien total (§3 ligne ~70, synthèse annexe J ligne ~2027) mis à jour pour renvoyer vers le nouveau chiffre. Le total du cahier super admin (166 lignes, `docs/AUDIT_COUVERTURE_CDC.md` §3) reste inchangé par cette tâche : **102 COMPLET / 64 PARTIEL / 0 ABSENT / 0 FAUX** (cette tâche ne portait que sur le questionnaire de 36 réponses, pas sur le cahier de 166 lignes lui-même).
+
+**Réel** : lecture seule, aucun `tsc`, aucun test, aucun déploiement, aucune donnée touchée — conforme à une tâche d'audit pur. Aucun navigateur ni serveur de dev ouvert. Aucun commit/push.
+
 ## Clôture de la série cahier super admin — 28/09/2026 (tâche `cdc-p2-final`)
 
 **Dernière tâche prévue de la série `cdc-p2-*` (suite de `cdc-p2-g5-g6` et `cdc-p2-rest`).** Recomptage complet de l'Annexe J §14-17 (`docs/AUDIT_COUVERTURE_CDC.md`) puis correction réelle de 3 des 6 points demandés (les 2 autres confirmés déjà résolus, 1 hors budget) :
