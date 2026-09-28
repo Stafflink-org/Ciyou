@@ -49,3 +49,4 @@ packages/shared/.test-build/
 .autopilot/
 scripts/autopilot/
 scripts/tests/_tmp/
+docs/*_interne.pdf
