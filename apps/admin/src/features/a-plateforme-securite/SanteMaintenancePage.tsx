@@ -72,8 +72,14 @@ function MaintenanceRow({ app }: { app: AppKey }) {
   const [open, setOpen] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [message, setMessage] = useState('');
+  const [hasUntil, setHasUntil] = useState(false);
+  const [until, setUntil] = useState('');
   const [reason, setReason] = useState('');
-  const save = useMutation(() => setMaintenanceMode({ app, enabled, message: enabled ? message : null, until: null, reason }), { success: 'Mode maintenance mis à jour.' });
+  const untilMs = hasUntil && until ? new Date(until).getTime() : null;
+  const save = useMutation(
+    () => setMaintenanceMode({ app, enabled, message: enabled ? message : null, until: enabled ? untilMs : null, reason }),
+    { success: 'Mode maintenance mis à jour.' },
+  );
   return (
     <>
       <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface-2 px-4 py-3">
@@ -86,11 +92,25 @@ function MaintenanceRow({ app }: { app: AppKey }) {
           <DialogBody className="space-y-4 pt-2">
             <FormField label="Mode maintenance actif"><div className="flex h-10 items-center"><Switch checked={enabled} onCheckedChange={setEnabled} /></div></FormField>
             {enabled && <FormField label="Message affiché" required><Textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={2} maxLength={400} /></FormField>}
+            {enabled && (
+              <FormField label="Fin prévue (optionnel)" hint="Passé ce moment, la maintenance cesse d'être appliquée sans intervention.">
+                <div className="flex items-center gap-2">
+                  <Switch checked={hasUntil} onCheckedChange={(v) => { setHasUntil(v); if (!v) setUntil(''); }} />
+                  {hasUntil && <Input type="datetime-local" value={until} onChange={(e) => setUntil(e.target.value)} />}
+                </div>
+              </FormField>
+            )}
             <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} placeholder="Motif (conservé dans le journal d'audit)" maxLength={500} />
           </DialogBody>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)}>Annuler</Button>
-            <Button loading={save.loading} disabled={reason.trim().length < 3 || (enabled && message.trim().length < 3)} onClick={async () => { const res = await save.mutate(); if (res) setOpen(false); }}>Enregistrer</Button>
+            <Button
+              loading={save.loading}
+              disabled={reason.trim().length < 3 || (enabled && message.trim().length < 3) || (enabled && hasUntil && (!until || untilMs === null || untilMs <= Date.now()))}
+              onClick={async () => { const res = await save.mutate(); if (res) setOpen(false); }}
+            >
+              Enregistrer
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -106,8 +126,23 @@ function VersionRow({ app }: { app: AppKey }) {
   const [latest, setLatest] = useState(current?.latestVersion ?? '1.0.0');
   const [min, setMin] = useState(current?.minimumVersion ?? '1.0.0');
   const [force, setForce] = useState(Boolean(current?.forceUpdate));
+  const [message, setMessage] = useState(current?.message?.fr ?? '');
+  const [storeIos, setStoreIos] = useState(current?.storeUrls?.ios ?? '');
+  const [storeAndroid, setStoreAndroid] = useState(current?.storeUrls?.android ?? '');
   const [reason, setReason] = useState('');
-  const save = useMutation(() => updateAppVersion({ app, latestVersion: latest, minimumVersion: min, forceUpdate: force, message: null, storeUrls: null, reason }), { success: 'Version enregistrée.' });
+  const save = useMutation(
+    () =>
+      updateAppVersion({
+        app,
+        latestVersion: latest,
+        minimumVersion: min,
+        forceUpdate: force,
+        message: message.trim() ? message.trim() : null,
+        storeUrls: storeIos.trim() || storeAndroid.trim() ? { ios: storeIos.trim() || null, android: storeAndroid.trim() || null } : null,
+        reason,
+      }),
+    { success: 'Version enregistrée.' },
+  );
   return (
     <>
       <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface-2 px-4 py-3">
@@ -126,6 +161,13 @@ function VersionRow({ app }: { app: AppKey }) {
               <FormField label="Version minimale" required><Input value={min} onChange={(e) => setMin(e.target.value)} placeholder="1.2.0" /></FormField>
             </div>
             <FormField label="Mise à jour forcée"><div className="flex h-10 items-center"><Switch checked={force} onCheckedChange={setForce} /></div></FormField>
+            {force && <FormField label="Message affiché (optionnel)"><Textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={2} maxLength={400} /></FormField>}
+            {force && (
+              <div className="grid grid-cols-2 gap-3">
+                <FormField label="Lien App Store"><Input value={storeIos} onChange={(e) => setStoreIos(e.target.value)} placeholder="https://apps.apple.com/…" /></FormField>
+                <FormField label="Lien Play Store"><Input value={storeAndroid} onChange={(e) => setStoreAndroid(e.target.value)} placeholder="https://play.google.com/…" /></FormField>
+              </div>
+            )}
             <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} placeholder="Motif" maxLength={500} />
           </DialogBody>
           <DialogFooter>
