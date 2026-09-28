@@ -314,9 +314,9 @@ async function applySection(data: Input, actor: RestaurantActor, ctx: ConfigCont
       const changes = diff(restaurant as unknown as Record<string, unknown>, next);
       if (changes.changed.length === 0) return changes;
       const extra: Record<string, unknown> = {};
-      if (name !== restaurant.name) {
+      if (name !== restaurant.name || data.phone !== restaurant.phone || data.email !== restaurant.email) {
         extra.mark = monogram(name);
-        extra.searchKeywords = buildSearchKeywords(name, restaurant.address.city, restaurant.address.postalCode);
+        extra.searchKeywords = buildSearchKeywords(name, restaurant.address.city, restaurant.address.postalCode, data.email ?? restaurant.email, data.phone ?? restaurant.phone);
       }
       await rRef.update({ ...next, ...extra, updatedAt: now, updatedBy: uid });
       return changes;
@@ -346,7 +346,7 @@ async function applySection(data: Input, actor: RestaurantActor, ctx: ConfigCont
       await rRef.update({
         address,
         zoneIds,
-        searchKeywords: buildSearchKeywords(restaurant.name, data.city, data.postalCode),
+        searchKeywords: buildSearchKeywords(restaurant.name, data.city, data.postalCode, restaurant.email, restaurant.phone),
         updatedAt: now,
         updatedBy: uid,
       });

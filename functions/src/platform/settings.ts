@@ -70,6 +70,20 @@ const settingsSchema = z.discriminatedUnion('doc', [
       autoAnonymize: z.boolean(),
     }),
   }),
+  z.object({
+    doc: z.literal('limits'),
+    reason: zReason,
+    data: z.object({
+      exports: z.object({
+        csvMaxRows: z.number().int().min(100).max(500_000),
+        xlsxMaxRows: z.number().int().min(100).max(500_000),
+        pdfMaxRows: z.number().int().min(50).max(50_000),
+        auditMaxRows: z.number().int().min(100).max(500_000),
+        importMaxRows: z.number().int().min(10).max(2000),
+      }),
+      merchantCashAlertDays: z.number().int().min(1).max(60),
+    }),
+  }),
 ]);
 
 const LABELS: Record<string, string> = {
@@ -77,6 +91,7 @@ const LABELS: Record<string, string> = {
   branding: 'Marque',
   security: 'Politique de sécurité',
   retention: 'Durées de conservation',
+  limits: 'Limites et seuils',
 };
 
 export const updatePlatformSettings = platformCallable(settingsSchema, async (input, request) => {

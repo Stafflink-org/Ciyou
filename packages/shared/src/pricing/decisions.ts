@@ -3,7 +3,7 @@
 // Tout chiffre reste un paramètre du super admin ; ces constantes servent d'amorçage
 // et de repli quand un document de paramètres est absent.
 import type { Locale } from '../constants/enums';
-import type { OrderRules } from '../models/platform';
+import type { MerchantDefaults, OrderRules } from '../models/platform';
 import type { CurrencyCode } from './currency';
 import { DEFAULT_CUSTOMER_CANCELLATION, DEFAULT_LATE_CREDIT_TIERS, DEFAULT_REFUND_LIABILITY } from './policies';
 
@@ -59,6 +59,19 @@ export const CLIENT_DECISIONS = {
   merchantPromotionCapsEnabled: false,
 } as const;
 
+/**
+ * Valeurs initiales des réglages de commande d'un nouveau commerce (repli documenté :
+ * appliquées quand la plateforme, le pays et la ville n'ont rien de spécifique — mêmes
+ * chiffres que ceux historiquement codés en dur dans `newOrderSettings`/`newRestaurantDoc`).
+ */
+export const DEFAULT_MERCHANT_DEFAULTS: MerchantDefaults = {
+  prepMinutes: 20,
+  maxConcurrentOrders: 12,
+  minOrderCents: 1000,
+  scheduledLeadMinutes: 60,
+  scheduledMaxDays: 3,
+};
+
 /** Règles de commande par défaut (settings/orderRules). */
 export const DEFAULT_ORDER_RULES: OrderRules = {
   acceptanceTimeoutSeconds: 300,
@@ -66,6 +79,7 @@ export const DEFAULT_ORDER_RULES: OrderRules = {
   autoPause: { enabled: true, missedOrdersInARow: 3 },
   merchantInactivity: { enabled: true, alertAfterDays: 15, removeAfterAlertDays: 30 },
   defaultPrepMinutes: 20,
+  merchantDefaults: DEFAULT_MERCHANT_DEFAULTS,
   maxPrepExtensionMinutes: 30,
   customerCancellation: DEFAULT_CUSTOMER_CANCELLATION,
   refundLiability: DEFAULT_REFUND_LIABILITY,
@@ -85,3 +99,19 @@ export const DEFAULT_ORDER_RULES: OrderRules = {
   lateToleranceMinutes: 5,
   claims: { photoRequired: true, minPhotos: 1, maxPhotos: 4, checkPhotoDate: true, checkDuplicates: true, repeatThreshold30d: 3, autoAcceptMaxCents: 0 },
 };
+
+/**
+ * Valeurs initiales d'un nouveau commerce : plateforme, puis pays, puis ville (la plus
+ * précise l'emporte) — même principe que `resolveDispatchRules`. Utilisée à la création
+ * d'un commerce (`newOrderSettings`, `newRestaurantDoc`) et par le bouton « Réinitialiser »
+ * du back-office restaurant.
+ */
+export function resolveMerchantDefaults(
+  platform?: Partial<OrderRules> | null,
+  country?: Partial<OrderRules> | null,
+  city?: Partial<OrderRules> | null,
+): MerchantDefaults {
+  const clean = (value: Partial<OrderRules> | null | undefined) =>
+    Object.fromEntries(Object.entries(value?.merchantDefaults ?? {}).filter(([, v]) => v !== undefined)) as Partial<MerchantDefaults>;
+  return { ...DEFAULT_MERCHANT_DEFAULTS, ...clean(platform), ...clean(country), ...clean(city) };
+}
