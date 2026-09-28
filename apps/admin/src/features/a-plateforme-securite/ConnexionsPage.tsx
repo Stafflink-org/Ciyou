@@ -78,7 +78,7 @@ function IntegrationCard({ integration }: { integration: PlatformIntegration & {
 }
 
 export function ConnexionsPage() {
-  useDocumentTitle('Connexions · GoLink Admin');
+  useDocumentTitle('Connexions · Ciyou Eats Admin');
   const can = useCan();
   const integrations = useIntegrations();
   const check = useMutation(() => runHealthCheck(), {});

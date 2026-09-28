@@ -1,7 +1,7 @@
 // Génération de fichiers tabulaires (CSV, Excel, PDF) pour les exports et les rapports
 // programmés, sans dépendance externe : CSV UTF-8 (séparateur « ; », lisible par Excel
 // en français), classeur Excel minimal (Office Open XML, archive ZIP non compressée)
-// et PDF A4 paysage mis en page aux couleurs GoLink.
+// et PDF A4 paysage mis en page aux couleurs Ciyou Eats.
 import { PDF_COLORS, PdfDocument } from '../../hr/pdf';
 
 export type ColumnType = 'text' | 'number' | 'money' | 'percent' | 'date' | 'datetime';
@@ -275,7 +275,7 @@ export function toXlsx(doc: TableDocument): Buffer {
 
 // ------------------------------------------------------------------ PDF
 
-/** PDF A4 paysage : en-tête GoLink, chiffres clés, tableau paginé avec en-têtes répétés. */
+/** PDF A4 paysage : en-tête Ciyou Eats, chiffres clés, tableau paginé avec en-têtes répétés. */
 export function toPdf(doc: TableDocument): Buffer {
   const pdf = new PdfDocument();
   // Format paysage : on permute les dimensions de la page A4.
@@ -290,7 +290,7 @@ export function toPdf(doc: TableDocument): Buffer {
 
   const footer = () => {
     pdf.line(margin, pdf.height - 28, pdf.width - margin, pdf.height - 28);
-    pdf.text(margin, pdf.height - 16, `GoLink · ${doc.title}`, { size: 7.5, color: PDF_COLORS.subtle });
+    pdf.text(margin, pdf.height - 16, `Ciyou Eats · ${doc.title}`, { size: 7.5, color: PDF_COLORS.subtle });
     pdf.text(pdf.width - margin, pdf.height - 16, `Page ${page} · généré le ${generated}`, { size: 7.5, color: PDF_COLORS.subtle, align: 'right' });
   };
   const tableHeader = () => {

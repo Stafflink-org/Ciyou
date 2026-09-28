@@ -52,7 +52,7 @@ export function pageState(p: ContentPage): { label: string; tone: 'success' | 'a
 }
 
 export function PagesPage() {
-  useDocumentTitle('Pages d’information · Affichage · GoLink Admin');
+  useDocumentTitle('Pages d’information · Affichage · Ciyou Eats Admin');
   const navigate = useNavigate();
   const { admin, can } = useAdminAccess();
   const canLegal = can('legal.edit');

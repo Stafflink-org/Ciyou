@@ -1,4 +1,4 @@
-// Point d'entrée des Cloud Functions GoLink. Chaque domaine vit dans son dossier
+// Point d'entrée des Cloud Functions Ciyou Eats. Chaque domaine vit dans son dossier
 // (src/<module>/index.ts) ; les options globales sont posées avant toute déclaration.
 import './lib/runtime';
 

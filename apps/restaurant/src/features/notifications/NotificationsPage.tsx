@@ -27,7 +27,7 @@ const ALERTS: Array<{ key: RestaurantAlertKey; label: string; description: strin
   { key: 'order_late', label: 'Commande en retard', description: 'Préparation qui dépasse le délai annoncé.', defaults: { inApp: true, email: false } },
   { key: 'low_stock', label: 'Stock bas', description: 'Un produit suivi passe sous son seuil d’alerte.', defaults: { inApp: true, email: true } },
   { key: 'new_review', label: 'Nouvel avis client', description: 'Pour répondre rapidement, surtout aux avis négatifs.', defaults: { inApp: true, email: false } },
-  { key: 'new_message', label: 'Nouveau message', description: 'Message d’un client, d’un livreur ou du support GoLink.', defaults: { inApp: true, email: false } },
+  { key: 'new_message', label: 'Nouveau message', description: 'Message d’un client, d’un livreur ou du support Ciyou Eats.', defaults: { inApp: true, email: false } },
   { key: 'document_expiry', label: 'Document bientôt expiré', description: 'Pièce d’identité ou attestation à renouveler (J-30 et J-7).', defaults: { inApp: true, email: true } },
   { key: 'payout_paid', label: 'Virement effectué', description: 'Vos ventes ont été reversées sur votre compte.', defaults: { inApp: true, email: true } },
 ];
@@ -109,7 +109,7 @@ export function NotificationsPage() {
     const result = await Notification.requestPermission();
     setBrowserPermission(result);
     if (result === 'granted') {
-      new Notification('GoLink Restaurant', { body: 'Les notifications sont activées sur cet appareil.', icon: '/favicon.svg' });
+      new Notification('Ciyou Eats Restaurant', { body: 'Les notifications sont activées sur cet appareil.', icon: '/favicon.svg' });
     }
   };
 
@@ -194,7 +194,7 @@ export function NotificationsPage() {
               <MonitorSmartphone className="mt-0.5 size-4 shrink-0 text-fg-muted" />
               <div>
                 <p className="text-sm font-medium text-fg">Notifications de cet appareil</p>
-                <p className="text-xs text-fg-subtle">Réglage propre à ce navigateur : utile quand l’onglet GoLink est en arrière-plan.</p>
+                <p className="text-xs text-fg-subtle">Réglage propre à ce navigateur : utile quand l’onglet Ciyou Eats est en arrière-plan.</p>
               </div>
             </div>
             {browserPermission === 'granted' ? (
@@ -260,7 +260,7 @@ export function NotificationsPage() {
               <SettingRow label="Rapport hebdomadaire" description="Tendances de la semaine, chaque lundi.">
                 <Switch checked={draft.emailWeeklyReport} aria-label="Rapport hebdomadaire" onCheckedChange={(v) => setDraft({ emailWeeklyReport: v })} />
               </SettingRow>
-              <SettingRow label="Factures et relevés" description="Factures GoLink et relevés de versement.">
+              <SettingRow label="Factures et relevés" description="Factures Ciyou Eats et relevés de versement.">
                 <Switch checked={draft.emailInvoices} aria-label="Factures et relevés" onCheckedChange={(v) => setDraft({ emailInvoices: v })} />
               </SettingRow>
             </RowList>
@@ -303,7 +303,7 @@ export function NotificationsPage() {
               />
             </FormField>
             <Notice tone="neutral" className="mt-5">
-              Les SMS sont envoyés par GoLink. Ils complètent le son et les notifications, sans les remplacer.
+              Les SMS sont envoyés par Ciyou Eats. Ils complètent le son et les notifications, sans les remplacer.
             </Notice>
           </SettingsCard>
         </div>

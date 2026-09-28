@@ -32,7 +32,7 @@ async function loadDriver(uid: string): Promise<{ driver: Driver; priv: DriverPr
 /** Renvoie le compte connecté du livreur, en le créant au besoin (un seul par livreur). */
 async function ensureDriverAccount(uid: string, email: string | null): Promise<{ accountId: string; created: boolean; status: NonNullable<DriverPrivate['stripeAccountStatus']> }> {
   const { driver, priv } = await loadDriver(uid);
-  if (driver.type !== 'platform') throw fail.precondition('Les livreurs salariés d’un commerce sont payés par leur employeur : aucun compte de paiement GoLink n’est nécessaire.');
+  if (driver.type !== 'platform') throw fail.precondition('Les livreurs salariés d’un commerce sont payés par leur employeur : aucun compte de paiement Ciyou Eats n’est nécessaire.');
   const country = await loadCountry(driver.countryId);
   if (country?.stripeAvailable === false) throw fail.precondition('Stripe n’est pas disponible dans votre pays : enregistrez un compte de paiement local (virement ou portefeuille mobile).');
   if (priv?.stripeAccountId) return { accountId: priv.stripeAccountId, created: false, status: priv.stripeAccountStatus ?? 'pending' };
@@ -44,13 +44,13 @@ async function ensureDriverAccount(uid: string, email: string | null): Promise<{
       email: driver.email ?? email ?? undefined,
       business_type: 'individual',
       capabilities: { transfers: { requested: true } },
-      business_profile: { product_description: 'Livraison de commandes pour GoLink', mcc: '4215' },
+      business_profile: { product_description: 'Livraison de commandes pour Ciyou Eats', mcc: '4215' },
       metadata: { driverId: uid, platform: 'golink' },
     },
     { idempotencyKey: `connect-driver-${uid}` },
   ).catch((error: unknown) => {
     // Compte Stripe de la plateforme sans Connect activé : message clair plutôt qu'une erreur interne.
-    if (/signed up for Connect/i.test(String((error as Error)?.message))) throw fail.unavailable('Les comptes de paiement des livreurs ne sont pas encore ouverts : Stripe Connect n’est pas activé sur le compte GoLink.');
+    if (/signed up for Connect/i.test(String((error as Error)?.message))) throw fail.unavailable('Les comptes de paiement des livreurs ne sont pas encore ouverts : Stripe Connect n’est pas activé sur le compte Ciyou Eats.');
     throw error;
   });
   const status = driverAccountStatus(account);

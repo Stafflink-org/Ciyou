@@ -1,4 +1,4 @@
-# Contrat des modules GoLink
+# Contrat des modules Ciyou Eats
 
 > **IMPORTANT — Décisions du client : lis `docs/DECISIONS_CLIENT.md` AVANT tout travail.** Elles priment sur toute hypothèse : commission sur les articles TTC hors livraison et pourboires, remboursements toujours payés par le commerce, frais bancaires déduits du reversement, espèces seulement avec un livreur salarié du commerce, **alcool interdit**, rémunération livreur fixe sous 2 km puis au km (par ville), acceptation en 5 min puis annulation + pause auto, client absent 10 min sans remboursement, validation commerce automatique / livreurs manuelle, lancement ville par ville, tous types de commerces, formules à 0 mais entièrement paramétrables. **Tout chiffre est un paramètre du super admin.**
 
@@ -51,7 +51,7 @@ Paquets du front :
 | Actions d'audit | `<entité>.<événement_passé>` | `restaurant.suspended`, `refund.approved` |
 | Clés `localStorage` | `golink:<app>:<sujet>` | `golink:restaurant:<uid>` |
 
-Textes : 100 % français, marque « GoLink », formats `fr-FR`, devise EUR. Commentaires en français, sobres. Pas de code mort, pas de `any` hors typage de colonnes de tableau, TypeScript strict.
+Textes : 100 % français, marque « Ciyou Eats », formats `fr-FR`, devise EUR. Commentaires en français, sobres. Pas de code mort, pas de `any` hors typage de colonnes de tableau, TypeScript strict.
 
 ---
 
@@ -136,7 +136,7 @@ Toute liste admin respecte le filtre pays / ville : `where('cityId', 'in', cityI
 
 Communs (`@golink/web`) : `useAuth()` (`status`, `user`, `claims`, `signIn`, `signOut`, `sendPasswordReset`, `refreshClaims`), `useCurrentUser()`, `<Can>`, `usePermissionCheck()`, `usePersistentState(key, défaut)`, `useDocumentTitle(titre)`.
 
-Titre d'onglet : `useDocumentTitle('Commandes · GoLink Restaurant')` (ou `· GoLink Admin`).
+Titre d'onglet : `useDocumentTitle('Commandes · Ciyou Eats Restaurant')` (ou `· Ciyou Eats Admin`).
 
 ### 3.3 Lire et écrire les données (`@/lib/firestore`)
 
@@ -286,7 +286,7 @@ Outils du socle (`functions/src/lib`) :
 | `audit.ts` | `writeAudit({ actor, action, target, reason, before, after, countryId, cityId, request })`, `actorFromCaller`, `SYSTEM_ACTOR` |
 | `admin.ts` | `db`, `auth`, `storage`, `FieldValue`, `Timestamp` |
 | `claims.ts` | `syncClaims(uid)` après tout changement de rôle ou d'appartenance |
-| `brevo.ts`, `emails.ts`, `email-layout.ts` | `sendEmail(...)` et gabarits HTML GoLink ; déclarer `secrets: EMAIL_SECRETS` |
+| `brevo.ts`, `emails.ts`, `email-layout.ts` | `sendEmail(...)` et gabarits HTML Ciyou Eats ; déclarer `secrets: EMAIL_SECRETS` |
 | `stripe.ts`, `secrets.ts` | client Stripe (secret `STRIPE_SECRET_KEY`), secrets déclarés par `defineSecret` |
 | `config.ts` | `APP_URLS` (liens des e-mails, surchargés par `ADMIN_APP_URL` / `RESTAURANT_APP_URL`) |
 

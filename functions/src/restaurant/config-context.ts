@@ -138,7 +138,7 @@ export function allowedPaymentMethods(ctx: ConfigContext): PaymentMethod[] {
   return PAYMENT_METHODS.filter((method) => {
     if (DISABLED_PAYMENT_METHODS.includes(method)) return false;
     if (method === 'cash' && !ownCouriers) return false;
-    // L'avoir GoLink est un moyen de la plateforme : seul le pays peut le désactiver.
+    // L'avoir Ciyou Eats est un moyen de la plateforme : seul le pays peut le désactiver.
     if (commercial && method !== 'wallet' && !commercial.includes(method)) return false;
     if (ctx.country && ctx.country.paymentMethods && ctx.country.paymentMethods[method] === false) return false;
     if ((method === 'card' || method === 'apple_pay' || method === 'google_pay') && !ctx.isEnabled('card_payment')) return false;

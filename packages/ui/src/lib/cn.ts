@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from 'clsx';
 import { extendTailwindMerge } from 'tailwind-merge';
 
-// tailwind-merge doit connaître l'échelle typographique GoLink (text-2xs, text-md…)
+// tailwind-merge doit connaître l'échelle typographique Ciyou Eats (text-2xs, text-md…)
 // pour ne pas la confondre avec des couleurs de texte.
 const twMerge = extendTailwindMerge({
   extend: {

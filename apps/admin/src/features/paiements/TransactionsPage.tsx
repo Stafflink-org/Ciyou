@@ -53,7 +53,7 @@ const FAILURE_LABELS: Record<string, string> = {
 
 /** Paiements (cahier §14) : suivi des encaissements, des paiements refusés et des remboursements. */
 export function TransactionsPage() {
-  useDocumentTitle('Paiements · GoLink Admin');
+  useDocumentTitle('Paiements · Ciyou Eats Admin');
   const can = useCan();
   const geo = useGeoScope();
   const directory = useDirectory();
@@ -150,7 +150,7 @@ export function TransactionsPage() {
       rows: list.data.map((p) => [toDate(p.createdAt) ?? null, PURPOSE_LABELS[p.purpose], p.orderId ?? p.subscriptionId ?? '', payer(p), PAYMENT_METHOD_LABELS[p.method], p.amountCents, p.feeCents, p.refundedCents, PAYMENT_STATUS_LABELS[p.status], p.failureMessage ?? '', p.attempts]),
     };
     if (format === 'csv') downloadCsv(sheet, 'golink-paiements');
-    else await downloadXlsx([sheet], 'golink-paiements', { title: 'GoLink · Paiements', subtitle: geo.label });
+    else await downloadXlsx([sheet], 'golink-paiements', { title: 'Ciyou Eats · Paiements', subtitle: geo.label });
   }
 
   return (
@@ -218,7 +218,7 @@ export function TransactionsPage() {
               <SheetBody className="space-y-5">
                 <div className="flex flex-wrap items-center gap-2">
                   <StatusBadge status={selected.status} map={PAYMENT_STATUS} />
-                  <Badge tone="neutral" size="sm">{selected.provider === 'stripe' ? 'Stripe' : selected.provider === 'cash' ? 'Espèces' : 'Avoir GoLink'}</Badge>
+                  <Badge tone="neutral" size="sm">{selected.provider === 'stripe' ? 'Stripe' : selected.provider === 'cash' ? 'Espèces' : 'Avoir Ciyou Eats'}</Badge>
                 </div>
                 {selected.status === 'failed' && (
                   <Callout tone="danger" title={FAILURE_LABELS[selected.failureCode ?? ''] ?? 'Paiement refusé'}>

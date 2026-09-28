@@ -205,7 +205,7 @@ export function parseMenuCsv(text: string): { lines: ParsedLine[]; missingColumn
     const vat = get('tva');
     if (vat) {
       const found = VAT_LOOKUP.get(normalizeText(vat));
-      if (found === 'alcohol' || normalizeText(vat).includes('alcool')) errors.push('La vente d’alcool est interdite sur GoLink');
+      if (found === 'alcohol' || normalizeText(vat).includes('alcool')) errors.push('La vente d’alcool est interdite sur Ciyou Eats');
       else if (found) row.vatCategory = found as VatCategory;
       else errors.push(`Type de TVA inconnu : « ${vat} »`);
     }

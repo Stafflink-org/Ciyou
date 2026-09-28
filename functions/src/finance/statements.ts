@@ -1,5 +1,5 @@
 // Relevé détaillé d'un reversement restaurant : données faisant foi, lues côté
-// serveur (grand livre, identité légale de l'établissement et de l'entité GoLink),
+// serveur (grand livre, identité légale de l'établissement et de l'entité Ciyou Eats),
 // mises en page en PDF par le back-office.
 import {
   COLLECTIONS,
@@ -67,7 +67,7 @@ export interface StatementResult {
 const iso = (value: AdminTimestamp | null | undefined): string | null => (value ? value.toDate().toISOString() : null);
 
 const DEFAULT_ISSUER: StatementResult['issuer'] = {
-  legalName: 'GoLink SAS',
+  legalName: 'Ciyou Eats SAS',
   vatNumber: '',
   registrationNumber: '',
   address: '',

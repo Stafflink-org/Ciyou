@@ -47,12 +47,12 @@ export function usePromotionSettings() {
   return { ...merged, capsEnabled: merged.capsEnabled !== false };
 }
 
-/** Règles GoLink applicables, en une phrase. */
+/** Règles Ciyou Eats applicables, en une phrase. */
 export function promotionRulesText(limits: ReturnType<typeof usePromotionSettings>): string {
   const caps = limits.capsEnabled
     ? `remise jusqu’à ${limits.restaurantMaxPercentBps / 100} % ou ${formatEUR(limits.restaurantMaxFixedCents, { cents: true })}, ${limits.maxActivePerRestaurant} offres en ligne au plus`
     : 'aucun plafond de remise ni de nombre d’offres';
-  const review = limits.restaurantRequiresReview ? 'chaque nouvelle offre est vérifiée par GoLink avant publication (sous 24 h ouvrées)' : 'vos offres sont publiées immédiatement';
+  const review = limits.restaurantRequiresReview ? 'chaque nouvelle offre est vérifiée par Ciyou Eats avant publication (sous 24 h ouvrées)' : 'vos offres sont publiées immédiatement';
   return `${caps.charAt(0).toUpperCase()}${caps.slice(1)} ; ${review}. Les remises sont à la charge de l’établissement.`;
 }
 

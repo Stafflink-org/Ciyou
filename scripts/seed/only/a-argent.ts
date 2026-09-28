@@ -188,8 +188,8 @@ async function main(): Promise<void> {
 
   // 5. Ajustements rattachés aux reversements programmés
   const adjustments: Array<{ id: string; payoutId: string; accountType: 'restaurant' | 'driver'; accountId: string; amountCents: number; description: string; reason: string }> = [
-    { id: 'aj-mina-kitchen-geste', payoutId: 'po-r-mina-kitchen-2026-09-21', accountType: 'restaurant', accountId: 'mina-kitchen', amountCents: 1500, description: 'Geste commercial : panne de la tablette de commandes', reason: 'Commandes perdues le 22 septembre pendant 40 minutes (incident GoLink)' },
-    { id: 'aj-onda-pasta-sacs', payoutId: 'po-r-onda-pasta-club-2026-09-21', accountType: 'restaurant', accountId: 'onda-pasta-club', amountCents: -1200, description: 'Sacs isothermes GoLink (lot de 10)', reason: 'Commande de matériel validée par le gérant' },
+    { id: 'aj-mina-kitchen-geste', payoutId: 'po-r-mina-kitchen-2026-09-21', accountType: 'restaurant', accountId: 'mina-kitchen', amountCents: 1500, description: 'Geste commercial : panne de la tablette de commandes', reason: 'Commandes perdues le 22 septembre pendant 40 minutes (incident Ciyou Eats)' },
+    { id: 'aj-onda-pasta-sacs', payoutId: 'po-r-onda-pasta-club-2026-09-21', accountType: 'restaurant', accountId: 'onda-pasta-club', amountCents: -1200, description: 'Sacs isothermes Ciyou Eats (lot de 10)', reason: 'Commande de matériel validée par le gérant' },
   ];
   for (const a of adjustments) {
     const payoutRef = db.doc(`${COLLECTIONS.payouts}/${a.payoutId}`);

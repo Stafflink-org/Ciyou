@@ -73,7 +73,7 @@ export const openSupportChat = experienceCallable(
     });
     for (const uid of Object.keys(participants)) {
       if (uid === caller.uid) continue;
-      await notify(uid, { title: `Support GoLink · ${order.number}`, body: preview(data.message), category: 'support', link: { type: 'order', target: data.orderId } });
+      await notify(uid, { title: `Support Ciyou Eats · ${order.number}`, body: preview(data.message), category: 'support', link: { type: 'order', target: data.orderId } });
     }
     await writeAudit({
       actor: actorFromCaller(caller, 'admin'),
@@ -115,7 +115,7 @@ export const postSupportChatMessage = experienceCallable(
       const role = conversation.participants[uid]?.role;
       if (role !== 'client' && role !== 'driver') continue;
       await notify(uid, {
-        title: 'Message du support GoLink',
+        title: 'Message du support Ciyou Eats',
         body: preview(data.text),
         category: 'support',
         link: conversation.orderId ? { type: 'order', target: conversation.orderId } : null,
@@ -146,7 +146,7 @@ export const closeSupportChat = experienceCallable(
     const at = Timestamp.now();
     await db.runTransaction(async (tx) => {
       tx.update(ref, { closed: true });
-      const message: ConversationMessage = { senderId: caller.uid, senderRole: 'system', senderName: 'GoLink', text: 'Conversation close par le support. Merci de nous avoir contactés.', attachments: [], readBy: [caller.uid], createdAt: at, auto: 'support_closed' };
+      const message: ConversationMessage = { senderId: caller.uid, senderRole: 'system', senderName: 'Ciyou Eats', text: 'Conversation close par le support. Merci de nous avoir contactés.', attachments: [], readBy: [caller.uid], createdAt: at, auto: 'support_closed' };
       tx.create(ref.collection(SUBCOLLECTIONS.conversations.messages).doc(), message);
     });
     await writeAudit({

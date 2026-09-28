@@ -94,7 +94,7 @@ export async function upsertTestAccounts(auth: Auth): Promise<{ created: number;
   writeFileSync(
     CREDENTIALS_FILE,
     [
-      '# Comptes de test GoLink (base de démonstration)',
+      '# Comptes de test Ciyou Eats (base de démonstration)',
       '',
       'Fichier local, ignoré par git : ne jamais le committer ni le partager.',
       'Régénéré par `npm run seed` ; un mot de passe déjà présent ici est conservé.',

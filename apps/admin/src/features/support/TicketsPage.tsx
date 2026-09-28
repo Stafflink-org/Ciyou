@@ -38,7 +38,7 @@ const updateTicket = callFunction<UpdateTicketInput, { changed: boolean }>('upda
 const col = createColumnHelper<WithId<SupportTicket>>();
 
 export function TicketsPage() {
-  useDocumentTitle('Support · GoLink Admin');
+  useDocumentTitle('Support · Ciyou Eats Admin');
   const navigate = useNavigate();
   const { admin, can } = useAdminAccess();
   const uid = admin.uid;

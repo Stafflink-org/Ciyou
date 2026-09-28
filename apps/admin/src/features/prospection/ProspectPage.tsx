@@ -81,7 +81,7 @@ export function ProspectPage() {
   const [followUp, setFollowUp] = useState<number | null>(null);
   const log = useMutation(logProspectActivity, { success: 'Échange enregistré' });
   const p = state.data;
-  useDocumentTitle(`${p?.name ?? 'Prospect'} · Prospection · GoLink Admin`);
+  useDocumentTitle(`${p?.name ?? 'Prospect'} · Prospection · Ciyou Eats Admin`);
 
   if (state.loading) {
     return (
@@ -119,7 +119,7 @@ export function ProspectPage() {
 
   const row = { ...p, id: prospectId };
   const restaurant = p.restaurantId ? restaurants.byId.get(p.restaurantId) : null;
-  const author = (uid: string) => team.byId.get(uid)?.displayName ?? (uid === p.ownerId ? p.ownerName : null) ?? 'Équipe GoLink';
+  const author = (uid: string) => team.byId.get(uid)?.displayName ?? (uid === p.ownerId ? p.ownerName : null) ?? 'Équipe Ciyou Eats';
   const open = OPEN_STAGES.includes(p.stage);
 
   return (

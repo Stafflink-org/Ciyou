@@ -90,7 +90,7 @@ export function DriversPage() {
       col.accessor((d) => DRIVER_TYPE_LABELS[d.type], {
         id: 'type',
         header: 'Type',
-        cell: ({ row }) => (row.original.type === 'platform' ? <Badge tone="brand" size="sm">GoLink</Badge> : <Badge tone="plum" size="sm">Salarié commerce</Badge>),
+        cell: ({ row }) => (row.original.type === 'platform' ? <Badge tone="brand" size="sm">Ciyou Eats</Badge> : <Badge tone="plum" size="sm">Salarié commerce</Badge>),
       }),
       col.accessor((d) => names.city(d.cityId), {
         id: 'city',
@@ -180,7 +180,7 @@ export function DriversPage() {
     <DriversShell
       documentTitle="Livreurs"
       title="Livreurs"
-      description="Flotte GoLink et livreurs salariés des commerces : statut, performance, conformité."
+      description="Flotte Ciyou Eats et livreurs salariés des commerces : statut, performance, conformité."
       actions={
         <Button variant="secondary" leftIcon={<Download />} disabled={list.length === 0} onClick={() => void exportDriversCsv(list, names.city, contact.masked)}>
           Exporter
@@ -230,7 +230,7 @@ export function DriversPage() {
           filters={[
             { id: 'status', label: 'Statut', options: (['active', 'onboarding', 'suspended', 'deactivated'] as const).map((s) => ({ value: s, label: DRIVER_STATUS_LABELS[s] })), getValue: (d) => d.status },
             { id: 'availability', label: 'Disponibilité', options: [{ value: 'online', label: 'Disponible' }, { value: 'on_delivery', label: 'En course' }, { value: 'paused', label: 'En pause' }, { value: 'offline', label: 'Hors ligne' }], getValue: (d) => d.availability },
-            { id: 'type', label: 'Type', options: [{ value: 'platform', label: 'Livreur GoLink' }, { value: 'restaurant', label: 'Salarié d’un commerce' }], getValue: (d) => d.type },
+            { id: 'type', label: 'Type', options: [{ value: 'platform', label: 'Livreur Ciyou Eats' }, { value: 'restaurant', label: 'Salarié d’un commerce' }], getValue: (d) => d.type },
             { id: 'vehicle', label: 'Véhicule', options: VEHICLE_TYPES.map((v) => ({ value: v, label: VEHICLE_LABELS[v] })), getValue: (d) => d.vehicle.type },
           ]}
           emptyState={<EmptyState icon={<Bike />} title="Aucun livreur dans ce périmètre" description="Les livreurs apparaissent ici dès leur inscription depuis l’application livreur." />}

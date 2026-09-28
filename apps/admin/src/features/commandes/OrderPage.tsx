@@ -78,7 +78,7 @@ const euros = (cents: number | null | undefined) => formatEUR(cents ?? 0, { cent
 export function OrderPage() {
   const { orderId = '' } = useParams();
   const order = useDoc<Order>(docAt(`${COLLECTIONS.orders}/${orderId}`));
-  useDocumentTitle(`${order.data?.number ?? 'Commande'} · GoLink Admin`);
+  useDocumentTitle(`${order.data?.number ?? 'Commande'} · Ciyou Eats Admin`);
   if (order.loading) {
     return (
       <PageContainer wide>
@@ -274,7 +274,7 @@ function Amounts({ order }: { order: Order }) {
           <InfoRow label="Remboursé">{euros(a.refundedCents)}</InfoRow>
           {a.discount?.totalCents > 0 && (
             <InfoRow label="Remise financée">
-              commerce {euros(a.discount.restaurantFundedCents)} · GoLink {euros(a.discount.platformFundedCents)}
+              commerce {euros(a.discount.restaurantFundedCents)} · Ciyou Eats {euros(a.discount.platformFundedCents)}
             </InfoRow>
           )}
           {order.commission && <InfoRow label="Commission appliquée">{(order.commission.bps / 100).toLocaleString('fr-FR')} %</InfoRow>}
@@ -325,11 +325,11 @@ function Financials({ orderId }: { orderId: string }) {
               <Line label="Total livreur" value={s.courier.totalCents} strong />
             </dl>
           ) : (
-            <p className="text-sm text-fg-subtle">Pas de livreur GoLink sur cette commande.</p>
+            <p className="text-sm text-fg-subtle">Pas de livreur Ciyou Eats sur cette commande.</p>
           )}
         </div>
         <div>
-          <p className="eyebrow mb-2">GoLink (HT)</p>
+          <p className="eyebrow mb-2">Ciyou Eats (HT)</p>
           <dl>
             <Line label="Commission" value={s.platform.commissionHtCents} />
             {s.platform.serviceFeeHtCents > 0 && <Line label="Frais de service" value={s.platform.serviceFeeHtCents} />}
@@ -345,7 +345,7 @@ function Financials({ orderId }: { orderId: string }) {
   );
 }
 
-const ACTOR_LABELS: Record<string, string> = { customer: 'Client', restaurant: 'Commerce', driver: 'Livreur', admin: 'Support GoLink', system: 'Automatique' };
+const ACTOR_LABELS: Record<string, string> = { customer: 'Client', restaurant: 'Commerce', driver: 'Livreur', admin: 'Support Ciyou Eats', system: 'Automatique' };
 const EVENT_TONES: Partial<Record<OrderEvent['type'], Tone>> = { created: 'brand', driver_assigned: 'plum', driver_unassigned: 'amber', refund_issued: 'info', credit_issued: 'info', item_removed: 'amber', item_replaced: 'amber' };
 
 function Chronology({ order }: { order: WithId<Order> }) {
@@ -413,7 +413,7 @@ function Parties({ order }: { order: WithId<Order> }) {
                 <span className="block text-2xs font-normal text-fg-subtle">{[d.address.postalCode, d.address.city].filter(Boolean).join(' ')}</span>
               </InfoRow>
               <InfoRow label="Distance">{formatMeters(d.distanceMeters)}</InfoRow>
-              <InfoRow label="Livraison assurée par">{d.deliveredBy === 'platform' ? 'Flotte GoLink' : 'Le commerce'}</InfoRow>
+              <InfoRow label="Livraison assurée par">{d.deliveredBy === 'platform' ? 'Flotte Ciyou Eats' : 'Le commerce'}</InfoRow>
               {d.proof && <InfoRow label="Preuve de livraison">{d.proof.type === 'code' ? 'Code' : d.proof.type === 'photo' ? 'Photo' : d.proof.type === 'signature' ? 'Signature' : 'Remise en main propre'}</InfoRow>}
             </>
           )}
@@ -575,7 +575,7 @@ function ForceDriverDialog({ open, onOpenChange, order, onSubmit, loading }: { o
       <DialogContent size="md">
         <DialogHeader icon={<Bike />} title={order.driverId ? 'Changer de livreur' : 'Imposer un livreur'} description="Le livreur choisi reçoit directement la course. Action tracée dans le journal d’audit." />
         <DialogBody className="space-y-4">
-          <FormField label="Livreur GoLink de la ville">
+          <FormField label="Livreur Ciyou Eats de la ville">
             <Combobox options={options} value={driverId} onChange={setDriverId} placeholder="Choisir un livreur…" searchPlaceholder="Rechercher…" />
           </FormField>
           <FormField label="Motif">

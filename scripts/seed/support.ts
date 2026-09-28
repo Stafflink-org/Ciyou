@@ -102,7 +102,7 @@ export function seedSupport(ctx: SeedContext, orders: SeededOrder[]): number {
       { authorType: 'requester', authorId: o.customerId, authorName: o.customerName, body: o.late ? 'Ma commande est arrivée avec plus de 30 minutes de retard et froide.' : 'Bonjour, il manque une partie de ma commande.', internal: false, attachments: [], action: null, createdAt: ts(createdAt) },
     ];
     if (status !== 'open') {
-      messages.push({ authorType: 'agent', authorId: support, authorName: 'Malik (support GoLink)', body: o.late ? 'Toutes nos excuses pour ce retard. Un avoir de 5 € a été ajouté à votre compte.' : 'Nous sommes désolés. Nous avons procédé au remboursement de l’article manquant.', internal: false, attachments: [], action: { type: o.late ? 'credit' : 'refund', detail: o.late ? 'Avoir de 5,00 €' : 'Remboursement partiel' }, createdAt: ts(firstResponse) });
+      messages.push({ authorType: 'agent', authorId: support, authorName: 'Malik (support Ciyou Eats)', body: o.late ? 'Toutes nos excuses pour ce retard. Un avoir de 5 € a été ajouté à votre compte.' : 'Nous sommes désolés. Nous avons procédé au remboursement de l’article manquant.', internal: false, attachments: [], action: { type: o.late ? 'credit' : 'refund', detail: o.late ? 'Avoir de 5,00 €' : 'Remboursement partiel' }, createdAt: ts(firstResponse) });
       messages.push({ authorType: 'agent', authorId: support, authorName: 'Malik', body: 'Deuxième réclamation de ce client ce mois-ci : à surveiller.', internal: true, attachments: [], action: null, createdAt: ts(minutesAfter(firstResponse, 2)) });
     }
     messages.forEach((m, j) => w.set(w.doc(`${COLLECTIONS.supportTickets}/${id}/${SUBCOLLECTIONS.supportTickets.messages}/m${j + 1}`), m));

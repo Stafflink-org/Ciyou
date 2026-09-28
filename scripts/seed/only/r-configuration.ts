@@ -133,7 +133,7 @@ async function main() {
   // Pièce refusée (avis de situation illisible) et fichier de démonstration associé.
   const files = new SeedFiles(bucket);
   const path = 'restaurants/lune-coffee/private/documents/siret_notice-demo.pdf';
-  const file = files.storedPdf(path, 'Avis de situation SIRENE', ['Document de démonstration GoLink', 'Lune Coffee'], days(-6), OWNER);
+  const file = files.storedPdf(path, 'Avis de situation SIRENE', ['Document de démonstration Ciyou Eats', 'Lune Coffee'], days(-6), OWNER);
   set(db.collection(COLLECTIONS.partnerDocuments).doc('lune-coffee-siret_notice'), {
     ownerType: 'restaurant',
     ownerId: 'lune-coffee',

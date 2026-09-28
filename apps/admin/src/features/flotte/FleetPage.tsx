@@ -49,7 +49,7 @@ interface ZoneLiveRow {
 }
 
 export function FleetPage() {
-  useDocumentTitle('Flotte en direct · GoLink Admin');
+  useDocumentTitle('Flotte en direct · Ciyou Eats Admin');
   const geo = useGeoScope();
   const cities = useScopedCities();
   const zones = useScopedZones();

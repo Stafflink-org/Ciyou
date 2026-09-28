@@ -15,7 +15,7 @@ const DEFAULTS: Values = { maxSendsPer7Days: 3, sendWindow: { fromHour: 9, toHou
 
 /** Garde-fous des campagnes des restaurants (settings/campaignRules), tous paramétrables. */
 export function RulesPage() {
-  useDocumentTitle('Règles des campagnes · GoLink Admin');
+  useDocumentTitle('Règles des campagnes · Ciyou Eats Admin');
   const { can, admin } = useAdminAccess();
   const central = admin.role === 'super_admin' || (admin.cityIds.length === 0 && admin.countryIds.length === 0);
   const canEdit = can('notifications.send') && central;

@@ -331,7 +331,7 @@ export const updateTicket = experienceCallable(
       }
       lines.push(`Statut : ${TICKET_STATUS_LABELS[ticket.status]} → ${TICKET_STATUS_LABELS[data.status]}`);
       if (data.status === 'resolved') publicLine = 'Votre demande a été marquée comme résolue. Si le problème persiste, répondez simplement à ce message.';
-      if (data.status === 'closed') publicLine = 'Votre demande est fermée. Merci d’avoir contacté le support GoLink.';
+      if (data.status === 'closed') publicLine = 'Votre demande est fermée. Merci d’avoir contacté le support Ciyou Eats.';
     }
     if (data.priority && data.priority !== ticket.priority) {
       changes.priority = data.priority;
@@ -357,7 +357,7 @@ export const updateTicket = experienceCallable(
       tx.update(ticketRef(data.ticketId), { ...changes, updatedAt: at, updatedBy: caller.uid });
       addTicketMessage(tx, data.ticketId, systemMessage(admin, caller.uid, [lines.join(' · '), data.note].filter(Boolean).join('\n'), changes.status ? { type: 'status_change', detail: String(changes.status) } : null), at);
       if (publicLine) {
-        addTicketMessage(tx, data.ticketId, { ...systemMessage(admin, caller.uid, publicLine, { type: 'status_change', detail: String(changes.status) }, false), authorName: 'GoLink' }, at);
+        addTicketMessage(tx, data.ticketId, { ...systemMessage(admin, caller.uid, publicLine, { type: 'status_change', detail: String(changes.status) }, false), authorName: 'Ciyou Eats' }, at);
         tx.update(ticketRef(data.ticketId), { lastMessageAt: at, lastMessagePreview: preview(publicLine), unreadByRequester: FieldValue.increment(1) });
       }
     });
@@ -537,7 +537,7 @@ export const contactTicketParty = experienceCallable(
     if (recipients.length === 0) throw fail.precondition('Aucun destinataire joignable pour cette partie.');
     for (const uid of recipients) {
       await notify(uid, {
-        title: `Support GoLink · ${ticket.number}`,
+        title: `Support Ciyou Eats · ${ticket.number}`,
         body: preview(data.message),
         category: 'support',
         link: { type: 'ticket', target: data.ticketId },

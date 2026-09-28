@@ -108,7 +108,7 @@ function FlagCard({ flag }: { flag: FeatureFlag & { id: string } }) {
 }
 
 export function FonctionnalitesPage() {
-  useDocumentTitle('Fonctionnalités · GoLink Admin');
+  useDocumentTitle('Fonctionnalités · Ciyou Eats Admin');
   const flags = useFeatureFlags();
   const byKey = useMemo(() => new Map(flags.data.map((f) => [f.key, f])), [flags.data]);
   const missing = FEATURE_KEYS.filter((k) => !byKey.has(k));

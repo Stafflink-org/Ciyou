@@ -17,7 +17,7 @@ const EMPTY: Omit<PaymentProviderInput, 'reason'> = { providerId: null, code: ''
 
 /** Prestataires de paiement par pays (décision client : Stripe n'est pas disponible partout, moyens locaux au Maghreb). */
 export function ProvidersPage() {
-  useDocumentTitle('Prestataires de paiement · GoLink Admin');
+  useDocumentTitle('Prestataires de paiement · Ciyou Eats Admin');
   const can = useCan();
   const geo = useGeoScope();
   const editable = can('payments.configure');

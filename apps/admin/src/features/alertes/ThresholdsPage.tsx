@@ -184,7 +184,7 @@ const updateSettings = callFunction<Values & { reason: string }, { ok: true }>('
 
 /** Seuils des alertes par exception (settings/monitoring), tous paramétrables. */
 export function ThresholdsPage() {
-  useDocumentTitle('Seuils des alertes · GoLink Admin');
+  useDocumentTitle('Seuils des alertes · Ciyou Eats Admin');
   const { can } = useAdminAccess();
   const canView = can('settings.view');
   const canEdit = can('settings.edit');

@@ -73,7 +73,7 @@ const signupSchema = z.object({
     vatNumber: z.string().trim().max(20).optional(),
   }),
   acceptTerms: z.literal(true, { message: 'Vous devez accepter les conditions partenaires' }),
-  /** Code de parrainage d'un commerce GoLink (lien « ?parrain= »). */
+  /** Code de parrainage d'un commerce Ciyou Eats (lien « ?parrain= »). */
   referralCode: z.string().trim().max(20).optional(),
 });
 
@@ -158,7 +158,7 @@ export const restaurantSignup = callable(
     await assertNotInMaintenance('restaurant');
     // Liste de blocage (§28) : consultée avant toute création de compte ou de fiche.
     if ((await isBlocked('email', data.owner.email)) || (await isBlocked('phone', data.owner.phone))) {
-      throw fail.forbidden('Cette inscription ne peut pas être finalisée. Contactez le support GoLink.');
+      throw fail.forbidden('Cette inscription ne peut pas être finalisée. Contactez le support Ciyou Eats.');
     }
     const countryId = data.restaurant.address.countryCode;
     const city = await findCity(countryId, data.restaurant.address.city);

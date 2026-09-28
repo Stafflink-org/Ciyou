@@ -92,7 +92,7 @@ export function ParametresPage() {
       description: 'Secteurs livrés, frais, minimum et délai.',
       icon: <MapPinned />,
       permission: 'zones.manage',
-      summary: restaurant.deliveredBy === 'platform' ? 'Livraison assurée par GoLink' : `${activeZones} zone${activeZones > 1 ? 's' : ''} active${activeZones > 1 ? 's' : ''}`,
+      summary: restaurant.deliveredBy === 'platform' ? 'Livraison assurée par Ciyou Eats' : `${activeZones} zone${activeZones > 1 ? 's' : ''} active${activeZones > 1 ? 's' : ''}`,
     },
     {
       href: '/paiements',

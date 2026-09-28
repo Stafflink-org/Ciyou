@@ -87,8 +87,8 @@ async function recordCommissionRule(
 function checkPaymentMethods(methods: readonly PaymentMethod[], deliveredBy: string): PaymentMethod[] {
   const unique = [...new Set(methods)];
   const disabled = unique.filter((m) => DISABLED_PAYMENT_METHODS.includes(m));
-  if (disabled.length > 0) throw fail.invalid('Les titres-restaurant ne sont pas acceptés sur GoLink.');
-  if (unique.includes('wallet')) throw fail.invalid('Les avoirs GoLink sont toujours acceptés : ne les ajoutez pas ici.');
+  if (disabled.length > 0) throw fail.invalid('Les titres-restaurant ne sont pas acceptés sur Ciyou Eats.');
+  if (unique.includes('wallet')) throw fail.invalid('Les avoirs Ciyou Eats sont toujours acceptés : ne les ajoutez pas ici.');
   if (unique.includes('cash') && !isMerchantCourier(deliveredBy === 'platform' ? 'platform' : 'restaurant')) {
     throw fail.invalid('Les espèces ne sont possibles que si le commerce livre avec ses propres livreurs salariés.');
   }
@@ -352,7 +352,7 @@ const groupSchema = z.object({
 
 export const saveRestaurantGroup = acteursCallable(groupSchema, async (data, request) => {
   const { caller, admin } = await requireAdmin(request, 'restaurants.edit');
-  if (data.restaurantIds.length > 1) await assertFeatureOn('multi_outlet', { countryId: data.countryId }, 'Le multi-boutiques est désactivé par GoLink : un groupe ne peut pas réunir plusieurs établissements.');
+  if (data.restaurantIds.length > 1) await assertFeatureOn('multi_outlet', { countryId: data.countryId }, 'Le multi-boutiques est désactivé par Ciyou Eats : un groupe ne peut pas réunir plusieurs établissements.');
   const canCommercial = adminHasPermission(admin, 'restaurants.commercial');
   const ownerSnap = await db.collection(COLLECTIONS.users).where('email', '==', data.ownerEmail).limit(1).get();
   const owner = ownerSnap.docs[0];

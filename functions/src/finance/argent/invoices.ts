@@ -313,7 +313,7 @@ export async function runMonthlyInvoices(options: RunOptions): Promise<MonthlyIn
         dueAt: null,
         paidAt: null,
         legalMentions: [
-          'Autofacturation : facture émise par GoLink au nom et pour le compte du prestataire.',
+          'Autofacturation : facture émise par Ciyou Eats au nom et pour le compte du prestataire.',
           // Mention du droit français uniquement pour les prestataires établis en France.
           exempt ? (driver.countryId === 'FR' ? 'TVA non applicable, article 293 B du CGI.' : 'TVA non applicable : prestataire exonéré selon la réglementation de son pays.') : 'TVA due par le prestataire.',
         ],

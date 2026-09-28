@@ -60,7 +60,7 @@ export function SettingRow({
   icon?: ReactNode;
   children: ReactNode;
   className?: string;
-  /** Réglage verrouillé par GoLink : explication affichée sous l'aide. */
+  /** Réglage verrouillé par Ciyou Eats : explication affichée sous l'aide. */
   disabledReason?: ReactNode;
 }) {
   return (

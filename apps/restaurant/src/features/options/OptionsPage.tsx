@@ -51,7 +51,7 @@ import { OptionDialog } from './OptionDialog';
 const column = createColumnHelper<Option>();
 
 export function OptionsPage() {
-  useDocumentTitle('Options & listes · GoLink Restaurant');
+  useDocumentTitle('Options & listes · Ciyou Eats Restaurant');
   const { restaurantId, restaurant } = useRestaurantAccess();
   const { user } = useAuth();
   const uid = user?.uid ?? '';

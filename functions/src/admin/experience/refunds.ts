@@ -191,7 +191,7 @@ export const refundFromTicket = experienceCallable(
           caller.uid,
           needsApproval
             ? `Remboursement de ${euros(data.amountCents)} demandé (${CAUSE_LABELS[data.cause]}) : au-delà du plafond de ${euros(limit)}, validation d’un responsable requise. Motif : ${data.reason}`
-            : `Remboursement de ${euros(data.amountCents)} (${CAUSE_LABELS[data.cause]}) : ${data.reason}. Imputation : commerce ${euros(allocation.restaurantCents)}, GoLink ${euros(allocation.platformCents)}${allocation.courierCents ? `, livreur ${euros(allocation.courierCents)}` : ''}.`,
+            : `Remboursement de ${euros(data.amountCents)} (${CAUSE_LABELS[data.cause]}) : ${data.reason}. Imputation : commerce ${euros(allocation.restaurantCents)}, Ciyou Eats ${euros(allocation.platformCents)}${allocation.courierCents ? `, livreur ${euros(allocation.courierCents)}` : ''}.`,
           { type: 'refund', detail: `${euros(data.amountCents)}${needsApproval ? ' (en attente)' : ''}` },
         ),
         at,
@@ -317,7 +317,7 @@ export const creditFromTicket = experienceCallable(
     const { caller, admin } = await requireAdmin(request, 'customers.credit');
     const ticket = await loadTicketFor(admin, data.ticketId);
     if (ticket.requesterType !== 'client') throw fail.precondition('Un avoir ne peut être accordé qu’à un client.');
-    if (data.chargedTo === 'restaurant' && !ticket.restaurantId) throw fail.invalid('Aucun commerce n’est lié à ce ticket : imputez l’avoir à GoLink.');
+    if (data.chargedTo === 'restaurant' && !ticket.restaurantId) throw fail.invalid('Aucun commerce n’est lié à ce ticket : imputez l’avoir à Ciyou Eats.');
     const limit = await refundLimitOf(admin);
     const maxCredit = await maxCreditOf();
     if (data.amountCents > maxCredit) throw fail.invalid(`Un avoir est limité à ${euros(maxCredit)}.`);
@@ -331,7 +331,7 @@ export const creditFromTicket = experienceCallable(
     const txRef = db.collection(COLLECTIONS.walletTransactions).doc();
     const at = Timestamp.now();
     const expiresAt = Timestamp.fromMillis(at.toMillis() + validityDays * 86_400_000);
-    const body = `Un avoir de ${euros(data.amountCents)} a été ajouté à votre compte GoLink, valable jusqu’au ${expiresAt.toDate().toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' })}. Il sera déduit automatiquement de votre prochaine commande.`;
+    const body = `Un avoir de ${euros(data.amountCents)} a été ajouté à votre compte Ciyou Eats, valable jusqu’au ${expiresAt.toDate().toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' })}. Il sera déduit automatiquement de votre prochaine commande.`;
 
     const balance = await db.runTransaction(async (tx) => {
       const user = (await tx.get(userRef)).data() as User | undefined;
@@ -382,7 +382,7 @@ export const creditFromTicket = experienceCallable(
         updatedAt: at,
         updatedBy: caller.uid,
       });
-      addTicketMessage(tx, data.ticketId, systemMessage(admin, caller.uid, `Avoir de ${euros(data.amountCents)} accordé (${data.chargedTo === 'restaurant' ? 'imputé au commerce' : 'geste commercial GoLink'}), valable ${validityDays} jours : ${data.reason}`, { type: 'credit', detail: euros(data.amountCents) }), at);
+      addTicketMessage(tx, data.ticketId, systemMessage(admin, caller.uid, `Avoir de ${euros(data.amountCents)} accordé (${data.chargedTo === 'restaurant' ? 'imputé au commerce' : 'geste commercial Ciyou Eats'}), valable ${validityDays} jours : ${data.reason}`, { type: 'credit', detail: euros(data.amountCents) }), at);
       addTicketMessage(tx, data.ticketId, { authorType: 'agent', authorId: caller.uid, authorName: agentPublicName(admin), body, internal: false, attachments: [], action: { type: 'credit', detail: euros(data.amountCents) } }, at);
       return next;
     });

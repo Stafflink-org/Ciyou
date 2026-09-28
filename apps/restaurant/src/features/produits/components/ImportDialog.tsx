@@ -113,7 +113,7 @@ export function ImportDialog({ open, onOpenChange, restaurantId }: { open: boole
                 accept=".csv,text/csv"
                 maxSize={2 * 1024 * 1024}
                 label="Glissez-déposez votre fichier CSV ou"
-                hint="CSV exporté depuis GoLink, Excel ou votre logiciel de caisse · 2 Mo max."
+                hint="CSV exporté depuis Ciyou Eats, Excel ou votre logiciel de caisse · 2 Mo max."
                 onReject={setFileError}
               />
               <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-fg-muted">
@@ -189,7 +189,7 @@ export function ImportDialog({ open, onOpenChange, restaurantId }: { open: boole
             <div className="tone-amber rounded-xl border border-(--tone-border) bg-(--tone-bg)">
               <p className="flex items-center gap-2 border-b border-(--tone-border) px-3 py-2 text-xs font-medium text-(--tone-fg)">
                 <FileWarning className="size-3.5" aria-hidden="true" />
-                Importées hors vente : la vente d’alcool est interdite sur GoLink
+                Importées hors vente : la vente d’alcool est interdite sur Ciyou Eats
               </p>
               <ul className="max-h-32 divide-y divide-(--tone-border) overflow-y-auto text-sm">
                 {report!.warnings!.map((w) => (

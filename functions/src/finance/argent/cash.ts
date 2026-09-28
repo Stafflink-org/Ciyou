@@ -94,7 +94,7 @@ export async function trackMerchantCash(orderId: string, order: Order): Promise<
 
 /**
  * Remise de caisse : le livreur salarié remet ses espèces au commerce. Enregistrée par le
- * commerce (ou par l'équipe GoLink), motif facultatif pour le commerce, audit systématique.
+ * commerce (ou par l'équipe Ciyou Eats), motif facultatif pour le commerce, audit systématique.
  */
 export const recordMerchantCashRemittance = argentCallable(
   z.object({ restaurantId: zId, driverId: zId, amountCents: z.number().int().min(1).max(5_000_000), note: z.string().trim().max(200).nullish() }),

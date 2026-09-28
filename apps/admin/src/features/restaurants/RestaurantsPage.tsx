@@ -182,7 +182,7 @@ function matches(r: RestaurantRow, f: Filters, now: number): boolean {
 const column = createColumnHelper<RestaurantRow>();
 
 export function RestaurantsPage() {
-  useDocumentTitle('Restaurants · GoLink Admin');
+  useDocumentTitle('Restaurants · Ciyou Eats Admin');
   const navigate = useNavigate();
   const can = useCan();
   const scope = useGeoScope();

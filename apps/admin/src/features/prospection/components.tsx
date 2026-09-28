@@ -163,7 +163,7 @@ export function StageDialog({ prospect, to, onClose }: { prospect: ProspectRow; 
         />
         <DialogBody className="space-y-4">
           {to === 'signed_up' && (
-            <FormField label="Restaurant inscrit sur GoLink" hint="Facultatif si l’inscription est en cours.">
+            <FormField label="Restaurant inscrit sur Ciyou Eats" hint="Facultatif si l’inscription est en cours.">
               <Combobox
                 value={restaurantId}
                 onChange={(v: string | undefined) => setRestaurantId(v)}

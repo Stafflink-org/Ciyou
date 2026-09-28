@@ -1,5 +1,5 @@
 // Vue d'ensemble financière (cahier §15) : ce que paient les clients, ce que garde
-// GoLink, ce que reçoivent commerces et livreurs, sur une période et un périmètre,
+// Ciyou Eats, ce que reçoivent commerces et livreurs, sur une période et un périmètre,
 // comparée à la période précédente de même durée. Calculée côté serveur à partir de
 // la répartition faisant foi de chaque commande (orderFinancials).
 import {

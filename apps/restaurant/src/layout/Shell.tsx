@@ -69,7 +69,7 @@ export function Shell() {
   const active = useActiveModule(MODULES);
   const group = NAV_GROUPS.find((item) => item.id === active?.nav.group);
 
-  useDocumentTitle(active ? `${moduleLabel(active.id, active.nav.label)} · ${restaurant.name} · GoLink` : `${restaurant.name} · GoLink`);
+  useDocumentTitle(active ? `${moduleLabel(active.id, active.nav.label)} · ${restaurant.name} · Ciyou Eats` : `${restaurant.name} · Ciyou Eats`);
   useCommandShortcut(useCallback(() => setPaletteOpen((open) => !open), []));
 
   const go = useCallback((href: string) => navigate(href), [navigate]);

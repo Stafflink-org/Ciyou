@@ -109,7 +109,7 @@ export function ImageCropDialog({ source, onCancel, onConfirm, title = 'Recadrer
   return (
     <Dialog open={Boolean(source)} onOpenChange={(open) => !open && !saving && onCancel()}>
       <DialogContent size="lg">
-        <DialogHeader icon={<Crop />} title={title} description="Cadrez le plat au centre : c’est ce que verront vos clients dans l’app GoLink." />
+        <DialogHeader icon={<Crop />} title={title} description="Cadrez le plat au centre : c’est ce que verront vos clients dans l’app Ciyou Eats." />
         <DialogBody className="space-y-4">
           <div
             ref={frameRef}

@@ -37,7 +37,7 @@ export function useSetupSteps(): { steps: SetupStep[]; loading: boolean } {
     { id: 'hours', label: 'Définir les horaires', description: 'Créneaux d’ouverture de la semaine.', href: '/horaires', done: openDays > 0 },
     { id: 'legal', label: 'Informations légales', description: 'SIRET, TVA, numéro fiscal, siège.', href: '/etablissement?onglet=legal', done: legalDone, unknown: !settings },
     { id: 'documents', label: 'Déposer les justificatifs', description: 'Kbis, pièce d’identité, RIB.', href: '/documents', done: docsDone, unknown: !settings },
-    { id: 'contract', label: 'Signer le contrat partenaire', description: 'Version en vigueur des conditions GoLink.', href: '/documents', done: contractDone, unknown: !settings },
+    { id: 'contract', label: 'Signer le contrat partenaire', description: 'Version en vigueur des conditions Ciyou Eats.', href: '/documents', done: contractDone, unknown: !settings },
     { id: 'payouts', label: 'Activer les versements', description: 'Compte bancaire vérifié par Stripe.', href: '/versements', done: payoutsDone, unknown: !finance },
   ];
   return { steps, loading: legal.loading || docs.loading || contract.loading || commercial.loading };

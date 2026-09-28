@@ -144,7 +144,7 @@ export function useNewOrderAlert(pendingCount: number): OrderAlertState {
     let flip = false;
     const id = window.setInterval(() => {
       flip = !flip;
-      document.title = flip ? `(${pendingCount}) Nouvelle commande · GoLink` : original;
+      document.title = flip ? `(${pendingCount}) Nouvelle commande · Ciyou Eats` : original;
     }, 1200);
     return () => {
       window.clearInterval(id);

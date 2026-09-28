@@ -132,7 +132,7 @@ export function StatsTab({ restaurant }: { restaurant: WithId<Restaurant> }) {
           <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
             <StatCard label="Commandes" value={formatNumber(view.totals.orders)} icon={<ShoppingBag />} delta={view.deltas.orders} deltaLabel="vs période préc." loading={stats.loading} footer={`Annulation ${bpsLabel(view.cancelRate)}`} />
             <StatCard label="Chiffre d’affaires" value={eur(view.totals.sales)} icon={<TrendingUp />} tone="success" delta={view.deltas.sales} deltaLabel="vs période préc." loading={stats.loading} footer={`Panier moyen ${eur(view.basket)}`} />
-            <StatCard label="Commissions GoLink" value={eur(view.totals.commission)} icon={<Receipt />} tone="brand" delta={view.deltas.commission} deltaLabel="vs période préc." loading={stats.loading} />
+            <StatCard label="Commissions Ciyou Eats" value={eur(view.totals.commission)} icon={<Receipt />} tone="brand" delta={view.deltas.commission} deltaLabel="vs période préc." loading={stats.loading} />
             <StatCard label="Net reversé" value={eur(view.totals.net)} icon={<Wallet />} tone="info" loading={stats.loading} footer="Après commissions et remboursements" />
           </div>
           <Panel title="Ventes et commissions" icon={<TrendingUp />}>

@@ -40,7 +40,7 @@ import { ROLE_DESCRIPTIONS } from './permissions-catalog';
 
 const PRESETS: Array<Exclude<StaffRole, 'custom'>> = ['owner', 'manager', 'kitchen', 'service', 'accountant', 'employee'];
 
-/** Rôles fournis par GoLink (lecture) et rôles sur mesure de l'établissement. */
+/** Rôles fournis par Ciyou Eats (lecture) et rôles sur mesure de l'établissement. */
 export function RolesTab({
   roles,
   loading,
@@ -129,7 +129,7 @@ export function RolesTab({
       <section>
         <div className="mb-3">
           <h2 className="font-display text-lg font-semibold tracking-tight text-fg">Rôles standards</h2>
-          <p className="text-sm text-fg-muted">Définis par GoLink, mis à jour automatiquement quand de nouvelles fonctions arrivent.</p>
+          <p className="text-sm text-fg-muted">Définis par Ciyou Eats, mis à jour automatiquement quand de nouvelles fonctions arrivent.</p>
         </div>
         <div className="space-y-2">
           {PRESETS.map((preset) => {

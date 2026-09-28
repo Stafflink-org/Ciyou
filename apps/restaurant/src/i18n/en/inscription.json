@@ -1,5 +1,5 @@
 {
-  "title": "Sign up · GoLink Restaurant",
+  "title": "Sign up · Ciyou Eats Restaurant",
   "eyebrow": "Become a partner",
   "heading": "Register your business",
   "description": "Free, with no commitment. Your application is reviewed as soon as your documents are uploaded; if it is complete and compliant, it is approved automatically.",
@@ -25,7 +25,7 @@
     "password": "Password",
     "passwordHint": "At least 10 characters, with at least one letter and one digit.",
     "referral": "Referral code (optional)",
-    "referralHint": "Filled in automatically if you came from a GoLink merchant’s link."
+    "referralHint": "Filled in automatically if you came from a Ciyou Eats merchant’s link."
   },
   "countries": {
     "FR": "France",
@@ -44,7 +44,7 @@
     "TN": "Tax identification number"
   },
   "registrationOk": "Number is valid.",
-  "terms": "I have read and accept GoLink’s partner terms, and I certify that the information entered is accurate.",
+  "terms": "I have read and accept Ciyou Eats’s partner terms, and I certify that the information entered is accurate.",
   "submit": "Create my account",
   "haveAccount": "Already a partner?",
   "login": "Sign in",
@@ -64,7 +64,7 @@
   },
   "waitlist": {
     "title": "We are not in your city yet",
-    "text": "GoLink opens city by city. Your request is saved: we will contact you at {{email}} as soon as {{city}} opens.",
+    "text": "Ciyou Eats opens city by city. Your request is saved: we will contact you at {{email}} as soon as {{city}} opens.",
     "cta": "Back to sign in"
   }
 }

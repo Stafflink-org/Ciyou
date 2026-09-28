@@ -213,7 +213,7 @@ function IncidentsTab() {
 }
 
 export function SanteMaintenancePage() {
-  useDocumentTitle('Santé · GoLink Admin');
+  useDocumentTitle('Santé · Ciyou Eats Admin');
   return (
     <PageContainer wide>
       <PageHeader eyebrow="Plateforme & sécurité" title="Santé et maintenance" description="État des services, mode maintenance par application, versions minimales, incidents.">

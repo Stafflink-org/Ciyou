@@ -232,7 +232,7 @@ async function searchDrivers(ctx: Context, query: string): Promise<GlobalSearchH
         type: 'driver',
         id: doc.id,
         title: `${d.firstName} ${d.lastName}`.trim() || d.displayName,
-        subtitle: [cityLabel(ctx, d.cityId), d.type === 'restaurant' ? 'Livreur du commerce' : 'Livreur GoLink', `${d.stats?.deliveries ?? 0} livraisons`].filter(Boolean).join(' · '),
+        subtitle: [cityLabel(ctx, d.cityId), d.type === 'restaurant' ? 'Livreur du commerce' : 'Livreur Ciyou Eats', `${d.stats?.deliveries ?? 0} livraisons`].filter(Boolean).join(' · '),
         status: d.status,
         matched: contactMatch(ctx, query, d.email, d.phone),
         cityId: d.cityId,

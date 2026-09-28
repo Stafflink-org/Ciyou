@@ -52,7 +52,7 @@ function tomorrowParis(hour: number, minute: number): Timestamp {
 const TEMPLATES: Array<[string, ReplyTemplate['kind'], string, string, number[], string | null, number]> = [
   ['merci-5', 'review_reply', 'Merci pour un avis 5 étoiles', 'Merci beaucoup {{prenom}} ! Toute l’équipe de {{restaurant}} est ravie que vous vous soyez régalé. À très vite !', [5], '/merci', 14],
   ['merci-4', 'review_reply', 'Avis positif avec une remarque', 'Merci {{prenom}} pour votre retour et votre remarque, que nous avons transmise en cuisine. Au plaisir de vous régaler à nouveau chez {{restaurant}}.', [4], '/merci4', 6],
-  ['excuses', 'review_reply', 'Excuses et engagement', 'Bonjour {{prenom}}, nous sommes sincèrement désolés que votre commande n’ait pas été à la hauteur. Nous avons revu ce point avec l’équipe pour que cela ne se reproduise pas. N’hésitez pas à nous écrire via la messagerie GoLink.', [1, 2, 3], '/excuses', 4],
+  ['excuses', 'review_reply', 'Excuses et engagement', 'Bonjour {{prenom}}, nous sommes sincèrement désolés que votre commande n’ait pas été à la hauteur. Nous avons revu ce point avec l’équipe pour que cela ne se reproduise pas. N’hésitez pas à nous écrire via la messagerie Ciyou Eats.', [1, 2, 3], '/excuses', 4],
   ['retard', 'customer_message', 'Retard en cuisine', 'Bonjour {{prenom}}, petit contretemps en cuisine : votre commande {{commande}} part dans une dizaine de minutes. Merci de votre patience !', [], '/retard', 9],
   ['allergenes', 'customer_message', 'Question sur les allergènes', 'Bonjour {{prenom}}, la liste complète des allergènes est indiquée sur chaque plat dans l’application. Pour toute allergie sévère, dites-le-nous : nous adaptons la préparation.', [], '/allergenes', 3],
   ['sans-oignon', 'customer_message', 'Demande de personnalisation', 'C’est noté {{prenom}}, nous préparons votre commande {{commande}} selon votre demande.', [], '/note', 11],
@@ -97,8 +97,8 @@ const social: RestaurantSocialProfile = {
     facebook: 'https://facebook.com/minakitchenlongwy',
     google: 'https://g.page/mina-kitchen-longwy',
   },
-  shareMessage: 'Houmous maison, falafels croustillants et grillades du Levant : commandez chez Mina Kitchen sur GoLink, livré chez vous à Longwy.',
-  hashtags: ['#MinaKitchen', '#Longwy', '#CuisineLevantine', '#GoLink'],
+  shareMessage: 'Houmous maison, falafels croustillants et grillades du Levant : commandez chez Mina Kitchen sur Ciyou Eats, livré chez vous à Longwy.',
+  hashtags: ['#MinaKitchen', '#Longwy', '#CuisineLevantine', '#Ciyou Eats'],
   updatedAt: at(-5 * DAY),
   updatedBy: OWNER,
 };
@@ -163,7 +163,7 @@ const promotions: Array<Promotion & { id: string }> = [
     totalUsageLimit: 150,
     startsAt: at(2 * DAY),
     endsAt: at(60 * DAY),
-    // Publication immédiate (validation GoLink désactivée) : l'offre démarre dans deux jours.
+    // Publication immédiate (validation Ciyou Eats désactivée) : l'offre démarre dans deux jours.
     status: 'active',
     submittedAt: at(-2 * HOUR),
     approvedAt: at(-2 * HOUR),
@@ -401,12 +401,12 @@ for (const [id, label, defaultPriority, requiresOrder, order] of reasons) {
 
 const articles: Array<[string, string, string, string, string[]]> = [
   ['promo-creer', 'Marketing', 'Créer un code promo ou une offre automatique', 'Dans Marketing › Codes promo, cliquez sur « Nouvelle offre ». Choisissez le type de remise (pourcentage, montant fixe ou livraison offerte), les clients concernés, le panier minimum et la période.\n\nUn code se partage (réseaux, flyers, campagne) ; une offre automatique s’applique d’office et s’affiche sur votre fiche. Les remises sont à la charge de votre établissement et déduites de vos reversements.', ['promotion', 'code']],
-  ['promo-validation', 'Marketing', 'Pourquoi mon offre est-elle « en validation » ?', 'GoLink vérifie chaque nouvelle offre avant sa publication, en général sous 24 heures ouvrées : plafonds de remise, cohérence du panier minimum, clarté du titre. En cas de refus, le motif s’affiche sur l’offre : modifiez-la puis soumettez-la à nouveau.', ['validation', 'refus']],
+  ['promo-validation', 'Marketing', 'Pourquoi mon offre est-elle « en validation » ?', 'Ciyou Eats vérifie chaque nouvelle offre avant sa publication, en général sous 24 heures ouvrées : plafonds de remise, cohérence du panier minimum, clarté du titre. En cas de refus, le motif s’affiche sur l’offre : modifiez-la puis soumettez-la à nouveau.', ['validation', 'refus']],
   ['campagnes', 'Marketing', 'Envoyer une campagne à mes clients', 'Marketing › Campagnes permet d’envoyer une notification ou un e-mail à vos clients, tout de suite ou à une date choisie. Seuls les clients ayant accepté de recevoir des offres sont contactés. Les envois sont possibles de 9 h à 21 h, trois fois par semaine au plus.', ['notification', 'e-mail']],
   ['avis-repondre', 'Avis', 'Répondre aux avis de vos clients', 'Chaque avis peut recevoir une réponse publique. Remerciez les avis positifs et proposez une solution aux avis négatifs : une réponse courtoise rassure les futurs clients. Vos réponses types (Marketing › Modèles) vous font gagner du temps.', ['avis', 'réponse']],
-  ['avis-signaler', 'Avis', 'Signaler un avis abusif', 'Un avis injurieux, mensonger ou contenant des données personnelles peut être signalé depuis la page Avis clients. La modération GoLink examine chaque signalement ; un avis négatif mais sincère reste publié.', ['signalement', 'modération']],
+  ['avis-signaler', 'Avis', 'Signaler un avis abusif', 'Un avis injurieux, mensonger ou contenant des données personnelles peut être signalé depuis la page Avis clients. La modération Ciyou Eats examine chaque signalement ; un avis négatif mais sincère reste publié.', ['signalement', 'modération']],
   ['messagerie', 'Messagerie', 'Échanger avec un client ou un livreur', 'Chaque commande ouvre un fil de discussion pendant 7 jours. Depuis Messagerie › Messages, répondez aux questions de vos clients, prévenez un livreur ou joignez une photo. Les messages automatiques se règlent dans Marketing › Modèles.', ['message', 'livreur']],
-  ['fidelite', 'Marketing', 'Lancer votre programme de fidélité', 'Dans Marketing › Fidélité, choisissez combien de points vos clients gagnent par euro dépensé et les récompenses débloquées à chaque palier. GoLink plafonne le retour client à 20 % des dépenses pour protéger votre marge.', ['points', 'récompense']],
+  ['fidelite', 'Marketing', 'Lancer votre programme de fidélité', 'Dans Marketing › Fidélité, choisissez combien de points vos clients gagnent par euro dépensé et les récompenses débloquées à chaque palier. Ciyou Eats plafonne le retour client à 20 % des dépenses pour protéger votre marge.', ['points', 'récompense']],
 ];
 articles.forEach(([id, category, title, body, tags], i) => {
   const article: HelpArticle = {
@@ -532,7 +532,7 @@ for (const t of tickets) {
     const message: TicketMessage = {
       authorType,
       authorId: authorType === 'agent' ? SUPPORT : OWNER,
-      authorName: authorType === 'agent' ? 'Malik (support GoLink)' : 'Mina Haddad',
+      authorName: authorType === 'agent' ? 'Malik (support Ciyou Eats)' : 'Mina Haddad',
       body,
       internal: false,
       attachments: [],

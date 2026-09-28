@@ -33,7 +33,7 @@ export function monthlyBaseCents(employee: Pick<Employee, 'hourlyRateCents' | 'w
 }
 
 export function EmployeesPage() {
-  useDocumentTitle('Employés · GoLink Restaurant');
+  useDocumentTitle('Employés · Ciyou Eats Restaurant');
   const navigate = useNavigate();
   const can = useCan();
   const { restaurant, restaurantId } = useRestaurantAccess();
@@ -107,8 +107,8 @@ export function EmployeesPage() {
           <div className="flex items-center gap-1.5">
             <StatusBadge status={info.getValue()} map={EMPLOYEE_STATUS} />
             {info.row.original.uid && (
-              <span title="Compte GoLink relié" className="text-fg-subtle">
-                <Link2 className="size-3.5" aria-label="Compte GoLink relié" />
+              <span title="Compte Ciyou Eats relié" className="text-fg-subtle">
+                <Link2 className="size-3.5" aria-label="Compte Ciyou Eats relié" />
               </span>
             )}
           </div>
@@ -171,7 +171,7 @@ export function EmployeesPage() {
           icon={<Users />}
           tone="brand"
           loading={employees.loading}
-          footer={`${linked} avec un compte GoLink · ${employees.data.length - active.length} sorti(s) ou inactif(s)`}
+          footer={`${linked} avec un compte Ciyou Eats · ${employees.data.length - active.length} sorti(s) ou inactif(s)`}
         />
         <StatCard
           label="Heures contractuelles"

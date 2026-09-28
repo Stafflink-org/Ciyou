@@ -115,7 +115,7 @@ export function SectionDialog({ open, onOpenChange, restaurantId, sections, sect
             <DialogHeader
               icon={<LayoutList />}
               title={section ? 'Modifier la section' : 'Nouvelle section'}
-              description="Les sections organisent la carte que voient vos clients dans l’app GoLink."
+              description="Les sections organisent la carte que voient vos clients dans l’app Ciyou Eats."
             />
             <DialogBody className="space-y-5">
               <div className="flex flex-col gap-5 sm:flex-row">

@@ -222,8 +222,8 @@ function ComposerBody({ campaign, duplicate, onClose }: { campaign: CampaignRow 
               />
               <p className="text-xs text-fg-subtle">
                 {form.channel === 'push'
-                  ? 'Notification sur le téléphone et dans le centre de notifications de l’app GoLink.'
-                  : 'E-mail aux couleurs de votre établissement, envoyé par GoLink.'}
+                  ? 'Notification sur le téléphone et dans le centre de notifications de l’app Ciyou Eats.'
+                  : 'E-mail aux couleurs de votre établissement, envoyé par Ciyou Eats.'}
               </p>
             </section>
 
@@ -333,7 +333,7 @@ function ComposerBody({ campaign, duplicate, onClose }: { campaign: CampaignRow 
                 <div className="rounded-2xl bg-white/85 p-3 text-petrol-950 shadow-lg backdrop-blur">
                   <div className="mb-1 flex items-center gap-2 text-2xs text-petrol-700">
                     <LogoMark size={16} />
-                    <span className="font-semibold uppercase tracking-wide">GoLink</span>
+                    <span className="font-semibold uppercase tracking-wide">Ciyou Eats</span>
                     <span className="ml-auto">maintenant</span>
                   </div>
                   <p className="text-sm font-semibold leading-5">{form.title || 'Titre de votre notification'}</p>
@@ -344,7 +344,7 @@ function ComposerBody({ campaign, duplicate, onClose }: { campaign: CampaignRow 
             ) : (
               <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
                 <div className="border-b border-border px-4 py-3 text-xs">
-                  <p className="font-semibold text-fg">{restaurant.name} via GoLink</p>
+                  <p className="font-semibold text-fg">{restaurant.name} via Ciyou Eats</p>
                   <p className="truncate text-fg-muted">{form.emailSubject || form.title || 'Objet de l’e-mail'}</p>
                 </div>
                 <div className="bg-canvas p-4">

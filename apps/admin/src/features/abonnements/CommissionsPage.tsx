@@ -31,7 +31,7 @@ const isActive = (r: CommissionRule) => !r.validTo || (toDate(r.validTo)?.getTim
 
 /** Commissions (cahier §17) : par défaut, par formule, par ville, négociées, avec historique. */
 export function CommissionsPage() {
-  useDocumentTitle('Commissions · GoLink Admin');
+  useDocumentTitle('Commissions · Ciyou Eats Admin');
   const can = useCan();
   const geo = useGeoScope();
   const directory = useDirectory();
@@ -80,7 +80,7 @@ export function CommissionsPage() {
           </div>
         ),
       }),
-      col.accessor('platformDeliveryBps', { header: 'Livraison GoLink', meta: { align: 'right' }, cell: (info) => <span className="font-mono num">{bps(info.getValue())}</span> }),
+      col.accessor('platformDeliveryBps', { header: 'Livraison Ciyou Eats', meta: { align: 'right' }, cell: (info) => <span className="font-mono num">{bps(info.getValue())}</span> }),
       col.accessor('restaurantDeliveryBps', { header: 'Livreurs du commerce', meta: { align: 'right' }, cell: (info) => <span className="font-mono num">{bps(info.getValue())}</span> }),
       col.accessor('pickupBps', { header: 'Retrait', meta: { align: 'right' }, cell: (info) => <span className="font-mono num">{bps(info.getValue())}</span> }),
       col.accessor((r) => toDate(r.validFrom)?.getTime() ?? 0, {
@@ -149,7 +149,7 @@ export function CommissionsPage() {
                     <thead>
                       <tr className="border-b border-border bg-surface-2 text-left">
                         <th className="eyebrow px-5 py-2.5 font-normal">Barème</th>
-                        <th className="eyebrow px-3 py-2.5 text-right font-normal">Livraison GoLink</th>
+                        <th className="eyebrow px-3 py-2.5 text-right font-normal">Livraison Ciyou Eats</th>
                         <th className="eyebrow px-3 py-2.5 text-right font-normal">Livreurs du commerce</th>
                         <th className="eyebrow px-5 py-2.5 text-right font-normal">Retrait</th>
                       </tr>
@@ -311,7 +311,7 @@ function RuleDialog({ onClose }: { onClose: () => void }) {
         <Combobox options={options} value={scopeId} onChange={prefill} placeholder="Choisir…" searchPlaceholder="Rechercher…" emptyText="Aucun résultat" className="w-full" aria-label="Cible du barème" />
       </FormField>
       <div className="grid gap-4 sm:grid-cols-3">
-        <FormField label="Livraison GoLink"><Input inputMode="decimal" value={rates.platform} trailing="%" invalid={rates.platform !== '' && parsed.platform === null} onChange={(e) => setRates({ ...rates, platform: e.target.value })} /></FormField>
+        <FormField label="Livraison Ciyou Eats"><Input inputMode="decimal" value={rates.platform} trailing="%" invalid={rates.platform !== '' && parsed.platform === null} onChange={(e) => setRates({ ...rates, platform: e.target.value })} /></FormField>
         <FormField label="Livreurs du commerce"><Input inputMode="decimal" value={rates.restaurant} trailing="%" invalid={rates.restaurant !== '' && parsed.restaurant === null} onChange={(e) => setRates({ ...rates, restaurant: e.target.value })} /></FormField>
         <FormField label="Retrait"><Input inputMode="decimal" value={rates.pickup} trailing="%" invalid={rates.pickup !== '' && parsed.pickup === null} onChange={(e) => setRates({ ...rates, pickup: e.target.value })} /></FormField>
       </div>

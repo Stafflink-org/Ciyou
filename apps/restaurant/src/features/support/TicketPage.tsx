@@ -102,7 +102,7 @@ export function TicketPage() {
   return (
     <PageContainer>
       <PageHeader
-        breadcrumbs={[{ label: 'Support GoLink', href: '/support' }, { label: ticket.number }]}
+        breadcrumbs={[{ label: 'Support Ciyou Eats', href: '/support' }, { label: ticket.number }]}
         eyebrow={`Demande ${ticket.number}`}
         title={ticket.subject}
         actions={
@@ -183,7 +183,7 @@ export function TicketPage() {
         open={confirm !== null}
         onOpenChange={(open) => !open && setConfirm(null)}
         title={confirm === 'close' ? 'Votre demande est réglée ?' : 'Rouvrir la demande ?'}
-        description={confirm === 'close' ? 'La demande sera fermée. Vous pourrez la rouvrir pendant 14 jours si besoin.' : 'Le support GoLink sera prévenu et reprendra le fil.'}
+        description={confirm === 'close' ? 'La demande sera fermée. Vous pourrez la rouvrir pendant 14 jours si besoin.' : 'Le support Ciyou Eats sera prévenu et reprendra le fil.'}
         confirmLabel={confirm === 'close' ? 'Fermer la demande' : 'Rouvrir'}
         onConfirm={async () => {
           if (confirm) await change.mutate({ ticketId, action: confirm });
@@ -214,7 +214,7 @@ function TicketBubble({ message: m, mine }: { message: MessageRow; mine: boolean
       )}
       <div className={cn('min-w-0 max-w-[85%]', mine && 'text-right')}>
         <p className="mb-1 text-xs text-fg-muted">
-          <span className="font-medium text-fg">{agent ? `${m.authorName.split(' (')[0]} · Support GoLink` : m.authorName}</span> · {time ? formatDateTime(time) : ''}
+          <span className="font-medium text-fg">{agent ? `${m.authorName.split(' (')[0]} · Support Ciyou Eats` : m.authorName}</span> · {time ? formatDateTime(time) : ''}
         </p>
         <div className={cn('inline-block rounded-2xl px-4 py-3 text-left text-sm leading-6', mine ? 'rounded-tr-md bg-primary-soft text-fg' : 'rounded-tl-md border border-border bg-surface-2 text-fg')}>
           <p className="whitespace-pre-line break-words">{m.body}</p>

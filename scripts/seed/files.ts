@@ -83,7 +83,7 @@ function pdfText(value: string): string {
 export function simplePdf(title: string, lines: string[]): Buffer {
   const body = [
     'BT /F2 18 Tf 56 780 Td (' + pdfText(title) + ') Tj ET',
-    'BT /F1 10 Tf 56 758 Td (' + pdfText('Document de démonstration GoLink - sans valeur légale') + ') Tj ET',
+    'BT /F1 10 Tf 56 758 Td (' + pdfText('Document de démonstration Ciyou Eats - sans valeur légale') + ') Tj ET',
     ...lines.map((line, i) => `BT /F1 11 Tf 56 ${720 - i * 18} Td (${pdfText(line)}) Tj ET`),
   ].join('\n');
   const objects = [

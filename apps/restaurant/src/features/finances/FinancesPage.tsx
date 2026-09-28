@@ -65,7 +65,7 @@ const MODE_TONES: Record<FulfillmentMode, string> = {
 
 /** Finances & ventes : chiffre d'affaires, du brut au net, répartitions, produits. */
 export function FinancesPage() {
-  useDocumentTitle('Finances & ventes · GoLink Restaurant');
+  useDocumentTitle('Finances & ventes · Ciyou Eats Restaurant');
   const { restaurant, restaurantId, can } = useRestaurantAccess();
   const [period, periodValue, setPeriod] = usePeriod();
   const [metric, setMetric] = useState<TrendMetric>('sales');
@@ -118,7 +118,7 @@ export function FinancesPage() {
   const waterfall = [
     { label: 'Ventes TTC (articles)', cents: totals.salesCents, sign: 1, hint: 'Prix payés par vos clients pour vos plats.' },
     { label: 'Remises que vous financez', cents: totals.discountCents, sign: -1, hint: 'Codes promo et offres à votre charge.' },
-    { label: 'Commission GoLink HT', cents: totals.commissionHtCents, sign: -1, hint: 'Selon votre formule et le mode de commande.' },
+    { label: 'Commission Ciyou Eats HT', cents: totals.commissionHtCents, sign: -1, hint: 'Selon votre formule et le mode de commande.' },
     { label: `TVA sur commission (${bpsLabel(vatBps)})`, cents: totals.commissionVatCents, sign: -1, hint: 'Récupérable dans votre déclaration de TVA.' },
     { label: 'Remboursements imputés', cents: refundsCharged, sign: -1, hint: 'Part des remboursements clients à votre charge.' },
   ];
@@ -222,7 +222,7 @@ export function FinancesPage() {
         columnWidths: { 0: 10 },
       });
     }
-    pdf.paragraph('Montants calculés sur les commandes livrées. La TVA sur commission est récupérable ; l’abonnement GoLink est facturé séparément (rubrique Factures).');
+    pdf.paragraph('Montants calculés sur les commandes livrées. La TVA sur commission est récupérable ; l’abonnement Ciyou Eats est facturé séparément (rubrique Factures).');
     pdf.save(stem);
   }
 
@@ -374,7 +374,7 @@ export function FinancesPage() {
                     </dl>
                     <p className="mt-3 flex gap-2 rounded-lg bg-surface-2 p-3 text-xs text-fg-muted">
                       <Info className="mt-0.5 size-3.5 shrink-0 text-fg-subtle" />
-                      Frais de service et de livraison payés par vos clients reviennent à GoLink. L’abonnement est facturé à part.
+                      Frais de service et de livraison payés par vos clients reviennent à Ciyou Eats. L’abonnement est facturé à part.
                     </p>
                   </>
                 )}

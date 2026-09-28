@@ -77,8 +77,8 @@ const LOCKED_FEATURES = new Set<string>([ALCOHOL_POLICY.featureKey]);
 export function platformSettingsDocs(): Record<string, object> {
   return {
     [SETTINGS_DOCS.general]: {
-      platformName: 'GoLink',
-      legalEntityName: 'GoLink SAS',
+      platformName: 'Ciyou Eats',
+      legalEntityName: 'Ciyou Eats SAS',
       supportEmail: 'support@golink.fr',
       supportPhone: '+33 3 82 00 00 00',
       defaultCountryId: 'FR',
@@ -131,8 +131,8 @@ export function platformSettingsDocs(): Record<string, object> {
 
 /** Entités de facturation connues ; les autres pays restent à compléter dans le super admin. */
 const BILLING_ENTITIES: Record<string, Country['billingEntity']> = {
-  FR: { legalName: 'GoLink SAS', vatNumber: 'FR 12 912 345 678', registrationNumber: 'RCS Briey 912 345 678', address: '4 Place Darche, 54400 Longwy', invoicePrefix: 'FR' },
-  LU: { legalName: 'GoLink Luxembourg SARL', vatNumber: 'LU 34567890', registrationNumber: 'RCS Luxembourg B 281 234', address: '12 Rue du Fossé, L-1536 Luxembourg', invoicePrefix: 'LU' },
+  FR: { legalName: 'Ciyou Eats SAS', vatNumber: 'FR 12 912 345 678', registrationNumber: 'RCS Briey 912 345 678', address: '4 Place Darche, 54400 Longwy', invoicePrefix: 'FR' },
+  LU: { legalName: 'Ciyou Eats Luxembourg SARL', vatNumber: 'LU 34567890', registrationNumber: 'RCS Luxembourg B 281 234', address: '12 Rue du Fossé, L-1536 Luxembourg', invoicePrefix: 'LU' },
 };
 
 /** Pays de lancement : FR, BE, LU, DZ, MA, TN (seuls FR et LU sont ouverts ; lancement ville par ville). */
@@ -381,7 +381,7 @@ export function seedPlatform(ctx: SeedContext): void {
 
   const integrations: PlatformIntegration[] = [
     { key: 'stripe', name: 'Stripe', category: 'payment', enabled: true, mode: 'test', status: 'operational', lastCheckAt: nowTs, lastError: null, publicConfig: { connect: true, country: 'FR' }, updatedAt: nowTs, updatedBy: by },
-    { key: 'brevo', name: 'Brevo', category: 'email', enabled: true, mode: 'live', status: 'operational', lastCheckAt: nowTs, lastError: null, publicConfig: { senderName: 'GoLink' }, updatedAt: nowTs, updatedBy: by },
+    { key: 'brevo', name: 'Brevo', category: 'email', enabled: true, mode: 'live', status: 'operational', lastCheckAt: nowTs, lastError: null, publicConfig: { senderName: 'Ciyou Eats' }, updatedAt: nowTs, updatedBy: by },
     { key: 'google_maps', name: 'Google Maps', category: 'maps', enabled: true, mode: 'live', status: 'operational', lastCheckAt: nowTs, lastError: null, publicConfig: { region: 'FR' }, updatedAt: nowTs, updatedBy: by },
     { key: 'fcm', name: 'Firebase Cloud Messaging', category: 'push', enabled: true, mode: 'live', status: 'operational', lastCheckAt: nowTs, lastError: null, publicConfig: {}, updatedAt: nowTs, updatedBy: by },
     { key: 'sms', name: 'SMS (Brevo)', category: 'sms', enabled: false, mode: 'test', status: 'maintenance', lastCheckAt: null, lastError: null, publicConfig: {}, updatedAt: nowTs, updatedBy: by },
@@ -441,7 +441,7 @@ export function seedPlatform(ctx: SeedContext): void {
     { id: 'accueil-promotions', type: 'promotions', title: { fr: 'Offres du moment' }, subtitle: null, countryId: null, cityIds: null, order: 4, active: true, restaurantIds: null },
     { id: 'accueil-populaires', type: 'popular', title: { fr: 'Les plus commandés' }, subtitle: null, countryId: null, cityIds: null, order: 5, active: true, restaurantIds: null },
     { id: 'accueil-recommander', type: 'reorder', title: { fr: 'À recommander' }, subtitle: null, countryId: null, cityIds: null, order: 6, active: true, restaurantIds: null },
-    { id: 'accueil-nouveautes', type: 'new_restaurants', title: { fr: 'Nouveaux sur GoLink' }, subtitle: null, countryId: null, cityIds: null, order: 7, active: false, restaurantIds: null },
+    { id: 'accueil-nouveautes', type: 'new_restaurants', title: { fr: 'Nouveaux sur Ciyou Eats' }, subtitle: null, countryId: null, cityIds: null, order: 7, active: false, restaurantIds: null },
   ];
   for (const { id, ...s } of sections) set(COLLECTIONS.homeSections, id, { ...s, startsAt: null, endsAt: null, ...tracked(nowTs, by) });
 
@@ -454,7 +454,7 @@ export function seedPlatform(ctx: SeedContext): void {
   for (const { id, ...b } of banners) set(COLLECTIONS.banners, id, { ...b, startsAt: null, endsAt: null, ...tracked(nowTs, by) });
 
   const pages: Array<Omit<ContentPage, 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'>> = [
-    { slug: 'a-propos', title: { fr: 'À propos de GoLink' }, body: { fr: 'GoLink relie les restaurants indépendants de la Grande Région à leurs clients, avec une flotte de livreurs locale et des commissions transparentes.' }, audience: ['public'], published: true, order: 0 },
+    { slug: 'a-propos', title: { fr: 'À propos de Ciyou Eats' }, body: { fr: 'Ciyou Eats relie les restaurants indépendants de la Grande Région à leurs clients, avec une flotte de livreurs locale et des commissions transparentes.' }, audience: ['public'], published: true, order: 0 },
     { slug: 'devenir-partenaire', title: { fr: 'Devenir restaurant partenaire' }, body: { fr: 'Inscrivez votre établissement en dix minutes : notre équipe valide votre dossier sous 48 heures ouvrées.' }, audience: ['public', 'restaurant'], published: true, order: 1 },
     { slug: 'devenir-livreur', title: { fr: 'Devenir livreur' }, body: { fr: 'Travaillez quand vous voulez, avec un revenu horaire minimum garanti et 100 % des pourboires.' }, audience: ['public', 'driver'], published: true, order: 2 },
   ];
@@ -464,7 +464,7 @@ export function seedPlatform(ctx: SeedContext): void {
     ['Suivre ma commande', 'Depuis l’onglet Commandes, suivez chaque étape et la position du livreur en temps réel.', 'Commandes', ['client']],
     ['Il manque un article', 'Signalez l’article manquant depuis le détail de la commande dans les 48 heures : le remboursement est immédiat sur votre moyen de paiement ou en avoir.', 'Réclamations', ['client']],
     ['Modifier mes horaires d’ouverture', 'Dans Réglages > Horaires, ajoutez plusieurs créneaux par jour et des fermetures exceptionnelles.', 'Back-office', ['restaurant']],
-    ['Comprendre mon reversement', 'Chaque lundi, GoLink reverse vos ventes de la semaine, commission et remboursements imputés déduits. Le détail est dans Finances.', 'Paiements', ['restaurant']],
+    ['Comprendre mon reversement', 'Chaque lundi, Ciyou Eats reverse vos ventes de la semaine, commission et remboursements imputés déduits. Le détail est dans Finances.', 'Paiements', ['restaurant']],
     ['Activer le mode rush', 'Le mode rush ajoute jusqu’à 30 minutes au temps de préparation affiché aux clients.', 'Commandes', ['restaurant']],
     ['Comment est calculée ma course ?', 'Montant fixe pour les courses de moins de 2 km, puis un prix au kilomètre, avec un bonus aux heures de pointe (barème de votre ville). Les pourboires vous reviennent en totalité.', 'Rémunération', ['driver']],
   ];
@@ -518,7 +518,7 @@ export function seedPlatform(ctx: SeedContext): void {
         countryId,
         version: '2026-06',
         title: { fr: LEGAL_DOCUMENT_LABELS[type] },
-        content: { fr: `${LEGAL_DOCUMENT_LABELS[type]} de GoLink (${countryId === 'FR' ? 'France' : 'Luxembourg'}). Version de démonstration à faire valider par le conseil juridique avant publication.` },
+        content: { fr: `${LEGAL_DOCUMENT_LABELS[type]} de Ciyou Eats (${countryId === 'FR' ? 'France' : 'Luxembourg'}). Version de démonstration à faire valider par le conseil juridique avant publication.` },
         pdf: null,
         status: 'published',
         publishedAt: published,

@@ -21,7 +21,7 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
-/** Invitation d'un livreur propre : e-mail d'activation et accès à l'application GoLink Livreur. */
+/** Invitation d'un livreur propre : e-mail d'activation et accès à l'application Ciyou Eats Livreur. */
 export function InviteCourierDialog({
   open,
   onOpenChange,
@@ -58,7 +58,7 @@ export function InviteCourierDialog({
         <DialogHeader
           icon={<MailPlus />}
           title="Inviter un livreur"
-          description="Il recevra un e-mail pour activer son compte, puis se connectera à l’application GoLink Livreur pour recevoir vos courses."
+          description="Il recevra un e-mail pour activer son compte, puis se connectera à l’application Ciyou Eats Livreur pour recevoir vos courses."
         />
         <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col" noValidate>
           <DialogBody className="grid gap-4 sm:grid-cols-2">

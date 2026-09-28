@@ -81,7 +81,7 @@ Crédité automatiquement à la livraison si le retard dépasse un palier (`late
 ## 6. Fermeture d'urgence d'une ville ou d'une zone (app client)
 
 - Lecture : `cities/{id}.emergencyClosure` et `zones/{id}.emergencyClosure` : `{ active, reason, message: { fr, en?, ar? }, endsAt }`. Afficher `message[locale]` (repli `fr`) et masquer la commande.
-- `placeOrder` refuse avec ce même message dans la langue du profil. Une ville désactivée (`cities/{id}.active = false`) refuse aussi : « Le service GoLink n'est pas encore ouvert dans cette ville. »
+- `placeOrder` refuse avec ce même message dans la langue du profil. Une ville désactivée (`cities/{id}.active = false`) refuse aussi : « Le service Ciyou Eats n'est pas encore ouvert dans cette ville. »
 - Les clients ayant une commande en cours dans la ville ou la zone reçoivent le message `zone_emergency_closure`.
 
 ## 7. Classement et mention « Sponsorisé » (app client)
@@ -104,7 +104,7 @@ Crédité automatiquement à la livraison si le retard dépasse un palier (`late
   paymentMethod: 'card' | 'apple_pay' | 'google_pay' | 'cash' | 'wallet',
   paymentMethodId?: string,   // pm_… Stripe, exigé pour un règlement en ligne
   promoCode?: string,         // facultatif : sans code, l'offre automatique la plus avantageuse est appliquée
-  useWallet?: boolean,        // régler avec le solde d'avoirs GoLink (tout ou partie)
+  useWallet?: boolean,        // régler avec le solde d'avoirs Ciyou Eats (tout ou partie)
   tipCents?, customerNote?, scheduledFor?, clientRequestId
 }
 // -> { orderId, number, status, totalCents, chargedCents, payment: { status, clientSecret? } }
@@ -112,7 +112,7 @@ Crédité automatiquement à la livraison si le retard dépasse un palier (`late
 
 - **Offres.** Sans `promoCode`, le serveur cherche les offres sans code éligibles (portée, dates, mode, limites, ciblage) et applique celle qui fait économiser le plus ; `orders/{id}.promotionId`, `amounts.discount`. Ciblage : `new_customers` (aucune commande), `inactive_customers` (dernière commande plus ancienne que `inactiveDays`, sinon `settings/promotions.inactiveDaysDefault`), `loyal_customers` (au moins `settings/promotions.loyalOrdersThreshold` commandes). Les limites (total, par client) sont recontrôlées dans la transaction : une commande simultanée peut donc être refusée (« Vous avez déjà utilisé cette offre. ») et se renvoie sans l'offre.
 - **Annulation.** L'utilisation de l'offre est libérée (`promotionRedemptions/{orderId}.status = 'reversed'`) et le quota du client rendu.
-- **Portefeuille.** Affichage : `users/{uid}.walletBalanceCents`, `walletTransactions` (motifs `refund`, `late_delivery`, `commercial_gesture`, `referral`, `loyalty_reward`, `order_payment`). Avec `useWallet: true`, le serveur utilise `min(solde, total)` : si le solde couvre tout, la commande est réglée sans autre moyen (`payment.method = 'wallet'`, `amounts.chargedCents = 0`, `paymentMethod`/`paymentMethodId` ignorés) ; sinon la carte n'est autorisée que pour le reste (`amounts.chargedCents`). Erreurs : « Votre solde d'avoirs GoLink est vide. », « Votre solde d'avoirs a changé… » (solde modifié entre-temps : rafraîchir). Annulation : les avoirs utilisés sont rendus (`walletTransactions/wr-{orderId}`).
+- **Portefeuille.** Affichage : `users/{uid}.walletBalanceCents`, `walletTransactions` (motifs `refund`, `late_delivery`, `commercial_gesture`, `referral`, `loyalty_reward`, `order_payment`). Avec `useWallet: true`, le serveur utilise `min(solde, total)` : si le solde couvre tout, la commande est réglée sans autre moyen (`payment.method = 'wallet'`, `amounts.chargedCents = 0`, `paymentMethod`/`paymentMethodId` ignorés) ; sinon la carte n'est autorisée que pour le reste (`amounts.chargedCents`). Erreurs : « Votre solde d'avoirs Ciyou Eats est vide. », « Votre solde d'avoirs a changé… » (solde modifié entre-temps : rafraîchir). Annulation : les avoirs utilisés sont rendus (`walletTransactions/wr-{orderId}`).
 - **Espèces.** Proposées seulement pour une livraison assurée par un livreur salarié du commerce (`restaurant.deliveredBy = 'restaurant'`, `settings/payments.cash.enabled`) ; sinon « Le paiement en espèces n'est possible qu'avec les livreurs du commerce. »
 - **Pourboire.** Activation et plafond : `settings/payments.tips` (et plafond du pays) ; aucune valeur codée dans l'app. Reversé à 100 % au livreur.
 - **Paiement refusé.** « Paiement refusé par votre banque… » : le refus est tracé dans `payments` (`orderId = null`, `status = 'failed'`). Au-delà de `settings/payments.failedPaymentRetry.maxAttempts` refus dans l'heure : « Trop de paiements refusés récemment. »
@@ -128,7 +128,7 @@ Crédité automatiquement à la livraison si le retard dépasse un palier (`late
 
 - **Livreur indépendant, pays avec Stripe** : `createDriverConnectAccount` `{}` → `{ accountId, status, created }` ; `createDriverConnectAccountLink` `{}` → `{ url, expiresAt }` (ouvrir l'URL Stripe, valable quelques minutes) ; au retour, `refreshDriverConnectAccountStatus` `{}` → `{ status: 'pending'|'restricted'|'enabled'|null }`. Lecture : `driverPrivate/{uid}.stripeAccountStatus`. Sans compte actif, le reversement échoue avec « Le livreur n'a pas encore activé son compte de paiement Stripe. »
 - **Pays sans Stripe (Algérie, Maroc, Tunisie)** : `setDriverPayoutAccount` `{ account: { provider: 'bank_transfer'|'mobile_wallet', paymentProviderId?, holderName, accountNumber } }` → `{ accountMasked, verified: false }`. Le numéro complet n'est jamais conservé (extrait masqué) ; l'équipe finance vérifie le compte avant le premier virement, puis vire à la main et saisit la référence. Prestataires proposés : `paymentProviders` (lecture pour tout compte connecté), filtrer sur `countryIds` et `supports.payout`.
-- Un livreur **salarié d'un commerce** n'a pas de compte de paiement GoLink (« Les livreurs salariés d'un commerce sont payés par leur employeur. »).
+- Un livreur **salarié d'un commerce** n'a pas de compte de paiement Ciyou Eats (« Les livreurs salariés d'un commerce sont payés par leur employeur. »).
 - Reversements et relevés : `payouts` (`currency`, `provider`, `manualReference`), messages `driver_payout_paid`.
 
 ## 12. Espèces (app livreur salarié du commerce)
@@ -138,7 +138,7 @@ Décision : espèces uniquement avec un livreur salarié du commerce ; l'argent 
 - À la clôture de la livraison (`completeOrder`), le montant encaissé (`orders/{id}.amounts.chargedCents`) est ajouté à la caisse du livreur : `driverPrivate/{uid}.cashBalanceCents` (lecture par le livreur), mouvements `cashMovements` (`collected` / `remitted`, `balanceAfterCents`).
 - Plafond : `driverPrivate.cashLimitCents`, sinon `settings/payments.cash.driverCashLimitCents`. Au plafond, la plateforme n'attribue plus de commande en espèces au livreur (« … détient X en espèces (plafond Y) : enregistrez sa remise de caisse… ») ; le commerce reçoit le message `cash_limit_reached`.
 - Le livreur doit être autorisé aux espèces (`drivers/{uid}.acceptsCash`).
-- Remise de caisse : enregistrée par le commerce (`recordMerchantCashRemittance` `{ restaurantId, driverId, amountCents, note? }`, droit `couriers.manage`) ou par l'équipe GoLink (`recordCashRemittance`). L'app livreur affiche la caisse et le plafond, sans écrire.
+- Remise de caisse : enregistrée par le commerce (`recordMerchantCashRemittance` `{ restaurantId, driverId, amountCents, note? }`, droit `couriers.manage`) ou par l'équipe Ciyou Eats (`recordCashRemittance`). L'app livreur affiche la caisse et le plafond, sans écrire.
 
 ## 13. Parrainage entre commerces (web `apps/restaurant`, app livreur pour la prime livreur)
 

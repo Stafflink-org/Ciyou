@@ -27,7 +27,7 @@ export async function downloadInvoicePdf(invoice: Invoice): Promise<void> {
       issued ? `Émise le ${formatDate(issued)}` : '',
       invoice.periodStart && invoice.periodEnd ? `Période du ${day(invoice.periodStart)} au ${day(invoice.periodEnd)}` : '',
     ].filter(Boolean),
-    footer: `${invoice.issuer.name}${invoice.issuer.registrationNumber ? ` · ${invoice.issuer.registrationNumber}` : ''} · ${generatedFooter('GoLink')}`,
+    footer: `${invoice.issuer.name}${invoice.issuer.registrationNumber ? ` · ${invoice.issuer.registrationNumber}` : ''} · ${generatedFooter('Ciyou Eats')}`,
     caption: 'FACTURATION',
   });
   const party = (p: Invoice['issuer']) =>

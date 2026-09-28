@@ -182,7 +182,7 @@ export function ReglagesCommandesPage() {
                   value={draft.deliveredBy}
                   onValueChange={(v) => setDraft({ deliveredBy: v as Draft['deliveredBy'] })}
                   options={[
-                    { value: 'platform', label: 'Livreurs GoLink', description: `Commission ${formatBps(commission.platformDeliveryBps)}. Paiement en ligne uniquement.` },
+                    { value: 'platform', label: 'Livreurs Ciyou Eats', description: `Commission ${formatBps(commission.platformDeliveryBps)}. Paiement en ligne uniquement.` },
                     {
                       value: 'restaurant',
                       label: 'Mes livreurs',
@@ -192,7 +192,7 @@ export function ReglagesCommandesPage() {
                     {
                       value: 'both',
                       label: 'Les deux',
-                      description: 'Vos livreurs dans leur rayon, GoLink au-delà et en renfort.',
+                      description: 'Vos livreurs dans leur rayon, Ciyou Eats au-delà et en renfort.',
                       disabled: !ownDrivers,
                     },
                   ]}
@@ -228,7 +228,7 @@ export function ReglagesCommandesPage() {
               icon={<Utensils />}
               label={FULFILLMENT_LABELS.dine_in}
               description="Le client commande depuis sa table ou le comptoir."
-              disabledReason={!flag('dine_in') ? 'Bientôt disponible sur GoLink.' : undefined}
+              disabledReason={!flag('dine_in') ? 'Bientôt disponible sur Ciyou Eats.' : undefined}
             >
               <Switch checked={draft.dineIn} disabled={!flag('dine_in') && !draft.dineIn} aria-label="Sur place" onCheckedChange={(v) => setDraft({ dineIn: v })} />
             </SettingRow>

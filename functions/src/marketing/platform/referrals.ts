@@ -37,7 +37,7 @@ async function referralMessage(amountCents: number, role: 'referrer' | 'referee'
   const values = { amount: formatPrice(amountCents), role: role === 'referrer' ? 'parrain' : 'filleul' };
   if (tpl && !tpl.active) return null;
   if (!tpl) {
-    return { title: 'Parrainage récompensé', body: `${formatPrice(amountCents)} ont été ajoutés à votre solde GoLink. Merci !` };
+    return { title: 'Parrainage récompensé', body: `${formatPrice(amountCents)} ont été ajoutés à votre solde Ciyou Eats. Merci !` };
   }
   return { title: fillVariables(tpl.title?.fr ?? 'Parrainage récompensé', values), body: fillVariables(tpl.body.fr, values) };
 }

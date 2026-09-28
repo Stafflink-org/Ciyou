@@ -40,7 +40,7 @@ function Block({ icon, title, description, children }: { icon: ReactNode; title:
 }
 
 export function PayrollSettingsPage() {
-  useDocumentTitle('Réglages de paie · GoLink Restaurant');
+  useDocumentTitle('Réglages de paie · Ciyou Eats Restaurant');
   const can = useCan();
   const { restaurantId } = useRestaurantAccess();
   const { user } = useAuth();

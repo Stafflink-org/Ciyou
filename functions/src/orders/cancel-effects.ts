@@ -1,5 +1,5 @@
 // Effets d'une annulation de commande sur ce qui avait été consommé à la commande :
-// utilisation d'une offre libérée, avoirs GoLink rendus au portefeuille du client.
+// utilisation d'une offre libérée, avoirs Ciyou Eats rendus au portefeuille du client.
 // Chaque effet est rejouable sans doublon (identifiants déterministes).
 import { COLLECTIONS, type LedgerEntry, type Order, type WalletTransaction } from '@golink/shared';
 import { db, Timestamp } from '../lib/admin';

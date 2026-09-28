@@ -332,7 +332,7 @@ export function Showcase() {
             title={isAdmin ? 'Bonjour Camille' : 'Service du soir'}
             description={
               isAdmin
-                ? 'Vue d’ensemble du réseau GoLink en France et au Luxembourg. Seules les anomalies remontent ici.'
+                ? 'Vue d’ensemble du réseau Ciyou Eats en France et au Luxembourg. Seules les anomalies remontent ici.'
                 : '18 commandes en cours, ticket le plus rapide à 14 minutes.'
             }
             actions={
@@ -415,7 +415,7 @@ export function Showcase() {
                     className="mb-3"
                     series={[
                       { key: 'gmv', label: 'Volume d’affaires' },
-                      { key: 'commissions', label: 'Commissions GoLink' },
+                      { key: 'commissions', label: 'Commissions Ciyou Eats' },
                     ]}
                   />
                   <AreaChart
@@ -424,7 +424,7 @@ export function Showcase() {
                     height={260}
                     series={[
                       { key: 'gmv', label: 'Volume d’affaires' },
-                      { key: 'commissions', label: 'Commissions GoLink' },
+                      { key: 'commissions', label: 'Commissions Ciyou Eats' },
                     ]}
                     valueFormatter={(value) => formatEUR(value)}
                     axisFormatter={(value) => formatEUR(value, { compact: true })}
@@ -850,7 +850,7 @@ export function Showcase() {
                 </CardContent>
               </Card>
               <Card>
-                <CardHeader title="Identité" description="Logo et symbole GoLink" />
+                <CardHeader title="Identité" description="Logo et symbole Ciyou Eats" />
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-center rounded-xl bg-cream-100 p-6 text-petrol-900">
                     <Logo size={36} />

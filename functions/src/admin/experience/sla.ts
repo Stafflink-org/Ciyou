@@ -13,7 +13,7 @@ import { EXPERIENCE_RUNTIME, MINUTE, OPEN_TICKET_STATUSES, experienceCallable, l
 const PRIORITY_UP: Record<TicketPriority, TicketPriority> = { low: 'normal', normal: 'high', high: 'urgent', urgent: 'urgent' };
 
 function system(body: string, internal: boolean, action: TicketMessage['action']): TicketMessage {
-  return { authorType: 'system', authorId: 'system', authorName: 'GoLink', body, internal, attachments: [], action, createdAt: Timestamp.now() };
+  return { authorType: 'system', authorId: 'system', authorName: 'Ciyou Eats', body, internal, attachments: [], action, createdAt: Timestamp.now() };
 }
 
 export async function enforceSla(): Promise<{ firstResponseBreaches: number; resolutionBreaches: number; escalated: number; closed: number }> {

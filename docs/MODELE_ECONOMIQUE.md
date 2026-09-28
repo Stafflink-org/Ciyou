@@ -1,13 +1,13 @@
-# GoLink — Modèle économique et moteur de tarification
+# Ciyou Eats — Modèle économique et moteur de tarification
 
-Ce document décrit comment GoLink gagne de l'argent sur chaque commande, d'où viennent les valeurs par défaut et comment elles se règlent. Le calcul est implémenté dans `packages/shared/src/pricing/` : un moteur pur et testé (`npm run test:shared`), utilisé à l'identique par l'app client pour l'affichage et par les Cloud Functions pour le montant qui fait foi.
+Ce document décrit comment Ciyou Eats gagne de l'argent sur chaque commande, d'où viennent les valeurs par défaut et comment elles se règlent. Le calcul est implémenté dans `packages/shared/src/pricing/` : un moteur pur et testé (`npm run test:shared`), utilisé à l'identique par l'app client pour l'affichage et par les Cloud Functions pour le montant qui fait foi.
 
-Principe retenu : même fonctionnement qu'Uber Eats, Deliveroo et Just Eat. GoLink est un **intermédiaire**. Le restaurant vend ses plats au client, et GoLink facture :
+Principe retenu : même fonctionnement qu'Uber Eats, Deliveroo et Just Eat. Ciyou Eats est un **intermédiaire**. Le restaurant vend ses plats au client, et Ciyou Eats facture :
 
 - au **restaurant** : une commission sur ses ventes, plus un abonnement selon la formule ;
 - au **client** : des frais de service, des frais de livraison, et des frais de petite commande si le panier est faible.
 
-Avec ces recettes, GoLink rémunère les livreurs indépendants et paie les frais de paiement.
+Avec ces recettes, Ciyou Eats rémunère les livreurs indépendants et paie les frais de paiement.
 
 > Toutes les valeurs chiffrées se règlent sans développeur depuis le super admin, à trois niveaux : `countries/{id}.pricing`, puis `cities/{id}.pricing`, puis les conditions du commerce. Les points fiscaux (TVA, DAC7, statut des livreurs) sont à faire valider par un expert-comptable, comme le demande le cahier du client.
 
@@ -20,7 +20,7 @@ Source : `docs/DECISIONS_CLIENT.md`, qui fait foi. Ces décisions **remplacent**
 | Sujet | Décision appliquée | Où dans le code |
 |---|---|---|
 | Assiette de la commission | Sous-total articles **TTC payé par le client**, après remise financée par le commerce, **hors livraison et hors pourboires** | `commission.base = subtotal_after_restaurant_discount`, `Settlement.restaurant.commissionBaseCents` |
-| Taux de commission | 3 taux paramétrables : livraison GoLink / livreur propre du commerce / retrait (défauts 30 / 15 / 12 %, à fixer dans le super admin) | `commission.platformDeliveryBps`, `restaurantDeliveryBps`, `pickupBps` |
+| Taux de commission | 3 taux paramétrables : livraison Ciyou Eats / livreur propre du commerce / retrait (défauts 30 / 15 / 12 %, à fixer dans le super admin) | `commission.platformDeliveryBps`, `restaurantDeliveryBps`, `pickupBps` |
 | Mode de facturation | `commission`, `subscription` (aucune commission) ou `hybrid`, par formule (`plans.billingMode`) et surchargeable par commerce (`private/commercial.billingMode`) | `resolveBillingMode`, `resolveCommissionBps({ billingMode })` |
 | Frais de paiement (carte) | **Déduits du reversement du commerce** (ligne `restaurant.paymentFeeCents` de la répartition) | `payment.payer = 'restaurant'` |
 | Remboursements | **Imputés au commerce pour toutes les causes**, déduits du prochain reversement ; règle toujours paramétrable | `DEFAULT_REFUND_LIABILITY` (l'ancienne règle reste disponible : `CAUSE_BASED_REFUND_LIABILITY`) |
@@ -66,7 +66,7 @@ Valeurs par défaut (hypothèses à régler par ville) : FR forfait 4,00 €, 0,
 
 Stripe n'étant pas disponible au Maghreb, les frais de paiement y sont une hypothèse de prestataire local (2 %, sans part fixe). Seuls FR et LU sont ouverts (`active`) ; les autres pays sont créés inactifs, lancement ville par ville. Les taux de TVA de la catégorie `alcohol` restent renseignés pour la compatibilité mais ne sont plus utilisables.
 
-> Les sections 2 à 4 ci-dessous décrivent le fonctionnement du moteur. Là où elles diffèrent de la section 0 (frais de service, petite commande, payeur des frais de paiement, imputation des remboursements, barème livreur, formules), **la section 0 s'applique**. Les exemples chiffrés de la section 4 ont été calculés avec les anciennes hypothèses (frais de service et petite commande actifs, frais de paiement à la charge de GoLink) ; ils restent valables comme illustration du moteur avec cette configuration.
+> Les sections 2 à 4 ci-dessous décrivent le fonctionnement du moteur. Là où elles diffèrent de la section 0 (frais de service, petite commande, payeur des frais de paiement, imputation des remboursements, barème livreur, formules), **la section 0 s'applique**. Les exemples chiffrés de la section 4 ont été calculés avec les anciennes hypothèses (frais de service et petite commande actifs, frais de paiement à la charge de Ciyou Eats) ; ils restent valables comme illustration du moteur avec cette configuration.
 
 ---
 
@@ -92,17 +92,17 @@ Taux de TVA retenus (droit fiscal connu, à valider par l'expert-comptable) :
   - plats préparés vendus à emporter ou en livraison, et boissons sans alcool à consommer immédiatement : **10 %** ;
   - boissons alcoolisées : **20 %** ;
   - produits d'épicerie conditionnés : **5,5 %** ;
-  - commission, frais de service et frais de livraison facturés par GoLink : **20 %**.
+  - commission, frais de service et frais de livraison facturés par Ciyou Eats : **20 %**.
 - **Luxembourg** :
   - restauration et vente à emporter : **3 %** ;
   - boissons alcoolisées : **17 %** ;
-  - services de GoLink : **17 %**.
+  - services de Ciyou Eats : **17 %**.
 
 ---
 
-## 2. Valeurs par défaut de GoLink
+## 2. Valeurs par défaut de Ciyou Eats
 
-Source : `pricing/defaults.ts`, amorçage de `countries/{id}.pricing`. Montants TTC pour le client, HT pour ce que GoLink facture au restaurant.
+Source : `pricing/defaults.ts`, amorçage de `countries/{id}.pricing`. Montants TTC pour le client, HT pour ce que Ciyou Eats facture au restaurant.
 
 ### 2.1 Côté client
 
@@ -122,7 +122,7 @@ Source : `pricing/defaults.ts`, amorçage de `countries/{id}.pricing`. Montants 
 
 | Paramètre | Valeur | Règle |
 |---|---|---|
-| Commission, livraison GoLink | 30 % HT | Assiette : sous-total TTC des plats, moins les remises que le restaurant finance |
+| Commission, livraison Ciyou Eats | 30 % HT | Assiette : sous-total TTC des plats, moins les remises que le restaurant finance |
 | Commission, livreurs du restaurant | 15 % HT | Le restaurant garde ses frais de livraison et les pourboires |
 | Commission, retrait / sur place | 12 % HT | |
 | TVA sur commission | 20 % (FR), 17 % (LU) | Retenue avec la commission, récupérable par le restaurant |
@@ -136,7 +136,7 @@ Source : `pricing/plans.ts`, amorçage de la collection `plans`.
 
 > **Décision client** : les trois formules sont aujourd'hui vides (prix 0, aucune fonctionnalité, commission identique au marché, sans engagement, sans essai, délai d'impayé 0). Le tableau ci-dessous est l'**ancienne hypothèse**, conservée comme exemple de paramétrage possible.
 
-| Formule | Prix HT / mois | Essai | Commission (GoLink / propres livreurs / retrait) | Inclus |
+| Formule | Prix HT / mois | Essai | Commission (Ciyou Eats / propres livreurs / retrait) | Inclus |
 |---|---|---|---|---|
 | Basic | 0 € | — | 30 % / 15 % / 12 % | Commandes, carte, finances, messagerie, codes promo ; rayon 5 km |
 | Pro | 49 € | 30 jours | 27 % / 13 % / 10 % | + fidélité, campagnes push, équipe, planning, pointage, absences, tâches, documents ; rayon 7 km ; bonus de classement |
@@ -187,7 +187,7 @@ La commande est **bloquée** dans ces cas :
 
 Si le minimum d'une promotion n'est pas atteint, la commande reste valide mais sans remise.
 
-**TVA des articles.** Elle est calculée par catégorie (plats, boissons sans alcool, alcool, épicerie) sur le montant TTC, après déduction de la part de remise financée par le restaurant. Cette part est répartie au prorata des catégories. Une remise financée par GoLink ne réduit pas la base de TVA du restaurant : GoLink paie cette part pour le compte du client.
+**TVA des articles.** Elle est calculée par catégorie (plats, boissons sans alcool, alcool, épicerie) sur le montant TTC, après déduction de la part de remise financée par le restaurant. Cette part est répartie au prorata des catégories. Une remise financée par Ciyou Eats ne réduit pas la base de TVA du restaurant : Ciyou Eats paie cette part pour le compte du client.
 
 ### 3.2 Répartition (`computeSettlement`)
 
@@ -198,15 +198,15 @@ reversement resto  = sous-total − remises financées par le resto − commissi
                      (− frais de paiement si la configuration les lui impute)
 livreur            = barème de la course (+ prime de pointe) ; + pourboire à 100 %
 frais de paiement  = total × 1,5 % + 0,25 € + 0,25 % Connect (carte) ; 0 en espèces ou avec l'avoir
-TVA due par GoLink = TVA sur frais de service, petite commande, livraison encaissée, commission
-MARGE GoLink       = total − reversement − livreur − frais de paiement − TVA due
+TVA due par Ciyou Eats = TVA sur frais de service, petite commande, livraison encaissée, commission
+MARGE Ciyou Eats       = total − reversement − livreur − frais de paiement − TVA due
                    = service HT + petite cmd HT + livraison HT + commission HT
-                     − rémunération livreur − remises financées par GoLink − frais de paiement
+                     − rémunération livreur − remises financées par Ciyou Eats − frais de paiement
 ```
 
 Les tests vérifient les deux écritures de la marge pour toutes les combinaisons suivantes : type de remise, qui livre, carte ou espèces.
 
-**Portefeuille (avoirs GoLink).** `SettlementInput.walletAppliedCents` : la part réglée par le portefeuille n'est pas un encaissement. Les frais de carte ne portent que sur `total − avoirs`, et les espèces encaissées par le livreur salarié aussi. Une commande entièrement réglée par le portefeuille a des frais de paiement nuls. L'utilisation des avoirs est écrite à la commande (`walletTransactions` motif `order_payment`, grand livre `wallet_debit`) et rendue à l'annulation.
+**Portefeuille (avoirs Ciyou Eats).** `SettlementInput.walletAppliedCents` : la part réglée par le portefeuille n'est pas un encaissement. Les frais de carte ne portent que sur `total − avoirs`, et les espèces encaissées par le livreur salarié aussi. Une commande entièrement réglée par le portefeuille a des frais de paiement nuls. L'utilisation des avoirs est écrite à la commande (`walletTransactions` motif `order_payment`, grand livre `wallet_debit`) et rendue à l'annulation.
 
 **Abonnement et mises en avant : compensation sur les reversements.** Il n'y a pas de prélèvement carte. La facture mensuelle (`fac-{commerce}-{mois}`) récapitule les commissions et frais de paiement (déjà retenus commande par commande) et l'abonnement et les mises en avant, retenus au grand livre par des écritures négatives (`subscription_fee`, `sponsored_placement`) reprises au prochain reversement. Si le solde à reverser couvre la retenue, la facture est payée « par compensation » ; sinon elle reste `issued` avec `compensation.status = 'pending'`, l'abonnement passe en impayé (`past_due`), puis `restricted` (fonctions coupées : `settings/dunning.restrictedFeatures`) et `suspended` (plus de nouvelles commandes) selon les relances et le délai de grâce de la formule. De nouvelles ventes ou un reversement positif compensent la facture et rétablissent l'abonnement ; un virement reçu se constate par `markInvoicePaid` (écriture inverse).
 
@@ -230,10 +230,10 @@ Les tests vérifient les deux écritures de la marge pour toutes les combinaison
 
 ## 4. Exemples chiffrés (France, calculés par le moteur)
 
-| Cas | Client paie | Resto reçoit | Commission HT | Livreur | Stripe | TVA due GoLink | **Marge GoLink** |
+| Cas | Client paie | Resto reçoit | Commission HT | Livreur | Stripe | TVA due Ciyou Eats | **Marge Ciyou Eats** |
 |---|---|---|---|---|---|---|---|
 | A. Panier 25 €, 2,5 km, carte | 29,49 € (25 + 2,50 service + 1,99 livraison) | 16,00 € | 7,50 € | 5,00 € | 0,76 € | 2,25 € | **5,48 €** |
-| B. Idem + −20 % offert par GoLink (plafond 5 €) + pourboire 2 € | 26,49 € | 16,00 € | 7,50 € | 5,00 € + 2 € | 0,72 € | 2,25 € | **0,52 €** |
+| B. Idem + −20 % offert par Ciyou Eats (plafond 5 €) + pourboire 2 € | 26,49 € | 16,00 € | 7,50 € | 5,00 € + 2 € | 0,72 € | 2,25 € | **0,52 €** |
 | C. Petit panier 8 €, 1,2 km | 11,79 € (8 + 0,80 + 2,00 petite cmd + 0,99) | 5,12 € | 2,40 € | 3,96 € | 0,46 € | 1,10 € | **1,15 €** |
 | D. Retrait 25 € | 25,00 € | 21,40 € | 3,00 € | — | 0,69 € | 0,60 € | **2,31 €** |
 | E. Livreur du restaurant, 25 € + 2,50 € de livraison | 30,00 € | 23,00 € | 3,75 € | (payé par le resto) | 0,78 € | 1,17 € | **5,05 €** |
@@ -241,7 +241,7 @@ Les tests vérifient les deux écritures de la marge pour toutes les combinaison
 
 Enseignements :
 
-- **Une promotion financée par GoLink efface presque toute la marge (cas B).** Les promotions d'acquisition doivent être plafonnées et ciblées sur les nouveaux clients, ou cofinancées avec le restaurant (`funding = shared`).
+- **Une promotion financée par Ciyou Eats efface presque toute la marge (cas B).** Les promotions d'acquisition doivent être plafonnées et ciblées sur les nouveaux clients, ou cofinancées avec le restaurant (`funding = shared`).
 - **Les petits paniers ne sont rentables que grâce aux frais de petite commande (cas C).** Sans eux, la marge devient négative.
 - **La rentabilité dépend du panier moyen et de la distance** : la rémunération du livreur est fixe pour l'essentiel. Viser un panier moyen supérieur à 25 € et un rayon de 3 à 5 km.
 - **Garantie de 19 €/h** : un livreur doit faire environ 3,5 courses par heure d'activité à 5,50 € pour ne pas déclencher de complément. Un complément fréquent signale un **surplus de livreurs** dans la zone. Suivi : `zones.live` et alerte `zone_driver_shortage`, ainsi que le ratio inverse.

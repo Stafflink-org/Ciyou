@@ -81,7 +81,7 @@ function GroupDialog({ group, restaurants, onClose }: { group: Group | null; res
             <FormField label="Nom du groupe" required>
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} maxLength={80} />
             </FormField>
-            <FormField label="E-mail du propriétaire" required hint="Compte existant sur GoLink.">
+            <FormField label="E-mail du propriétaire" required hint="Compte existant sur Ciyou Eats.">
               <Input value={email} onChange={(e) => setForm({ ...form, ownerEmail: e.target.value })} type="email" />
             </FormField>
             <FormField label="Pays">
@@ -101,7 +101,7 @@ function GroupDialog({ group, restaurants, onClose }: { group: Group | null; res
             <Combobox multiple value={form.restaurantIds} onChange={(v: string[]) => setForm({ ...form, restaurantIds: v })} placeholder="Choisir les établissements" options={options} />
           </FormField>
           <div className="grid gap-3 sm:grid-cols-2">
-            <FormField label="Commission commune (livraison GoLink)" hint={can('restaurants.commercial') ? 'Vide : taux de chaque établissement.' : 'Réservé à l’équipe commerciale.'}>
+            <FormField label="Commission commune (livraison Ciyou Eats)" hint={can('restaurants.commercial') ? 'Vide : taux de chaque établissement.' : 'Réservé à l’équipe commerciale.'}>
               <Input disabled={!can('restaurants.commercial')} inputMode="decimal" trailing="%" value={form.commission} onChange={(e) => setForm({ ...form, commission: e.target.value })} />
             </FormField>
             <FormField label="Formule commune">
@@ -214,7 +214,7 @@ function GroupSheet({ group, members, onEdit }: { group: Group; members: Restaur
 }
 
 export function GroupsPage() {
-  useDocumentTitle('Groupes et chaînes · GoLink Admin');
+  useDocumentTitle('Groupes et chaînes · Ciyou Eats Admin');
   const can = useCan();
   const [params, setParams] = useSearchParams();
   const restaurants = useScopedRestaurants();

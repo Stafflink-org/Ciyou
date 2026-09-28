@@ -80,7 +80,7 @@ export async function downloadXlsx(sheets: Sheet[], fileName: string, meta: { ti
   // Paquet CommonJS : selon l'outil de build, l'API est exposée directement ou sous `default`.
   const ExcelJS = (loaded as unknown as { default?: typeof loaded }).default ?? loaded;
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = 'GoLink';
+  workbook.creator = 'Ciyou Eats';
   workbook.created = new Date();
   for (const sheet of sheets) {
     const ws = workbook.addWorksheet(sheet.name.slice(0, 31), { views: [{ state: 'frozen', ySplit: 4 }] });

@@ -1,4 +1,4 @@
-# GoLink — Schéma Firestore
+# Ciyou Eats — Schéma Firestore
 
 Schéma complet de la base `golink-9f16d` (Firestore, `europe-west1`). Il sert à toute la plateforme : back-office restaurant, super admin, app client et app livreur.
 
@@ -56,7 +56,7 @@ Dans les tableaux ci-dessous : **C** = client, **L** = livreur, **R** = membre d
 |---|---|---|---|---|
 | `settings/{doc}` | Documents fixes : `general`, `branding`, `orderRules` (`OrderRulesSettings` : délai d'acceptation, annulation client, imputation des remboursements, client absent, produit indisponible, avoirs de retard, alcool, commandes programmées), `dispatch`, `payments`, `refunds`, `payouts`, `loyalty`, `referral`, `promotions`, `display` (classement, mention « sponsorisé »), `support`, `security`, `retention`, `maintenance` | Public : general, branding, payments, maintenance, display, loyalty, referral. Connecté : orderRules, promotions, support. A `settings.view` : tout | A `settings.edit` (`security` : A `security.manage`) | `onSettingsWrite` → `settingsHistory` + `auditLogs` |
 | `settingsHistory/{id}` | `docPath`, `changedFields[]`, `before`, `after`, `reason?`, `changedBy`, `changedAt` | A `settings.view` | CF | — |
-| `countries/{FR}` | `Country` (FR, BE, LU, DZ, MA, TN) : `code`, `name`, `active`, `currency` (EUR, DZD, MAD, TND), `vatValidated?`, `vatNote?`, `stripeAvailable?`, `locales[]`, `timezone`, `pricing: MarketPricingConfig`, `orderRules?`, `paymentMethods`, `billingEntity` (entité GoLink qui facture, préfixe de facture), `legal` (autorité DAC7, URSSAF, âge alcool) | Public | A `markets.edit` | — |
+| `countries/{FR}` | `Country` (FR, BE, LU, DZ, MA, TN) : `code`, `name`, `active`, `currency` (EUR, DZD, MAD, TND), `vatValidated?`, `vatNote?`, `stripeAvailable?`, `locales[]`, `timezone`, `pricing: MarketPricingConfig`, `orderRules?`, `paymentMethods`, `billingEntity` (entité Ciyou Eats qui facture, préfixe de facture), `legal` (autorité DAC7, URSSAF, âge alcool) | Public | A `markets.edit` | — |
 | `cities/{id}` | `City` : `countryId`, `name`, `slug`, `active`, `launchedAt?`, `center`, `serviceHours: WeeklyHours`, `pricing?`, `orderRules?`, `dispatch?`, `emergencyClosure?`, `commissionOverrideBps?`, `managerIds[]`, `stats?` | Public | A `markets.edit`, ou A `zones.edit` dans sa ville | `onCityWrite` : recalcule `acceptingOrders` des restaurants en cas de coupure |
 | `zones/{id}` | `Zone` : `countryId`, `cityId`, `name`, `active`, `polygon: LatLng[]` (≥ 3 points), `bounds`, `maxDeliveryDistanceMeters`, `deliveryTiers?`, `minOrderCents?`, `serviceHours?`, `emergencyClosure?`, `currentSurge?`, `live?` (livreurs en ligne et disponibles, commandes en attente) | Public | A `zones.edit` dans la ville (`live` : CF) | `computeZoneLive` (chaque minute) → `live` + alerte `zone_driver_shortage` |
 | `surgeRules/{id}` | `SurgeRule` : `cityId`, `zoneIds[]`, `trigger` (manual, schedule, demand), `multiplierBps`, `flatFeeCents`, `courierBonusCents`, `startsAt?`, `endsAt?` | A `zones.edit`, `drivers.pay_rules` | A `zones.edit` dans la ville | `applySurge` → `zones.currentSurge` |
@@ -164,7 +164,7 @@ Cloud Functions (`functions/src/restaurant`), permission vérifiée côté serve
 
 | Fonction | Rôle |
 |---|---|
-| `updateRestaurantSettings` | Sections `profile` (nom réservé au propriétaire, cuisines existantes, `labels`, `allergenNotice`), `address` (position contrôlée dans une zone GoLink active de la ville ; `zoneIds`, `geohash` recalculés), `legal` (SIRET/RCS et TVA contrôlés s'ils changent, `dac7Complete` calculé), `orders` (modes selon les drapeaux, `deliveredBy` ; recopie `prepMinutes`, `etaMinutes`, `fulfillmentModes`, `minOrderCents`), `hours` (`validateWeeklyHours`), `payments` (moyens ∩ `private/commercial.allowedPaymentMethods` ∩ `countries.paymentMethods` ∩ drapeaux ; recopie `acceptedPaymentMethods`), `notifications`, `pause` (R `orders.manage` : `isOpen` + `pausedUntil`) |
+| `updateRestaurantSettings` | Sections `profile` (nom réservé au propriétaire, cuisines existantes, `labels`, `allergenNotice`), `address` (position contrôlée dans une zone Ciyou Eats active de la ville ; `zoneIds`, `geohash` recalculés), `legal` (SIRET/RCS et TVA contrôlés s'ils changent, `dac7Complete` calculé), `orders` (modes selon les drapeaux, `deliveredBy` ; recopie `prepMinutes`, `etaMinutes`, `fulfillmentModes`, `minOrderCents`), `hours` (`validateWeeklyHours`), `payments` (moyens ∩ `private/commercial.allowedPaymentMethods` ∩ `countries.paymentMethods` ∩ drapeaux ; recopie `acceptedPaymentMethods`), `notifications`, `pause` (R `orders.manage` : `isOpen` + `pausedUntil`) |
 | `onRestaurantSettingsWrite` | Filet de sécurité des écritures directes dans `settings/{orders,hours,payments}` : recopie sur la fiche, retrait des moyens non autorisés (idempotent) |
 | `resumePausedRestaurants` | Toutes les 5 minutes : réouverture quand `pausedUntil` est échu |
 | `saveDeliveryZone`, `deleteDeliveryZone` | Zones propres : rayon ≤ `plans.maxDeliveryRadiusMeters`, tracé contenu dans ce rayon, frais ≤ 20 €, 12 zones ; suppression vers `trash` (30 jours), refusée pour la dernière zone active si `deliveredBy = restaurant` |
@@ -512,7 +512,7 @@ Règles : `firebase/rules/storage/`, assemblées dans `firebase/storage.rules`. 
 
 ## 15. Hypothèses et décisions
 
-1. **Livraison** : la flotte GoLink est le cas nominal. Les livreurs propres d'un restaurant (`drivers.type = restaurant`) sont gérés dans le même modèle, avec une commission réduite, derrière le drapeau `restaurant_own_drivers`. Le retrait et le sur place existent dans le modèle, activables par drapeau.
+1. **Livraison** : la flotte Ciyou Eats est le cas nominal. Les livreurs propres d'un restaurant (`drivers.type = restaurant`) sont gérés dans le même modèle, avec une commission réduite, derrière le drapeau `restaurant_own_drivers`. Le retrait et le sur place existent dans le modèle, activables par drapeau.
 2. **Un restaurant = un point de vente.** Le multi-établissement passe par `restaurantGroups`.
 3. **Un seul modèle d'options**, normalisé (`options` + `optionGroups`). Le modèle « groupe à choix intégrés » de la maquette est abandonné.
 4. **Stock** : `null` signifie non suivi.

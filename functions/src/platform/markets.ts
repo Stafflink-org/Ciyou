@@ -217,7 +217,7 @@ export const createCountry = platformCallable(
       orderRules: null,
       paymentMethods,
       paymentProviderIds: [],
-      billingEntity: { legalName: `GoLink ${data.name}`, vatNumber: '', registrationNumber: '', address: 'À renseigner', invoicePrefix: data.countryId },
+      billingEntity: { legalName: `Ciyou Eats ${data.name}`, vatNumber: '', registrationNumber: '', address: 'À renseigner', invoicePrefix: data.countryId },
       legal: { dac7Authority: 'À renseigner', requiresDriverUrssaf: false, alcoholMinimumAge: 18 },
       createdAt: now,
       createdBy: caller.uid,

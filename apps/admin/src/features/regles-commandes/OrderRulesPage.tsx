@@ -115,7 +115,7 @@ function pick(rules: Rules): Partial<Rules> {
 }
 
 export function OrderRulesPage() {
-  useDocumentTitle('Règles automatiques · GoLink Admin');
+  useDocumentTitle('Règles automatiques · Ciyou Eats Admin');
   const { can } = useAdminAccess();
   const geo = useGeoScope();
   const platformDoc = useDoc<OrderRulesSettings>(docAt(`${COLLECTIONS.settings}/${SETTINGS_DOCS.orderRules}`));
@@ -279,7 +279,7 @@ export function OrderRulesPage() {
                     <TableHead>Cause</TableHead>
                     <TableHead className="w-28 text-right">Commerce</TableHead>
                     <TableHead className="w-28 text-right">Livreur</TableHead>
-                    <TableHead className="w-28 text-right">GoLink</TableHead>
+                    <TableHead className="w-28 text-right">Ciyou Eats</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -336,7 +336,7 @@ export function OrderRulesPage() {
             </Section>
 
             <Section icon={<Gift />} title="Gestes automatiques" description="Retard au-delà d’un seuil : avoir crédité automatiquement au client." badge={badge(['lateCredit'])}>
-              <ToggleRow checked={draft.lateCredit.enabled} onChange={(v) => set('lateCredit', { ...draft.lateCredit, enabled: v })} disabled={!editable} label="Avoirs de retard" description="Crédités sur le porte-monnaie GoLink du client.">
+              <ToggleRow checked={draft.lateCredit.enabled} onChange={(v) => set('lateCredit', { ...draft.lateCredit, enabled: v })} disabled={!editable} label="Avoirs de retard" description="Crédités sur le porte-monnaie Ciyou Eats du client.">
                 <UnitInput value={draft.lateCredit.creditValidityDays} onChange={(v) => v !== null && set('lateCredit', { ...draft.lateCredit, creditValidityDays: v })} unit="j de validité" min={1} max={730} disabled={!editable} aria-label="Validité de l’avoir" />
               </ToggleRow>
               <div className="max-w-xs">

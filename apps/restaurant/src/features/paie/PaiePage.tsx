@@ -34,7 +34,7 @@ const column = createColumnHelper<WithId<Payslip>>();
 const shortMonth = new Intl.DateTimeFormat('fr-FR', { month: 'short' });
 
 export function PaiePage() {
-  useDocumentTitle('Paie · GoLink Restaurant');
+  useDocumentTitle('Paie · Ciyou Eats Restaurant');
   const can = useCan();
   return can('payroll.view') ? <PayrollManager /> : <MyPayslips />;
 }
@@ -241,7 +241,7 @@ function PayrollManager() {
                 compact
                 icon={<ReceiptText />}
                 title={`Aucun bulletin pour ${formatMonth(period).toLowerCase()}`}
-                description={manage ? 'Lancez le calcul : GoLink reprend les pointages, les absences et vos réglages de paie.' : 'Les bulletins apparaîtront dès qu’ils seront calculés.'}
+                description={manage ? 'Lancez le calcul : Ciyou Eats reprend les pointages, les absences et vos réglages de paie.' : 'Les bulletins apparaîtront dès qu’ils seront calculés.'}
                 action={
                   manage ? (
                     <Button variant="primary" leftIcon={<Calculator />} onClick={() => setComputeOpen(true)}>

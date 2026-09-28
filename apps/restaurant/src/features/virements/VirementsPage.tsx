@@ -71,7 +71,7 @@ export function StatusOfPayout({ status }: { status: PayoutStatus }) {
 
 /** Historique des reversements : statut, relevé détaillé PDF, retenues. */
 export function VirementsPage() {
-  useDocumentTitle('Virements · GoLink Restaurant');
+  useDocumentTitle('Virements · Ciyou Eats Restaurant');
   const navigate = useNavigate();
   const { payoutId } = useParams();
   const { restaurant, restaurantId } = useRestaurantAccess();
@@ -196,7 +196,7 @@ export function VirementsPage() {
       <PageHeader
         eyebrow="Finances"
         title="Virements"
-        description="Vos reversements GoLink, leur statut et le relevé détaillé de chaque période."
+        description="Vos reversements Ciyou Eats, leur statut et le relevé détaillé de chaque période."
         actions={<ExportMenu onExport={exportData} disabled={payouts.loading || list.length === 0} />}
       />
 
@@ -206,7 +206,7 @@ export function VirementsPage() {
         <div className="space-y-6">
           {commercial.data?.payoutsBlocked && (
             <Callout tone="danger" icon={<ShieldAlert />} title="Vos reversements sont suspendus">
-              {commercial.data.payoutsBlockedReason ?? 'Contactez le support GoLink pour connaître la marche à suivre.'} Les montants restent dus et seront versés dès la levée du blocage.
+              {commercial.data.payoutsBlockedReason ?? 'Contactez le support Ciyou Eats pour connaître la marche à suivre.'} Les montants restent dus et seront versés dès la levée du blocage.
             </Callout>
           )}
           {problems.map((p) => (
@@ -373,7 +373,7 @@ function PayoutDetail({ payout, restaurantId }: { payout: WithId<Payout>; restau
           <p className="eyebrow mb-2">Calcul</p>
           <div className="divide-y divide-border">
             <DetailRow label="Ventes livrées" hint="Après remises que vous financez" value={eur(payout.grossCents)} />
-            <DetailRow label="Commission GoLink TTC" value={`− ${eur(payout.commissionCents)}`} />
+            <DetailRow label="Commission Ciyou Eats TTC" value={`− ${eur(payout.commissionCents)}`} />
             <DetailRow label="Remboursements imputés" value={payout.refundsChargedCents ? `− ${eur(payout.refundsChargedCents)}` : eur(0)} />
             {payout.adjustmentsCents !== 0 && <DetailRow label="Ajustements" value={eur(payout.adjustmentsCents)} />}
             {payout.cashDeductedCents > 0 && <DetailRow label="Espèces déjà encaissées" value={`− ${eur(payout.cashDeductedCents)}`} />}

@@ -69,7 +69,7 @@ import { SortableHint, useSortable } from './menu/sortable';
 type StatusFilter = 'all' | 'available' | 'unavailable' | 'out' | 'featured';
 
 export function ProductsPage() {
-  useDocumentTitle('Produits & menu · GoLink Restaurant');
+  useDocumentTitle('Produits & menu · Ciyou Eats Restaurant');
   const { restaurantId, restaurant } = useRestaurantAccess();
   const { user } = useAuth();
   const uid = user?.uid ?? '';
@@ -321,7 +321,7 @@ export function ProductsPage() {
       <PageHeader
         eyebrow={`${restaurant.name} · Carte`}
         title="Produits & menu"
-        description="Organisez votre carte, de la première section au dernier supplément. Les changements sont visibles immédiatement dans l’app GoLink."
+        description="Organisez votre carte, de la première section au dernier supplément. Les changements sont visibles immédiatement dans l’app Ciyou Eats."
         actions={
           <>
             <DropdownMenu>

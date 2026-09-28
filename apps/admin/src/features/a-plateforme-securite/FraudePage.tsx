@@ -391,7 +391,7 @@ function FraudThresholdsTab() {
 }
 
 export function FraudePage() {
-  useDocumentTitle('Fraude · GoLink Admin');
+  useDocumentTitle('Fraude · Ciyou Eats Admin');
   return (
     <PageContainer wide>
       <PageHeader eyebrow="Plateforme & sécurité" title="Fraude" description="Dossiers ouverts à partir de signaux automatiques (recalculés chaque nuit) et liste de blocage.">

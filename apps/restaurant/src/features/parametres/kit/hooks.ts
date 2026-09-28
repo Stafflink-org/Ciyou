@@ -66,7 +66,7 @@ export function planOf(plans: Array<Plan & { id?: string }>, code: PlanCode) {
 }
 
 /**
- * Limites fixées par GoLink pour l'établissement actif : fonctionnalités
+ * Limites fixées par Ciyou Eats pour l'établissement actif : fonctionnalités
  * activées, moyens de paiement autorisés, rayon maximal de la formule.
  * Le serveur refait les mêmes contrôles (ceux-ci ne servent qu'à l'affichage).
  */

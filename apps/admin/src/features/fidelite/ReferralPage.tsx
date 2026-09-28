@@ -82,7 +82,7 @@ type Row = WithId<Referral>;
 const col = createColumnHelper<Row>();
 
 export function ReferralPage() {
-  useDocumentTitle('Parrainage · GoLink Admin');
+  useDocumentTitle('Parrainage · Ciyou Eats Admin');
   const { can, admin } = useAdminAccess();
   const central = admin.role === 'super_admin' || (admin.cityIds.length === 0 && admin.countryIds.length === 0);
   const canEdit = can('loyalty.edit') && central;
@@ -289,7 +289,7 @@ export function ReferralPage() {
             <FormField label="Première commande minimale" hint="Articles, hors livraison.">
               <MoneyInput value={draft.client.minFirstOrderCents} onChange={(v) => set('client', 'minFirstOrderCents', v ?? 0)} disabled={!canEdit} />
             </FormField>
-            <p className="text-xs text-fg-subtle">Récompenses versées en avoir sur le compte GoLink, utilisable sur toute commande.</p>
+            <p className="text-xs text-fg-subtle">Récompenses versées en avoir sur le compte Ciyou Eats, utilisable sur toute commande.</p>
           </ProgramCard>
           <ProgramCard
             icon={<Store />}

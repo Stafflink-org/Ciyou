@@ -257,8 +257,8 @@ export function HorairesPage() {
 
             {serviceToday && (
               <div className="rounded-xl border border-border bg-surface p-5 shadow-card">
-                <p className="text-sm font-medium text-fg">Service GoLink à {city.data?.name}</p>
-                <p className="mt-1 text-xs leading-5 text-fg-subtle">Les livreurs GoLink circulent sur ces plages. En dehors, seuls le retrait et vos propres livreurs restent possibles.</p>
+                <p className="text-sm font-medium text-fg">Service Ciyou Eats à {city.data?.name}</p>
+                <p className="mt-1 text-xs leading-5 text-fg-subtle">Les livreurs Ciyou Eats circulent sur ces plages. En dehors, seuls le retrait et vos propres livreurs restent possibles.</p>
                 <p className="mt-3 font-mono text-sm text-fg num">{serviceToday.open ? slotsLabel(serviceToday.slots) : 'Pas de service aujourd’hui'}</p>
               </div>
             )}
@@ -267,7 +267,7 @@ export function HorairesPage() {
       >
         {restaurant.status === 'suspended' && (
           <Notice tone="danger" title="Établissement suspendu">
-            Les commandes sont bloquées par GoLink, quels que soient vos horaires. Contactez le support.
+            Les commandes sont bloquées par Ciyou Eats, quels que soient vos horaires. Contactez le support.
           </Notice>
         )}
 

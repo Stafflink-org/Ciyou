@@ -1,4 +1,4 @@
-// Envois de l'équipe GoLink (cahier §20) : push, e-mail, SMS ou message dans l'app,
+// Envois de l'équipe Ciyou Eats (cahier §20) : push, e-mail, SMS ou message dans l'app,
 // à tous ou à une cible (pays, villes, formules, restaurants, segment de clients).
 // Les messages promotionnels ne partent qu'aux clients ayant donné leur consentement.
 // Envoi immédiat ou programmé (tâche `sendCampaign`, toutes les 5 minutes).
@@ -364,7 +364,7 @@ async function sendSms(phone: string, content: string, tag: string): Promise<{ o
     const response = await fetch('https://api.brevo.com/v3/transactionalSMS/sms', {
       method: 'POST',
       headers: { 'api-key': BREVO_API_KEY.value(), 'content-type': 'application/json', accept: 'application/json' },
-      body: JSON.stringify({ sender: 'GoLink', recipient: phone.replace(/[^\d+]/g, ''), content, type: 'marketing', tag }),
+      body: JSON.stringify({ sender: 'Ciyou Eats', recipient: phone.replace(/[^\d+]/g, ''), content, type: 'marketing', tag }),
       signal: AbortSignal.timeout(10_000),
     });
     return response.ok ? { ok: true, error: null } : { ok: false, error: `${response.status}` };
@@ -438,20 +438,20 @@ async function deliver(campaignId: string, preset?: Recipient[]) {
       }
     }
     for (const r of recipients) {
-      logs.push({ ...base, channel: 'push', recipientId: r.uid, destinationMasked: 'Centre de notifications GoLink', status: 'delivered', provider: 'fcm', error: null });
+      logs.push({ ...base, channel: 'push', recipientId: r.uid, destinationMasked: 'Centre de notifications Ciyou Eats', status: 'delivered', provider: 'fcm', error: null });
     }
   } else if (campaign.channel === 'email') {
     const message = {
       subject: campaign.emailSubject || campaign.title,
       ...renderEmail({
         preheader: campaign.body.slice(0, 120),
-        eyebrow: 'GoLink',
+        eyebrow: 'Ciyou Eats',
         title: campaign.title,
         paragraphs: campaign.body.split(/\n+/).filter(Boolean),
         ...(campaign.link?.type === 'url' ? { cta: { label: 'Découvrir', url: campaign.link.target } } : {}),
         footerReason: audience.marketing
-          ? 'Vous recevez cet e-mail car vous avez accepté de recevoir les offres GoLink. Vous pouvez retirer ce consentement à tout moment dans les réglages de votre compte.'
-          : 'Message de service lié à votre compte GoLink.',
+          ? 'Vous recevez cet e-mail car vous avez accepté de recevoir les offres Ciyou Eats. Vous pouvez retirer ce consentement à tout moment dans les réglages de votre compte.'
+          : 'Message de service lié à votre compte Ciyou Eats.',
       }),
     };
     for (const r of recipients) {

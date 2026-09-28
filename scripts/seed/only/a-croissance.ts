@@ -36,9 +36,9 @@ const merge = (path: string, data: object) => writes.push([db.doc(path), data, t
 // ------------------------------------------------------------------ Messages automatiques
 const TEMPLATES: Array<[string, string, MessageTemplate['audience'], MessageTemplate['channels'], string, string, string[]]> = [
   ['invoice_available', 'Facture disponible', 'restaurant', ['email', 'in_app'], 'Votre facture {{invoiceNumber}} est disponible', 'La facture {{invoiceNumber}} de {{amount}} pour la période {{period}} est disponible dans votre espace Factures.', ['invoiceNumber', 'amount', 'period']],
-  ['referral_rewarded', 'Parrainage récompensé', 'client', ['push', 'in_app'], 'Parrainage récompensé', '{{amount}} ont été ajoutés à votre solde GoLink en tant que {{role}}. Merci de faire connaître GoLink !', ['amount', 'role']],
+  ['referral_rewarded', 'Parrainage récompensé', 'client', ['push', 'in_app'], 'Parrainage récompensé', '{{amount}} ont été ajoutés à votre solde Ciyou Eats en tant que {{role}}. Merci de faire connaître Ciyou Eats !', ['amount', 'role']],
   ['order_ready_pickup', 'Commande prête à retirer', 'client', ['push', 'sms'], 'Votre commande est prête', '{{restaurantName}} a préparé votre commande {{orderNumber}}. Présentez le code {{code}} au comptoir.', ['restaurantName', 'orderNumber', 'code']],
-  ['restaurant_inactivity_warning', 'Commerce sans commande depuis 15 jours', 'restaurant', ['email'], 'Votre établissement n’a pas reçu de commande depuis 15 jours', 'Aucune commande n’a été passée chez {{restaurantName}} depuis le {{date}}. Sans activité d’ici 30 jours, l’établissement sera retiré de GoLink. Contactez-nous pour relancer vos ventes.', ['restaurantName', 'date']],
+  ['restaurant_inactivity_warning', 'Commerce sans commande depuis 15 jours', 'restaurant', ['email'], 'Votre établissement n’a pas reçu de commande depuis 15 jours', 'Aucune commande n’a été passée chez {{restaurantName}} depuis le {{date}}. Sans activité d’ici 30 jours, l’établissement sera retiré de Ciyou Eats. Contactez-nous pour relancer vos ventes.', ['restaurantName', 'date']],
   ['restaurant_auto_paused', 'Pause automatique après commandes manquées', 'restaurant', ['push', 'email', 'in_app'], 'Établissement mis en pause', '{{restaurantName}} a manqué {{count}} commandes d’affilée : l’établissement est en pause. Rouvrez-le depuis votre back-office dès que vous êtes prêt.', ['restaurantName', 'count']],
   ['restaurant_documents_missing', 'Dossier d’inscription incomplet', 'restaurant', ['email'], 'Il manque des pièces à votre dossier', 'Pour valider {{restaurantName}}, merci de déposer : {{documents}}.', ['restaurantName', 'documents']],
 ];
@@ -138,7 +138,7 @@ METZ_PROSPECTS.forEach(([id, name, cuisine, stage, followDays, note], i) => {
   put(`${COLLECTIONS.prospects}/${id}`, prospect);
   const acts: ProspectActivity[] = [
     { type: 'note', summary: 'Fiche prospect créée.', fromStage: null, toStage: 'to_contact', by: METZ, at: created },
-    ...(stage !== 'to_contact' ? [{ type: 'call' as const, summary: 'Premier appel : présentation de GoLink et des commissions réduites en livraison propre.', fromStage: null, toStage: null, by: METZ, at: at(-15 + i) }] : []),
+    ...(stage !== 'to_contact' ? [{ type: 'call' as const, summary: 'Premier appel : présentation de Ciyou Eats et des commissions réduites en livraison propre.', fromStage: null, toStage: null, by: METZ, at: at(-15 + i) }] : []),
     ...(stage === 'demo' || stage === 'negotiation' ? [{ type: 'demo' as const, summary: 'Démonstration du back-office sur tablette.', fromStage: 'contacted' as const, toStage: 'demo' as const, by: METZ, at: at(-8 + i) }] : []),
     ...(stage === 'lost' ? [{ type: 'stage_change' as const, summary: `Perdu : ${note}`, fromStage: 'contacted' as const, toStage: 'lost' as const, by: METZ, at: at(-5) }] : []),
   ];
@@ -170,7 +170,7 @@ const ANNOUNCEMENTS: Array<[string, Announcement]> = [
     {
       audience: 'restaurants', countryIds: null, cityIds: ['metz'], planCodes: ['pro', 'premium'],
       title: 'Atelier photo gratuit à Metz',
-      body: 'Un photographe GoLink passe le 14 octobre pour mettre en valeur vos plats. Inscrivez-vous auprès de votre responsable de ville.',
+      body: 'Un photographe Ciyou Eats passe le 14 octobre pour mettre en valeur vos plats. Inscrivez-vous auprès de votre responsable de ville.',
       severity: 'info', link: null, publishedAt: at(4, 9), expiresAt: at(20), active: true, requiresAcknowledgement: false,
       createdAt: at(0, 9), createdBy: METZ, updatedAt: at(0, 9), updatedBy: METZ,
     },

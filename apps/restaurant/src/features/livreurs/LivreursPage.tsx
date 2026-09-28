@@ -74,9 +74,9 @@ function median(values: number[]): number | null {
   return sorted[Math.floor(sorted.length / 2)] ?? null;
 }
 
-/** Livreurs : livreurs GoLink ayant livré pour vous et livreurs propres de l'établissement. */
+/** Livreurs : livreurs Ciyou Eats ayant livré pour vous et livreurs propres de l'établissement. */
 export function LivreursPage() {
-  useDocumentTitle('Livreurs · GoLink Restaurant');
+  useDocumentTitle('Livreurs · Ciyou Eats Restaurant');
   const navigate = useNavigate();
   const { driverId } = useParams();
   const { restaurant, restaurantId } = useRestaurantAccess();
@@ -146,7 +146,7 @@ export function LivreursPage() {
                   {row.invitation?.status === 'pending' && <Badge tone="amber" size="sm">Invitation envoyée</Badge>}
                 </p>
                 <p className="truncate text-xs text-fg-subtle">
-                  {row.relation === 'own' ? 'Livreur de l’établissement' : 'Flotte GoLink'}
+                  {row.relation === 'own' ? 'Livreur de l’établissement' : 'Flotte Ciyou Eats'}
                   {row.vehicle ? ` · ${VEHICLE_LABELS[row.vehicle]}` : ''}
                 </p>
               </div>
@@ -218,7 +218,7 @@ export function LivreursPage() {
           onValueChange={(v) => setTab(v as typeof tab)}
           options={[
             { value: 'all', label: 'Tous', count: rows.length },
-            { value: 'platform', label: 'Flotte GoLink', count: rows.length - own.length },
+            { value: 'platform', label: 'Flotte Ciyou Eats', count: rows.length - own.length },
             { value: 'own', label: 'Mes livreurs', count: own.length },
           ]}
         />
@@ -229,7 +229,7 @@ export function LivreursPage() {
       ) : (
         <div className="space-y-6">
           {restaurant.deliveredBy === 'platform' && (
-            <Callout tone="info" icon={<Truck />} title="Vos commandes sont livrées par la flotte GoLink">
+            <Callout tone="info" icon={<Truck />} title="Vos commandes sont livrées par la flotte Ciyou Eats">
               Vos livreurs propres pourront recevoir vos courses dès que la livraison par vos soins sera activée dans{' '}
               <Link to="/reglages-commandes" className="font-medium text-fg underline underline-offset-2">
                 Réglages des commandes
@@ -268,11 +268,11 @@ export function LivreursPage() {
                   compact
                   icon={<Bike />}
                   title="Aucun livreur propre"
-                  description="Invitez vos livreurs : ils recevront vos courses dans l’application GoLink Livreur."
+                  description="Invitez vos livreurs : ils recevront vos courses dans l’application Ciyou Eats Livreur."
                   action={<Button size="sm" leftIcon={<MailPlus />} onClick={() => setInviteOpen(true)}>Inviter un livreur</Button>}
                 />
               ) : (
-                <EmptyState compact icon={<Bike />} title="Aucun livreur pour le moment" description="Les livreurs GoLink apparaissent ici après leur première livraison pour vous." />
+                <EmptyState compact icon={<Bike />} title="Aucun livreur pour le moment" description="Les livreurs Ciyou Eats apparaissent ici après leur première livraison pour vous." />
               )
             }
           />
@@ -346,7 +346,7 @@ function CourierDetail({
     <>
       <SheetHeader
         title={courier.displayName}
-        description={`${courier.relation === 'own' ? 'Livreur de l’établissement' : 'Livreur de la flotte GoLink'}${courier.vehicle ? ` · ${VEHICLE_LABELS[courier.vehicle]}` : ''}`}
+        description={`${courier.relation === 'own' ? 'Livreur de l’établissement' : 'Livreur de la flotte Ciyou Eats'}${courier.vehicle ? ` · ${VEHICLE_LABELS[courier.vehicle]}` : ''}`}
         icon={<Avatar name={courier.displayName} size="sm" />}
       />
       <SheetBody className="space-y-6">

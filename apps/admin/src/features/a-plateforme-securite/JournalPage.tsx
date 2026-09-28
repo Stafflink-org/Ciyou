@@ -232,7 +232,7 @@ function JournalTable() {
 }
 
 export function JournalPage() {
-  useDocumentTitle('Journal d’audit · GoLink Admin');
+  useDocumentTitle('Journal d’audit · Ciyou Eats Admin');
   return (
     <PageContainer wide>
       <PageHeader eyebrow="Plateforme & sécurité" title="Journal d’audit" description="Consultation transversale du journal non modifiable : filtres, détail avant/après, motif et export.">

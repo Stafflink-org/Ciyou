@@ -84,7 +84,7 @@ function validateFields(fields: PromotionFields, settings: Awaited<ReturnType<ty
     if (f.value < 100) throw fail.invalid('Le pourcentage doit être d’au moins 1 %.');
     if (f.value > HARD_MAX_PERCENT_BPS) throw fail.invalid('Le pourcentage ne peut pas dépasser 100 %.');
     if (capped && f.value > settings.restaurantMaxPercentBps) {
-      throw fail.invalid(`GoLink limite les remises des établissements à ${settings.restaurantMaxPercentBps / 100} %.`);
+      throw fail.invalid(`Ciyou Eats limite les remises des établissements à ${settings.restaurantMaxPercentBps / 100} %.`);
     }
   } else {
     f.maxDiscountCents = null;
@@ -93,7 +93,7 @@ function validateFields(fields: PromotionFields, settings: Awaited<ReturnType<ty
     if (f.value < 50) throw fail.invalid('La remise doit être d’au moins 0,50 €.');
     if (f.value > HARD_MAX_FIXED_CENTS) throw fail.invalid(`La remise ne peut pas dépasser ${formatPrice(HARD_MAX_FIXED_CENTS)}.`);
     if (capped && f.value > settings.restaurantMaxFixedCents) {
-      throw fail.invalid(`GoLink limite les remises fixes des établissements à ${formatPrice(settings.restaurantMaxFixedCents)}.`);
+      throw fail.invalid(`Ciyou Eats limite les remises fixes des établissements à ${formatPrice(settings.restaurantMaxFixedCents)}.`);
     }
     if (f.minSubtotalCents < f.value) throw fail.invalid('Fixez un panier minimum au moins égal au montant de la remise.');
   }
@@ -125,7 +125,7 @@ function restaurantPromotions(restaurantId: string) {
   return db.collection(COLLECTIONS.promotions).where('scope', '==', 'restaurant').where('restaurantId', '==', restaurantId);
 }
 
-/** Un code ne peut exister qu'une fois parmi les offres vivantes de l'établissement et les offres GoLink. */
+/** Un code ne peut exister qu'une fois parmi les offres vivantes de l'établissement et les offres Ciyou Eats. */
 async function assertCodeAvailable(restaurantId: string, code: string | null, exceptId?: string) {
   if (!code) return;
   const live: PromotionStatus[] = ['draft', 'pending_review', 'active', 'paused'];
@@ -135,7 +135,7 @@ async function assertCodeAvailable(restaurantId: string, code: string | null, ex
     const p = doc.data() as Promotion;
     if (!live.includes(p.status)) continue;
     if (p.scope === 'restaurant' && p.restaurantId === restaurantId) throw fail.alreadyExists('Ce code existe déjà pour cet établissement.');
-    if (p.scope !== 'restaurant') throw fail.alreadyExists('Ce code est déjà utilisé par une offre GoLink. Choisissez-en un autre.');
+    if (p.scope !== 'restaurant') throw fail.alreadyExists('Ce code est déjà utilisé par une offre Ciyou Eats. Choisissez-en un autre.');
   }
 }
 
@@ -177,7 +177,7 @@ function auditBase(actor: RestaurantActor, restaurant: RestaurantDoc) {
   };
 }
 
-/** Statut atteint à la soumission : validation GoLink, ou mise en ligne directe. */
+/** Statut atteint à la soumission : validation Ciyou Eats, ou mise en ligne directe. */
 function submittedState(settings: Awaited<ReturnType<typeof loadSettings>>, code: string | null) {
   const now = Timestamp.now();
   return settings.restaurantRequiresReview
@@ -194,7 +194,7 @@ export const createPromotion = callable(
     const [restaurant, settings] = await Promise.all([loadRestaurant(data.restaurantId), loadSettings()]);
     // Formule et impayé : « codes promo » coupé pendant une restriction, nombre d'offres limité par la formule.
     await assertFeatureAllowed(restaurant.id, 'promo_codes');
-    await assertFeatureOn('promotions', scopeOfRestaurant(restaurant, data.restaurantId), 'Les promotions sont désactivées par GoLink pour cet établissement.');
+    await assertFeatureOn('promotions', scopeOfRestaurant(restaurant, data.restaurantId), 'Les promotions sont désactivées par Ciyou Eats pour cet établissement.');
     const live = await restaurantPromotions(restaurant.id).where('status', 'in', ['active', 'pending_review']).get();
     await assertWithinLimit(restaurant.id, 'maxPromotions', live.size, 'offres en ligne');
     const f = validateFields(data, settings, true);
@@ -261,7 +261,7 @@ export const updatePromotion = callable(updateSchema, async (data, request) => {
   const snap = await ref.get();
   if (!snap.exists) throw fail.notFound('Offre');
   const current = snap.data() as Promotion;
-  if (current.scope !== 'restaurant' || !current.restaurantId) throw fail.forbidden('Cette offre est gérée par GoLink.');
+  if (current.scope !== 'restaurant' || !current.restaurantId) throw fail.forbidden('Cette offre est gérée par Ciyou Eats.');
   const actor = await requireRestaurantAccess(request, current.restaurantId, 'marketing.manage', 'promotions.edit');
   const [restaurant, settings] = await Promise.all([loadRestaurant(current.restaurantId), loadSettings()]);
   const now = Timestamp.now();

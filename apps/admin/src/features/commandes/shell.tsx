@@ -7,7 +7,7 @@ import { OpsTabs } from '../_operations/ui';
 import { useActiveOrders } from './hooks';
 
 export function OrdersShell({ title, description, actions, children, documentTitle }: { title: string; description: string; actions?: ReactNode; children: ReactNode; documentTitle: string }) {
-  useDocumentTitle(`${documentTitle} · GoLink Admin`);
+  useDocumentTitle(`${documentTitle} · Ciyou Eats Admin`);
   const geo = useGeoScope();
   const active = useActiveOrders().data.filter((o) => o.status !== 'scheduled').length;
   return (

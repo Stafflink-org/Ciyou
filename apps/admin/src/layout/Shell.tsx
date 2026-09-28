@@ -32,7 +32,7 @@ import { db } from '@/lib/firebase';
 import { GeoScopeProvider, GeoScopeSelector } from './GeoScope';
 import { ImpersonationBanner } from './Impersonation';
 
-/** Logo du menu : celui du réglage « Marque » s'il est renseigné, sinon le logo GoLink. */
+/** Logo du menu : celui du réglage « Marque » s'il est renseigné, sinon le logo Ciyou Eats. */
 function BrandLogo({ caption }: { caption: string }) {
   const { logoUrl, platformName } = useBranding(db);
   if (!logoUrl) return <Logo size={30} caption={caption} />;
@@ -89,7 +89,7 @@ function ShellLayout() {
   const active = useActiveModule(MODULES);
   const group = NAV_GROUPS.find((item) => item.id === active?.nav.group);
 
-  useDocumentTitle(active ? `${moduleLabel(active.id, active.nav.label)} · GoLink Admin` : 'GoLink Admin');
+  useDocumentTitle(active ? `${moduleLabel(active.id, active.nav.label)} · Ciyou Eats Admin` : 'Ciyou Eats Admin');
   useCommandShortcut(useCallback(() => setPaletteOpen((open) => !open), []));
 
   const go = useCallback((href: string) => navigate(href), [navigate]);

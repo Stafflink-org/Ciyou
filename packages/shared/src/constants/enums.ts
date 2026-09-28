@@ -30,7 +30,7 @@ export type DriverStatus = (typeof DRIVER_STATUSES)[number];
 export const DRIVER_AVAILABILITIES = values(['offline', 'online', 'on_delivery', 'paused']);
 export type DriverAvailability = (typeof DRIVER_AVAILABILITIES)[number];
 
-/** `restaurant` = livreur salarié du commerce (« merchant »), `platform` = indépendant GoLink. */
+/** `restaurant` = livreur salarié du commerce (« merchant »), `platform` = indépendant Ciyou Eats. */
 export const DRIVER_TYPES = values(['platform', 'restaurant']);
 export type DriverType = (typeof DRIVER_TYPES)[number];
 

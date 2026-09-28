@@ -33,7 +33,7 @@ const DAY = 86_400_000;
 const avg = (list: number[]) => (list.length ? list.reduce((a, b) => a + b, 0) / list.length : null);
 
 export function StatsPage() {
-  useDocumentTitle('Statistiques · Support · GoLink Admin');
+  useDocumentTitle('Statistiques · Support · Ciyou Eats Admin');
   const [days, setDays] = useState('30');
   const scope = useScopeFilter();
   const since = useMemo(() => {

@@ -148,7 +148,7 @@ export function ImpersonateDialog({ restaurant, open, onOpenChange }: { restaura
   async function start() {
     const session = await run.mutate({ restaurantId: restaurant.id, reason: reason.trim(), durationMinutes: Number(duration) });
     if (!session) return;
-    toast.success('Session « voir comme » ouverte', { description: 'Connectez-vous avec votre compte GoLink dans l’espace restaurant si besoin.' });
+    toast.success('Session « voir comme » ouverte', { description: 'Connectez-vous avec votre compte Ciyou Eats dans l’espace restaurant si besoin.' });
     window.open(`${env.restaurantAppUrl}/?voir-comme=${encodeURIComponent(restaurant.id)}`, '_blank', 'noopener');
     setReason('');
     onOpenChange(false);

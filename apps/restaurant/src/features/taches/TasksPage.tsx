@@ -74,7 +74,7 @@ function TaskCard({ task, status, onOpen, draggable, names }: { task: WithId<Tas
 }
 
 export function TasksPage() {
-  useDocumentTitle('Tâches · GoLink Restaurant');
+  useDocumentTitle('Tâches · Ciyou Eats Restaurant');
   const can = useCan();
   const manager = can('tasks.manage');
   const { user } = useAuth();

@@ -58,7 +58,7 @@ const KIND_GROUPS: Record<Exclude<KindFilter, 'all'>, InvoiceKind[]> = {
 
 /** Facturation (cahier §16) : factures aux commerces, relevés livreurs, justificatifs clients, avoirs. */
 export function InvoicesPage() {
-  useDocumentTitle('Facturation · GoLink Admin');
+  useDocumentTitle('Facturation · Ciyou Eats Admin');
   const can = useCan();
   const geo = useGeoScope();
   const [kind, setKind] = useState<KindFilter>('all');
@@ -148,7 +148,7 @@ export function InvoicesPage() {
       rows: list.data.map((i) => [i.number, INVOICE_KIND_LABELS[i.kind], i.issuer.name, i.recipient.name, toDate(i.issuedAt) ?? null, i.periodStart ?? null, i.periodEnd ?? null, i.totalHtCents, i.totalVatCents, i.totalTtcCents, INVOICE_STATUS_LABELS[i.status], i.creditedInvoiceId ?? '']),
     };
     if (format === 'csv') downloadCsv(sheet, 'golink-factures');
-    else await downloadXlsx([sheet], 'golink-factures', { title: 'GoLink · Factures et avoirs', subtitle: geo.label });
+    else await downloadXlsx([sheet], 'golink-factures', { title: 'Ciyou Eats · Factures et avoirs', subtitle: geo.label });
   }
 
   return (
@@ -171,7 +171,7 @@ export function InvoicesPage() {
       <div className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard label={`Émises en ${monthLabel(thisMonth).toLowerCase()}`} icon={<FileStack />} tone="brand" loading={list.loading} value={eur(stats.issued.ttc)} footer={plural(stats.issued.count, 'pièce')} />
-          <StatCard label="TVA facturée par GoLink (mois)" icon={<Percent />} tone="info" loading={list.loading} value={eur(stats.vat)} footer="Factures de commissions, abonnements, mises en avant" />
+          <StatCard label="TVA facturée par Ciyou Eats (mois)" icon={<Percent />} tone="info" loading={list.loading} value={eur(stats.vat)} footer="Factures de commissions, abonnements, mises en avant" />
           <StatCard label="En retard de paiement" icon={<AlertOctagon />} tone="danger" loading={list.loading} value={eur(stats.overdue.ttc)} footer={plural(stats.overdue.count, 'facture')} />
           <StatCard label="Avoirs émis (mois)" icon={<Undo2 />} tone="neutral" loading={list.loading} value={eur(Math.abs(stats.credits.ttc))} footer={plural(stats.credits.count, 'avoir')} />
         </div>

@@ -23,7 +23,7 @@ export function MaintenanceGate({ children }: { children: ReactNode }) {
         if (!app?.enabled) return setState({ enabled: false, message: null });
         const until = app.until as unknown as { toMillis?: () => number } | null;
         if (until?.toMillis && until.toMillis() <= Date.now()) return setState({ enabled: false, message: null });
-        setState({ enabled: true, message: app.message?.fr ?? 'GoLink Restaurant est momentanément en maintenance. Réessayez dans quelques minutes.' });
+        setState({ enabled: true, message: app.message?.fr ?? 'Ciyou Eats Restaurant est momentanément en maintenance. Réessayez dans quelques minutes.' });
       },
       () => setState({ enabled: false, message: null }),
     );

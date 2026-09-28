@@ -209,7 +209,7 @@ const KPIS: KpiDef[] = [
   },
   {
     key: 'commission',
-    label: 'Commissions GoLink HT',
+    label: 'Commissions Ciyou Eats HT',
     icon: <HandCoins />,
     tone: 'plum',
     money: true,

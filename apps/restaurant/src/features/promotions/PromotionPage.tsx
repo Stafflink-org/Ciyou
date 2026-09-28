@@ -85,7 +85,7 @@ export function PromotionPage() {
   const limits = usePromotionSettings();
   const actions = usePromotionActions();
   const [editor, setEditor] = useState<'edit' | 'duplicate' | null>(null);
-  const submitLabel = limits.restaurantRequiresReview ? 'Soumettre à GoLink' : 'Mettre en ligne';
+  const submitLabel = limits.restaurantRequiresReview ? 'Soumettre à Ciyou Eats' : 'Mettre en ligne';
 
   const series = useMemo(() => {
     const days = 30;
@@ -147,7 +147,7 @@ export function PromotionPage() {
     ...(p.submittedAt ? [{ id: 'submitted', title: 'Envoyée pour validation', time: formatDateTime(toDate(p.submittedAt)!), icon: <Send />, tone: 'info' as const }] : []),
     ...(p.approvedAt ? [{ id: 'approved', title: 'Validée et mise en ligne', time: formatDateTime(toDate(p.approvedAt)!), icon: <CheckCircle2 />, tone: 'success' as const }] : []),
     ...(p.status === 'rejected'
-      ? [{ id: 'rejected', title: 'Refusée par GoLink', description: p.reviewNote ?? undefined, time: formatDateTime(toDate(p.updatedAt)!), icon: <Flag />, tone: 'danger' as const }]
+      ? [{ id: 'rejected', title: 'Refusée par Ciyou Eats', description: p.reviewNote ?? undefined, time: formatDateTime(toDate(p.updatedAt)!), icon: <Flag />, tone: 'danger' as const }]
       : []),
     ...(p.pausedAt && p.status === 'paused' ? [{ id: 'paused', title: 'Mise en pause', time: formatDateTime(toDate(p.pausedAt)!), icon: <Pause />, tone: 'amber' as const }] : []),
     ...(p.endedAt ? [{ id: 'ended', title: 'Terminée', time: formatDateTime(toDate(p.endedAt)!), icon: <CalendarCheck />, tone: 'neutral' as const }] : []),

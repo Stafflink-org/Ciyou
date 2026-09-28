@@ -64,7 +64,7 @@ export function SupportPage() {
     <PageContainer>
       <PageHeader
         eyebrow="Messagerie"
-        title="Support GoLink"
+        title="Support Ciyou Eats"
         description="Une question sur un reversement, une commande ou votre compte ? Notre équipe vous répond ici, avec un suivi de chaque demande."
         actions={create}
       />
@@ -75,7 +75,7 @@ export function SupportPage() {
           value={formatNumber(stats.open)}
           icon={<Inbox />}
           loading={tickets.loading}
-          footer={stats.open > 0 ? 'Suivies par l’équipe GoLink, 7 j/7.' : 'Aucune demande ouverte.'}
+          footer={stats.open > 0 ? 'Suivies par l’équipe Ciyou Eats, 7 j/7.' : 'Aucune demande ouverte.'}
         />
         <StatCard
           label="Réponses à lire"
@@ -95,7 +95,7 @@ export function SupportPage() {
         />
         <Card className="flex flex-col justify-between gap-3 bg-sidebar p-5 text-sidebar-fg">
           <p className="flex items-center gap-2 text-sm font-medium">
-            <Headphones className="size-4 text-primary" /> Contacter GoLink
+            <Headphones className="size-4 text-primary" /> Contacter Ciyou Eats
           </p>
           {general.loading ? (
             <Skeleton className="h-10 bg-white/10" />

@@ -19,7 +19,7 @@ export function useNonStripeCountry(): { nonStripe: boolean; country: Country | 
   return { nonStripe: country.data?.stripeAvailable === false, country: country.data ?? null };
 }
 
-/** Compte de versement local (Algérie, Maroc, Tunisie) : coordonnées masquées, vérifiées par l'équipe GoLink avant le premier virement. */
+/** Compte de versement local (Algérie, Maroc, Tunisie) : coordonnées masquées, vérifiées par l'équipe Ciyou Eats avant le premier virement. */
 export function LocalAccountCard({ account }: { account: PayoutAccount | null | undefined }) {
   const { restaurantId } = useRestaurantAccess();
   const can = useCan();
@@ -31,7 +31,7 @@ export function LocalAccountCard({ account }: { account: PayoutAccount | null | 
   const [providerId, setProviderId] = useState('');
   const [holder, setHolder] = useState('');
   const [number, setNumber] = useState('');
-  const save = useMutation(setAccount, { success: 'Compte enregistré : il sera vérifié par l’équipe GoLink avant le premier virement' });
+  const save = useMutation(setAccount, { success: 'Compte enregistré : il sera vérifié par l’équipe Ciyou Eats avant le premier virement' });
   if (!nonStripe) return null;
   const canEdit = can('settings.manage');
   return (

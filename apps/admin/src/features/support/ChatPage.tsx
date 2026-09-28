@@ -51,7 +51,7 @@ const TYPE_LABELS: Record<Conversation['type'], string> = {
 const ROLE_ICONS = { client: <UserRound />, driver: <Bike />, restaurant: <Store />, admin: <Headset /> } as const;
 
 export function ChatPage() {
-  useDocumentTitle('Chat en direct · Support · GoLink Admin');
+  useDocumentTitle('Chat en direct · Support · Ciyou Eats Admin');
   const { can } = useAdminAccess();
   const [params, setParams] = useSearchParams();
   const selectedId = params.get('c');
@@ -108,7 +108,7 @@ export function ChatPage() {
                     onClick={() => select(c.id)}
                     className={cn('flex w-full gap-3 border-b border-border px-4 py-3 text-left transition-colors hover:bg-surface-2', c.id === selectedId && 'bg-surface-3')}
                   >
-                    <Avatar name={names[0] ?? 'GoLink'} size="sm" />
+                    <Avatar name={names[0] ?? 'Ciyou Eats'} size="sm" />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="truncate text-sm font-medium text-fg">{names.join(', ') || 'Conversation'}</span>
@@ -134,7 +134,7 @@ export function ChatPage() {
           {selected ? (
             <ChatThread conversation={selected} onBack={() => select(null)} canWrite={can('support.handle')} />
           ) : (
-            <EmptyState icon={<MessagesSquare />} title="Sélectionnez une conversation" description="Suivez un échange en temps réel et intervenez au nom du support GoLink." className="h-full" />
+            <EmptyState icon={<MessagesSquare />} title="Sélectionnez une conversation" description="Suivez un échange en temps réel et intervenez au nom du support Ciyou Eats." className="h-full" />
           )}
         </div>
       </Card>
@@ -244,7 +244,7 @@ function NewChatDialog({ open, onOpenChange, onOpened }: { open: boolean; onOpen
   const [error, setError] = useState<string | null>(null);
   const [withDriver, setWithDriver] = useState(false);
   const [withRestaurant, setWithRestaurant] = useState(false);
-  const [message, setMessage] = useState('Bonjour, ici le support GoLink. Comment pouvons-nous vous aider pour votre commande ?');
+  const [message, setMessage] = useState('Bonjour, ici le support Ciyou Eats. Comment pouvons-nous vous aider pour votre commande ?');
   const { mutate, loading } = useMutation(openChat, { success: 'Chat ouvert' });
 
   async function lookup() {

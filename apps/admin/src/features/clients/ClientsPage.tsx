@@ -71,7 +71,7 @@ function useWalletTotal(q: Query | null): number | null {
 }
 
 export function ClientsPage() {
-  useDocumentTitle('Clients · GoLink Admin');
+  useDocumentTitle('Clients · Ciyou Eats Admin');
   const navigate = useNavigate();
   const can = useCan();
   const scope = useGeoScope();

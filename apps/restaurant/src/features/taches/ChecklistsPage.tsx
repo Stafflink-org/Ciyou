@@ -174,7 +174,7 @@ function ChecklistCard({ template, run, day, editable }: { template: WithId<Chec
 }
 
 export function ChecklistsPage() {
-  useDocumentTitle('Checklists · GoLink Restaurant');
+  useDocumentTitle('Checklists · Ciyou Eats Restaurant');
   const can = useCan();
   const manager = can('tasks.manage');
   const today = todayIso();

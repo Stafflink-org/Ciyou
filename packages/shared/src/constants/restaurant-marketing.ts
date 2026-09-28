@@ -222,7 +222,7 @@ export const RESTAURANT_PROMOTION_RULES = {
 } as const;
 
 // ------------------------------------------------------------------ Liens publics
-/** Site public GoLink (pages établissement partageables). */
+/** Site public Ciyou Eats (pages établissement partageables). */
 export const CLIENT_WEB_URL = 'https://golink.fr';
 /** Schéma de l'app client (liens profonds). */
 export const CLIENT_APP_SCHEME = 'golink-client';

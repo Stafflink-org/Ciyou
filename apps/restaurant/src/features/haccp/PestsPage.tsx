@@ -160,7 +160,7 @@ function ReportDialog({ open, onClose }: { open: boolean; onClose: () => void })
 }
 
 export function PestsPage() {
-  useDocumentTitle('Nuisibles · HACCP · GoLink Restaurant');
+  useDocumentTitle('Nuisibles · HACCP · Ciyou Eats Restaurant');
   const can = useCan();
   const manage = can('haccp.manage');
   const { restaurantId } = useRestaurantAccess();

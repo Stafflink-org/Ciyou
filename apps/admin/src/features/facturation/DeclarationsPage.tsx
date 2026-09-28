@@ -22,7 +22,7 @@ const periodText = (r: Pick<TaxReport, 'period' | 'type'>) => (/^\d{4}$/.test(r.
 
 /** Déclarations aux autorités et exports (cahier §16) : DAC7, TVA, export comptable mensuel. */
 export function DeclarationsPage() {
-  useDocumentTitle('Déclarations et exports · GoLink Admin');
+  useDocumentTitle('Déclarations et exports · Ciyou Eats Admin');
   const can = useCan();
   const geo = useGeoScope();
   const allowed = can('tax.reports');
@@ -69,7 +69,7 @@ export function DeclarationsPage() {
       };
       const name = `golink-export-comptable-${countryId}-${exportMonth}`;
       if (format === 'csv') downloadCsv(sheet, name);
-      else await downloadXlsx([sheet], name, { title: `GoLink · Export comptable ${countryId}`, subtitle: monthLabel(exportMonth) });
+      else await downloadXlsx([sheet], name, { title: `Ciyou Eats · Export comptable ${countryId}`, subtitle: monthLabel(exportMonth) });
       toast.success(`${plural(result.lines.length, 'écriture')} exportée${result.lines.length > 1 ? 's' : ''} (${result.totals.invoices} factures, ${result.totals.payouts} reversements)`);
     } catch (error) {
       toast.error(errorMessage(error, 'L’export comptable a échoué.'));
@@ -152,7 +152,7 @@ export function DeclarationsPage() {
             </CardContent>
           </Card>
           <Card>
-            <CardHeader title="Récapitulatif de TVA" description="TVA collectée par GoLink sur ses commissions, abonnements et frais, moins les avoirs." icon={<Percent />} divided />
+            <CardHeader title="Récapitulatif de TVA" description="TVA collectée par Ciyou Eats sur ses commissions, abonnements et frais, moins les avoirs." icon={<Percent />} divided />
             <CardContent className="space-y-3">
               <FormField label="Mois">
                 <Input type="month" value={vatMonth} max={previousMonth()} onChange={(e) => e.target.value && setVatMonth(e.target.value)} />
@@ -250,7 +250,7 @@ function ReportSheet({ report, countryName, onSubmit, onRegenerate, regenerating
         ],
         rows: lines.map((l) => [l.sellerType === 'restaurant' ? 'Commerce' : 'Livreur', l.name, l.taxId ?? '', l.address ?? '', l.reportable ? 'Oui' : 'Non', ...l.quarters.map((q) => q.grossCents), l.grossCents, l.feesCents, l.transactionsCount, l.missing.join(', ')]),
       };
-      await downloadXlsx([sheet], `golink-dac7-${report.countryId}-${report.period}`, { title: `GoLink · DAC7 ${countryName} ${report.period}`, subtitle: `${reportable.length} déclarants` });
+      await downloadXlsx([sheet], `golink-dac7-${report.countryId}-${report.period}`, { title: `Ciyou Eats · DAC7 ${countryName} ${report.period}`, subtitle: `${reportable.length} déclarants` });
     } else if (report.type === 'vat') {
       const sheet: ExportSheet = {
         name: `TVA ${report.period}`,
@@ -258,7 +258,7 @@ function ReportSheet({ report, countryName, onSubmit, onRegenerate, regenerating
         rows: (report.vatLines ?? []).map((l) => [l.label, bps(l.rateBps), l.htCents, l.vatCents]),
         totals: ['Total', '', (report.vatLines ?? []).reduce((s, l) => s + l.htCents, 0), (report.vatLines ?? []).reduce((s, l) => s + l.vatCents, 0)],
       };
-      await downloadXlsx([sheet], `golink-tva-${report.countryId}-${report.period}`, { title: `GoLink · TVA ${countryName}`, subtitle: monthLabel(report.period) });
+      await downloadXlsx([sheet], `golink-tva-${report.countryId}-${report.period}`, { title: `Ciyou Eats · TVA ${countryName}`, subtitle: monthLabel(report.period) });
     }
   }
 

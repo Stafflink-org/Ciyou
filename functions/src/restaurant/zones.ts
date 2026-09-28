@@ -46,12 +46,12 @@ export const saveDeliveryZone = callable(saveSchema, async (data, request) => {
   const maxRadius = Math.min(plan.maxDeliveryRadiusMeters, bounds.maxRadiusMeters ?? Number.MAX_SAFE_INTEGER);
   const eur = (cents: number) => (cents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
   if (bounds.minFeeCents != null && data.feeCents < bounds.minFeeCents) throw fail.invalid(`Les frais de livraison doivent être d’au moins ${eur(bounds.minFeeCents)}.`);
-  if (bounds.maxFeeCents != null && data.feeCents > bounds.maxFeeCents) throw fail.invalid(`Les frais de livraison sont limités à ${eur(bounds.maxFeeCents)} par GoLink.`);
+  if (bounds.maxFeeCents != null && data.feeCents > bounds.maxFeeCents) throw fail.invalid(`Les frais de livraison sont limités à ${eur(bounds.maxFeeCents)} par Ciyou Eats.`);
   if (data.minOrderCents != null && bounds.minOrderFloorCents != null && data.minOrderCents < bounds.minOrderFloorCents) {
     throw fail.invalid(`Le minimum de commande doit être d’au moins ${eur(bounds.minOrderFloorCents)}.`);
   }
   if (data.minOrderCents != null && bounds.minOrderCeilingCents != null && data.minOrderCents > bounds.minOrderCeilingCents) {
-    throw fail.invalid(`Le minimum de commande est limité à ${eur(bounds.minOrderCeilingCents)} par GoLink.`);
+    throw fail.invalid(`Le minimum de commande est limité à ${eur(bounds.minOrderCeilingCents)} par Ciyou Eats.`);
   }
   const center = restaurant.address.geo ? { lat: restaurant.address.geo.latitude, lng: restaurant.address.geo.longitude } : null;
   if (!center) throw fail.precondition('Renseignez d’abord l’adresse de l’établissement (rubrique Établissement).');

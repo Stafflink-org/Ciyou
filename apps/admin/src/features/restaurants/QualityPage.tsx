@@ -33,7 +33,7 @@ import { refreshRestaurantScores, useScopedRestaurants, type RestaurantRow } fro
 const column = createColumnHelper<RestaurantRow>();
 
 export function QualityPage() {
-  useDocumentTitle('Qualité des commerces · GoLink Admin');
+  useDocumentTitle('Qualité des commerces · Ciyou Eats Admin');
   const navigate = useNavigate();
   const scope = useGeoScope();
   const restaurants = useScopedRestaurants();

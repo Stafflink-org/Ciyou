@@ -1,5 +1,5 @@
 // E-mails adressés aux livreurs par l'exploitation : décision sur l'inscription,
-// sanction, document expiré. Mise en page commune GoLink.
+// sanction, document expiré. Mise en page commune Ciyou Eats.
 import { PARTNER_DOCUMENT_LABELS, SANCTION_TYPE_LABELS, type PartnerDocumentType, type SanctionType } from '@golink/shared';
 import { PLATFORM_NAME } from '../../lib/config';
 import { renderEmail } from '../../lib/email-layout';

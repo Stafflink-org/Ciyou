@@ -147,7 +147,7 @@ function ShareLinkCard() {
         <div className="flex items-center gap-2 rounded-xl border border-border p-1.5 pl-3.5">
           <Smartphone className="size-4 shrink-0 text-fg-subtle" />
           <span className="min-w-0 flex-1">
-            <span className="block text-xs text-fg-subtle">Lien direct vers l’app GoLink</span>
+            <span className="block text-xs text-fg-subtle">Lien direct vers l’app Ciyou Eats</span>
             <span className="block truncate font-mono text-xs text-fg-muted">{deepLink}</span>
           </span>
           <Button size="sm" variant="ghost" leftIcon={<Copy />} onClick={() => copy(deepLink, 'Lien de l’app')}>
@@ -158,7 +158,7 @@ function ShareLinkCard() {
           <Button
             variant="secondary"
             leftIcon={<Share2 />}
-            onClick={() => void navigator.share({ title: restaurant.name, text: `Commandez chez ${restaurant.name} sur GoLink`, url }).catch(() => undefined)}
+            onClick={() => void navigator.share({ title: restaurant.name, text: `Commandez chez ${restaurant.name} sur Ciyou Eats`, url }).catch(() => undefined)}
           >
             Partager depuis cet appareil
           </Button>
@@ -192,7 +192,7 @@ function QrCard() {
           {svg ? <div className="size-full [&_svg]:size-full" role="img" aria-label={`QR code vers ${url}`} dangerouslySetInnerHTML={{ __html: svg }} /> : <Skeleton className="size-full" />}
         </div>
         <div className="w-full space-y-2.5">
-          <p className="text-sm text-fg-muted">Le QR code ouvre votre page GoLink ; les visites sont comptées à part pour mesurer l’efficacité de vos supports imprimés.</p>
+          <p className="text-sm text-fg-muted">Le QR code ouvre votre page Ciyou Eats ; les visites sont comptées à part pour mesurer l’efficacité de vos supports imprimés.</p>
           <div className="grid gap-2 sm:grid-cols-2">
             <Button
               variant="secondary"
@@ -274,7 +274,7 @@ function VisualStudio() {
     return {
       kind,
       title: offer.title.fr,
-      subtitle: offer.description?.fr ?? `Offre valable chez ${restaurant.name} sur GoLink.`,
+      subtitle: offer.description?.fr ?? `Offre valable chez ${restaurant.name} sur Ciyou Eats.`,
       discount: offer.kind === 'free_delivery' ? 'Livraison offerte' : `−${discountLabel(offer)}`,
       code: offer.code ?? null,
       imageUrl: restaurant.cover?.url ?? null,
@@ -397,7 +397,7 @@ function ProfileForm({ saved, error }: { saved: RestaurantSocialProfile | null; 
       });
       return true;
     },
-    { success: 'Comptes enregistrés : ils apparaissent sur votre fiche GoLink.' },
+    { success: 'Comptes enregistrés : ils apparaissent sur votre fiche Ciyou Eats.' },
   );
   const invalid = Object.values(errors).some(Boolean);
 
@@ -440,9 +440,9 @@ function ShareMessageCard({ saved }: { saved: RestaurantSocialProfile | null }) 
   const { user } = useAuth();
   const { restaurantId, restaurant } = useRestaurantAccess();
   const url = restaurantPublicUrl(restaurant.slug);
-  const defaultMessage = `Envie de ${restaurant.tags[0]?.toLowerCase() ?? 'bien manger'} ? Commandez chez ${restaurant.name} sur GoLink, livré chez vous ou à emporter.`;
+  const defaultMessage = `Envie de ${restaurant.tags[0]?.toLowerCase() ?? 'bien manger'} ? Commandez chez ${restaurant.name} sur Ciyou Eats, livré chez vous ou à emporter.`;
   const [message, setMessage] = useState(saved?.shareMessage || defaultMessage);
-  const [hashtags, setHashtags] = useState((saved?.hashtags ?? []).join(' ') || `#${restaurant.name.replace(/[^\p{L}\p{N}]/gu, '')} #${restaurant.address.city.replace(/[^\p{L}\p{N}]/gu, '')} #GoLink`);
+  const [hashtags, setHashtags] = useState((saved?.hashtags ?? []).join(' ') || `#${restaurant.name.replace(/[^\p{L}\p{N}]/gu, '')} #${restaurant.address.city.replace(/[^\p{L}\p{N}]/gu, '')} #Ciyou Eats`);
   const tags = hashtags
     .split(/[\s,]+/)
     .map((t) => t.trim())

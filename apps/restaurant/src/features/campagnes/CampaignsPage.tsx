@@ -144,7 +144,7 @@ export function CampaignsPage() {
         </span>
         <p className="text-sm text-fg-muted">
           <span className="font-medium text-fg">Consentement respecté :</span> vos campagnes ne partent qu’aux clients ayant accepté les offres par notification ou
-          par e-mail. Chaque envoi est tracé, et vos clients peuvent se désabonner à tout moment depuis leur compte GoLink.
+          par e-mail. Chaque envoi est tracé, et vos clients peuvent se désabonner à tout moment depuis leur compte Ciyou Eats.
         </p>
       </Card>
 

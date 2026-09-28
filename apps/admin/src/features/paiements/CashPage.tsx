@@ -32,7 +32,7 @@ const col = createColumnHelper<Row>();
 
 /** Espèces (cahier §14) : caisse des livreurs salariés des commerces (l'argent reste chez le commerce), plafond et remises. */
 export function CashPage() {
-  useDocumentTitle('Espèces · GoLink Admin');
+  useDocumentTitle('Espèces · Ciyou Eats Admin');
   const can = useCan();
   const geo = useGeoScope();
   const directory = useDirectory();
@@ -113,7 +113,7 @@ export function CashPage() {
       </PageHeader>
       <div className="space-y-6">
         <Callout tone="info" icon={<Banknote />} title="Espèces seulement avec les livreurs salariés des commerces">
-          Avec un livreur indépendant GoLink, le paiement en ligne est obligatoire. Les espèces encaissées par un livreur salarié restent au commerce : elles sont déduites du reversement du commerce (déjà encaissées), la caisse du livreur augmente à chaque livraison payée en espèces, et le commerce (ou l’équipe GoLink) enregistre la remise de caisse. Au plafond, le livreur ne reçoit plus de commande en espèces.
+          Avec un livreur indépendant Ciyou Eats, le paiement en ligne est obligatoire. Les espèces encaissées par un livreur salarié restent au commerce : elles sont déduites du reversement du commerce (déjà encaissées), la caisse du livreur augmente à chaque livraison payée en espèces, et le commerce (ou l’équipe Ciyou Eats) enregistre la remise de caisse. Au plafond, le livreur ne reçoit plus de commande en espèces.
         </Callout>
         <div className="grid gap-4 sm:grid-cols-3">
           <StatCard label="Espèces détenues" icon={<Wallet />} tone="brand" loading={loading} value={eur(total)} footer={plural(rows.length, 'livreur')} />

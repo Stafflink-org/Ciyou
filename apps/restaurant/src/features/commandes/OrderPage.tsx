@@ -15,7 +15,7 @@ export function OrderPage() {
   const { restaurantId } = useRestaurantAccess();
   const state = useOrder(orderId);
   const order = state.data && state.data.restaurantId === restaurantId ? state.data : null;
-  useDocumentTitle(order ? `${order.number} · Commandes · GoLink Restaurant` : 'Commande · GoLink Restaurant');
+  useDocumentTitle(order ? `${order.number} · Commandes · Ciyou Eats Restaurant` : 'Commande · Ciyou Eats Restaurant');
 
   return (
     <OrderActionsProvider>

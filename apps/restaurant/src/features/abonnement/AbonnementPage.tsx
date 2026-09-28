@@ -153,7 +153,7 @@ export function AbonnementPage() {
     <PageHeader
       eyebrow="Configuration"
       title="Abonnement"
-      description="Votre formule GoLink, les commissions qui s’appliquent à vos ventes, et vos factures d’abonnement."
+      description="Votre formule Ciyou Eats, les commissions qui s’appliquent à vos ventes, et vos factures d’abonnement."
     />
   );
 
@@ -212,7 +212,7 @@ export function AbonnementPage() {
             </div>
             <dl className="grid grid-cols-3 gap-2 rounded-xl border border-border bg-surface-2 p-3 text-center sm:gap-4 sm:p-4">
               {[
-                { label: 'Livraison GoLink', value: rates.platformDeliveryBps },
+                { label: 'Livraison Ciyou Eats', value: rates.platformDeliveryBps },
                 { label: 'Vos livreurs', value: rates.restaurantDeliveryBps },
                 { label: 'Retrait', value: rates.pickupBps },
               ].map((r) => (
@@ -224,7 +224,7 @@ export function AbonnementPage() {
             </dl>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border bg-surface-2 px-5 py-3 text-xs text-fg-muted">
-            <span>Commission calculée sur le montant TTC des articles, hors frais de livraison et pourboires{negotiated ? ', conditions négociées avec GoLink' : ''}. Facturée HT, TVA en sus.</span>
+            <span>Commission calculée sur le montant TTC des articles, hors frais de livraison et pourboires{negotiated ? ', conditions négociées avec Ciyou Eats' : ''}. Facturée HT, TVA en sus.</span>
             {negotiated?.validUntil && toDate(negotiated.validUntil) && <Badge size="sm">Jusqu’au {formatDate(toDate(negotiated.validUntil)!)}</Badge>}
           </div>
         </Card>
@@ -250,7 +250,7 @@ export function AbonnementPage() {
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="font-display text-lg font-semibold tracking-tight text-fg">Comparer les formules</h2>
-              <p className="text-sm text-fg-muted">Prix HT par établissement, conditions en vigueur fixées par GoLink.</p>
+              <p className="text-sm text-fg-muted">Prix HT par établissement, conditions en vigueur fixées par Ciyou Eats.</p>
             </div>
             {!isOwner && <p className="text-xs text-fg-subtle">Seul le propriétaire peut changer de formule.</p>}
           </div>
@@ -290,7 +290,7 @@ export function AbonnementPage() {
                   {plan.description && <p className="mt-3 text-sm text-fg-muted">{plan.description}</p>}
                   <dl className="mt-4 space-y-1.5 rounded-lg bg-surface-2 p-3 text-sm">
                     <div className="flex justify-between gap-2">
-                      <dt className="text-fg-muted">Commission livraison GoLink</dt>
+                      <dt className="text-fg-muted">Commission livraison Ciyou Eats</dt>
                       <dd className="font-mono text-fg num">{formatBps(plan.commission.platformDeliveryBps)}</dd>
                     </div>
                     <div className="flex justify-between gap-2">
@@ -307,7 +307,7 @@ export function AbonnementPage() {
                     </div>
                   </dl>
                   {features.length === 0 && plan.includedOutlets <= 1 && (
-                    <p className="mt-4 flex-1 text-sm text-fg-subtle">Le détail des avantages de cette formule sera communiqué par GoLink.</p>
+                    <p className="mt-4 flex-1 text-sm text-fg-subtle">Le détail des avantages de cette formule sera communiqué par Ciyou Eats.</p>
                   )}
                   <ul className={cn('mt-4 space-y-2 text-sm', (features.length > 0 || plan.includedOutlets > 1) && 'flex-1')}>
                     {features.map((f) => (

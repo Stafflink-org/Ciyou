@@ -79,7 +79,7 @@ function Body({ onClose, onCreated, defaultOrderId }: { onClose: () => void; onC
       }
       return ticket;
     },
-    { success: (t) => `Demande ${t.number} envoyée au support GoLink.` },
+    { success: (t) => `Demande ${t.number} envoyée au support Ciyou Eats.` },
   );
 
   return (

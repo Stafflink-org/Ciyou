@@ -62,7 +62,7 @@ const active = (s: { active: boolean; archivedAt?: unknown; startsAt?: unknown; 
   s.active && !s.archivedAt && (!s.startsAt || millis(s.startsAt) <= now) && (!s.endsAt || millis(s.endsAt) >= now);
 
 export function HomeLayoutPage() {
-  useDocumentTitle('Page d’accueil · Affichage · GoLink Admin');
+  useDocumentTitle('Page d’accueil · Affichage · Ciyou Eats Admin');
   const { admin } = useAdminAccess();
   const { cityId, city, selector } = useWorkingCity();
   const sectionsQ = useMemo(() => query(collection(db, COLLECTIONS.homeSections), orderBy('order'), limit(200)), []);

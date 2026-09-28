@@ -79,7 +79,7 @@ function toInput(report: WithId<ScheduledReport>, patch: Partial<SaveScheduledRe
 
 /** Rapports envoyés automatiquement par e-mail chaque jour, semaine ou mois (cahier §4). */
 export function ScheduledReportsPage() {
-  useDocumentTitle('Rapports programmés · GoLink Admin');
+  useDocumentTitle('Rapports programmés · Ciyou Eats Admin');
   const { can } = useAdminAccess();
   const geo = useGeoScope();
   const canView = can('reports.view');

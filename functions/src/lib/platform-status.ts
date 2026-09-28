@@ -20,7 +20,7 @@ export async function assertNotInMaintenance(app: AppKey, isTest = false): Promi
   const state = (snap.data() as MaintenanceSettings | undefined)?.apps?.[app];
   if (!state?.enabled) return;
   if (state.until && state.until.toMillis() <= Date.now()) return;
-  const message = state.message?.fr ?? 'GoLink est momentanément en maintenance. Réessayez dans quelques minutes.';
+  const message = state.message?.fr ?? 'Ciyou Eats est momentanément en maintenance. Réessayez dans quelques minutes.';
   throw fail.unavailable(message);
 }
 

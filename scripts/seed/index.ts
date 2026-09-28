@@ -1,4 +1,4 @@
-// Base de démonstration GoLink : `npm run seed` (idempotent, identifiants stables).
+// Base de démonstration Ciyou Eats : `npm run seed` (idempotent, identifiants stables).
 // `npm run seed -- --reset` supprime d'abord toutes les données marquées seed:true.
 // Chaque document écrit porte `seed: true`.
 import { COLLECTIONS, SUBCOLLECTIONS } from '@golink/shared';
@@ -34,7 +34,7 @@ async function resetSeedData(): Promise<number> {
 
 async function main(): Promise<void> {
   const started = Date.now();
-  console.log(`Seed GoLink → projet ${PROJECT_ID}`);
+  console.log(`Seed Ciyou Eats → projet ${PROJECT_ID}`);
   if (process.argv.includes('--reset')) console.log(`Réinitialisation : ${await resetSeedData()} documents racine supprimés.`);
 
   const ctx = createContext(db, bucket, account('superAdmin').uid);

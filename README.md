@@ -1,4 +1,4 @@
-# GoLink
+# Ciyou Eats
 
 Plateforme de livraison (France, Luxembourg) : commande client, restaurants partenaires, livreurs suivis en temps réel.
 

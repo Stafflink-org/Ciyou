@@ -122,7 +122,7 @@ export function EditProfileSheet({ restaurant, open, onOpenChange }: { restauran
             <FormField label="Étiquettes" hint="Séparées par des virgules (fait maison, halal…)." className="sm:col-span-2">
               <Input value={form.tags} onChange={(e) => set('tags')(e.target.value)} />
             </FormField>
-            <FormField label="Zones de livraison GoLink" className="sm:col-span-2">
+            <FormField label="Zones de livraison Ciyou Eats" className="sm:col-span-2">
               <Combobox multiple value={form.zoneIds} onChange={(v: string[]) => set('zoneIds')(v)} placeholder="Aucune zone" options={zones.data.map((z) => ({ value: z.id, label: z.name }))} />
             </FormField>
           </div>
@@ -150,7 +150,7 @@ export function EditProfileSheet({ restaurant, open, onOpenChange }: { restauran
               value={form.deliveredBy}
               onValueChange={set('deliveredBy')}
               options={[
-                { value: 'platform', label: 'Livreurs GoLink' },
+                { value: 'platform', label: 'Livreurs Ciyou Eats' },
                 { value: 'restaurant', label: 'Ses livreurs' },
                 { value: 'both', label: 'Les deux' },
               ]}

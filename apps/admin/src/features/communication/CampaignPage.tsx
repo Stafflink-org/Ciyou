@@ -119,7 +119,7 @@ function Preview({ draft }: { draft: Draft }) {
       <div className="overflow-hidden rounded-xl border border-border bg-surface-2">
         <div className="border-b border-border px-4 py-2.5 text-xs text-fg-muted">
           <p>
-            <span className="text-fg-subtle">De :</span> GoLink
+            <span className="text-fg-subtle">De :</span> Ciyou Eats
           </p>
           <p className="truncate">
             <span className="text-fg-subtle">Objet :</span> <span className="font-medium text-fg">{draft.emailSubject.trim() || title}</span>
@@ -136,7 +136,7 @@ function Preview({ draft }: { draft: Draft }) {
             </p>
           ))}
           {draft.linkType === 'url' && <span className="mt-2 inline-block rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-fg">Découvrir</span>}
-          {draft.audience.marketing && <p className="border-t border-border pt-2 text-2xs text-fg-subtle">Vous recevez cet e-mail car vous avez accepté les offres GoLink. Se désinscrire.</p>}
+          {draft.audience.marketing && <p className="border-t border-border pt-2 text-2xs text-fg-subtle">Vous recevez cet e-mail car vous avez accepté les offres Ciyou Eats. Se désinscrire.</p>}
         </div>
       </div>
     );
@@ -149,7 +149,7 @@ function Preview({ draft }: { draft: Draft }) {
       <div className="rounded-2xl bg-elevated p-3 shadow-sm">
         <div className="mb-1 flex items-center gap-2 text-2xs text-fg-muted">
           <span className="grid size-4 place-items-center rounded bg-primary text-[8px] font-bold text-primary-fg">G</span>
-          {draft.channel === 'sms' ? 'SMS · GoLink' : 'GoLink'} · maintenant
+          {draft.channel === 'sms' ? 'SMS · Ciyou Eats' : 'Ciyou Eats'} · maintenant
         </div>
         {draft.channel !== 'sms' && <p className="text-sm font-semibold text-fg">{title}</p>}
         <p className="whitespace-pre-line text-sm text-fg-muted">
@@ -183,7 +183,7 @@ function CampaignDetail({ id, campaign }: { id: string; campaign: Campaign }) {
   return (
     <PageContainer wide>
       <PageHeader
-        eyebrow={campaign.scope === 'restaurant' ? `Campagne de ${restaurantName(campaign.restaurantId ?? '')}` : `Envoi GoLink · ${CHANNEL_SHORT[campaign.channel]}`}
+        eyebrow={campaign.scope === 'restaurant' ? `Campagne de ${restaurantName(campaign.restaurantId ?? '')}` : `Envoi Ciyou Eats · ${CHANNEL_SHORT[campaign.channel]}`}
         title={campaign.name}
         actions={
           <div className="flex flex-wrap gap-2">
@@ -408,7 +408,7 @@ function Composer({ id, campaign }: { id: string | null; campaign: Campaign | nu
               value={a.userType}
               onValueChange={(v) => setDraft((d) => ({ ...d, audience: { ...d.audience, userType: v as AudienceInput['userType'], restaurantIds: null, planCodes: null, segment: 'all' } }))}
               options={[
-                { value: 'client', label: 'Clients', description: 'App client GoLink' },
+                { value: 'client', label: 'Clients', description: 'App client Ciyou Eats' },
                 { value: 'restaurant', label: 'Restaurants', description: 'Propriétaires des commerces' },
                 { value: 'driver', label: 'Livreurs', description: 'Livreurs actifs' },
               ]}
@@ -498,7 +498,7 @@ function Composer({ id, campaign }: { id: string | null; campaign: Campaign | nu
           </Block>
 
           <Block step={3} title="Message">
-            <FormField label="Nom interne" required hint="Visible uniquement par l’équipe GoLink." error={err('name')}>
+            <FormField label="Nom interne" required hint="Visible uniquement par l’équipe Ciyou Eats." error={err('name')}>
               <Input value={draft.name} maxLength={80} onChange={(e) => set('name', e.target.value)} placeholder="Ex. Relance inactifs Metz — octobre" />
             </FormField>
             {draft.channel === 'email' && (
@@ -669,7 +669,7 @@ function Composer({ id, campaign }: { id: string | null; campaign: Campaign | nu
 export function CampaignPage() {
   const { campaignId } = useParams();
   const state = useDoc<Campaign>(campaignId ? docAt(`${COLLECTIONS.campaigns}/${campaignId}`) : null);
-  useDocumentTitle(`${state.data?.name ?? (campaignId ? 'Envoi' : 'Nouvel envoi')} · GoLink Admin`);
+  useDocumentTitle(`${state.data?.name ?? (campaignId ? 'Envoi' : 'Nouvel envoi')} · Ciyou Eats Admin`);
 
   if (!campaignId) return <Composer id={null} campaign={null} />;
   if (state.loading) {

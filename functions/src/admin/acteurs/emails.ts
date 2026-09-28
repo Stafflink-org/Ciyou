@@ -1,4 +1,4 @@
-// E-mails envoyés aux restaurants par l'équipe GoLink : validation, refus,
+// E-mails envoyés aux restaurants par l'équipe Ciyou Eats : validation, refus,
 // documents manquants ou expirants, suspension, réactivation, message groupé.
 import { APP_URLS, PLATFORM_NAME } from '../../lib/config';
 import { renderEmail } from '../../lib/email-layout';
@@ -16,7 +16,7 @@ export function applicationApprovedEmail(input: { restaurantName: string; live: 
       paragraphs: [
         'Bonne nouvelle : votre dossier est complet et validé.',
         input.live
-          ? 'Votre établissement est désormais visible dans l’application GoLink. Ouvrez-le depuis votre back-office dès que vous êtes prêt à recevoir des commandes.'
+          ? 'Votre établissement est désormais visible dans l’application Ciyou Eats. Ouvrez-le depuis votre back-office dès que vous êtes prêt à recevoir des commandes.'
           : 'Votre établissement sera mis en ligne très prochainement. Vérifiez votre carte et vos horaires en attendant.',
       ],
       details: [
@@ -122,8 +122,8 @@ export function suspensionEmail(input: { restaurantName: string; reason: string;
       title: input.permanent ? 'Votre établissement a été retiré' : 'Votre établissement est suspendu',
       paragraphs: [
         input.permanent
-          ? 'Votre établissement n’est plus visible dans l’application GoLink.'
-          : 'Votre établissement n’est temporairement plus visible dans l’application GoLink.',
+          ? 'Votre établissement n’est plus visible dans l’application Ciyou Eats.'
+          : 'Votre établissement n’est temporairement plus visible dans l’application Ciyou Eats.',
         `Motif : ${input.reason}`,
         ...(input.message ? [input.message] : []),
       ],
@@ -153,7 +153,7 @@ export function partnerMessageEmail(input: { restaurantName: string; subject: st
     subject: input.subject,
     ...renderEmail({
       preheader: input.message.slice(0, 90),
-      eyebrow: 'Message de l’équipe GoLink',
+      eyebrow: 'Message de l’équipe Ciyou Eats',
       title: input.subject,
       paragraphs: input.message.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean),
       cta: { label: 'Ouvrir mon back-office', url: backOffice('/') },

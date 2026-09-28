@@ -106,10 +106,10 @@ export interface EventActor {
   name: string | null;
 }
 
-export const SYSTEM_EVENT_ACTOR: EventActor = { type: 'system', uid: null, name: 'GoLink' };
+export const SYSTEM_EVENT_ACTOR: EventActor = { type: 'system', uid: null, name: 'Ciyou Eats' };
 
 export function eventActorOf(actor: RestaurantActor): EventActor {
-  if (actor.kind === 'admin') return { type: 'admin', uid: actor.caller.uid, name: 'Support GoLink' };
+  if (actor.kind === 'admin') return { type: 'admin', uid: actor.caller.uid, name: 'Support Ciyou Eats' };
   return { type: 'restaurant', uid: actor.caller.uid, name: actor.member.displayName || actor.caller.name };
 }
 

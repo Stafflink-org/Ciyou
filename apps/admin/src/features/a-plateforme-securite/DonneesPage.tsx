@@ -119,7 +119,7 @@ function TrashTab() {
 }
 
 export function DonneesPage() {
-  useDocumentTitle('Données & sauvegardes · GoLink Admin');
+  useDocumentTitle('Données & sauvegardes · Ciyou Eats Admin');
   const can = useCan();
   const canBackups = can('backups.manage');
   const canTrash = can('trash.view');

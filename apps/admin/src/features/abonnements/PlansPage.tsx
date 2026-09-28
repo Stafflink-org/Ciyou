@@ -70,7 +70,7 @@ const FIELD_LABELS: Record<string, string> = {
 
 /** Formules Basic / Pro / Premium (cahier §17) : prix, fonctionnalités, limites, commission associée. */
 export function PlansPage() {
-  useDocumentTitle('Formules · GoLink Admin');
+  useDocumentTitle('Formules · Ciyou Eats Admin');
   const can = useCan();
   const geo = useGeoScope();
   const plans = usePlans();
@@ -118,7 +118,7 @@ export function PlansPage() {
                         <DetailRow label="Commissions" value={<span className="font-sans">Barème du pays</span>} />
                       ) : (
                         <>
-                          <DetailRow label="Commission livraison GoLink" value={bps(plan.commission.platformDeliveryBps)} />
+                          <DetailRow label="Commission livraison Ciyou Eats" value={bps(plan.commission.platformDeliveryBps)} />
                           <DetailRow label="Commission livreurs du commerce" value={bps(plan.commission.restaurantDeliveryBps)} />
                           <DetailRow label="Commission retrait" value={bps(plan.commission.pickupBps)} />
                         </>
@@ -258,7 +258,7 @@ function PlanEditor({ plan, onDone }: { plan: WithId<Plan>; onDone: () => void }
         <section className="space-y-4">
           <h3 className="eyebrow">Commissions associées</h3>
           <div className="grid gap-4 sm:grid-cols-3">
-            <FormField label="Livraison GoLink"><Input inputMode="decimal" value={form.platform} trailing="%" invalid={rates.platformDeliveryBps === null} onChange={(e) => set('platform', e.target.value)} /></FormField>
+            <FormField label="Livraison Ciyou Eats"><Input inputMode="decimal" value={form.platform} trailing="%" invalid={rates.platformDeliveryBps === null} onChange={(e) => set('platform', e.target.value)} /></FormField>
             <FormField label="Livreurs du commerce"><Input inputMode="decimal" value={form.restaurant} trailing="%" invalid={rates.restaurantDeliveryBps === null} onChange={(e) => set('restaurant', e.target.value)} /></FormField>
             <FormField label="Retrait"><Input inputMode="decimal" value={form.pickup} trailing="%" invalid={rates.pickupBps === null} onChange={(e) => set('pickup', e.target.value)} /></FormField>
           </div>
