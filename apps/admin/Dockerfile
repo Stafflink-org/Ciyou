@@ -1,4 +1,4 @@
-# GoLink Admin — build Vite puis service statique nginx.
+# Ciyou Eats Admin — build Vite puis service statique nginx.
 # Contexte de build Docker = racine du dépôt (monorepo : besoin de packages/shared, packages/ui et packages/web).
 
 FROM node:22-alpine AS builder

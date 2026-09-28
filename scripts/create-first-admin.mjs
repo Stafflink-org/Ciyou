@@ -166,7 +166,7 @@ const link = new URL('/definir-mot-de-passe', adminUrl);
 if (oobCode) link.searchParams.set('oobCode', oobCode);
 
 await db.collection('auditLogs').add({
-  actor: { uid: 'bootstrap-script', type: 'system', role: null, name: 'GoLink (script de démarrage)' },
+  actor: { uid: 'bootstrap-script', type: 'system', role: null, name: 'Ciyou Eats (script de démarrage)' },
   action: 'admin.invited',
   target: { type: 'admin', id: user.uid, label: email },
   countryId: null,
@@ -190,11 +190,11 @@ if (secrets.BREVO_API_KEY && secrets.BREVO_SENDER_EMAIL) {
     method: 'POST',
     headers: { 'api-key': secrets.BREVO_API_KEY, 'content-type': 'application/json', accept: 'application/json' },
     body: JSON.stringify({
-      sender: { name: 'GoLink', email: secrets.BREVO_SENDER_EMAIL },
+      sender: { name: 'Ciyou Eats', email: secrets.BREVO_SENDER_EMAIL },
       to: [{ email, name: displayName }],
-      subject: "Votre accès à l'administration GoLink",
-      htmlContent: `<p>Bonjour ${firstName},</p><p>Un accès super administrateur à la plateforme GoLink vient d'être créé pour vous.</p><p><a href="${link.toString()}">Définir mon mot de passe</a></p><p>Si le lien a expiré, redemandez une réinitialisation depuis la page de connexion.</p>`,
-      textContent: `Bonjour ${firstName},\nUn accès super administrateur GoLink a été créé pour vous.\nDéfinir votre mot de passe : ${link.toString()}`,
+      subject: "Votre accès à l'administration Ciyou Eats",
+      htmlContent: `<p>Bonjour ${firstName},</p><p>Un accès super administrateur à la plateforme Ciyou Eats vient d'être créé pour vous.</p><p><a href="${link.toString()}">Définir mon mot de passe</a></p><p>Si le lien a expiré, redemandez une réinitialisation depuis la page de connexion.</p>`,
+      textContent: `Bonjour ${firstName},\nUn accès super administrateur Ciyou Eats a été créé pour vous.\nDéfinir votre mot de passe : ${link.toString()}`,
       tags: ['admin_invitation', 'bootstrap'],
     }),
   });

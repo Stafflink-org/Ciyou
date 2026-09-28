@@ -24,7 +24,7 @@ match /restaurantGroups/{groupId} {
 }
 
 match /restaurants/{rid} {
-  // Interrupteur « Visible dans l'application GoLink » (§A2) : masque le commerce du catalogue
+  // Interrupteur « Visible dans l'application Ciyou Eats » (§A2) : masque le commerce du catalogue
   // public sans changer son statut ; toujours visible pour son équipe et le super admin.
   allow read: if (resource.data.status == 'active' && resource.data.get('visibleInApp', true) != false)
     || isRestaurantMember(rid)

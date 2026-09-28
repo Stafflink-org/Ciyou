@@ -24,7 +24,7 @@ if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i.test(d
   process.exit(1);
 }
 
-const MAPS_KEY_DISPLAY_NAME = 'GoLink Web Maps';
+const MAPS_KEY_DISPLAY_NAME = 'Ciyou Eats Web Maps';
 
 console.log(`Domaine ciblé : ${domain}`);
 console.log(apply ? 'Mode : --apply (modifications réelles)' : 'Mode : --dry-run (aucune modification, ajouter --apply pour appliquer)');

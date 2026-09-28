@@ -524,7 +524,7 @@ function Composer({ ticket, order }: { ticket: WithId<SupportTicket>; order: Wit
           }}
           rows={5}
           maxLength={5000}
-          placeholder={mode === 'note' ? 'Note visible uniquement par l’équipe Ciyou Eats…' : `Répondre à ${ticket.requesterName}…`}
+          placeholder={mode === 'note' ? 'Note visible uniquement par l’équipe GoLink…' : `Répondre à ${ticket.requesterName}…`}
           className={cn('rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0', mode === 'note' && 'bg-(--tone-bg)')}
           aria-label="Message"
         />

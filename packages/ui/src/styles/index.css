@@ -1,5 +1,5 @@
 /*
- * GoLink — thème partagé des back-offices (Tailwind CSS v4).
+ * Ciyou Eats — thème partagé des back-offices (Tailwind CSS v4).
  * Import unique côté application : @import "@golink/ui/styles.css";
  * Thème piloté par attributs sur <html> :
  *   data-theme="restaurant" (défaut, clair) | data-theme="admin" (sombre)

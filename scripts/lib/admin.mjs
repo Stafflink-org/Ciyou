@@ -5,7 +5,7 @@
  * - Auth : credential personnalisé qui échange le refresh token du CLI.
  * - Firestore et Storage : le SDK Admin n'accepte que les clés de service ou
  *   l'ADC ; on instancie donc les clients Google Cloud avec les mêmes
- *   identifiants utilisateur (type `authorized_user`), projet de quota GoLink.
+ *   identifiants utilisateur (type `authorized_user`), projet de quota Ciyou Eats.
  */
 import { getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';

@@ -695,11 +695,13 @@ service cloud.firestore {
 
     match /announcements/{announcementId} {
       allow read: if resource.data.active == true
-          && ((resource.data.audience == 'restaurants' && signedIn())
+          && ((resource.data.audience == 'restaurants' && isRole('restaurant'))
             || (resource.data.audience == 'drivers' && isRole('driver')))
         || isAdmin('announcements.edit');
-      allow create: if isAdmin('announcements.edit') && createdNow();
-      allow update: if isAdmin('announcements.edit') && updatedNow();
+      // Écriture réservée à `publishAnnouncement` (SDK Admin, audit) : la lecture admin reste
+      // ouverte ci-dessus pour la consultation en back-office.
+      allow create: if false;
+      allow update: if false;
       allow delete: if false;
     }
 
@@ -1027,7 +1029,7 @@ service cloud.firestore {
     }
 
     match /restaurants/{rid} {
-      // Interrupteur « Visible dans l'application GoLink » (§A2) : masque le commerce du catalogue
+      // Interrupteur « Visible dans l'application Ciyou Eats » (§A2) : masque le commerce du catalogue
       // public sans changer son statut ; toujours visible pour son équipe et le super admin.
       allow read: if (resource.data.status == 'active' && resource.data.get('visibleInApp', true) != false)
         || isRestaurantMember(rid)
