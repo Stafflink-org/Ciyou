@@ -8,6 +8,7 @@ export default defineModule({
     label: 'Finances & ventes',
     icon: <Landmark />,
     order: 10,
+    hidden: true, // regroupé dans le hub Paiement (features/paiement)
     keywords: ['chiffre d’affaires', 'ventes', 'commission', 'net', 'panier moyen', 'export'],
   },
   permission: 'finance.view',

@@ -191,23 +191,45 @@ async function updatePaymentDoc(order: Order, fields: Record<string, unknown>): 
     .set({ ...fields, updatedAt: Timestamp.now() }, { merge: true });
 }
 
+/** Appel Stripe brut de capture, partagé par tous les chemins d'acceptation (manuel ou automatique). */
+async function captureIntentRaw(intentId: string, idempotencyKey: string): Promise<{ status: PaymentStatus; providerChargeId: string | null }> {
+  const intent = await getStripe().paymentIntents.capture(intentId, {}, { idempotencyKey });
+  return {
+    status: statusOfIntent(intent),
+    providerChargeId: typeof intent.latest_charge === 'string' ? intent.latest_charge : (intent.latest_charge?.id ?? null),
+  };
+}
+
 /** Encaisse le montant autorisé (acceptation par le restaurant). */
 export async function capturePayment(orderId: string, order: Order): Promise<PaymentStatus> {
   if (order.payment.status !== 'authorized') return order.payment.status;
   const intentId = await intentIdOf(order);
   if (!intentId) return order.payment.status;
   try {
-    const intent = await getStripe().paymentIntents.capture(intentId, {}, { idempotencyKey: `order-capture-${orderId}` });
-    const status = statusOfIntent(intent);
-    await updatePaymentDoc(order, {
-      status,
-      providerChargeId: typeof intent.latest_charge === 'string' ? intent.latest_charge : (intent.latest_charge?.id ?? null),
-    });
+    const { status, providerChargeId } = await captureIntentRaw(intentId, `order-capture-${orderId}`);
+    await updatePaymentDoc(order, { status, providerChargeId });
     return status;
   } catch (error) {
     logger.error('Encaissement Stripe en échec', { orderId, error: error instanceof Error ? error.message : String(error) });
     await updatePaymentDoc(order, { status: 'failed', failureMessage: 'Encaissement impossible' });
     return 'failed';
+  }
+}
+
+/**
+ * Encaisse immédiatement une autorisation lors d'une acceptation automatique à la création de la
+ * commande (réglage restaurant `autoAccept`) : à ce stade le document `payments` n'existe pas encore
+ * (l'identifiant de commande n'est attribué que dans la transaction qui suit), donc cette fonction ne
+ * touche pas Firestore — l'appelant écrit `status`/`providerChargeId` directement dans les documents
+ * qu'il crée. Ne lève jamais d'exception : un échec renvoie `status: 'failed'`, à charge de l'appelant
+ * de créer la commande en attente d'acceptation manuelle (qui retentera l'encaissement).
+ */
+export async function captureAuthorizedIntent(intentId: string, idempotencyKey: string, orderContext: string): Promise<{ status: PaymentStatus; providerChargeId: string | null }> {
+  try {
+    return await captureIntentRaw(intentId, idempotencyKey);
+  } catch (error) {
+    logger.error('Encaissement Stripe en échec (acceptation automatique)', { orderContext, error: error instanceof Error ? error.message : String(error) });
+    return { status: 'failed', providerChargeId: null };
   }
 }
 

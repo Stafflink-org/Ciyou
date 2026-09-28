@@ -9,6 +9,7 @@ export default defineModule({
     icon: <CreditCard />,
     order: 50,
     keywords: ['carte', 'espèces', 'titres-restaurant', 'apple pay', 'encaissement'],
+    hidden: true, // regroupé dans le hub Paramètres (features/parametres)
   },
   permission: 'settings.manage',
   routes: [{ path: 'paiements', lazy: () => import('./PaiementsPage').then((m) => ({ Component: m.PaiementsPage })) }],

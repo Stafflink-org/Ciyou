@@ -8,6 +8,7 @@ export default defineModule({
     label: 'Produits mis en avant',
     icon: <Star />,
     order: 5,
+    hidden: true, // regroupé dans le hub Marketing (features/marketing)
     keywords: ['vitrine', 'populaires', 'best-sellers', 'classement', 'ventes'],
   },
   permission: 'menu.view',

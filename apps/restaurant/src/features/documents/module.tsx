@@ -9,6 +9,7 @@ export default defineModule({
     label: 'Documents & contrat',
     icon: <FileCheck />,
     order: 80,
+    hidden: true, // regroupé dans le hub Paramètres (features/parametres)
     badge: useDocumentsBadge,
     keywords: ['kbis', 'pièce d’identité', 'rib', 'licence', 'justificatifs', 'contrat partenaire', 'kyc'],
   },

@@ -30,6 +30,12 @@ export interface ModuleNav<G extends string = string> {
   href?: string;
   /** Termes supplémentaires pour la recherche ⌘K. */
   keywords?: string[];
+  /**
+   * Rubrique regroupée dans un hub (Paiement, Marketing, Paramètres…) : absente de la
+   * sidebar, mais toujours présente dans la palette ⌘K, le fil d'Ariane et sa route
+   * directe. Faux par défaut (aucun changement pour les modules existants).
+   */
+  hidden?: boolean;
 }
 
 export interface AppModule<G extends string = string, P extends string = string> {
@@ -131,7 +137,7 @@ export function useModuleNav<M extends AppModule>(
       id: group.id,
       label: translateOr(`nav:groups.${group.id}`, group.label, locale),
       items: modules.flatMap((module, index) => {
-        if (module.nav.group !== group.id || (module.permission && !can(module.permission))) return [];
+        if (module.nav.group !== group.id || module.nav.hidden || (module.permission && !can(module.permission))) return [];
         const badge = badges[index];
         return [
           {

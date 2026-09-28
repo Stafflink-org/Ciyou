@@ -9,6 +9,7 @@ export default defineModule({
     icon: <MapPinned />,
     order: 40,
     keywords: ['rayon', 'carte', 'frais de livraison', 'secteur', 'livreurs'],
+    hidden: true, // regroupé dans le hub Paramètres (features/parametres)
   },
   permission: 'zones.manage',
   routes: [{ path: 'zones', lazy: () => import('./ZonesPage').then((m) => ({ Component: m.ZonesPage })) }],

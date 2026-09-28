@@ -6,7 +6,7 @@ export default defineModule({
   id: 'support',
   nav: {
     group: 'messagerie',
-    label: 'Support Ciyou Eats',
+    label: 'Support GoLink',
     icon: <Headphones />,
     order: 20,
     badge: useSupportUnreadCount,
