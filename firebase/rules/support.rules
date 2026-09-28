@@ -1,0 +1,141 @@
+// ---------------------------------------------------------------------------
+// Support et litiges, messagerie, avis, signalements de contenus.
+// Ouverture d'un ticket (numérotation) : Cloud Function openTicket.
+// Remboursements et avoirs depuis un ticket : Cloud Function issueRefund.
+// ---------------------------------------------------------------------------
+
+function ticketData(ticketId) {
+  return get(/databases/$(database)/documents/supportTickets/$(ticketId)).data;
+}
+
+function isTicketRequester(ticket) {
+  return isSelf(ticket.requesterId)
+    || (ticket.requesterType == 'restaurant' && ticket.get('restaurantId', null) != null
+      && can(ticket.restaurantId, 'support.use'));
+}
+
+match /supportTickets/{ticketId} {
+  allow read: if isTicketRequester(resource.data) || isAdmin('support.view');
+  allow update: if isTicketRequester(existing())
+      && existing().status in ['resolved', 'closed']
+      && existing().get('satisfaction', null) == null
+      && onlyChanges(['satisfaction', 'updatedAt'])
+      && incoming().satisfaction.score in [1, 2, 3, 4, 5]
+      && incoming().satisfaction.at == request.time
+    || isTicketRequester(existing()) && onlyChanges(['unreadByRequester']) && incoming().unreadByRequester == 0
+    || isAdmin('support.handle')
+      && onlyChanges(['status', 'priority', 'assigneeId', 'tags', 'escalated', 'escalatedTo', 'escalatedAt',
+        'resolvedAt', 'closedAt', 'unreadBySupport', 'reasonId', 'updatedAt', 'updatedBy'])
+      && (keepsUnchanged(['escalated', 'escalatedTo', 'escalatedAt']) || isAdmin('support.escalate'))
+      && updatedNow();
+  allow create, delete: if false;
+
+  match /messages/{messageId} {
+    allow read: if isAdmin('support.view')
+      || (resource.data.internal == false && isTicketRequester(ticketData(ticketId)));
+    allow create: if incoming().createdAt == request.time
+      && incoming().authorId == uid()
+      && isNonEmptyString(incoming().body, 5000)
+      && (
+        incoming().authorType == 'requester'
+          && incoming().internal == false
+          && isTicketRequester(ticketData(ticketId))
+          && ticketData(ticketId).status != 'closed'
+        || incoming().authorType == 'agent' && isAdmin('support.handle')
+      );
+    allow update, delete: if false;
+  }
+}
+
+match /ticketReasons/{reasonId} {
+  allow read: if signedIn();
+  allow write: if isAdmin('support.configure');
+}
+
+match /cannedResponses/{responseId} {
+  allow read: if isAdmin('support.view');
+  allow create: if isAdmin('support.configure') && createdNow();
+  allow update: if isAdmin('support.configure') && updatedNow();
+  allow delete: if isAdmin('support.configure');
+}
+
+// ------------------------------------------------------------ Messagerie
+// Création des fils : Cloud Function (à l'attribution d'une commande ou à la demande).
+
+function conversationData(conversationId) {
+  return get(/databases/$(database)/documents/conversations/$(conversationId)).data;
+}
+
+function isConversationMember(conversation) {
+  return (signedIn() && request.auth.uid in conversation.participantIds)
+    || (conversation.get('restaurantId', null) != null && can(conversation.restaurantId, 'messages.use'));
+}
+
+match /conversations/{conversationId} {
+  allow read: if isConversationMember(resource.data) || isAdmin('support.view');
+  // Remise à zéro de son propre compteur de non-lus.
+  allow update: if isConversationMember(existing())
+    && onlyChanges(['unread'])
+    && incoming().unread.diff(existing().unread).affectedKeys().hasOnly([request.auth.uid])
+    && incoming().unread[request.auth.uid] == 0;
+  allow create, delete: if false;
+
+  match /messages/{messageId} {
+    allow read: if isConversationMember(conversationData(conversationId)) || isAdmin('support.view');
+    allow create: if isConversationMember(conversationData(conversationId))
+      && conversationData(conversationId).closed == false
+      && incoming().senderId == uid()
+      && isNonEmptyString(incoming().text, 2000)
+      && incoming().readBy == [request.auth.uid]
+      && incoming().createdAt == request.time;
+    allow update: if isConversationMember(conversationData(conversationId))
+      && onlyChanges(['readBy'])
+      && incoming().readBy.toSet().difference(existing().readBy.toSet()) == [request.auth.uid].toSet();
+    allow delete: if false;
+  }
+}
+
+// ------------------------------------------------------------ Avis
+// Identifiant de l'avis = identifiant de la commande : un avis par commande livrée.
+// La publication suit la modération automatique (trigger onReviewCreate).
+
+function reviewableOrder(orderId) {
+  return get(/databases/$(database)/documents/orders/$(orderId)).data;
+}
+
+match /reviews/{orderId} {
+  allow read: if resource.data.status == 'published'
+    || isSelf(resource.data.customerId)
+    || can(resource.data.restaurantId, 'reviews.reply')
+    || isAdmin('reviews.view');
+  allow create: if isSelf(incoming().customerId)
+    && reviewableOrder(orderId).customerId == request.auth.uid
+    && reviewableOrder(orderId).status == 'delivered'
+    && incoming().orderId == orderId
+    && incoming().restaurantId == reviewableOrder(orderId).restaurantId
+    && incoming().restaurantRating in [1, 2, 3, 4, 5]
+    && isOptionalString(incoming().get('comment', null), 1000)
+    && incoming().status == 'pending_moderation'
+    && incoming().reportsCount == 0
+    && incoming().get('reply', null) == null
+    && incoming().createdAt == request.time;
+  // Le champ « reply » n'est jamais écrit directement par le restaurant : la
+  // réponse (et son audit) passe obligatoirement par la Cloud Function
+  // replyToReview / moderateReview (écriture Admin SDK, hors règles).
+  allow update: if isAdmin('reviews.moderate')
+    && onlyChanges(['status', 'moderation', 'reply', 'updatedAt'])
+    && incoming().updatedAt == request.time;
+  allow delete: if false;
+}
+
+match /contentReports/{reportId} {
+  allow read: if isAdmin('reviews.moderate');
+  allow create: if signedIn()
+    && incoming().reporterId == uid()
+    && incoming().status == 'open'
+    && incoming().get('decision', null) == null
+    && isOptionalString(incoming().get('details', null), 2000)
+    && incoming().createdAt == request.time;
+  allow update: if isAdmin('reviews.moderate') && onlyChanges(['status', 'decision']);
+  allow delete: if false;
+}

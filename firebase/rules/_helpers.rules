@@ -1,0 +1,137 @@
+// ---------------------------------------------------------------------------
+// Fonctions communes à toutes les règles Firestore.
+//
+// Identité :
+//   - custom claim `role` : client | driver | restaurant | admin (posé par Cloud Function) ;
+//   - équipe interne : document admins/{uid} (rôle, permissions résolues, villes) ;
+//   - personnel d'un restaurant : document restaurants/{rid}/members/{uid}.
+// Tout ce qui n'est pas explicitement autorisé est refusé. Les champs sensibles
+// (statuts de validation, commissions, rôles, montants) ne sont écrits que par
+// les Cloud Functions (SDK Admin, qui contourne ces règles).
+// ---------------------------------------------------------------------------
+
+function signedIn() {
+  return request.auth != null;
+}
+
+function uid() {
+  return request.auth.uid;
+}
+
+function role() {
+  return signedIn() ? request.auth.token.get('role', '') : '';
+}
+
+function isRole(r) {
+  return role() == r;
+}
+
+function isSelf(userId) {
+  return signedIn() && request.auth.uid == userId;
+}
+
+// ----------------------------------------------------------------- Équipe interne
+
+function adminData() {
+  return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data;
+}
+
+function adminHas(a, perm) {
+  return a.active == true && (a.role == 'super_admin' || perm in a.permissions);
+}
+
+function adminCovers(a, cityId) {
+  return a.cityIds.size() == 0 || cityId in a.cityIds;
+}
+
+// Membre actif de l'équipe interne, quelle que soit sa permission.
+function isAnyAdmin() {
+  return isRole('admin') && adminData().active == true;
+}
+
+// Membre actif de l'équipe interne disposant de la permission `perm`.
+function isAdmin(perm) {
+  return isRole('admin') && adminHas(adminData(), perm);
+}
+
+// Permission `perm` et ville dans le périmètre de l'administrateur (liste vide = toutes).
+function isAdminIn(perm, cityId) {
+  return isRole('admin') && adminHas(adminData(), perm) && adminCovers(adminData(), cityId);
+}
+
+// ----------------------------------------------------------------- Personnel restaurant
+
+function memberPath(rid) {
+  return /databases/$(database)/documents/restaurants/$(rid)/members/$(request.auth.uid);
+}
+
+function memberHas(m, perm) {
+  return m.active == true && (m.role == 'owner' || perm in m.permissions);
+}
+
+// Membre actif du personnel du restaurant.
+function isRestaurantMember(rid) {
+  return signedIn() && exists(memberPath(rid)) && get(memberPath(rid)).data.active == true;
+}
+
+// Membre actif du restaurant disposant de la permission `perm` (le propriétaire a tout).
+function can(rid, perm) {
+  return signedIn() && exists(memberPath(rid)) && memberHas(get(memberPath(rid)).data, perm);
+}
+
+// ----------------------------------------------------------------- Écritures
+
+function incoming() {
+  return request.resource.data;
+}
+
+function existing() {
+  return resource.data;
+}
+
+function changedKeys() {
+  return request.resource.data.diff(resource.data).affectedKeys();
+}
+
+// La mise à jour ne touche que les champs listés.
+function onlyChanges(keys) {
+  return changedKeys().hasOnly(keys);
+}
+
+// La mise à jour ne touche aucun des champs listés.
+function keepsUnchanged(keys) {
+  return !changedKeys().hasAny(keys);
+}
+
+// Horodatage serveur et auteur à la création (documents Tracked).
+function createdNow() {
+  return incoming().createdAt == request.time
+    && incoming().updatedAt == request.time
+    && incoming().get('createdBy', request.auth.uid) == request.auth.uid;
+}
+
+// Horodatage serveur et auteur à la mise à jour (documents Tracked).
+function updatedNow() {
+  return incoming().updatedAt == request.time
+    && incoming().get('updatedBy', request.auth.uid) == request.auth.uid;
+}
+
+function isNonEmptyString(value, maxLength) {
+  return value is string && value.size() > 0 && value.size() <= maxLength;
+}
+
+function isOptionalString(value, maxLength) {
+  return value == null || (value is string && value.size() <= maxLength);
+}
+
+function isCents(value) {
+  return value is int && value >= 0;
+}
+
+function isIsoDay(value) {
+  return value is string && value.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+}
+
+function isHourMinute(value) {
+  return value is string && value.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+}

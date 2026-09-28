@@ -1,0 +1,38 @@
+// ---------------------------------------------------------------------------
+// Commandes. Création (placeOrder), transitions (advanceOrder, cancelOrder,
+// verifyPickupCode), attribution et remboursements : Cloud Functions uniquement.
+// Aucune écriture directe : les montants et statuts ne sont jamais modifiables
+// par le client, le restaurant ou le livreur.
+// ---------------------------------------------------------------------------
+
+function canReadOrder(order) {
+  return isSelf(order.customerId)
+    || (order.get('driverId', null) != null && isSelf(order.driverId))
+    || can(order.restaurantId, 'orders.view')
+    || isAdminIn('orders.view', order.cityId);
+}
+
+match /orders/{orderId} {
+  allow read: if canReadOrder(resource.data);
+  allow write: if false;
+
+  match /events/{eventId} {
+    allow read: if (resource.data.visibleToCustomer == true
+        && isSelf(get(/databases/$(database)/documents/orders/$(orderId)).data.customerId))
+      || can(get(/databases/$(database)/documents/orders/$(orderId)).data.restaurantId, 'orders.view')
+      || isAdmin('orders.view');
+    allow write: if false;
+  }
+}
+
+// Réclamations des clients (photo obligatoire, contrôles automatiques) : dépôt et décision par Cloud Function.
+match /orderClaims/{claimId} {
+  allow read: if isSelf(resource.data.customerId) || isAdminIn('support.view', resource.data.cityId);
+  allow write: if false;
+}
+
+// Répartition financière complète (commission, part livreur, marge) : équipe finance.
+match /orderFinancials/{orderId} {
+  allow read: if isAdmin('finance.view');
+  allow write: if false;
+}

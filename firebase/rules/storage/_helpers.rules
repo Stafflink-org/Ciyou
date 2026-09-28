@@ -1,0 +1,45 @@
+// ---------------------------------------------------------------------------
+// Fonctions communes des règles Cloud Storage. Les droits sont lus dans
+// Firestore (admins/{uid}, restaurants/{rid}/members/{uid}) via firestore.get.
+// ---------------------------------------------------------------------------
+
+function signedIn() {
+  return request.auth != null;
+}
+
+function isSelf(userId) {
+  return signedIn() && request.auth.uid == userId;
+}
+
+function role() {
+  return signedIn() ? request.auth.token.get('role', '') : '';
+}
+
+function adminHas(a, perm) {
+  return a.active == true && (a.role == 'super_admin' || perm in a.permissions);
+}
+
+function isAdmin(perm) {
+  return role() == 'admin'
+    && adminHas(firestore.get(/databases/(default)/documents/admins/$(request.auth.uid)).data, perm);
+}
+
+function memberHas(m, perm) {
+  return m.active == true && (m.role == 'owner' || perm in m.permissions);
+}
+
+function can(rid, perm) {
+  return signedIn()
+    && firestore.exists(/databases/(default)/documents/restaurants/$(rid)/members/$(request.auth.uid))
+    && memberHas(firestore.get(/databases/(default)/documents/restaurants/$(rid)/members/$(request.auth.uid)).data, perm);
+}
+
+function isImage(maxMb) {
+  return request.resource.contentType.matches('image/(jpeg|png|webp|avif)')
+    && request.resource.size <= maxMb * 1024 * 1024;
+}
+
+function isDocument(maxMb) {
+  return request.resource.contentType.matches('image/(jpeg|png|webp|heic)|application/pdf')
+    && request.resource.size <= maxMb * 1024 * 1024;
+}

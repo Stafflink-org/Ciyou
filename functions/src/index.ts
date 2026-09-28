@@ -1,7 +1,16 @@
-import { setGlobalOptions } from 'firebase-functions/v2';
-import { initializeApp } from 'firebase-admin/app';
+// Point d'entrée des Cloud Functions GoLink. Chaque domaine vit dans son dossier
+// (src/<module>/index.ts) ; les options globales sont posées avant toute déclaration.
+import './lib/runtime';
 
-initializeApp();
-
-// Toutes les fonctions tournent en Europe, au plus près de la base Firestore.
-setGlobalOptions({ region: 'europe-west1', maxInstances: 20 });
+export * from './core';
+export * from './restaurant';
+export * from './orders';
+export * from './menu';
+export * from './finance';
+export * from './marketing';
+export * from './messaging';
+export * from './hr';
+export * from './admin';
+export * from './platform';
+export * from './payments';
+export * from './notifications';

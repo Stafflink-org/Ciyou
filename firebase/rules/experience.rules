@@ -1,0 +1,41 @@
+// ---------------------------------------------------------------------------
+// Expérience client (super admin) : offres de mise en avant payante, historique
+// des pages d'information, filtre automatique des avis, suivi qualité des notes.
+// Ventes d'emplacements : Cloud Function bookSponsoredPlacement.
+// Publication d'une page : Cloud Function publishPage (instantané versionné).
+// ---------------------------------------------------------------------------
+
+match /sponsoredOffers/{offerId} {
+  // Catalogue lisible par l'équipe et par les commerces (achat de visibilité).
+  allow read: if isAnyAdmin() || isRole('restaurant');
+  // Création et modification (prix = argent) : saveSponsoredOffer (Cloud Function, motif, audit).
+  allow write: if false;
+}
+
+match /pages/{slug}/versions/{version} {
+  allow read: if isAdmin('display.edit') || isAdmin('legal.edit');
+  allow write: if false;
+}
+
+match /moderationTerms/{termId} {
+  allow read: if isAdmin('reviews.view');
+  allow create: if isAdmin('reviews.moderate') && createdNow()
+    && isNonEmptyString(incoming().term, 60)
+    && incoming().action in ['block', 'flag']
+    && incoming().hits == 0;
+  allow update: if isAdmin('reviews.moderate') && updatedNow()
+    && keepsUnchanged(['hits'])
+    && isNonEmptyString(incoming().term, 60)
+    && incoming().action in ['block', 'flag'];
+  allow delete: if isAdmin('reviews.moderate');
+}
+
+// Calculé par la tâche planifiée detectRatingDrops ; l'équipe peut en prendre acte.
+match /ratingWatch/{watchId} {
+  allow read: if isAdmin('reviews.view');
+  allow update: if isAdmin('reviews.moderate')
+    && onlyChanges(['acknowledgedAt', 'acknowledgedBy', 'note'])
+    && (incoming().acknowledgedAt == null || incoming().acknowledgedAt == request.time && incoming().acknowledgedBy == uid())
+    && isOptionalString(incoming().get('note', null), 500);
+  allow create, delete: if false;
+}
