@@ -110,6 +110,54 @@ export const bulkRestaurantAction = acteursCallable(
     const errors: Array<{ id: string; message: string }> = [];
     let succeeded = 0;
 
+    try {
+      await runBulkAction();
+    } catch (error) {
+      // Une erreur non rattrapée (ex. transaction set_feature) ne doit jamais laisser le job
+      // bloqué à 'running' : on le clôture en échec et on trace l'audit avant de relancer l'erreur.
+      const message = error instanceof Error ? error.message : 'Échec';
+      await jobRef.update({
+        status: 'failed',
+        processed: ids.length,
+        succeeded,
+        failed: ids.length - succeeded,
+        errors: [{ id: '*', row: null, message }],
+        finishedAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+      await writeAudit({
+        actor: adminActor(caller),
+        action: data.action === 'export' ? 'restaurants.exported' : `restaurants.bulk_${data.action}`,
+        target: { type: 'other', id: jobRef.id, label: `${ids.length} commerces` },
+        reason: data.reason,
+        after: { action: data.action, count: ids.length, succeeded, failed: ids.length - succeeded, error: message, ...p },
+        sensitive: true,
+        request,
+      });
+      throw error;
+    }
+
+    await jobRef.update({
+      status: errors.length === ids.length ? 'failed' : 'completed',
+      processed: ids.length,
+      succeeded,
+      failed: errors.length,
+      errors: errors.slice(0, 100).map((e) => ({ id: e.id, row: null, message: e.message })),
+      finishedAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    await writeAudit({
+      actor: adminActor(caller),
+      action: data.action === 'export' ? 'restaurants.exported' : `restaurants.bulk_${data.action}`,
+      target: { type: 'other', id: jobRef.id, label: `${ids.length} commerces` },
+      reason: data.reason,
+      after: { action: data.action, count: ids.length, succeeded, failed: errors.length, ...p },
+      sensitive: data.action !== 'send_message',
+      request,
+    });
+    return { jobId: jobRef.id, succeeded, failed: errors.length, errors };
+
+    async function runBulkAction(): Promise<void> {
     if (data.action === 'set_feature') {
       // Une seule écriture du drapeau : surcharges « restaurant » remplacées pour la sélection.
       const flagRef = db.collection(COLLECTIONS.featureFlags).doc(p.feature!);
@@ -167,26 +215,7 @@ export const bulkRestaurantAction = acteursCallable(
         if ((index + 1) % 10 === 0) await jobRef.update({ processed: index + 1, succeeded, failed: errors.length, updatedAt: FieldValue.serverTimestamp() });
       }
     }
-
-    await jobRef.update({
-      status: errors.length === ids.length ? 'failed' : 'completed',
-      processed: ids.length,
-      succeeded,
-      failed: errors.length,
-      errors: errors.slice(0, 100).map((e) => ({ id: e.id, row: null, message: e.message })),
-      finishedAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-    await writeAudit({
-      actor: adminActor(caller),
-      action: data.action === 'export' ? 'restaurants.exported' : `restaurants.bulk_${data.action}`,
-      target: { type: 'other', id: jobRef.id, label: `${ids.length} commerces` },
-      reason: data.reason,
-      after: { action: data.action, count: ids.length, succeeded, failed: errors.length, ...p },
-      sensitive: data.action !== 'send_message',
-      request,
-    });
-    return { jobId: jobRef.id, succeeded, failed: errors.length, errors };
+    }
   },
   { ...ACTEURS_HEAVY_RUNTIME, secrets: EMAIL_SECRETS },
 );
