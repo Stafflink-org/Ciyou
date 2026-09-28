@@ -1,0 +1,10 @@
+import puppeteer from 'puppeteer-core';
+const b = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
+const p = await b.newPage(); const errs=[];
+p.on('console', m => m.type()==='error' && errs.push(m.text().slice(0,300)));
+p.on('pageerror', e => errs.push(e.message.slice(0,300)));
+await p.goto('http://localhost:5403/connexion', { waitUntil: 'networkidle0', timeout: 90000 });
+await new Promise(r=>setTimeout(r,3000));
+console.log(await p.evaluate(() => document.body.innerText.slice(0,500)));
+console.log(errs);
+await b.close();

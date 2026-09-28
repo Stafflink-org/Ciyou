@@ -1,0 +1,97 @@
+// ---------------------------------------------------------------------------
+// Administration interne : comptes, rôles, sessions, journal d'audit, alertes,
+// notes internes, filtres, « voir comme », traitements en masse, rapports.
+// Création des administrateurs, custom claims et révocation des sessions : Cloud Functions.
+// ---------------------------------------------------------------------------
+
+match /admins/{adminId} {
+  allow read: if (isSelf(adminId) && isRole('admin')) || isAdmin('admins.view');
+  allow write: if false;
+}
+
+// Rôles internes : modification par updateAdminRoleDefinition uniquement (motif, historique,
+// audit, alerte de changement de droits) ; la Cloud Function onAdminRoleWrite propage aux comptes.
+match /adminRoles/{roleId} {
+  allow read: if isAnyAdmin();
+  allow write: if false;
+}
+
+match /adminSessions/{sessionId} {
+  allow read: if (isSelf(resource.data.adminId) && isRole('admin')) || isAdmin('security.manage');
+  allow write: if false;
+}
+
+// Journal d'audit : écrit uniquement par Cloud Functions, jamais modifié ni supprimé.
+match /auditLogs/{logId} {
+  allow read: if isAdmin('audit.view');
+  allow write: if false;
+}
+
+match /securityAlerts/{alertId} {
+  allow read: if isAdmin('security.manage');
+  // Prise en charge : handleSecurityAlert (Cloud Function, audit).
+  allow write: if false;
+}
+
+match /platformAlerts/{alertId} {
+  allow read: if isAdmin('dashboard.view')
+    && (resource.data.get('cityId', null) == null || isAdminIn('dashboard.view', resource.data.cityId));
+  // Traitement d'une alerte : handlePlatformAlert (Cloud Function, audit).
+  allow write: if false;
+}
+
+match /internalNotes/{noteId} {
+  allow read: if isAnyAdmin();
+  allow create: if isAnyAdmin()
+    && incoming().authorId == uid()
+    && isNonEmptyString(incoming().body, 5000)
+    && incoming().createdAt == request.time
+    && incoming().updatedAt == request.time;
+  allow update: if isAnyAdmin()
+    && existing().authorId == uid()
+    && onlyChanges(['body', 'pinned', 'updatedAt'])
+    && incoming().updatedAt == request.time;
+  allow delete: if isAnyAdmin() && existing().authorId == uid();
+}
+
+match /savedFilters/{filterId} {
+  allow read: if isAnyAdmin() && (resource.data.ownerId == uid() || resource.data.shared == true);
+  allow create: if isAnyAdmin() && incoming().ownerId == uid() && incoming().createdAt == request.time;
+  allow update: if isAnyAdmin() && existing().ownerId == uid() && keepsUnchanged(['ownerId', 'createdAt']);
+  allow delete: if isAnyAdmin() && existing().ownerId == uid();
+}
+
+// Ouverture et fin d'une session « voir comme » : Cloud Function (journalisée).
+match /impersonationSessions/{sessionId} {
+  allow read: if (isSelf(resource.data.adminId) && isRole('admin')) || isAdmin('audit.view');
+  allow write: if false;
+}
+
+// Imports, actions groupées et exports : lancés par Cloud Function (contrôle de la permission par type).
+match /bulkJobs/{jobId} {
+  allow read: if (isAnyAdmin() && resource.data.createdBy == uid()) || isAdmin('audit.view');
+  allow update: if isAnyAdmin()
+    && existing().createdBy == uid()
+    && existing().status == 'queued'
+    && onlyChanges(['status', 'updatedAt', 'updatedBy'])
+    && incoming().status == 'cancelled'
+    && updatedNow();
+  allow create, delete: if false;
+}
+
+match /scheduledReports/{reportId} {
+  allow read: if isAdmin('reports.view');
+  // Création, modification, suppression : Cloud Functions (saveScheduledReport, ...) avec audit.
+  allow write: if false;
+}
+
+// File des agrégats statsDaily à recalculer (ville × jour) : Cloud Functions uniquement.
+match /statsQueue/{entryId} {
+  allow read, write: if false;
+}
+
+// Secrets de double authentification (TOTP chiffré, codes de secours hachés) :
+// lus et écrits uniquement par les Cloud Functions enrollTotp / verifyTotp.
+match /adminSecrets/{adminId} {
+  allow read, write: if false;
+}

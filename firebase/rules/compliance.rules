@@ -1,0 +1,74 @@
+// ---------------------------------------------------------------------------
+// Fraude, conformité (CGU, RGPD), corbeille, sauvegardes, statistiques.
+// ---------------------------------------------------------------------------
+
+match /fraudCases/{caseId} {
+  allow read: if isAdmin('fraud.view');
+  // Décisions à effet (blocage, suspension, gel des reversements) : Cloud Function decideFraudCase.
+  allow write: if false;
+}
+
+match /blocklist/{entryId} {
+  allow read: if isAdmin('fraud.view');
+  // Ajout, désactivation : addBlocklistEntry / removeBlocklistEntry (Cloud Functions, motif, audit).
+  allow write: if false;
+}
+
+match /legalDocuments/{documentId} {
+  allow read: if resource.data.status == 'published' || isAdmin('legal.edit');
+  allow create: if isAdmin('legal.edit') && incoming().status == 'draft' && createdNow();
+  // Une version publiée n'est plus modifiable : seul l'archivage est permis.
+  allow update: if isAdmin('legal.edit')
+    && (existing().status == 'draft' || onlyChanges(['status', 'updatedAt', 'updatedBy']) && incoming().status == 'archived')
+    && updatedNow();
+  allow delete: if false;
+}
+
+// Preuve d'acceptation : créée par l'utilisateur, jamais modifiée.
+match /legalAcceptances/{acceptanceId} {
+  allow read: if isSelf(resource.data.userId) || isAdmin('legal.edit') || isAdmin('gdpr.handle');
+  // Super admin, fiche restaurant : preuve d'acceptation du contrat partenaire.
+  allow read: if resource.data.userType == 'restaurant' && isAdmin('restaurants.view');
+  allow create: if isSelf(incoming().userId)
+    && incoming().userType in ['client', 'restaurant', 'driver']
+    && get(/databases/$(database)/documents/legalDocuments/$(incoming().documentId)).data.status == 'published'
+    && get(/databases/$(database)/documents/legalDocuments/$(incoming().documentId)).data.version == incoming().version
+    && incoming().acceptedAt == request.time;
+  allow update, delete: if false;
+}
+
+// Dépôt d'une demande : Cloud Function submitGdprRequest (calcul de l'échéance, vérification d'identité).
+match /gdprRequests/{requestId} {
+  allow read: if isSelf(resource.data.get('subjectId', ''))
+    || (resource.data.get('subjectType', '') == 'restaurant' && can(resource.data.get('subjectId', ''), 'settings.manage'))
+    || isAdmin('gdpr.handle');
+  allow update: if isAdmin('gdpr.handle')
+    && onlyChanges(['status', 'assigneeId', 'notes', 'retainedData', 'completedAt', 'updatedAt', 'updatedBy'])
+    && updatedNow();
+  allow create, delete: if false;
+}
+
+// Corbeille : mise en corbeille, restauration et purge par Cloud Functions.
+match /trash/{itemId} {
+  allow read: if isAdmin('trash.view')
+    || (resource.data.get('restaurantId', null) != null && can(resource.data.restaurantId, 'menu.edit'));
+  allow write: if false;
+}
+
+match /backups/{backupId} {
+  allow read: if isAdmin('backups.manage');
+  allow write: if false;
+}
+
+match /backupRestores/{restoreId} {
+  allow read: if isAdmin('backups.manage');
+  allow write: if false;
+}
+
+match /statsDaily/{statsId} {
+  allow read: if (resource.data.scope in ['platform', 'country'] && isAdmin('dashboard.view'))
+    || (resource.data.scope in ['city', 'zone'] && isAdminIn('dashboard.view', resource.data.get('cityId', resource.data.scopeId)))
+    // Requêtes des responsables de ville (where cityId in [...]) : champ lu directement.
+    || (resource.data.scope == 'city' && isAdminIn('dashboard.view', resource.data.cityId));
+  allow write: if false;
+}

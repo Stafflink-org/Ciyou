@@ -1,0 +1,70 @@
+{
+  "title": "Inscription · Ciyou Eats Restaurant",
+  "eyebrow": "Devenir partenaire",
+  "heading": "Inscrivez votre commerce",
+  "description": "Gratuit, sans engagement. Votre dossier est examiné dès que vos pièces sont déposées ; s’il est complet et conforme, il est validé automatiquement.",
+  "sections": {
+    "business": "Votre commerce",
+    "legal": "Entreprise",
+    "account": "Votre compte"
+  },
+  "fields": {
+    "country": "Pays",
+    "businessName": "Nom du commerce",
+    "businessPhone": "Téléphone du commerce",
+    "address": "Adresse",
+    "postalCode": "Code postal",
+    "city": "Ville",
+    "legalName": "Raison sociale",
+    "registration": "Numéro d’immatriculation",
+    "vat": "N° de TVA (facultatif)",
+    "firstName": "Prénom du gérant",
+    "lastName": "Nom du gérant",
+    "email": "E-mail professionnel",
+    "phone": "Téléphone du gérant",
+    "password": "Mot de passe",
+    "passwordHint": "10 caractères minimum, avec au moins une lettre et un chiffre.",
+    "referral": "Code de parrainage (facultatif)",
+    "referralHint": "Renseigné automatiquement si vous venez du lien d’un commerce Ciyou Eats."
+  },
+  "countries": {
+    "FR": "France",
+    "BE": "Belgique",
+    "LU": "Luxembourg",
+    "DZ": "Algérie",
+    "MA": "Maroc",
+    "TN": "Tunisie"
+  },
+  "registrationLabels": {
+    "FR": "SIRET (14 chiffres)",
+    "BE": "Numéro d’entreprise BCE",
+    "LU": "Numéro RCS (ex. B123456)",
+    "DZ": "NIF ou registre de commerce",
+    "MA": "ICE ou registre de commerce",
+    "TN": "Matricule fiscal"
+  },
+  "registrationOk": "Numéro conforme.",
+  "terms": "J’ai lu et j’accepte les conditions partenaires de Ciyou Eats, et je certifie que les informations saisies sont exactes.",
+  "submit": "Créer mon compte",
+  "haveAccount": "Déjà partenaire ?",
+  "login": "Se connecter",
+  "errors": {
+    "required": "Champ obligatoire.",
+    "email": "Adresse e-mail invalide.",
+    "phone": "Numéro de téléphone invalide.",
+    "postalCode": "Code postal invalide.",
+    "password": "10 caractères minimum, avec une lettre et un chiffre.",
+    "terms": "Vous devez accepter les conditions partenaires.",
+    "failed": "L’inscription n’a pas pu aboutir. Vérifiez les champs puis réessayez."
+  },
+  "done": {
+    "title": "Votre demande est enregistrée",
+    "text": "Nous avons envoyé un e-mail de confirmation à {{email}}. Connectez-vous pour déposer vos pièces (Kbis ou avis SIRET, pièce d’identité, RIB) et accepter le contrat partenaire : votre commerce est ensuite validé.",
+    "cta": "Accéder à mon espace"
+  },
+  "waitlist": {
+    "title": "Nous ne sommes pas encore dans votre ville",
+    "text": "Ciyou Eats ouvre ville par ville. Votre demande est enregistrée : nous vous contacterons à {{email}} dès l’ouverture de {{city}}.",
+    "cta": "Retour à la connexion"
+  }
+}

@@ -1,0 +1,51 @@
+node_modules/
+dist/
+build/
+.expo/
+web-build/
+*.tsbuildinfo
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+
+# Cloud Functions (compilé)
+functions/lib/
+
+# Expo : dossiers natifs générés par prebuild
+apps/*/ios/
+apps/*/android/
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Secrets / clés
+*.jks
+*.p8
+*.p12
+*.key
+*.pem
+*.mobileprovision
+service-account*.json
+
+.vscode/
+.idea/
+
+# Tests compilés du package partagé
+packages/shared/.test-build/
+
+# Comptes de test générés par le seed (mots de passe) et secrets 2FA de test (.test-mfa.local.json)
+*.local.md
+*.local.json
+
+# Captures de scripts/smoke.mjs
+.smoke/
+
+# File de travail automatique (état local)
+.autopilot/
+scripts/autopilot/
+scripts/tests/_tmp/

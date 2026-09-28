@@ -1,0 +1,139 @@
+{
+  "docTitle": "Home",
+  "greeting": {
+    "day": "Hello",
+    "evening": "Good evening"
+  },
+  "moment": {
+    "before": "before service",
+    "lunch": "lunch service",
+    "between": "between services",
+    "evening": "dinner service"
+  },
+  "actions": {
+    "live": "Live tracking",
+    "openService": "Open service"
+  },
+  "live": {
+    "eyebrow": "Live service",
+    "none": "No orders in progress",
+    "inProgress_one": "{{count}} order in progress",
+    "inProgress_other": "{{count}} orders in progress",
+    "late_one": "{{count}} order running late",
+    "late_other": "{{count}} orders running late",
+    "calmTitle": "The counter is quiet",
+    "calmDescription": "New orders will appear here in real time, with a sound alert in the Orders section.",
+    "items_one": "{{count}} item",
+    "items_other": "{{count}} items",
+    "couriersOnTheWay": "Couriers are on their way: follow them in",
+    "trackingLink": "live tracking"
+  },
+  "lanes": {
+    "new": "New",
+    "kitchen": "In the kitchen",
+    "ready": "Ready",
+    "delivery": "Out for delivery"
+  },
+  "fulfillment": {
+    "delivery": "Delivery",
+    "pickup": "Takeaway",
+    "dine_in": "Dine-in"
+  },
+  "kpi": {
+    "salesToday": "Sales today",
+    "deliveredToday": "Orders delivered today",
+    "ordersToday": "Orders today",
+    "avgPrep": "Average preparation",
+    "rating": "Average rating",
+    "vsSameHour": "vs last {{day}} at the same time",
+    "weekFooter": "Week: {{amount}} ({{change}})",
+    "newPeriod": "new period",
+    "ordersFooter": "{{week}} over 7 days · {{cancelled}}",
+    "cancelledToday_one": "{{count}} cancelled today",
+    "cancelledToday_other": "{{count}} cancelled today",
+    "vsAvg7": "vs 7-day average",
+    "avg7": "7-day average",
+    "minutes": "{{value}} min",
+    "prepFooter": "Default announced time: {{minutes}} min",
+    "prepFooterBusy": "Default announced time: {{minutes}} min (+{{extra}} busy)",
+    "ratingCount": "{{count}} customer reviews",
+    "noReview": "No reviews yet"
+  },
+  "charts": {
+    "last7": "Last 7 days",
+    "salesWeek": "Sales this week",
+    "ordersWeek": "Orders this week",
+    "summaryMoney": "{{current}} · previous week {{previous}}",
+    "summaryOrders": "{{current}} orders · previous week {{previous}}",
+    "thisWeek": "This week",
+    "previousWeek": "Previous week",
+    "todayEyebrow": "Today",
+    "peakHours": "Peak hours",
+    "peakHoursDescription": "Orders received per hour, compared with the same day last week.",
+    "today": "Today",
+    "lastWeek": "Last week",
+    "hour": "{{h}}h",
+    "hourRange": "{{from}}-{{to}}h"
+  },
+  "best": {
+    "eyebrow": "Your menu",
+    "title": "Best sellers",
+    "products": "Products",
+    "none": "No sales yet",
+    "noneDescription": "Your most ordered dishes will appear here.",
+    "sold": "{{count}} sold"
+  },
+  "stock": {
+    "eyebrow": "Menu health",
+    "title": "Stock alerts",
+    "action": "Stock",
+    "none": "No low stock",
+    "noneDescription": "Tracked products are above their alert threshold.",
+    "outOfStock": "Out of stock: removed from sale",
+    "remaining": "Only {{count}} left in stock",
+    "threshold": "threshold {{count}}"
+  },
+  "team": {
+    "title": "Team",
+    "planned_one": "{{count}} shift scheduled today",
+    "planned_other": "{{count}} shifts scheduled today",
+    "onDuty": "On duty now",
+    "nobody": "Nobody is marked as on duty.",
+    "slot": "Shift"
+  },
+  "reviews": {
+    "eyebrow": "Your customers",
+    "title": "Latest reviews",
+    "none": "No recent reviews",
+    "noneDescription": "Reviews published by your customers will appear here.",
+    "noComment": "Rating without a comment.",
+    "stars": "{{value}} out of 5"
+  },
+  "service": {
+    "suspended": "Suspended by Ciyou Eats",
+    "suspendedShort": "Suspended",
+    "paused": "Paused",
+    "closed": "Closed",
+    "busy": "Busy · +{{minutes}} min",
+    "busyShort": "+{{minutes}} min",
+    "open": "Open",
+    "receiving": "Order intake",
+    "receivingState": "Order intake: {{state}}",
+    "rushHint": "Busy: longer preparation time",
+    "plusMinutes": "+{{minutes}} minutes",
+    "pause": "Pause",
+    "outsideHours": "Outside opening hours: orders will resume at the next slot.",
+    "toastOpen": "Orders open.",
+    "toastRush": "Busy mode: +{{minutes}} min preparation time.",
+    "toastPaused": "New orders paused."
+  },
+  "status": {
+    "handedOver": "Handed over",
+    "readyAtCounter": "Ready at the counter",
+    "received": "Received"
+  },
+  "shell": {
+    "establishments": "Establishments",
+    "switchTo": "Switch to {{name}}"
+  }
+}

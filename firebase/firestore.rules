@@ -1,0 +1,1801 @@
+// ===========================================================================
+// FICHIER GÉNÉRÉ, NE PAS ÉDITER.
+// Source : firebase/rules/ — régénérer avec `npm run rules:build`.
+// ===========================================================================
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ----- _helpers.rules
+
+    // ---------------------------------------------------------------------------
+    // Fonctions communes à toutes les règles Firestore.
+    //
+    // Identité :
+    //   - custom claim `role` : client | driver | restaurant | admin (posé par Cloud Function) ;
+    //   - équipe interne : document admins/{uid} (rôle, permissions résolues, villes) ;
+    //   - personnel d'un restaurant : document restaurants/{rid}/members/{uid}.
+    // Tout ce qui n'est pas explicitement autorisé est refusé. Les champs sensibles
+    // (statuts de validation, commissions, rôles, montants) ne sont écrits que par
+    // les Cloud Functions (SDK Admin, qui contourne ces règles).
+    // ---------------------------------------------------------------------------
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    function role() {
+      return signedIn() ? request.auth.token.get('role', '') : '';
+    }
+
+    function isRole(r) {
+      return role() == r;
+    }
+
+    function isSelf(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    // ----------------------------------------------------------------- Équipe interne
+
+    function adminData() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data;
+    }
+
+    function adminHas(a, perm) {
+      return a.active == true && (a.role == 'super_admin' || perm in a.permissions);
+    }
+
+    function adminCovers(a, cityId) {
+      return a.cityIds.size() == 0 || cityId in a.cityIds;
+    }
+
+    // Membre actif de l'équipe interne, quelle que soit sa permission.
+    function isAnyAdmin() {
+      return isRole('admin') && adminData().active == true;
+    }
+
+    // Membre actif de l'équipe interne disposant de la permission `perm`.
+    function isAdmin(perm) {
+      return isRole('admin') && adminHas(adminData(), perm);
+    }
+
+    // Permission `perm` et ville dans le périmètre de l'administrateur (liste vide = toutes).
+    function isAdminIn(perm, cityId) {
+      return isRole('admin') && adminHas(adminData(), perm) && adminCovers(adminData(), cityId);
+    }
+
+    // ----------------------------------------------------------------- Personnel restaurant
+
+    function memberPath(rid) {
+      return /databases/$(database)/documents/restaurants/$(rid)/members/$(request.auth.uid);
+    }
+
+    function memberHas(m, perm) {
+      return m.active == true && (m.role == 'owner' || perm in m.permissions);
+    }
+
+    // Membre actif du personnel du restaurant.
+    function isRestaurantMember(rid) {
+      return signedIn() && exists(memberPath(rid)) && get(memberPath(rid)).data.active == true;
+    }
+
+    // Membre actif du restaurant disposant de la permission `perm` (le propriétaire a tout).
+    function can(rid, perm) {
+      return signedIn() && exists(memberPath(rid)) && memberHas(get(memberPath(rid)).data, perm);
+    }
+
+    // ----------------------------------------------------------------- Écritures
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    // La mise à jour ne touche que les champs listés.
+    function onlyChanges(keys) {
+      return changedKeys().hasOnly(keys);
+    }
+
+    // La mise à jour ne touche aucun des champs listés.
+    function keepsUnchanged(keys) {
+      return !changedKeys().hasAny(keys);
+    }
+
+    // Horodatage serveur et auteur à la création (documents Tracked).
+    function createdNow() {
+      return incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && incoming().get('createdBy', request.auth.uid) == request.auth.uid;
+    }
+
+    // Horodatage serveur et auteur à la mise à jour (documents Tracked).
+    function updatedNow() {
+      return incoming().updatedAt == request.time
+        && incoming().get('updatedBy', request.auth.uid) == request.auth.uid;
+    }
+
+    function isNonEmptyString(value, maxLength) {
+      return value is string && value.size() > 0 && value.size() <= maxLength;
+    }
+
+    function isOptionalString(value, maxLength) {
+      return value == null || (value is string && value.size() <= maxLength);
+    }
+
+    function isCents(value) {
+      return value is int && value >= 0;
+    }
+
+    function isIsoDay(value) {
+      return value is string && value.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    function isHourMinute(value) {
+      return value is string && value.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+    }
+
+    // ----- admin.rules
+
+    // ---------------------------------------------------------------------------
+    // Administration interne : comptes, rôles, sessions, journal d'audit, alertes,
+    // notes internes, filtres, « voir comme », traitements en masse, rapports.
+    // Création des administrateurs, custom claims et révocation des sessions : Cloud Functions.
+    // ---------------------------------------------------------------------------
+
+    match /admins/{adminId} {
+      allow read: if (isSelf(adminId) && isRole('admin')) || isAdmin('admins.view');
+      allow write: if false;
+    }
+
+    // Rôles internes : modification par updateAdminRoleDefinition uniquement (motif, historique,
+    // audit, alerte de changement de droits) ; la Cloud Function onAdminRoleWrite propage aux comptes.
+    match /adminRoles/{roleId} {
+      allow read: if isAnyAdmin();
+      allow write: if false;
+    }
+
+    match /adminSessions/{sessionId} {
+      allow read: if (isSelf(resource.data.adminId) && isRole('admin')) || isAdmin('security.manage');
+      allow write: if false;
+    }
+
+    // Journal d'audit : écrit uniquement par Cloud Functions, jamais modifié ni supprimé.
+    match /auditLogs/{logId} {
+      allow read: if isAdmin('audit.view');
+      allow write: if false;
+    }
+
+    match /securityAlerts/{alertId} {
+      allow read: if isAdmin('security.manage');
+      // Prise en charge : handleSecurityAlert (Cloud Function, audit).
+      allow write: if false;
+    }
+
+    match /platformAlerts/{alertId} {
+      allow read: if isAdmin('dashboard.view')
+        && (resource.data.get('cityId', null) == null || isAdminIn('dashboard.view', resource.data.cityId));
+      // Traitement d'une alerte : handlePlatformAlert (Cloud Function, audit).
+      allow write: if false;
+    }
+
+    match /internalNotes/{noteId} {
+      allow read: if isAnyAdmin();
+      allow create: if isAnyAdmin()
+        && incoming().authorId == uid()
+        && isNonEmptyString(incoming().body, 5000)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAnyAdmin()
+        && existing().authorId == uid()
+        && onlyChanges(['body', 'pinned', 'updatedAt'])
+        && incoming().updatedAt == request.time;
+      allow delete: if isAnyAdmin() && existing().authorId == uid();
+    }
+
+    match /savedFilters/{filterId} {
+      allow read: if isAnyAdmin() && (resource.data.ownerId == uid() || resource.data.shared == true);
+      allow create: if isAnyAdmin() && incoming().ownerId == uid() && incoming().createdAt == request.time;
+      allow update: if isAnyAdmin() && existing().ownerId == uid() && keepsUnchanged(['ownerId', 'createdAt']);
+      allow delete: if isAnyAdmin() && existing().ownerId == uid();
+    }
+
+    // Ouverture et fin d'une session « voir comme » : Cloud Function (journalisée).
+    match /impersonationSessions/{sessionId} {
+      allow read: if (isSelf(resource.data.adminId) && isRole('admin')) || isAdmin('audit.view');
+      allow write: if false;
+    }
+
+    // Imports, actions groupées et exports : lancés par Cloud Function (contrôle de la permission par type).
+    match /bulkJobs/{jobId} {
+      allow read: if (isAnyAdmin() && resource.data.createdBy == uid()) || isAdmin('audit.view');
+      allow update: if isAnyAdmin()
+        && existing().createdBy == uid()
+        && existing().status == 'queued'
+        && onlyChanges(['status', 'updatedAt', 'updatedBy'])
+        && incoming().status == 'cancelled'
+        && updatedNow();
+      allow create, delete: if false;
+    }
+
+    match /scheduledReports/{reportId} {
+      allow read: if isAdmin('reports.view');
+      // Création, modification, suppression : Cloud Functions (saveScheduledReport, ...) avec audit.
+      allow write: if false;
+    }
+
+    // File des agrégats statsDaily à recalculer (ville × jour) : Cloud Functions uniquement.
+    match /statsQueue/{entryId} {
+      allow read, write: if false;
+    }
+
+    // Secrets de double authentification (TOTP chiffré, codes de secours hachés) :
+    // lus et écrits uniquement par les Cloud Functions enrollTotp / verifyTotp.
+    match /adminSecrets/{adminId} {
+      allow read, write: if false;
+    }
+
+    // ----- argent.rules
+
+    // ---------------------------------------------------------------------------
+    // Rubriques « Argent » du super admin : lectures complémentaires pour les équipes
+    // finance, paiements et abonnements. Toutes les écritures passent par les Cloud
+    // Functions (updateFinanceSettings, updateCountryPayments, updateRestaurantPayments,
+    // updatePlan…), qui historisent et auditent chaque changement.
+    // ---------------------------------------------------------------------------
+
+    // Réglages financiers lisibles sans le droit général « paramètres ».
+    match /settings/{docId} {
+      allow read: if (docId in ['payouts', 'refunds', 'orderRules'] && (isAdmin('finance.view') || isAdmin('payments.view')))
+        || (docId == 'dunning' && (isAdmin('subscriptions.manage') || isAdmin('finance.view')));
+    }
+
+    // Historique des réglages financiers (formules, calendrier, paiements, relances, conditions d'un commerce).
+    match /settingsHistory/{entryId} {
+      allow read: if (isAdmin('finance.view') || isAdmin('plans.edit') || isAdmin('payments.configure') || isAdmin('subscriptions.manage'))
+        && resource.data.docPath.matches('^(plans/[a-z]+|settings/(payouts|payments|refunds|dunning)|countries/[A-Z]{2}|restaurants/[A-Za-z0-9_-]+/private/commercial)$');
+    }
+
+    // Moyens de paiement autorisés par commerce : consultables par l'équipe paiements.
+    match /restaurants/{rid}/private/{docId} {
+      allow read: if docId == 'commercial' && isAdmin('payments.view');
+    }
+
+    // Séries de numérotation des factures (numérotation continue) : lecture seule.
+    match /counters/{name} {
+      allow read: if name.matches('^invoice_.*$') && isAdmin('invoices.view');
+    }
+
+    // ----- compliance.rules
+
+    // ---------------------------------------------------------------------------
+    // Fraude, conformité (CGU, RGPD), corbeille, sauvegardes, statistiques.
+    // ---------------------------------------------------------------------------
+
+    match /fraudCases/{caseId} {
+      allow read: if isAdmin('fraud.view');
+      // Décisions à effet (blocage, suspension, gel des reversements) : Cloud Function decideFraudCase.
+      allow write: if false;
+    }
+
+    match /blocklist/{entryId} {
+      allow read: if isAdmin('fraud.view');
+      // Ajout, désactivation : addBlocklistEntry / removeBlocklistEntry (Cloud Functions, motif, audit).
+      allow write: if false;
+    }
+
+    match /legalDocuments/{documentId} {
+      allow read: if resource.data.status == 'published' || isAdmin('legal.edit');
+      allow create: if isAdmin('legal.edit') && incoming().status == 'draft' && createdNow();
+      // Une version publiée n'est plus modifiable : seul l'archivage est permis.
+      allow update: if isAdmin('legal.edit')
+        && (existing().status == 'draft' || onlyChanges(['status', 'updatedAt', 'updatedBy']) && incoming().status == 'archived')
+        && updatedNow();
+      allow delete: if false;
+    }
+
+    // Preuve d'acceptation : créée par l'utilisateur, jamais modifiée.
+    match /legalAcceptances/{acceptanceId} {
+      allow read: if isSelf(resource.data.userId) || isAdmin('legal.edit') || isAdmin('gdpr.handle');
+      // Super admin, fiche restaurant : preuve d'acceptation du contrat partenaire.
+      allow read: if resource.data.userType == 'restaurant' && isAdmin('restaurants.view');
+      allow create: if isSelf(incoming().userId)
+        && incoming().userType in ['client', 'restaurant', 'driver']
+        && get(/databases/$(database)/documents/legalDocuments/$(incoming().documentId)).data.status == 'published'
+        && get(/databases/$(database)/documents/legalDocuments/$(incoming().documentId)).data.version == incoming().version
+        && incoming().acceptedAt == request.time;
+      allow update, delete: if false;
+    }
+
+    // Dépôt d'une demande : Cloud Function submitGdprRequest (calcul de l'échéance, vérification d'identité).
+    match /gdprRequests/{requestId} {
+      allow read: if isSelf(resource.data.get('subjectId', ''))
+        || (resource.data.get('subjectType', '') == 'restaurant' && can(resource.data.get('subjectId', ''), 'settings.manage'))
+        || isAdmin('gdpr.handle');
+      allow update: if isAdmin('gdpr.handle')
+        && onlyChanges(['status', 'assigneeId', 'notes', 'retainedData', 'completedAt', 'updatedAt', 'updatedBy'])
+        && updatedNow();
+      allow create, delete: if false;
+    }
+
+    // Corbeille : mise en corbeille, restauration et purge par Cloud Functions.
+    match /trash/{itemId} {
+      allow read: if isAdmin('trash.view')
+        || (resource.data.get('restaurantId', null) != null && can(resource.data.restaurantId, 'menu.edit'));
+      allow write: if false;
+    }
+
+    match /backups/{backupId} {
+      allow read: if isAdmin('backups.manage');
+      allow write: if false;
+    }
+
+    match /backupRestores/{restoreId} {
+      allow read: if isAdmin('backups.manage');
+      allow write: if false;
+    }
+
+    match /statsDaily/{statsId} {
+      allow read: if (resource.data.scope in ['platform', 'country'] && isAdmin('dashboard.view'))
+        || (resource.data.scope in ['city', 'zone'] && isAdminIn('dashboard.view', resource.data.get('cityId', resource.data.scopeId)))
+        // Requêtes des responsables de ville (where cityId in [...]) : champ lu directement.
+        || (resource.data.scope == 'city' && isAdminIn('dashboard.view', resource.data.cityId));
+      allow write: if false;
+    }
+
+    // ----- drivers.rules
+
+    // ---------------------------------------------------------------------------
+    // Livreurs : profil, données privées, position en direct, sessions, sanctions,
+    // vérification d'identité, propositions de course, gains.
+    // Validation, statut, sanctions, attribution et rémunération : Cloud Functions.
+    // ---------------------------------------------------------------------------
+
+    match /drivers/{driverId} {
+      allow read: if isSelf(driverId) || isAdminIn('drivers.view', resource.data.cityId);
+      // Le livreur ne pilote que sa disponibilité ; passer en ligne exige un compte actif.
+      allow update: if isSelf(driverId)
+          && onlyChanges(['availability', 'lastSeenAt', 'updatedAt', 'updatedBy'])
+          && incoming().availability in ['online', 'offline', 'paused']
+          && (incoming().availability == 'offline' || existing().status == 'active')
+          && existing().activeOrderIds.size() == 0
+          && updatedNow()
+        || isAdminIn('drivers.edit', resource.data.cityId)
+          && onlyChanges(['firstName', 'lastName', 'displayName', 'phone', 'zoneIds', 'acceptsCash', 'searchKeywords', 'updatedAt', 'updatedBy'])
+          && updatedNow();
+      allow create, delete: if false;
+    }
+
+    // Identité légale, adresse, coordonnées bancaires : réservées aux rôles disposant de la
+    // permission « Données personnelles non masquées » (masquage appliqué côté serveur).
+    match /driverPrivate/{driverId} {
+      allow read: if isSelf(driverId) || isAdmin('personal_data.view');
+      allow write: if false;
+    }
+
+    // Position en direct : le livreur écrit uniquement sa position ; la liste des
+    // lecteurs autorisés (client et personnel du restaurant de la commande en cours)
+    // est tenue par la Cloud Function d'attribution.
+    match /driverLocations/{driverId} {
+      allow read: if isSelf(driverId)
+        || (signedIn() && request.auth.uid in resource.data.visibleTo)
+        || isAdmin('orders.view')
+        || isAdmin('drivers.view');
+      allow update: if isSelf(driverId)
+        && onlyChanges(['position', 'geohash', 'heading', 'speedKmh', 'accuracyMeters', 'updatedAt'])
+        && incoming().position is latlng
+        && incoming().updatedAt == request.time;
+      allow create, delete: if false;
+    }
+
+    match /driverSessions/{sessionId} {
+      allow read: if isSelf(resource.data.driverId) || isAdmin('drivers.view');
+      allow write: if false;
+    }
+
+    match /driverSanctions/{sanctionId} {
+      allow read: if isSelf(resource.data.driverId) || isAdmin('drivers.view');
+      // Contestation par le livreur ; la décision est prise par Cloud Function (audit).
+      allow update: if isSelf(existing().driverId)
+        && existing().status == 'active'
+        && existing().get('contest', null) == null
+        && onlyChanges(['contest', 'status', 'updatedAt', 'updatedBy'])
+        && incoming().status == 'contested'
+        && isNonEmptyString(incoming().contest.message, 2000)
+        && incoming().contest.submittedAt == request.time
+        && incoming().contest.get('decision', null) == null
+        && updatedNow();
+      allow create, delete: if false;
+    }
+
+    match /identityChecks/{checkId} {
+      allow read: if isSelf(resource.data.driverId) || isAdmin('drivers.validate');
+      allow update: if isSelf(existing().driverId)
+        && existing().status == 'requested'
+        && onlyChanges(['selfie', 'status'])
+        && incoming().status == 'submitted';
+      allow create, delete: if false;
+    }
+
+    // Acceptation et refus : Cloud Function respondToOffer (transaction, pas de double attribution).
+    match /dispatchOffers/{offerId} {
+      allow read: if isSelf(resource.data.driverId) || isAdmin('orders.view');
+      allow write: if false;
+    }
+
+    match /driverEarnings/{earningId} {
+      allow read: if isSelf(resource.data.driverId) || isAdmin('finance.view') || isAdmin('drivers.view');
+      allow write: if false;
+    }
+
+    // ----- equipe-rh.rules
+
+    // ---------------------------------------------------------------------------
+    // Équipe & RH (compléments) : annuaire de l'équipe et checklists du service.
+    // Sous restaurants/{rid}. Voir aussi workforce.rules.
+    // ---------------------------------------------------------------------------
+
+    // Annuaire lisible par tout membre actif (noms, postes, couleurs, sans donnée
+    // sensible). Écrit uniquement par les triggers onEmployeeDirectorySync et
+    // onMemberDirectorySync.
+    match /restaurants/{rid}/staffDirectory/{entryId} {
+      allow read: if isRestaurantMember(rid) || isAdmin('restaurants.view');
+      allow write: if false;
+    }
+
+    // Checklists types (ouverture, fermeture, service).
+    match /restaurants/{rid}/checklistTemplates/{templateId} {
+      allow read: if can(rid, 'tasks.view');
+      allow create: if can(rid, 'tasks.manage') && createdNow()
+        && isNonEmptyString(incoming().name, 120)
+        && incoming().items is list && incoming().items.size() <= 60;
+      allow update: if can(rid, 'tasks.manage') && updatedNow()
+        && isNonEmptyString(incoming().name, 120)
+        && incoming().items is list && incoming().items.size() <= 60;
+      allow delete: if can(rid, 'tasks.manage');
+    }
+
+    // Réalisation du jour : tout membre ayant accès aux tâches coche les points.
+    match /restaurants/{rid}/checklistRuns/{runId} {
+      allow read: if can(rid, 'tasks.view');
+      allow create, update: if can(rid, 'tasks.view')
+        && isIsoDay(incoming().date)
+        && incoming().items is list && incoming().items.size() <= 60
+        && incoming().updatedBy == uid()
+        && incoming().updatedAt == request.time;
+      allow delete: if can(rid, 'tasks.manage');
+    }
+
+    // ----- experience.rules
+
+    // ---------------------------------------------------------------------------
+    // Expérience client (super admin) : offres de mise en avant payante, historique
+    // des pages d'information, filtre automatique des avis, suivi qualité des notes.
+    // Ventes d'emplacements : Cloud Function bookSponsoredPlacement.
+    // Publication d'une page : Cloud Function publishPage (instantané versionné).
+    // ---------------------------------------------------------------------------
+
+    match /sponsoredOffers/{offerId} {
+      // Catalogue lisible par l'équipe et par les commerces (achat de visibilité).
+      allow read: if isAnyAdmin() || isRole('restaurant');
+      // Création et modification (prix = argent) : saveSponsoredOffer (Cloud Function, motif, audit).
+      allow write: if false;
+    }
+
+    match /pages/{slug}/versions/{version} {
+      allow read: if isAdmin('display.edit') || isAdmin('legal.edit');
+      allow write: if false;
+    }
+
+    match /moderationTerms/{termId} {
+      allow read: if isAdmin('reviews.view');
+      allow create: if isAdmin('reviews.moderate') && createdNow()
+        && isNonEmptyString(incoming().term, 60)
+        && incoming().action in ['block', 'flag']
+        && incoming().hits == 0;
+      allow update: if isAdmin('reviews.moderate') && updatedNow()
+        && keepsUnchanged(['hits'])
+        && isNonEmptyString(incoming().term, 60)
+        && incoming().action in ['block', 'flag'];
+      allow delete: if isAdmin('reviews.moderate');
+    }
+
+    // Calculé par la tâche planifiée detectRatingDrops ; l'équipe peut en prendre acte.
+    match /ratingWatch/{watchId} {
+      allow read: if isAdmin('reviews.view');
+      allow update: if isAdmin('reviews.moderate')
+        && onlyChanges(['acknowledgedAt', 'acknowledgedBy', 'note'])
+        && (incoming().acknowledgedAt == null || incoming().acknowledgedAt == request.time && incoming().acknowledgedBy == uid())
+        && isOptionalString(incoming().get('note', null), 500);
+      allow create, delete: if false;
+    }
+
+    // ----- finance.rules
+
+    // ---------------------------------------------------------------------------
+    // Argent : paiements, remboursements, grand livre, reversements, factures,
+    // déclarations, formules, abonnements, barèmes de commission.
+    // Tous les mouvements sont écrits par Cloud Functions (Stripe, planificateurs).
+    // ---------------------------------------------------------------------------
+
+    match /payments/{paymentId} {
+      allow read: if (resource.data.payerType == 'client' && isSelf(resource.data.payerId))
+        || (resource.data.get('restaurantId', null) != null
+          && resource.data.purpose != 'order'
+          && can(resource.data.restaurantId, 'finance.view'))
+        || isAdmin('payments.view');
+      allow write: if false;
+    }
+
+    match /refunds/{refundId} {
+      allow read: if isSelf(resource.data.customerId)
+        || can(resource.data.restaurantId, 'finance.view')
+        || isAdmin('refunds.create')
+        || isAdmin('finance.view');
+      allow write: if false;
+    }
+
+    match /ledgerEntries/{entryId} {
+      allow read: if (resource.data.accountType == 'restaurant' && can(resource.data.accountId, 'finance.view'))
+        || (resource.data.accountType in ['driver', 'driver_cash', 'customer_wallet'] && isSelf(resource.data.accountId))
+        || isAdmin('finance.view');
+      allow write: if false;
+    }
+
+    match /payouts/{payoutId} {
+      allow read: if (resource.data.beneficiaryType == 'restaurant' && can(resource.data.beneficiaryId, 'finance.view'))
+        || (resource.data.beneficiaryType == 'driver' && isSelf(resource.data.beneficiaryId))
+        || isAdmin('finance.view');
+      allow write: if false;
+    }
+
+    match /payoutHolds/{holdId} {
+      allow read: if isAdmin('finance.view');
+      allow write: if false;
+    }
+
+    // Factures et avoirs : jamais modifiés ni supprimés après émission.
+    match /invoices/{invoiceId} {
+      allow read: if (resource.data.recipient.type == 'restaurant' && can(resource.data.recipient.id, 'invoices.view'))
+        || (resource.data.recipient.type in ['client', 'driver'] && isSelf(resource.data.recipient.id))
+        || (resource.data.issuer.type == 'driver' && isSelf(resource.data.issuer.id))
+        || isAdmin('invoices.view');
+      allow write: if false;
+    }
+
+    match /taxReports/{reportId} {
+      allow read: if isAdmin('tax.reports');
+      allow write: if false;
+    }
+
+    match /plans/{planCode} {
+      allow read: if true;
+      // Écriture : updatePlan (Cloud Function, motif, audit).
+      allow write: if false;
+    }
+
+    // Changement de formule, essai, résiliation, impayés : Cloud Functions (Stripe Billing).
+    match /subscriptions/{subscriptionId} {
+      allow read: if (resource.data.subscriberType == 'restaurant' && can(resource.data.subscriberId, 'finance.view'))
+        || isAdmin('subscriptions.manage')
+        || isAdmin('finance.view');
+      allow write: if false;
+    }
+
+    // Barèmes versionnés : une modification crée une nouvelle règle, l'ancienne est close par trigger.
+    match /commissionRules/{ruleId} {
+      allow read: if isAdmin('commissions.edit') || isAdmin('finance.view') || isAdmin('restaurants.commercial');
+      // Création d'un barème : updateCommissionRule (Cloud Function : clôture de l'ancien, motif, audit).
+      allow write: if false;
+    }
+
+    // Prestataires de paiement par pays (Stripe, prestataires locaux) : lisibles par tout compte connecté
+    // (choix du compte de paiement dans les apps), modifiés par Cloud Function uniquement.
+    match /paymentProviders/{providerId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Espèces des livreurs salariés du commerce : suivi de la caisse et remises, écrit par Cloud Function.
+    match /cashMovements/{movementId} {
+      allow read: if can(resource.data.restaurantId, 'couriers.manage')
+        || can(resource.data.restaurantId, 'finance.view')
+        || isAdmin('finance.view');
+      allow write: if false;
+    }
+
+    // Codes de parrainage : recherchés par Cloud Function uniquement.
+    match /referralCodes/{code} {
+      allow read, write: if false;
+    }
+
+    // ----- marketing.rules
+
+    // ---------------------------------------------------------------------------
+    // Croissance et communication : promotions, campagnes, messages automatiques,
+    // annonces, prospection commerciale. Les envois sont faits par Cloud Functions.
+    // ---------------------------------------------------------------------------
+
+    // Champs qu'un restaurant ne peut jamais fixer sur ses promotions.
+    function promotionLockedFields() {
+      return ['scope', 'restaurantId', 'funding', 'stats', 'countryId', 'cityIds', 'restaurantIds', 'showcase', 'reviewNote'];
+    }
+
+    function isRestaurantPromotion(data, rid) {
+      return data.scope == 'restaurant' && data.restaurantId == rid && data.funding == 'restaurant';
+    }
+
+    match /promotions/{promotionId} {
+      allow read: if (resource.data.showcase == true && resource.data.status == 'active')
+        || (resource.data.scope == 'restaurant' && can(resource.data.restaurantId, 'marketing.manage'))
+        || isAdmin('promotions.view');
+      // Création par un restaurant : brouillon ou soumise à validation (activation par Cloud Function).
+      // Promotions de la plateforme et décisions de l'équipe : Cloud Functions (createPlatformPromotion, ...).
+      allow create: if (isRestaurantPromotion(incoming(), incoming().restaurantId)
+            && can(incoming().restaurantId, 'marketing.manage')
+            && incoming().status in ['draft', 'pending_review']
+            && incoming().showcase == false)
+        && incoming().stats.redemptions == 0
+        && incoming().kind in ['percentage', 'fixed', 'free_delivery']
+        && incoming().perCustomerLimit is int && incoming().perCustomerLimit >= 1
+        && createdNow();
+      allow update: if (can(existing().restaurantId, 'marketing.manage')
+            && existing().scope == 'restaurant'
+            && keepsUnchanged(promotionLockedFields())
+            && incoming().status in ['draft', 'pending_review', 'paused', 'ended'])
+        && updatedNow();
+      allow delete: if false;
+    }
+
+    match /promotionRedemptions/{redemptionId} {
+      allow read: if isSelf(resource.data.userId)
+        || can(resource.data.restaurantId, 'marketing.manage')
+        || isAdmin('promotions.view');
+      allow write: if false;
+    }
+
+    match /campaigns/{campaignId} {
+      allow read: if (resource.data.scope == 'restaurant' && can(resource.data.restaurantId, 'marketing.manage'))
+        || isAdmin('notifications.send');
+      allow create: if (incoming().scope == 'restaurant' && can(incoming().restaurantId, 'marketing.manage')
+          || incoming().scope == 'platform' && isAdmin('notifications.send'))
+        && incoming().status in ['draft', 'scheduled']
+        && incoming().stats.sent == 0
+        && createdNow();
+      allow update: if (existing().scope == 'restaurant' && can(existing().restaurantId, 'marketing.manage')
+          || existing().scope == 'platform' && isAdmin('notifications.send'))
+        && existing().status in ['draft', 'scheduled']
+        && incoming().status in ['draft', 'scheduled', 'cancelled']
+        && keepsUnchanged(['scope', 'restaurantId', 'stats', 'sentAt'])
+        && updatedNow();
+      allow delete: if false;
+    }
+
+    match /messageTemplates/{key} {
+      allow read: if isAdmin('templates.edit') || isAdmin('notifications.send');
+      // Modification d'un gabarit : updateMessageTemplate (Cloud Function, audit).
+      allow update: if false;
+      allow create, delete: if false;
+    }
+
+    match /notificationLogs/{logId} {
+      allow read: if isAdmin('support.view') || isAdmin('notifications.send');
+      allow write: if false;
+    }
+
+    match /announcements/{announcementId} {
+      allow read: if resource.data.active == true
+          && ((resource.data.audience == 'restaurants' && isRole('restaurant'))
+            || (resource.data.audience == 'drivers' && isRole('driver')))
+        || isAdmin('announcements.edit');
+      // Écriture réservée à `publishAnnouncement` (SDK Admin, audit) : la lecture admin reste
+      // ouverte ci-dessus pour la consultation en back-office.
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ------------------------------------------------------------ Prospection (mini CRM)
+
+    match /prospects/{prospectId} {
+      allow read: if isAdmin('crm.view');
+      allow create: if isAdmin('crm.edit') && createdNow();
+      allow update: if isAdmin('crm.edit') && keepsUnchanged(['restaurantId', 'signedUpAt']) && updatedNow();
+      allow delete: if false;
+
+      match /activities/{activityId} {
+        allow read: if isAdmin('crm.view');
+        allow create: if isAdmin('crm.edit') && incoming().by == uid() && incoming().at == request.time;
+        allow update, delete: if false;
+      }
+    }
+
+    match /salesCommissions/{commissionId} {
+      allow read: if isSelf(resource.data.salesRepId) && isAnyAdmin()
+        || isAdmin('crm.manage_team')
+        || isAdmin('finance.view');
+      allow write: if false;
+    }
+
+    // ------------------------------------------------------------ Marketing d'un établissement
+    // Profil social (lecture publique, fiche de l'app client), messages automatiques
+    // (lus par les Cloud Functions) et réponses types de l'équipe.
+
+    function restaurantSocialValid() {
+      return incoming().keys().hasOnly(['links', 'shareMessage', 'hashtags', 'updatedAt', 'updatedBy'])
+        && incoming().links is map && incoming().links.size() <= 6
+        && incoming().shareMessage is string && incoming().shareMessage.size() <= 280
+        && incoming().hashtags is list && incoming().hashtags.size() <= 10;
+    }
+
+    function restaurantAutoMessagesValid() {
+      return incoming().keys().hasOnly(['messages', 'updatedAt', 'updatedBy'])
+        && incoming().messages is map && incoming().messages.size() <= 10;
+    }
+
+    match /restaurants/{rid}/marketing/{docId} {
+      allow read: if docId == 'social' || isRestaurantMember(rid) || isAdmin('restaurants.view');
+      allow create, update: if can(rid, 'marketing.manage')
+        && incoming().updatedAt == request.time
+        && incoming().updatedBy == uid()
+        && (docId == 'social' && restaurantSocialValid()
+          || docId == 'autoMessages' && restaurantAutoMessagesValid());
+      allow delete: if false;
+    }
+
+    function replyTemplateValid() {
+      return incoming().kind in ['review_reply', 'customer_message', 'driver_message']
+        && isNonEmptyString(incoming().title, 60)
+        && isNonEmptyString(incoming().body, 1000)
+        && incoming().ratings is list && incoming().ratings.size() <= 5
+        && isOptionalString(incoming().get('shortcut', null), 24);
+    }
+
+    match /restaurants/{rid}/replyTemplates/{templateId} {
+      allow read: if can(rid, 'marketing.manage') || can(rid, 'reviews.reply') || can(rid, 'messages.use');
+      allow create: if can(rid, 'marketing.manage') && createdNow() && replyTemplateValid() && incoming().usageCount == 0;
+      // Compteur d'utilisation : Cloud Functions (réponse à un avis, message).
+      allow update: if can(rid, 'marketing.manage') && updatedNow() && replyTemplateValid()
+        && keepsUnchanged(['usageCount', 'lastUsedAt', 'createdAt', 'createdBy']);
+      allow delete: if can(rid, 'marketing.manage');
+    }
+
+    // ------------------------------------------------------------ Croissance (super admin)
+    // Compléments de lecture pour les rubriques Promotions, Fidélité, Communication et
+    // Prospection. Les écritures passent par les Cloud Functions du domaine marketing.
+
+    // Réglages du mini CRM (primes des commerciaux) : lisibles par l'équipe commerciale.
+    match /settings/{docId} {
+      allow read: if docId == 'crm' && isAdmin('crm.view');
+    }
+
+    // Parrainages : suivi par l'équipe fidélité ; parrainages restaurants par les commerciaux.
+    match /referrals/{referralId} {
+      allow read: if isAdmin('loyalty.edit')
+        || (isAdmin('crm.view') && resource.data.program == 'restaurant')
+        || (resource.data.program == 'restaurant' && resource.data.referrerType == 'restaurant' && can(resource.data.referrerId, 'settings.manage'));
+    }
+
+    // ----- operations.rules
+
+    // ---------------------------------------------------------------------------
+    // Exploitation du super admin (livreurs, commandes, règles, zones) : droits de
+    // lecture complémentaires. Toutes les écritures passent par Cloud Functions
+    // (functions/src/admin/operations) ; ces blocs s'ajoutent (OU logique) à ceux
+    // des autres domaines pour les mêmes chemins.
+    // ---------------------------------------------------------------------------
+
+    // Historique d'une fiche livreur ou commande, et des zones et villes : lisible par
+    // les administrateurs qui gèrent ces éléments, dans leur périmètre.
+    match /auditLogs/{logId} {
+      allow read: if (resource.data.target.type == 'driver' && isAdminIn('drivers.view', resource.data.cityId))
+        || (resource.data.target.type == 'order' && isAdminIn('orders.view', resource.data.cityId))
+        || (resource.data.target.type in ['zone', 'city'] && isAdminIn('zones.edit', resource.data.cityId));
+    }
+
+    // Historique des réglages d'exploitation (règles des commandes, attribution,
+    // rémunération, zones) : lisible par ceux qui peuvent les modifier.
+    match /settingsHistory/{entryId} {
+      allow read: if isAdmin('order_rules.edit') || isAdmin('zones.edit') || isAdmin('drivers.pay_rules');
+    }
+
+    // ----- orders.rules
+
+    // ---------------------------------------------------------------------------
+    // Commandes. Création (placeOrder), transitions (advanceOrder, cancelOrder,
+    // verifyPickupCode), attribution et remboursements : Cloud Functions uniquement.
+    // Aucune écriture directe : les montants et statuts ne sont jamais modifiables
+    // par le client, le restaurant ou le livreur.
+    // ---------------------------------------------------------------------------
+
+    function canReadOrder(order) {
+      return isSelf(order.customerId)
+        || (order.get('driverId', null) != null && isSelf(order.driverId))
+        || can(order.restaurantId, 'orders.view')
+        || isAdminIn('orders.view', order.cityId);
+    }
+
+    match /orders/{orderId} {
+      allow read: if canReadOrder(resource.data);
+      allow write: if false;
+
+      match /events/{eventId} {
+        allow read: if (resource.data.visibleToCustomer == true
+            && isSelf(get(/databases/$(database)/documents/orders/$(orderId)).data.customerId))
+          || can(get(/databases/$(database)/documents/orders/$(orderId)).data.restaurantId, 'orders.view')
+          || isAdmin('orders.view');
+        allow write: if false;
+      }
+    }
+
+    // Réclamations des clients (photo obligatoire, contrôles automatiques) : dépôt et décision par Cloud Function.
+    match /orderClaims/{claimId} {
+      allow read: if isSelf(resource.data.customerId) || isAdminIn('support.view', resource.data.cityId);
+      allow write: if false;
+    }
+
+    // Répartition financière complète (commission, part livreur, marge) : équipe finance.
+    match /orderFinancials/{orderId} {
+      allow read: if isAdmin('finance.view');
+      allow write: if false;
+    }
+
+    // ----- platform.rules
+
+    // ---------------------------------------------------------------------------
+    // Plateforme : réglages, marchés, zones, fonctionnalités, affichage app client,
+    // santé des services. AUCUNE écriture directe par un administrateur sur les réglages,
+    // marchés, zones, fonctionnalités, intégrations et versions : tout passe par une
+    // Cloud Function appelable (motif, historique settingsHistory, journal d'audit,
+    // double authentification de la session).
+    // ---------------------------------------------------------------------------
+
+    match /settings/{docId} {
+      // Réglages utiles aux apps sans connexion (vitrine, maintenance, pourboires…).
+      allow read: if docId in ['general', 'branding', 'payments', 'maintenance', 'display', 'loyalty', 'referral']
+        || (signedIn() && docId in ['orderRules', 'promotions', 'support'])
+        || (isAnyAdmin() && docId in ['merchantValidation', 'notificationDelivery', 'dispatch', 'limits'])
+        || isAdmin('settings.view');
+      // Écriture : Cloud Functions uniquement (updatePlatformSettings, updateFinanceSettings, ...).
+      allow write: if false;
+    }
+
+    match /settingsHistory/{entryId} {
+      allow read: if isAdmin('settings.view');
+      allow write: if false;
+    }
+
+    match /countries/{countryId} {
+      allow read: if true;
+      // Écriture : updateCountry, setCountryActive, updateCountryVat, updateCountryPayments (Cloud Functions).
+      allow write: if false;
+    }
+
+    match /cities/{cityId} {
+      allow read: if true;
+      // Écriture : saveCity, setCityActive, fermeture d'urgence (Cloud Functions).
+      allow write: if false;
+    }
+
+    match /zones/{zoneId} {
+      allow read: if true;
+      // Écriture : saveZone, closeZone (Cloud Functions).
+      allow write: if false;
+    }
+
+    match /surgeRules/{ruleId} {
+      allow read: if isAdmin('zones.edit') || isAdmin('drivers.pay_rules');
+      // Écriture : saveSurgeRule, applySurge (Cloud Functions).
+      allow write: if false;
+    }
+
+    // Verrou `locked` (vente d'alcool) et motif : setFeatureFlag uniquement.
+    match /featureFlags/{key} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /integrations/{key} {
+      allow read: if isAdmin('integrations.view');
+      // Écriture : updateIntegration, sondes de santé (Cloud Functions).
+      allow write: if false;
+    }
+
+    // Traduction automatique (Azure Translator, cahier « translation-azure ») : réglages publics
+    // sans la clé (settings/translator), écriture par saveTranslatorSettings uniquement.
+    match /translatorSecrets/{docId} {
+      // Clé chiffrée : jamais lue ni écrite côté client, Cloud Functions uniquement.
+      allow read, write: if false;
+    }
+
+    match /translations/{docId} {
+      // Cache serveur des traductions et compteurs de débit par utilisateur : Cloud Functions uniquement.
+      allow read, write: if false;
+    }
+
+    // Cartographie (Google Maps, tâche « maps-settings ») : réglages publics sans les clés
+    // (settings/maps), écriture par saveMapsSettings uniquement. La clé web est distribuée
+    // au navigateur via la Cloud Function getPublicRuntimeConfig, jamais via Firestore.
+    match /mapsSecrets/{docId} {
+      // Clés chiffrées (web + mobile) : jamais lues ni écrites côté client, Cloud Functions uniquement.
+      allow read, write: if false;
+    }
+
+    match /appVersions/{app} {
+      allow read: if true;
+      // Écriture : updateAppVersion (Cloud Function).
+      allow write: if false;
+    }
+
+    match /serviceStatus/{serviceKey} {
+      allow read: if isAdmin('system.view');
+      allow write: if false;
+    }
+
+    match /incidents/{incidentId} {
+      allow read: if isAdmin('system.view');
+      // Écriture : saveIncident (Cloud Function).
+      allow write: if false;
+    }
+
+    match /counters/{name} {
+      allow read, write: if false;
+    }
+
+    // ------------------------------------------------------------ Affichage app client
+
+    match /cuisineCategories/{id} {
+      allow read: if true;
+      allow create: if isAdmin('display.edit') && createdNow();
+      allow update: if isAdmin('display.edit') && updatedNow();
+      allow delete: if false;
+    }
+
+    match /homeSections/{id} {
+      allow read: if true;
+      allow create: if isAdmin('display.edit') && createdNow();
+      allow update: if isAdmin('display.edit') && updatedNow();
+      allow delete: if false;
+    }
+
+    match /banners/{id} {
+      allow read: if true;
+      allow create: if isAdmin('display.edit') && createdNow();
+      allow update: if isAdmin('display.edit') && updatedNow();
+      allow delete: if false;
+    }
+
+    match /sponsoredPlacements/{id} {
+      allow read: if isAdmin('display.edit') || isAdmin('finance.view')
+        || can(resource.data.restaurantId, 'finance.view');
+      // Vente et facturation d'un emplacement : Cloud Function `bookSponsoredPlacement`.
+      allow update: if isAdmin('display.edit')
+        && keepsUnchanged(['impressions', 'clicks', 'orders', 'invoiceId', 'priceHtCents'])
+        && updatedNow();
+      allow create, delete: if false;
+    }
+
+    match /pages/{slug} {
+      allow read: if resource.data.published == true || isAdmin('display.edit');
+      allow create: if isAdmin('display.edit') && createdNow();
+      allow update: if isAdmin('display.edit') && updatedNow();
+      allow delete: if false;
+    }
+
+    match /helpArticles/{id} {
+      allow read: if resource.data.published == true || isAdmin('support.view');
+      allow create: if isAdmin('support.configure') && createdNow();
+      allow update: if isAdmin('support.configure')
+        && keepsUnchanged(['views', 'helpfulYes', 'helpfulNo'])
+        && updatedNow();
+      allow delete: if false;
+    }
+
+    // ----- restaurants.rules
+
+    // ---------------------------------------------------------------------------
+    // Restaurants : fiche publique, conditions commerciales, réglages, carte,
+    // personnel (accès), CRM, livreurs du restaurant, documents partenaires.
+    // Statut, validation, formule, commission, notes et compteurs : Cloud Functions.
+    // ---------------------------------------------------------------------------
+
+    // Champs de la fiche modifiables par le restaurant (permission settings.manage).
+    function restaurantProfileFields() {
+      return ['description', 'phone', 'email', 'logo', 'cover', 'photos', 'accent', 'mark',
+        'cuisineIds', 'tags', 'priceLevel', 'prepMinutes', 'etaMinutes', 'ownDeliveryFeeCents',
+        'ownDeliveryRadiusMeters', 'isOpen', 'busyExtraMinutes', 'updatedAt', 'updatedBy'];
+    }
+
+    // Vente d'alcool interdite (décision client) : aucun produit de type boisson alcoolisée.
+    function productWithoutAlcohol() {
+      return incoming().get('vatCategory', 'food') != 'alcohol'
+        && incoming().get('containsAlcohol', false) != true;
+    }
+
+    // Limite de produits de la formule d'abonnement (settings/plans/{code}.limits.maxProducts,
+    // null = illimité). `productsCount` est tenu à jour par la Cloud Function `onProductWritten`
+    // (jamais modifiable par le restaurant lui-même, cf. restaurantProfileFields()).
+    function withinProductLimit(rid) {
+      let commercial = get(/databases/$(database)/documents/restaurants/$(rid)/private/commercial).data;
+      let plan = get(/databases/$(database)/documents/plans/$(commercial.get('planCode', 'basic'))).data;
+      let limit = plan.get('limits', {}).get('maxProducts', null);
+      let count = get(/databases/$(database)/documents/restaurants/$(rid)).data.get('productsCount', 0);
+      return limit == null || count < limit;
+    }
+
+    match /restaurantGroups/{groupId} {
+      allow read: if isSelf(resource.data.ownerId) || isAdmin('restaurants.view');
+      // Modification : saveRestaurantGroup (Cloud Function, audit).
+      allow write: if false;
+    }
+
+    match /restaurants/{rid} {
+      // Interrupteur « Visible dans l'application Ciyou Eats » (§A2) : masque le commerce du catalogue
+      // public sans changer son statut ; toujours visible pour son équipe et le super admin.
+      allow read: if (resource.data.status == 'active' && resource.data.get('visibleInApp', true) != false)
+        || isRestaurantMember(rid)
+        || isAdminIn('restaurants.view', resource.data.cityId);
+      allow update: if (can(rid, 'settings.manage') && onlyChanges(restaurantProfileFields())
+          || can(rid, 'orders.manage') && onlyChanges(['isOpen', 'busyExtraMinutes', 'updatedAt', 'updatedBy'])
+          // Modification par l'équipe interne : adminUpdateRestaurant (Cloud Function, motif, audit).
+          )
+        && incoming().busyExtraMinutes is int
+        && incoming().busyExtraMinutes >= 0
+        && incoming().busyExtraMinutes <= 90
+        && updatedNow();
+      // Création (inscription autonome) et suppression : Cloud Functions.
+      allow create, delete: if false;
+
+      // Conditions commerciales et identité légale.
+      match /private/{docId} {
+        allow read: if (docId == 'commercial' && can(rid, 'finance.view'))
+          || (docId == 'legal' && can(rid, 'settings.manage'))
+          || isAdmin('restaurants.commercial')
+          || isAdmin('finance.view');
+        allow write: if false;
+        // Super admin, validation des dossiers : identité légale consultable par les validateurs.
+        allow read: if docId == 'legal' && isAdmin('restaurants.validate');
+      }
+
+      match /settings/{docId} {
+        allow read: if isRestaurantMember(rid) || isAdmin('restaurants.view');
+        allow write: if updatedNow() && (
+          (docId in ['orders', 'hours', 'payments', 'loyalty', 'notifications'] && can(rid, 'settings.manage'))
+          || (docId == 'payroll' && can(rid, 'payroll.manage'))
+          || (docId == 'haccp' && can(rid, 'haccp.manage')));
+      }
+
+      match /deliveryZones/{zoneId} {
+        allow read: if true;
+        allow create: if can(rid, 'zones.manage') && createdNow();
+        allow update: if can(rid, 'zones.manage') && updatedNow();
+        allow delete: if can(rid, 'zones.manage');
+      }
+
+      // ------------------------------------------------------------ Carte
+      // Lecture publique (menu de l'app client). Les suppressions passent par la
+      // corbeille (Cloud Function moveToTrash).
+
+      match /sections/{sectionId} {
+        allow read: if true;
+        allow create: if can(rid, 'menu.edit') && createdNow() && isNonEmptyString(incoming().name, 80);
+        allow update: if can(rid, 'menu.edit')
+          && isNonEmptyString(incoming().name, 80)
+          && updatedNow();
+        allow delete: if false;
+      }
+
+      match /products/{productId} {
+        allow read: if true;
+        allow create: if can(rid, 'menu.edit')
+          && createdNow()
+          && isNonEmptyString(incoming().name, 100)
+          && isCents(incoming().priceCents)
+          && incoming().salesCount == 0
+          && productWithoutAlcohol()
+          && withinProductLimit(rid);
+        allow update: if (
+            can(rid, 'menu.edit')
+              && keepsUnchanged(['salesCount'])
+              && isNonEmptyString(incoming().name, 100)
+              && isCents(incoming().priceCents)
+              && productWithoutAlcohol()
+            || can(rid, 'stock.edit') && onlyChanges(['stock', 'available', 'updatedAt', 'updatedBy'])
+          ) && updatedNow();
+        allow delete: if false;
+      }
+
+      // Offres automatiques sur un plat (§B1) : lecture publique (fiche produit, panier), écriture par
+      // Cloud Function uniquement (saveProductOffer, toggleProductOffer, deleteProductOffer, et la
+      // désactivation par l'équipe Ciyou Eats).
+      match /productOffers/{offerId} {
+        allow read: if true;
+        allow write: if false;
+      }
+
+      match /options/{optionId} {
+        allow read: if true;
+        allow create: if can(rid, 'menu.edit') && createdNow()
+          && isNonEmptyString(incoming().name, 90) && isCents(incoming().priceCents);
+        allow update: if can(rid, 'menu.edit')
+          && isNonEmptyString(incoming().name, 90) && isCents(incoming().priceCents)
+          && updatedNow();
+        allow delete: if false;
+      }
+
+      match /optionGroups/{groupId} {
+        allow read: if true;
+        allow create, update: if can(rid, 'menu.edit')
+          && isNonEmptyString(incoming().name, 90)
+          && incoming().optionIds is list
+          && incoming().optionIds.size() >= 1
+          && incoming().min is int
+          && incoming().max is int
+          && incoming().min >= 0
+          && incoming().min <= incoming().max
+          && incoming().max >= 1
+          && incoming().updatedAt == request.time;
+        allow delete: if false;
+      }
+
+      // stockAfter n'est fiable que s'il correspond au dernier stock connu du
+      // produit + le delta annoncé : empêche un mouvement client incohérent qui
+      // contournerait la Cloud Function adjustStock (seule habilitée à recalculer
+      // le stock via transaction serveur).
+      function stockMovementConsistent(rid, productId) {
+        let product = get(/databases/$(database)/documents/restaurants/$(rid)/products/$(productId)).data;
+        return product.stock is int
+          && incoming().stockAfter == product.stock + incoming().delta;
+      }
+
+      match /stockMovements/{movementId} {
+        allow read: if can(rid, 'menu.view') || isAdmin('restaurants.view');
+        allow create: if can(rid, 'stock.edit')
+          && incoming().reason in ['manual_adjust', 'reception', 'waste', 'inventory']
+          && incoming().createdBy == uid()
+          && incoming().createdAt == request.time
+          && incoming().delta is int
+          && incoming().stockAfter is int
+          && incoming().stockAfter >= 0
+          && stockMovementConsistent(rid, incoming().productId);
+        allow update, delete: if false;
+      }
+
+      // ------------------------------------------------------------ Personnel (accès)
+      // Invitations, rôles et permissions : Cloud Functions inviteMember, updateMemberRole.
+
+      match /members/{memberId} {
+        allow read: if isSelf(memberId) || can(rid, 'team.view') || isAdmin('restaurants.view');
+        allow update: if can(rid, 'team.manage') && onlyChanges(['onDuty']);
+        allow create, delete: if false;
+      }
+
+      match /staffRoles/{roleId} {
+        allow read: if can(rid, 'team.view') || isAdmin('restaurants.view');
+        allow create: if can(rid, 'team.manage') && createdNow() && incoming().system == false;
+        allow update: if can(rid, 'team.manage') && existing().system == false && updatedNow();
+        allow delete: if can(rid, 'team.manage') && existing().system == false;
+      }
+
+      // ------------------------------------------------------------ Clients et livreurs
+
+      match /customers/{customerId} {
+        allow read: if can(rid, 'customers.view') || isAdmin('customers.view');
+        allow update: if can(rid, 'customers.manage')
+          && onlyChanges(['blocked', 'blockedReason', 'internalNote', 'tags', 'updatedAt'])
+          && incoming().updatedAt == request.time;
+        allow create, delete: if false;
+
+        // Notes internes de l'équipe : ajout et suppression par Cloud Function (addCustomerNote, deleteCustomerNote).
+        match /notes/{noteId} {
+          allow read: if can(rid, 'customers.view') || isAdmin('customers.view');
+          allow write: if false;
+        }
+      }
+
+      match /couriers/{driverId} {
+        allow read: if isSelf(driverId) || can(rid, 'orders.view') || isAdmin('drivers.view');
+        allow update: if can(rid, 'couriers.manage')
+          && onlyChanges(['status', 'note', 'updatedAt', 'updatedBy'])
+          && incoming().status in ['active', 'inactive', 'blocked']
+          && updatedNow();
+        allow create, delete: if false;
+      }
+
+      match /dailyStats/{day} {
+        allow read: if can(rid, 'dashboard.view') || can(rid, 'finance.view') || isAdmin('restaurants.view');
+        allow write: if false;
+      }
+
+      match /announcementReads/{announcementId} {
+        allow read: if isRestaurantMember(rid);
+        allow create: if isRestaurantMember(rid) && incoming().readBy == uid() && incoming().readAt == request.time;
+        allow update, delete: if false;
+      }
+    }
+
+    // ------------------------------------------------------------ Documents partenaires
+    // Dépôt par le restaurant ou le livreur ; validation, refus et expiration : Cloud Functions.
+
+    match /partnerDocuments/{documentId} {
+      allow read: if (resource.data.ownerType == 'restaurant' && can(resource.data.ownerId, 'settings.manage'))
+        || (resource.data.ownerType == 'driver' && isSelf(resource.data.ownerId))
+        || isAdmin('restaurants.validate')
+        || isAdmin('drivers.validate');
+      // Super admin, fiche restaurant : liste des justificatifs (sans accès aux fichiers, réservés aux validateurs).
+      allow read: if resource.data.ownerType == 'restaurant' && isAdminIn('restaurants.view', resource.data.get('cityId', ''));
+      allow create: if (
+          (incoming().ownerType == 'restaurant' && can(incoming().ownerId, 'settings.manage'))
+          || (incoming().ownerType == 'driver' && isSelf(incoming().ownerId))
+        )
+        && incoming().status == 'pending'
+        && incoming().get('reviewedBy', null) == null
+        && incoming().remindersSent == 0
+        && createdNow();
+      allow update, delete: if false;
+    }
+
+    match /menuIssues/{issueId} {
+      allow read: if can(resource.data.restaurantId, 'menu.view') || isAdmin('restaurants.view');
+      // Traitement par l'équipe interne : resolveMenuIssue (Cloud Function, motif, audit).
+      allow update: if can(resource.data.restaurantId, 'menu.edit')
+        && onlyChanges(['status', 'resolvedAt', 'resolvedBy'])
+        && incoming().status in ['fixed', 'ignored']
+        && incoming().resolvedBy == uid();
+      allow create, delete: if false;
+    }
+
+    match /posConnections/{connectionId} {
+      allow read: if can(resource.data.restaurantId, 'settings.manage') || isAdmin('integrations.view');
+      allow write: if false;
+    }
+
+    // ----- support.rules
+
+    // ---------------------------------------------------------------------------
+    // Support et litiges, messagerie, avis, signalements de contenus.
+    // Ouverture d'un ticket (numérotation) : Cloud Function openTicket.
+    // Remboursements et avoirs depuis un ticket : Cloud Function issueRefund.
+    // ---------------------------------------------------------------------------
+
+    function ticketData(ticketId) {
+      return get(/databases/$(database)/documents/supportTickets/$(ticketId)).data;
+    }
+
+    function isTicketRequester(ticket) {
+      return isSelf(ticket.requesterId)
+        || (ticket.requesterType == 'restaurant' && ticket.get('restaurantId', null) != null
+          && can(ticket.restaurantId, 'support.use'));
+    }
+
+    match /supportTickets/{ticketId} {
+      allow read: if isTicketRequester(resource.data) || isAdmin('support.view');
+      allow update: if isTicketRequester(existing())
+          && existing().status in ['resolved', 'closed']
+          && existing().get('satisfaction', null) == null
+          && onlyChanges(['satisfaction', 'updatedAt'])
+          && incoming().satisfaction.score in [1, 2, 3, 4, 5]
+          && incoming().satisfaction.at == request.time
+        || isTicketRequester(existing()) && onlyChanges(['unreadByRequester']) && incoming().unreadByRequester == 0
+        || isAdmin('support.handle')
+          && onlyChanges(['status', 'priority', 'assigneeId', 'tags', 'escalated', 'escalatedTo', 'escalatedAt',
+            'resolvedAt', 'closedAt', 'unreadBySupport', 'reasonId', 'updatedAt', 'updatedBy'])
+          && (keepsUnchanged(['escalated', 'escalatedTo', 'escalatedAt']) || isAdmin('support.escalate'))
+          && updatedNow();
+      allow create, delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if isAdmin('support.view')
+          || (resource.data.internal == false && isTicketRequester(ticketData(ticketId)));
+        allow create: if incoming().createdAt == request.time
+          && incoming().authorId == uid()
+          && isNonEmptyString(incoming().body, 5000)
+          && (
+            incoming().authorType == 'requester'
+              && incoming().internal == false
+              && isTicketRequester(ticketData(ticketId))
+              && ticketData(ticketId).status != 'closed'
+            || incoming().authorType == 'agent' && isAdmin('support.handle')
+          );
+        allow update, delete: if false;
+      }
+    }
+
+    match /ticketReasons/{reasonId} {
+      allow read: if signedIn();
+      allow write: if isAdmin('support.configure');
+    }
+
+    match /cannedResponses/{responseId} {
+      allow read: if isAdmin('support.view');
+      allow create: if isAdmin('support.configure') && createdNow();
+      allow update: if isAdmin('support.configure') && updatedNow();
+      allow delete: if isAdmin('support.configure');
+    }
+
+    // ------------------------------------------------------------ Messagerie
+    // Création des fils : Cloud Function (à l'attribution d'une commande ou à la demande).
+
+    function conversationData(conversationId) {
+      return get(/databases/$(database)/documents/conversations/$(conversationId)).data;
+    }
+
+    function isConversationMember(conversation) {
+      return (signedIn() && request.auth.uid in conversation.participantIds)
+        || (conversation.get('restaurantId', null) != null && can(conversation.restaurantId, 'messages.use'));
+    }
+
+    match /conversations/{conversationId} {
+      allow read: if isConversationMember(resource.data) || isAdmin('support.view');
+      // Remise à zéro de son propre compteur de non-lus.
+      allow update: if isConversationMember(existing())
+        && onlyChanges(['unread'])
+        && incoming().unread.diff(existing().unread).affectedKeys().hasOnly([request.auth.uid])
+        && incoming().unread[request.auth.uid] == 0;
+      allow create, delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if isConversationMember(conversationData(conversationId)) || isAdmin('support.view');
+        allow create: if isConversationMember(conversationData(conversationId))
+          && conversationData(conversationId).closed == false
+          && incoming().senderId == uid()
+          && isNonEmptyString(incoming().text, 2000)
+          && incoming().readBy == [request.auth.uid]
+          && incoming().createdAt == request.time;
+        allow update: if isConversationMember(conversationData(conversationId))
+          && onlyChanges(['readBy'])
+          && incoming().readBy.toSet().difference(existing().readBy.toSet()) == [request.auth.uid].toSet();
+        allow delete: if false;
+      }
+    }
+
+    // ------------------------------------------------------------ Avis
+    // Identifiant de l'avis = identifiant de la commande : un avis par commande livrée.
+    // La publication suit la modération automatique (trigger onReviewCreate).
+
+    function reviewableOrder(orderId) {
+      return get(/databases/$(database)/documents/orders/$(orderId)).data;
+    }
+
+    match /reviews/{orderId} {
+      allow read: if resource.data.status == 'published'
+        || isSelf(resource.data.customerId)
+        || can(resource.data.restaurantId, 'reviews.reply')
+        || isAdmin('reviews.view');
+      allow create: if isSelf(incoming().customerId)
+        && reviewableOrder(orderId).customerId == request.auth.uid
+        && reviewableOrder(orderId).status == 'delivered'
+        && incoming().orderId == orderId
+        && incoming().restaurantId == reviewableOrder(orderId).restaurantId
+        && incoming().restaurantRating in [1, 2, 3, 4, 5]
+        && isOptionalString(incoming().get('comment', null), 1000)
+        && incoming().status == 'pending_moderation'
+        && incoming().reportsCount == 0
+        && incoming().get('reply', null) == null
+        && incoming().createdAt == request.time;
+      // Le champ « reply » n'est jamais écrit directement par le restaurant : la
+      // réponse (et son audit) passe obligatoirement par la Cloud Function
+      // replyToReview / moderateReview (écriture Admin SDK, hors règles).
+      allow update: if isAdmin('reviews.moderate')
+        && onlyChanges(['status', 'moderation', 'reply', 'updatedAt'])
+        && incoming().updatedAt == request.time;
+      allow delete: if false;
+    }
+
+    match /contentReports/{reportId} {
+      allow read: if isAdmin('reviews.moderate');
+      allow create: if signedIn()
+        && incoming().reporterId == uid()
+        && incoming().status == 'open'
+        && incoming().get('decision', null) == null
+        && isOptionalString(incoming().get('details', null), 2000)
+        && incoming().createdAt == request.time;
+      allow update: if isAdmin('reviews.moderate') && onlyChanges(['status', 'decision']);
+      allow delete: if false;
+    }
+
+    // ----- users.rules
+
+    // ---------------------------------------------------------------------------
+    // Comptes utilisateurs, porte-monnaie, fidélité, parrainage.
+    // Le document users/{uid} est créé par la Cloud Function d'inscription ; le rôle,
+    // le statut, le solde d'avoirs et les agrégats ne sont jamais écrits par l'app.
+    // ---------------------------------------------------------------------------
+
+    function userEditableFields() {
+      return ['firstName', 'lastName', 'displayName', 'phone', 'avatar', 'locale',
+        'defaultAddressId', 'notificationPrefs', 'lastSeenAt', 'updatedAt', 'updatedBy'];
+    }
+
+    function adminCanViewUsers() {
+      return isAdmin('customers.view') || isAdmin('drivers.view') || isAdmin('restaurants.view');
+    }
+
+    match /users/{userId} {
+      allow read: if isSelf(userId) || adminCanViewUsers();
+      allow update: if isSelf(userId)
+          && onlyChanges(userEditableFields())
+          && isNonEmptyString(incoming().firstName, 60)
+          && isNonEmptyString(incoming().lastName, 60)
+          && updatedNow()
+        || isAdmin('customers.edit') && onlyChanges(userEditableFields()) && updatedNow();
+      allow create, delete: if false;
+
+      match /addresses/{addressId} {
+        allow read: if isSelf(userId) || isAdmin('customers.view');
+        allow create, update: if isSelf(userId)
+          && isNonEmptyString(incoming().label, 40)
+          && isNonEmptyString(incoming().line1, 200)
+          && incoming().geo is latlng
+          && incoming().updatedAt == request.time;
+        allow delete: if isSelf(userId);
+      }
+
+      match /favorites/{favoriteId} {
+        allow read: if isSelf(userId);
+        // Super admin, fiche client.
+        allow read: if isAdmin('customers.view');
+        allow create: if isSelf(userId)
+          && incoming().type in ['restaurant', 'product']
+          && incoming().restaurantId is string
+          && incoming().createdAt == request.time;
+        allow delete: if isSelf(userId);
+        allow update: if false;
+      }
+
+      match /notifications/{notificationId} {
+        allow read: if isSelf(userId);
+        allow update: if isSelf(userId) && onlyChanges(['read', 'readAt']) && incoming().read == true;
+        allow delete: if isSelf(userId);
+        allow create: if false;
+      }
+
+      match /devices/{deviceId} {
+        allow read, delete: if isSelf(userId);
+        allow create, update: if isSelf(userId)
+          && incoming().platform in ['ios', 'android', 'web']
+          && incoming().app in ['client', 'driver', 'restaurant', 'admin']
+          && incoming().lastSeenAt == request.time;
+      }
+
+      // Cartes enregistrées : écrites par Cloud Function (Stripe), jamais le numéro complet.
+      match /paymentMethods/{methodId} {
+        allow read: if isSelf(userId);
+        // Super admin, fiche client : cartes masquées (marque, 4 derniers chiffres, expiration).
+        allow read: if isAdmin('customers.view');
+        allow write: if false;
+      }
+
+      // Journal des consentements : écrit par la Cloud Function `setConsent`.
+      match /consents/{consentId} {
+        allow read: if isSelf(userId) || isAdmin('gdpr.handle');
+        allow write: if false;
+      }
+    }
+
+    match /userPrivate/{userId} {
+      allow read: if isAdmin('customers.view') || isAdmin('fraud.view');
+      allow write: if false;
+    }
+
+    match /walletTransactions/{id} {
+      allow read: if isSelf(resource.data.userId) || isAdmin('customers.view') || isAdmin('finance.view');
+      allow write: if false;
+    }
+
+    match /loyaltyAccounts/{accountId} {
+      allow read: if isSelf(resource.data.userId)
+        || (resource.data.scope == 'restaurant' && can(resource.data.restaurantId, 'customers.view'))
+        || isAdmin('customers.view');
+      allow write: if false;
+    }
+
+    match /loyaltyTransactions/{id} {
+      allow read: if isSelf(resource.data.userId) || isAdmin('customers.view');
+      allow write: if false;
+    }
+
+    match /referrals/{id} {
+      allow read: if isSelf(resource.data.referrerId) || isSelf(resource.data.refereeId) || isAdmin('customers.view');
+      allow write: if false;
+    }
+
+    // ----- workforce.rules
+
+    // ---------------------------------------------------------------------------
+    // Gestion d'entreprise du restaurant (équipe, planning, pointages, absences,
+    // paie, tâches, documents) et registre HACCP. Tout est sous restaurants/{rid}.
+    // Un employé accède à ses propres données via le champ dénormalisé employeeUid.
+    // Le pointage (entrée, sortie, pauses, géolocalisation) passe par la Cloud
+    // Function clockEvent ; la génération des bulletins par generatePayslips.
+    // ---------------------------------------------------------------------------
+
+    function ownsEntry() {
+      return signedIn() && resource.data.get('employeeUid', null) == request.auth.uid;
+    }
+
+    function ownsEmployeeRecord() {
+      return signedIn() && resource.data.get('uid', null) == request.auth.uid;
+    }
+
+    function ownsIncoming() {
+      return signedIn() && request.resource.data.get('employeeUid', null) == request.auth.uid;
+    }
+
+    match /restaurants/{rid}/employees/{employeeId} {
+      allow read: if can(rid, 'team.view') || ownsEmployeeRecord() || isAdmin('restaurants.view');
+      allow create: if can(rid, 'team.manage') && createdNow()
+        && isNonEmptyString(incoming().firstName, 60)
+        && isNonEmptyString(incoming().lastName, 60);
+      allow update: if can(rid, 'team.manage') && updatedNow();
+      allow delete: if false;
+    }
+
+    match /restaurants/{rid}/employeeDocuments/{documentId} {
+      allow read: if can(rid, 'team.manage') || (ownsEntry() && resource.data.visibleToEmployee == true);
+      allow create: if can(rid, 'team.manage') && createdNow();
+      allow update: if can(rid, 'team.manage') && updatedNow();
+      allow delete: if can(rid, 'team.manage');
+    }
+
+    match /restaurants/{rid}/availabilities/{availabilityId} {
+      allow read: if can(rid, 'planning.view') || ownsEntry();
+      allow create: if (ownsIncoming() && incoming().locked == false || can(rid, 'planning.manage'))
+        && isIsoDay(incoming().date)
+        && incoming().updatedAt == request.time;
+      allow update: if (ownsEntry() && existing().locked == false && incoming().locked == false
+          || can(rid, 'planning.manage'))
+        && keepsUnchanged(['employeeId', 'employeeUid', 'date'])
+        && incoming().updatedAt == request.time;
+      allow delete: if can(rid, 'planning.manage');
+    }
+
+    match /restaurants/{rid}/shifts/{shiftId} {
+      allow read: if can(rid, 'planning.view') || ownsEntry();
+      allow create: if can(rid, 'planning.manage') && createdNow()
+        && isIsoDay(incoming().date)
+        && isHourMinute(incoming().startTime)
+        && isHourMinute(incoming().endTime);
+      allow update: if can(rid, 'planning.manage') && updatedNow()
+        && isHourMinute(incoming().startTime)
+        && isHourMinute(incoming().endTime);
+      allow delete: if can(rid, 'planning.manage');
+    }
+
+    match /restaurants/{rid}/shiftTemplates/{templateId} {
+      allow read: if can(rid, 'planning.view');
+      allow create: if can(rid, 'planning.manage') && createdNow();
+      allow update: if can(rid, 'planning.manage') && updatedNow();
+      allow delete: if can(rid, 'planning.manage');
+    }
+
+    match /restaurants/{rid}/shiftChangeRequests/{requestId} {
+      allow read: if can(rid, 'planning.manage') || ownsEntry();
+      allow create: if ownsIncoming()
+        && isRestaurantMember(rid)
+        && incoming().status == 'pending'
+        && isIsoDay(incoming().date)
+        && createdNow();
+      allow update: if (can(rid, 'planning.manage')
+          && onlyChanges(['status', 'reviewedBy', 'reviewedAt', 'rejectionReason', 'updatedAt', 'updatedBy'])
+          && incoming().status in ['approved', 'rejected']
+          && incoming().reviewedBy == uid()
+        || ownsEntry() && existing().status == 'pending'
+          && onlyChanges(['status', 'updatedAt', 'updatedBy'])
+          && incoming().status == 'cancelled')
+        && updatedNow();
+      allow delete: if false;
+    }
+
+    match /restaurants/{rid}/timeEntries/{entryId} {
+      allow read: if can(rid, 'timeclock.manage') || ownsEntry();
+      // Corrections du manager (l'historique est écrit par le trigger onTimeEntryWrite).
+      allow create, update: if can(rid, 'timeclock.manage')
+        && isIsoDay(incoming().date)
+        && incoming().modifiedBy == uid()
+        && incoming().updatedAt == request.time;
+      allow delete: if false;
+
+      match /history/{historyId} {
+        allow read: if can(rid, 'timeclock.manage');
+        allow write: if false;
+      }
+    }
+
+    match /restaurants/{rid}/weekValidations/{validationId} {
+      allow read: if can(rid, 'timeclock.manage') || ownsEntry();
+      allow update: if (ownsEntry()
+          && existing().status == 'pending'
+          && onlyChanges(['status', 'employeeComment', 'updatedAt'])
+          && incoming().status == 'employee_validated'
+        || can(rid, 'timeclock.manage')
+          && onlyChanges(['status', 'managerComment', 'validatedBy', 'validatedAt', 'updatedAt'])
+          && incoming().status in ['manager_validated', 'rejected', 'pending']
+          && incoming().get('validatedBy', uid()) == uid())
+        && incoming().updatedAt == request.time;
+      allow create, delete: if false;
+    }
+
+    match /restaurants/{rid}/absences/{absenceId} {
+      allow read: if can(rid, 'planning.view') || ownsEntry();
+      allow create: if (ownsIncoming() && can(rid, 'absences.self') && incoming().status == 'pending'
+          || can(rid, 'absences.manage'))
+        && isIsoDay(incoming().startDate)
+        && isIsoDay(incoming().endDate)
+        && incoming().startDate <= incoming().endDate
+        && createdNow();
+      allow update: if (can(rid, 'absences.manage')
+          && keepsUnchanged(['employeeId', 'employeeUid'])
+        || ownsEntry() && existing().status == 'pending'
+          && onlyChanges(['status', 'updatedAt', 'updatedBy'])
+          && incoming().status == 'cancelled')
+        && updatedNow();
+      allow delete: if false;
+    }
+
+    match /restaurants/{rid}/payslips/{payslipId} {
+      allow read: if can(rid, 'payroll.view') || (ownsEntry() && resource.data.status in ['validated', 'sent']);
+      allow update: if can(rid, 'payroll.manage')
+        && onlyChanges(['status', 'validatedAt', 'validatedBy', 'bonusCents'])
+        && incoming().status in ['generated', 'validated']
+        && incoming().get('validatedBy', uid()) == uid();
+      allow create, delete: if false;
+    }
+
+    match /restaurants/{rid}/tasks/{taskId} {
+      allow read: if can(rid, 'tasks.view');
+      allow create: if can(rid, 'tasks.manage') && createdNow() && isNonEmptyString(incoming().title, 200);
+      allow update: if (can(rid, 'tasks.manage')
+        || request.auth.uid in existing().assigneeIds
+          && onlyChanges(['assigneeStatus', 'updatedAt', 'updatedBy'])
+          && incoming().assigneeStatus.diff(existing().assigneeStatus).affectedKeys().hasOnly([request.auth.uid]))
+        && updatedNow();
+      allow delete: if can(rid, 'tasks.manage');
+
+      match /comments/{commentId} {
+        allow read: if can(rid, 'tasks.view');
+        allow create: if can(rid, 'tasks.view')
+          && incoming().authorId == uid()
+          && isNonEmptyString(incoming().body, 2000)
+          && incoming().createdAt == request.time;
+        allow delete: if isSelf(resource.data.authorId) || can(rid, 'tasks.manage');
+        allow update: if false;
+      }
+    }
+
+    match /restaurants/{rid}/taskTemplates/{templateId} {
+      allow read: if can(rid, 'tasks.view');
+      allow create: if can(rid, 'tasks.manage') && createdNow();
+      allow update: if can(rid, 'tasks.manage') && updatedNow();
+      allow delete: if can(rid, 'tasks.manage');
+    }
+
+    match /restaurants/{rid}/documents/{documentId} {
+      allow read: if can(rid, 'documents.view');
+      allow create: if can(rid, 'documents.manage') && createdNow();
+      allow update: if can(rid, 'documents.manage') && updatedNow();
+      allow delete: if false;
+    }
+
+    // ------------------------------------------------------------ HACCP
+
+    match /restaurants/{rid}/haccpEquipments/{id} {
+      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow create: if can(rid, 'haccp.manage') && createdNow();
+      allow update: if can(rid, 'haccp.manage') && updatedNow();
+      allow delete: if false;
+    }
+
+    match /restaurants/{rid}/haccpCleaningTasks/{id} {
+      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow create: if can(rid, 'haccp.manage') && createdNow();
+      allow update: if can(rid, 'haccp.manage') && updatedNow();
+      allow delete: if false;
+    }
+
+    match /restaurants/{rid}/haccpTemperatureLogs/{id} {
+      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow create: if can(rid, 'haccp.record')
+        && incoming().value is number
+        && incoming().recordedBy == uid()
+        && incoming().recordedAt == request.time
+        && incoming().get('verifiedBy', null) == null;
+      allow update: if can(rid, 'haccp.manage')
+        && onlyChanges(['verifiedBy', 'verifiedAt', 'correctiveAction'])
+        && incoming().verifiedBy == uid();
+      allow delete: if false;
+    }
+
+    match /restaurants/{rid}/haccpReceptions/{id} {
+      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow create: if can(rid, 'haccp.record')
+        && incoming().receivedBy == uid()
+        && incoming().receivedAt == request.time
+        && incoming().status == 'pending';
+      allow update: if can(rid, 'haccp.manage')
+        && onlyChanges(['status', 'decidedBy', 'decidedAt', 'notes'])
+        && incoming().status in ['accepted', 'refused']
+        && incoming().decidedBy == uid();
+      allow delete: if false;
+    }
+
+    match /restaurants/{rid}/haccpNonConformities/{id} {
+      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow create: if can(rid, 'haccp.record')
+        && incoming().declaredBy == uid()
+        && incoming().declaredAt == request.time
+        && incoming().status == 'open';
+      allow update: if can(rid, 'haccp.manage')
+        && keepsUnchanged(['declaredBy', 'declaredAt']);
+      allow delete: if false;
+    }
+
+    match /restaurants/{rid}/haccpCleaningLogs/{id} {
+      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow create: if can(rid, 'haccp.record') && incoming().doneBy == uid() && incoming().doneAt == request.time;
+      allow update, delete: if false;
+    }
+
+    match /restaurants/{rid}/haccpPestVisits/{id} {
+      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow create: if can(rid, 'haccp.manage') && incoming().createdBy == uid() && incoming().createdAt == request.time;
+      allow update: if can(rid, 'haccp.manage') && keepsUnchanged(['createdBy', 'createdAt']);
+      allow delete: if false;
+    }
+
+    match /restaurants/{rid}/haccpPestReports/{id} {
+      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow create: if can(rid, 'haccp.record')
+        && incoming().reportedBy == uid()
+        && incoming().reportedAt == request.time
+        && incoming().status == 'open';
+      allow update: if can(rid, 'haccp.manage')
+        && onlyChanges(['status', 'resolvedBy', 'resolvedAt'])
+        && incoming().resolvedBy == uid();
+      allow delete: if false;
+    }
+
+    match /restaurants/{rid}/haccpPersonnelChecks/{id} {
+      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow create, update: if can(rid, 'haccp.record') && isIsoDay(incoming().date);
+      allow delete: if false;
+    }
+
+    match /restaurants/{rid}/haccpDocuments/{id} {
+      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow create: if can(rid, 'haccp.manage') && incoming().uploadedBy == uid() && incoming().uploadedAt == request.time;
+      allow delete: if can(rid, 'haccp.manage');
+      allow update: if false;
+    }
+
+    match /restaurants/{rid}/haccpAudits/{id} {
+      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow create: if can(rid, 'haccp.manage') && incoming().performedBy == uid() && incoming().createdAt == request.time;
+      allow update: if can(rid, 'haccp.manage') && keepsUnchanged(['performedBy', 'createdAt']);
+      allow delete: if false;
+    }
+
+    // Exports PDF générés par la Cloud Function exportHaccpRegister.
+    match /restaurants/{rid}/haccpExports/{id} {
+      allow read: if can(rid, 'haccp.manage') || isAdmin('restaurants.view');
+      allow write: if false;
+    }
+
+    // Tout chemin non décrit ci-dessus est refusé.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

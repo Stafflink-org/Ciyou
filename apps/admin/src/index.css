@@ -1,0 +1,4 @@
+@import "@golink/ui/styles.css";
+
+/* Socle applicatif partagé (pages d'accès, écrans d'état) : Tailwind doit analyser ses classes. */
+@source "../../../packages/web/src";

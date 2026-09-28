@@ -1,0 +1,103 @@
+// ---------------------------------------------------------------------------
+// Comptes utilisateurs, porte-monnaie, fidélité, parrainage.
+// Le document users/{uid} est créé par la Cloud Function d'inscription ; le rôle,
+// le statut, le solde d'avoirs et les agrégats ne sont jamais écrits par l'app.
+// ---------------------------------------------------------------------------
+
+function userEditableFields() {
+  return ['firstName', 'lastName', 'displayName', 'phone', 'avatar', 'locale',
+    'defaultAddressId', 'notificationPrefs', 'lastSeenAt', 'updatedAt', 'updatedBy'];
+}
+
+function adminCanViewUsers() {
+  return isAdmin('customers.view') || isAdmin('drivers.view') || isAdmin('restaurants.view');
+}
+
+match /users/{userId} {
+  allow read: if isSelf(userId) || adminCanViewUsers();
+  allow update: if isSelf(userId)
+      && onlyChanges(userEditableFields())
+      && isNonEmptyString(incoming().firstName, 60)
+      && isNonEmptyString(incoming().lastName, 60)
+      && updatedNow()
+    || isAdmin('customers.edit') && onlyChanges(userEditableFields()) && updatedNow();
+  allow create, delete: if false;
+
+  match /addresses/{addressId} {
+    allow read: if isSelf(userId) || isAdmin('customers.view');
+    allow create, update: if isSelf(userId)
+      && isNonEmptyString(incoming().label, 40)
+      && isNonEmptyString(incoming().line1, 200)
+      && incoming().geo is latlng
+      && incoming().updatedAt == request.time;
+    allow delete: if isSelf(userId);
+  }
+
+  match /favorites/{favoriteId} {
+    allow read: if isSelf(userId);
+    // Super admin, fiche client.
+    allow read: if isAdmin('customers.view');
+    allow create: if isSelf(userId)
+      && incoming().type in ['restaurant', 'product']
+      && incoming().restaurantId is string
+      && incoming().createdAt == request.time;
+    allow delete: if isSelf(userId);
+    allow update: if false;
+  }
+
+  match /notifications/{notificationId} {
+    allow read: if isSelf(userId);
+    allow update: if isSelf(userId) && onlyChanges(['read', 'readAt']) && incoming().read == true;
+    allow delete: if isSelf(userId);
+    allow create: if false;
+  }
+
+  match /devices/{deviceId} {
+    allow read, delete: if isSelf(userId);
+    allow create, update: if isSelf(userId)
+      && incoming().platform in ['ios', 'android', 'web']
+      && incoming().app in ['client', 'driver', 'restaurant', 'admin']
+      && incoming().lastSeenAt == request.time;
+  }
+
+  // Cartes enregistrées : écrites par Cloud Function (Stripe), jamais le numéro complet.
+  match /paymentMethods/{methodId} {
+    allow read: if isSelf(userId);
+    // Super admin, fiche client : cartes masquées (marque, 4 derniers chiffres, expiration).
+    allow read: if isAdmin('customers.view');
+    allow write: if false;
+  }
+
+  // Journal des consentements : écrit par la Cloud Function `setConsent`.
+  match /consents/{consentId} {
+    allow read: if isSelf(userId) || isAdmin('gdpr.handle');
+    allow write: if false;
+  }
+}
+
+match /userPrivate/{userId} {
+  allow read: if isAdmin('customers.view') || isAdmin('fraud.view');
+  allow write: if false;
+}
+
+match /walletTransactions/{id} {
+  allow read: if isSelf(resource.data.userId) || isAdmin('customers.view') || isAdmin('finance.view');
+  allow write: if false;
+}
+
+match /loyaltyAccounts/{accountId} {
+  allow read: if isSelf(resource.data.userId)
+    || (resource.data.scope == 'restaurant' && can(resource.data.restaurantId, 'customers.view'))
+    || isAdmin('customers.view');
+  allow write: if false;
+}
+
+match /loyaltyTransactions/{id} {
+  allow read: if isSelf(resource.data.userId) || isAdmin('customers.view');
+  allow write: if false;
+}
+
+match /referrals/{id} {
+  allow read: if isSelf(resource.data.referrerId) || isSelf(resource.data.refereeId) || isAdmin('customers.view');
+  allow write: if false;
+}

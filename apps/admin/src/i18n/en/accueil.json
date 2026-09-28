@@ -1,0 +1,142 @@
+{
+  "docTitle": "Dashboard",
+  "header": {
+    "greeting": "Hello {{name}}",
+    "title": "Dashboard",
+    "description": "Consolidated view of the platform: only anomalies need your attention."
+  },
+  "live": {
+    "badge": "Live",
+    "updated": "Updated every minute",
+    "ordersToday": "Orders today",
+    "vsYesterday": "{{percent}} vs yesterday, same hour",
+    "gmvToday": "Gross volume today",
+    "ordersMonth": "Orders this month",
+    "gross": "{{amount}} incl. VAT",
+    "openAlerts": "Open alerts",
+    "critical_one": "{{count}} critical",
+    "critical_other": "{{count}} critical",
+    "noneCritical": "none critical"
+  },
+  "planNote": "Figures recalculated for businesses on the {{plan}} plan: service fees and subscriptions are not broken down by plan.",
+  "kpi": {
+    "revenue": "Platform revenue (excl. VAT)",
+    "margin": "margin",
+    "fees": "fees",
+    "gmv": "Gross volume (incl. VAT)",
+    "refunded": "refunded",
+    "sales": "Business revenue",
+    "salesFooter": "Items incl. VAT, excluding delivery and tips.",
+    "commission": "Ciyou Eats commissions (excl. VAT)",
+    "avgRate": "average rate",
+    "subscriptions": "Subscriptions collected (excl. VAT)",
+    "subscriptionsFooter": "Subscription invoices paid during the period.",
+    "orders": "Orders",
+    "delivered": "delivered",
+    "cancelled": "cancelled",
+    "basket": "Average basket",
+    "basketFooter": "Amount incl. VAT paid per delivered order.",
+    "cancellation": "Cancellation rate",
+    "onTime": "on time",
+    "delivery": "Average delivery time",
+    "deliveredOnTime": "delivered on time",
+    "deliveredOrders": "Delivered orders",
+    "ofPlaced": "of orders placed",
+    "minutes": "{{value}} min"
+  },
+  "evolution": {
+    "title": "Trend",
+    "hourlyDescription": "Orders per hour, today and yesterday.",
+    "periodDescription": "{{period}}, compared with the previous period.",
+    "indicator": "Metric",
+    "metric": {
+      "gmv": "Gross volume",
+      "revenue": "Platform revenue",
+      "orders": "Orders",
+      "customers": "Customers",
+      "restaurants": "Businesses"
+    },
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "period": "Period",
+    "previousPeriod": "Previous period",
+    "vsYesterday": "vs {{amount}} yesterday",
+    "vsPrevious": "vs {{amount}} in the previous period",
+    "hour": "{{h}}h"
+  },
+  "alerts": {
+    "title": "Exception alerts",
+    "description": "Only anomalies surface here.",
+    "seeAll": "See all",
+    "none": "No anomalies",
+    "noneDescription": "Cancellations, rejections, couriers, refunds, orders and services are within norms.",
+    "critical_one": "{{count}} critical alert to handle first.",
+    "critical_other": "{{count}} critical alerts to handle first.",
+    "more_one": "{{count}} more alert",
+    "more_other": "{{count}} more alerts"
+  },
+  "counters": {
+    "title": "Platform stakeholders",
+    "description": "Snapshot of the selected scope.",
+    "shops": "Businesses",
+    "total": "in total",
+    "active": "Active",
+    "paused": "Paused",
+    "suspended": "Suspended",
+    "onboarding": "Signing up",
+    "customers": "Customers",
+    "registered": "registered",
+    "active30d": "Active 30 d",
+    "inactive": "Inactive",
+    "couriers": "Couriers",
+    "online": "Online",
+    "onDelivery": "On a delivery",
+    "offline": "Offline",
+    "toValidate": "To approve",
+    "subscriptions": "Subscriptions",
+    "mrr": "MRR",
+    "running": "running",
+    "trialing": "On trial",
+    "pastDue": "Past due",
+    "cancelledSubs": "Cancelled"
+  },
+  "todo": {
+    "title": "To handle",
+    "description": "Pending approvals, documents, tickets, reviews, GDPR requests and payouts.",
+    "seeAll": "See all",
+    "none": "Nothing pending",
+    "noneDescription": "All requests have been handled.",
+    "viewItems": "View all {{count}} items"
+  },
+  "activity": {
+    "title": "Recent activity",
+    "description": "Sign-ups, suspensions, plans, cancellations.",
+    "none": "No recent activity",
+    "noneDescription": "Sign-ups and status changes will appear here."
+  },
+  "period": {
+    "today": "Today",
+    "7d": "Last 7 days",
+    "30d": "Last 30 days",
+    "month": "Current month",
+    "prev_month": "Previous month",
+    "90d": "Last 90 days",
+    "12m": "Last 12 months",
+    "vsYesterday": "vs yesterday",
+    "vsMonthToDate": "vs previous month to date",
+    "vsPrevMonth": "vs the month before",
+    "vsDays": "vs previous {{days}} days"
+  },
+  "filter": {
+    "plan": "Subscription plan",
+    "allPlans": "All plans",
+    "planName": "{{name}} plan",
+    "refresh": "Refresh",
+    "loadError": "Unable to load"
+  },
+  "shell": {
+    "searchPlaceholder": "Order, restaurant, customer, invoice…",
+    "palettePlaceholder": "Search for a section, an order, a restaurant…",
+    "geoAll": "Whole platform"
+  }
+}

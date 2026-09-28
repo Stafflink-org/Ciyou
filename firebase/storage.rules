@@ -1,0 +1,179 @@
+// ===========================================================================
+// FICHIER GÉNÉRÉ, NE PAS ÉDITER.
+// Source : firebase/rules/ — régénérer avec `npm run rules:build`.
+// ===========================================================================
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ----- _helpers.rules
+
+    // ---------------------------------------------------------------------------
+    // Fonctions communes des règles Cloud Storage. Les droits sont lus dans
+    // Firestore (admins/{uid}, restaurants/{rid}/members/{uid}) via firestore.get.
+    // ---------------------------------------------------------------------------
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function role() {
+      return signedIn() ? request.auth.token.get('role', '') : '';
+    }
+
+    function adminHas(a, perm) {
+      return a.active == true && (a.role == 'super_admin' || perm in a.permissions);
+    }
+
+    function isAdmin(perm) {
+      return role() == 'admin'
+        && adminHas(firestore.get(/databases/(default)/documents/admins/$(request.auth.uid)).data, perm);
+    }
+
+    function memberHas(m, perm) {
+      return m.active == true && (m.role == 'owner' || perm in m.permissions);
+    }
+
+    function can(rid, perm) {
+      return signedIn()
+        && firestore.exists(/databases/(default)/documents/restaurants/$(rid)/members/$(request.auth.uid))
+        && memberHas(firestore.get(/databases/(default)/documents/restaurants/$(rid)/members/$(request.auth.uid)).data, perm);
+    }
+
+    function isImage(maxMb) {
+      return request.resource.contentType.matches('image/(jpeg|png|webp|avif)')
+        && request.resource.size <= maxMb * 1024 * 1024;
+    }
+
+    function isDocument(maxMb) {
+      return request.resource.contentType.matches('image/(jpeg|png|webp|heic)|application/pdf')
+        && request.resource.size <= maxMb * 1024 * 1024;
+    }
+
+    // ----- files.rules
+
+    // ---------------------------------------------------------------------------
+    // Fichiers. Public : logos, photos de plats, avatars, visuels plateforme.
+    // Privé : justificatifs (KYC), documents d'équipe, pièces jointes support.
+    // Factures, relevés et exports : lecture par URL signée délivrée par Cloud Function.
+    // ---------------------------------------------------------------------------
+
+    // Logos, couvertures, photos de la carte.
+    match /restaurants/{rid}/public/{allPaths=**} {
+      allow read: if true;
+      allow write: if (can(rid, 'menu.edit') || can(rid, 'settings.manage') || isAdmin('restaurants.edit'))
+        && (request.resource == null || isImage(5));
+    }
+
+    // Justificatifs du restaurant (Kbis, pièce du gérant, RIB, licence).
+    match /restaurants/{rid}/private/{allPaths=**} {
+      allow read: if can(rid, 'settings.manage') || isAdmin('restaurants.validate');
+      allow create: if can(rid, 'settings.manage') && isDocument(10);
+      allow update, delete: if false;
+    }
+
+    // Documents d'équipe, HACCP, pièces d'absence.
+    match /restaurants/{rid}/team/{allPaths=**} {
+      allow read: if can(rid, 'documents.view') || can(rid, 'team.manage') || can(rid, 'haccp.record');
+      allow create: if (can(rid, 'team.manage') || can(rid, 'documents.manage') || can(rid, 'haccp.record')
+          || can(rid, 'absences.self'))
+        && isDocument(15);
+      allow update, delete: if can(rid, 'team.manage') || can(rid, 'documents.manage');
+    }
+
+    // Avatar public du livreur.
+    match /drivers/{driverId}/public/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSelf(driverId) && (request.resource == null || isImage(3));
+    }
+
+    // Justificatifs et selfies de vérification du livreur.
+    match /drivers/{driverId}/private/{allPaths=**} {
+      allow read: if isSelf(driverId) || isAdmin('drivers.validate');
+      allow create: if isSelf(driverId) && isDocument(10);
+      allow update, delete: if false;
+    }
+
+    // Photos jointes à une réclamation de commande : dépôt par le client, lecture par le client et le support.
+    match /claims/{userId}/{fileName} {
+      allow read: if isSelf(userId) || isAdmin('support.view');
+      allow create: if isSelf(userId)
+        && request.resource.contentType.matches('image/(jpeg|png|webp|heic)')
+        && request.resource.size <= 10 * 1024 * 1024;
+      allow update, delete: if false;
+    }
+
+    match /users/{userId}/avatar/{fileName} {
+      allow read: if true;
+      allow write: if isSelf(userId) && (request.resource == null || isImage(2));
+    }
+
+    // Pièces jointes des tickets : dépôt par le demandeur ou un agent (contrôle fin à l'ajout du message).
+    match /support/{ticketId}/{fileName} {
+      allow read: if isAdmin('support.view')
+        || (signedIn() && firestore.get(/databases/(default)/documents/supportTickets/$(ticketId)).data.requesterId == request.auth.uid);
+      allow create: if (isAdmin('support.handle')
+          || (signedIn() && firestore.get(/databases/(default)/documents/supportTickets/$(ticketId)).data.requesterId == request.auth.uid))
+        && isDocument(10);
+      allow update, delete: if false;
+    }
+
+    match /conversations/{conversationId}/{fileName} {
+      allow read, create: if signedIn()
+        && request.auth.uid in firestore.get(/databases/(default)/documents/conversations/$(conversationId)).data.participantIds
+        && (request.resource == null || isImage(5));
+      allow update, delete: if false;
+    }
+
+    // Visuels de la plateforme (bannières, catégories, logos).
+    match /platform/public/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin('display.edit') && (request.resource == null || isImage(5));
+    }
+
+    // Factures, relevés, exports et sauvegardes : aucun accès direct.
+    match /invoices/{allPaths=**} {
+      allow read, write: if false;
+    }
+
+    match /exports/{allPaths=**} {
+      allow read, write: if false;
+    }
+
+    // Pièces jointes d'une conversation d'établissement : l'équipe autorisée à la messagerie.
+    function conversationRestaurant(conversationId) {
+      return firestore.get(/databases/(default)/documents/conversations/$(conversationId)).data.get('restaurantId', '');
+    }
+
+    match /conversations/{conversationId}/{fileName} {
+      allow read, create: if conversationRestaurant(conversationId) != ''
+        && can(conversationRestaurant(conversationId), 'messages.use')
+        && (request.resource == null || isImage(5));
+      allow update, delete: if false;
+    }
+
+    // Pièces jointes d'un ticket ouvert par un établissement : l'équipe autorisée au support.
+    function restaurantTicket(ticketId) {
+      return firestore.get(/databases/(default)/documents/supportTickets/$(ticketId)).data;
+    }
+
+    match /support/{ticketId}/{fileName} {
+      allow read: if restaurantTicket(ticketId).requesterType == 'restaurant'
+        && can(restaurantTicket(ticketId).get('restaurantId', ''), 'support.use');
+      allow create: if restaurantTicket(ticketId).requesterType == 'restaurant'
+        && can(restaurantTicket(ticketId).get('restaurantId', ''), 'support.use')
+        && isDocument(10);
+      allow update, delete: if false;
+    }
+
+    // Tout chemin non décrit ci-dessus est refusé.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

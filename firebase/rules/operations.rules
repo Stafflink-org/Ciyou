@@ -1,0 +1,20 @@
+// ---------------------------------------------------------------------------
+// Exploitation du super admin (livreurs, commandes, règles, zones) : droits de
+// lecture complémentaires. Toutes les écritures passent par Cloud Functions
+// (functions/src/admin/operations) ; ces blocs s'ajoutent (OU logique) à ceux
+// des autres domaines pour les mêmes chemins.
+// ---------------------------------------------------------------------------
+
+// Historique d'une fiche livreur ou commande, et des zones et villes : lisible par
+// les administrateurs qui gèrent ces éléments, dans leur périmètre.
+match /auditLogs/{logId} {
+  allow read: if (resource.data.target.type == 'driver' && isAdminIn('drivers.view', resource.data.cityId))
+    || (resource.data.target.type == 'order' && isAdminIn('orders.view', resource.data.cityId))
+    || (resource.data.target.type in ['zone', 'city'] && isAdminIn('zones.edit', resource.data.cityId));
+}
+
+// Historique des réglages d'exploitation (règles des commandes, attribution,
+// rémunération, zones) : lisible par ceux qui peuvent les modifier.
+match /settingsHistory/{entryId} {
+  allow read: if isAdmin('order_rules.edit') || isAdmin('zones.edit') || isAdmin('drivers.pay_rules');
+}
