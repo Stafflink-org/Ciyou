@@ -41,6 +41,12 @@ interface Tile {
   summary: ReactNode;
 }
 
+interface TileSection {
+  id: string;
+  label: string;
+  tiles: Tile[];
+}
+
 /** Vue d'ensemble de la configuration : mise en route et accès rapide à chaque rubrique. */
 export function ParametresPage() {
   const { restaurant, restaurantId } = useRestaurantAccess();
@@ -134,7 +140,7 @@ export function ParametresPage() {
       summary: steps.find((s) => s.id === 'documents')?.done && steps.find((s) => s.id === 'contract')?.done ? 'Dossier à jour' : 'Action requise',
     },
     {
-      href: '/versements',
+      href: '/paiement?onglet=versements',
       label: 'Compte de versement',
       description: 'Stripe Connect, calendrier des virements.',
       icon: <Landmark />,
@@ -142,12 +148,39 @@ export function ParametresPage() {
       summary: stripe === 'enabled' ? 'Versements actifs' : stripe ? 'Vérification en cours' : 'À configurer',
     },
     {
-      href: '/abonnement',
+      href: '/paiement?onglet=abonnement',
       label: 'Abonnement',
       description: 'Formule, commissions, factures.',
       icon: <Gem />,
       permission: 'finance.view',
       summary: `${plan.name} · ${plan.monthlyPriceHtCents > 0 ? `${formatEUR(plan.monthlyPriceHtCents, { cents: true })} HT / mois` : 'sans abonnement'}`,
+    },
+  ];
+
+  // Regroupement en sections (plan V2 §3.3) : les tuiles ne changent pas, seul l'agencement
+  // évolue. `tileOf` retrouve une tuile par son href pour composer chaque section sans
+  // dupliquer sa définition.
+  const tileOf = (href: string) => tiles.find((t) => t.href === href)!;
+  const sections: TileSection[] = [
+    {
+      id: 'etablissement',
+      label: 'Établissement',
+      tiles: [tileOf('/etablissement'), tileOf('/utilisateurs'), tileOf('/documents')],
+    },
+    {
+      id: 'service',
+      label: 'Service',
+      tiles: [tileOf('/reglages-commandes'), tileOf('/horaires'), tileOf('/zones')],
+    },
+    {
+      id: 'encaissement',
+      label: 'Encaissement',
+      tiles: [tileOf('/paiements'), tileOf('/paiement?onglet=versements'), tileOf('/paiement?onglet=abonnement')],
+    },
+    {
+      id: 'preferences',
+      label: 'Préférences',
+      tiles: [tileOf('/notifications')],
     },
   ];
 
@@ -198,32 +231,41 @@ export function ParametresPage() {
         )}
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {tiles
-          .filter((tile) => can(tile.permission))
-          .map((tile) => (
-            <Link
-              key={tile.href}
-              to={tile.href}
-              className="group rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-            >
-              <Card interactive className="flex h-full items-start gap-4 p-5">
-                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-surface-3 text-fg-muted transition-colors group-hover:bg-primary-soft group-hover:text-primary-soft-fg [&_svg]:size-5">
-                  {tile.icon}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center justify-between gap-2">
-                    <span className="font-medium text-fg">{tile.label}</span>
-                    <ArrowRight className="size-4 shrink-0 text-fg-subtle transition-transform group-hover:translate-x-0.5" />
-                  </span>
-                  <span className="mt-0.5 block text-xs text-fg-subtle">{tile.description}</span>
-                  <Badge className="mt-3 max-w-full truncate" tone={tile.summary === 'Action requise' || tile.summary === 'À configurer' ? 'amber' : 'neutral'}>
-                    {tile.summary}
-                  </Badge>
-                </span>
-              </Card>
-            </Link>
-          ))}
+      <div className="space-y-8">
+        {sections.map((section) => {
+          const visible = section.tiles.filter((tile) => can(tile.permission));
+          if (visible.length === 0) return null;
+          return (
+            <section key={section.id} aria-label={section.label}>
+              <h2 className="mb-3 text-sm font-semibold text-fg-muted">{section.label}</h2>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {visible.map((tile) => (
+                  <Link
+                    key={tile.href}
+                    to={tile.href}
+                    className="group rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  >
+                    <Card interactive className="flex h-full items-start gap-4 p-5">
+                      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-surface-3 text-fg-muted transition-colors group-hover:bg-primary-soft group-hover:text-primary-soft-fg [&_svg]:size-5">
+                        {tile.icon}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center justify-between gap-2">
+                          <span className="font-medium text-fg">{tile.label}</span>
+                          <ArrowRight className="size-4 shrink-0 text-fg-subtle transition-transform group-hover:translate-x-0.5" />
+                        </span>
+                        <span className="mt-0.5 block text-xs text-fg-subtle">{tile.description}</span>
+                        <Badge className="mt-3 max-w-full truncate" tone={tile.summary === 'Action requise' || tile.summary === 'À configurer' ? 'amber' : 'neutral'}>
+                          {tile.summary}
+                        </Badge>
+                      </span>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          );
+        })}
       </div>
     </PageContainer>
   );

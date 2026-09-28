@@ -142,14 +142,14 @@ export function ProfileTab({ active }: { active: boolean }) {
         <SettingsCard icon={<EyeOff />} title="Visibilité" description="Masquez temporairement votre établissement du catalogue sans changer votre statut ni vos horaires.">
           <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface-2 p-4">
             <div>
-              <p className="text-sm font-medium text-fg">Visible dans l’application GoLink</p>
+              <p className="text-sm font-medium text-fg">Visible dans l’application Ciyou Eats</p>
               <p className="mt-0.5 text-xs text-fg-muted">
                 {draft.visibleInApp
                   ? 'Vos clients peuvent vous trouver et commander.'
                   : 'Votre établissement est masqué : personne ne peut vous trouver ni commander, même s’il est ouvert.'}
               </p>
             </div>
-            <Switch aria-label="Visible dans l’application GoLink" checked={draft.visibleInApp} onCheckedChange={(checked) => setDraft({ visibleInApp: checked })} />
+            <Switch aria-label="Visible dans l’application Ciyou Eats" checked={draft.visibleInApp} onCheckedChange={(checked) => setDraft({ visibleInApp: checked })} />
           </div>
         </SettingsCard>
 
