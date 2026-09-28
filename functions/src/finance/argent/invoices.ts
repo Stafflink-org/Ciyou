@@ -54,6 +54,23 @@ const pct = (bps: number) => `${(bps / 100).toLocaleString('fr-FR', { maximumFra
 const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 const monthLabel = (month: string) => `${MONTHS[Number(month.slice(5, 7)) - 1] ?? ''} ${month.slice(0, 4)}`;
 
+/**
+ * Mention légale d'exonération de TVA sur le relevé d'autofacturation d'un livreur
+ * indépendant, par pays d'établissement (décision client : 6 pays de lancement,
+ * FR/BE/LU/DZ/MA/TN). Les seuils de franchise sont ceux en vigueur au 01/2026 ;
+ * pour DZ/MA/TN, le régime applicable dépend du statut du prestataire (auto-entrepreneur
+ * ou équivalent) et n'est pas une franchise de TVA harmonisée comme en UE : mention
+ * prudente renvoyant à la réglementation locale plutôt qu'une référence légale inventée.
+ */
+const DRIVER_VAT_EXEMPTION_MENTIONS: Record<string, string> = {
+  FR: 'TVA non applicable, article 293 B du Code général des impôts (franchise en base).',
+  BE: 'TVA non applicable, article 56bis du Code de la TVA belge (franchise en base pour petites entreprises).',
+  LU: 'TVA non applicable, article 57 de la loi TVA luxembourgeoise (franchise en base pour petites entreprises).',
+};
+function driverVatExemptionMention(countryId: string): string {
+  return DRIVER_VAT_EXEMPTION_MENTIONS[countryId] ?? 'TVA non applicable : prestataire exonéré selon le régime fiscal applicable dans son pays d’établissement.';
+}
+
 interface RunOptions {
   month: string;
   countryId?: string | null;
@@ -314,8 +331,7 @@ export async function runMonthlyInvoices(options: RunOptions): Promise<MonthlyIn
         paidAt: null,
         legalMentions: [
           'Autofacturation : facture émise par Ciyou Eats au nom et pour le compte du prestataire.',
-          // Mention du droit français uniquement pour les prestataires établis en France.
-          exempt ? (driver.countryId === 'FR' ? 'TVA non applicable, article 293 B du CGI.' : 'TVA non applicable : prestataire exonéré selon la réglementation de son pays.') : 'TVA due par le prestataire.',
+          exempt ? driverVatExemptionMention(driver.countryId) : 'TVA due par le prestataire.',
         ],
         retainUntil: retainUntil(year),
       };

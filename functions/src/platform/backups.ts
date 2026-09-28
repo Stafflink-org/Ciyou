@@ -183,6 +183,62 @@ export const getBackupDownloadLinks = platformCallable(
   },
 );
 
+/** Sérialise un document Firestore en JSON lisible (dates ISO, points géo, références en chemin). */
+function serializeForExport(value: unknown): unknown {
+  if (value === null || value === undefined) return value;
+  if (value instanceof Timestamp) return value.toDate().toISOString();
+  if (Array.isArray(value)) return value.map(serializeForExport);
+  if (typeof value === 'object') {
+    const anyValue = value as Record<string, unknown> & { path?: unknown; latitude?: unknown; longitude?: unknown };
+    if (typeof anyValue.path === 'string' && typeof anyValue.latitude !== 'number') return anyValue.path; // DocumentReference
+    if (typeof anyValue.latitude === 'number' && typeof anyValue.longitude === 'number') return { lat: anyValue.latitude, lng: anyValue.longitude }; // GeoPoint
+    const out: Record<string, unknown> = {};
+    for (const [key, val] of Object.entries(anyValue)) out[key] = serializeForExport(val);
+    return out;
+  }
+  return value;
+}
+
+const READABLE_EXPORT_RUNTIME = { maxInstances: 1, memory: '1GiB', timeoutSeconds: 300 } as const;
+const READABLE_EXPORT_MAX_DOCS_PER_COLLECTION = 5_000;
+
+/**
+ * Export complémentaire lisible par collection (§31 : le téléchargement natif ci-dessus
+ * donne l'export Firestore managé, plusieurs fichiers binaires par « kind », illisibles
+ * sans outil dédié). Ici : un fichier `.jsonl` (une ligne JSON par document, encodage
+ * UTF-8) par collection choisie, avec liens signés (15 min). Bornes volontaires (10
+ * collections, 5000 documents chacune) pour rester dans le budget d'une fonction : au-delà,
+ * utiliser l'export natif restauré par `startBackupRestore`, prévu pour les gros volumes.
+ */
+export const exportReadableCollections = platformCallable(
+  z.object({ collections: z.array(z.string().trim().min(1).max(60)).min(1).max(10), reason: zReason }),
+  async (data, request) => {
+    const { caller } = await requireSecureAdmin(request, 'backups.manage');
+    const exportId = `readable-${Date.now()}`;
+    const files: Array<{ name: string; url: string; count: number; truncated: boolean }> = [];
+    for (const collectionId of data.collections) {
+      const snap = await db.collection(collectionId).limit(READABLE_EXPORT_MAX_DOCS_PER_COLLECTION + 1).get();
+      const docs = snap.docs.slice(0, READABLE_EXPORT_MAX_DOCS_PER_COLLECTION);
+      const lines = docs.map((d) => JSON.stringify({ id: d.id, ...(serializeForExport(d.data()) as Record<string, unknown>) }));
+      const path = `${exportId}/${collectionId}.jsonl`;
+      const file = storage.bucket(BACKUP_BUCKET).file(path);
+      await file.save(Buffer.from(lines.join('\n'), 'utf-8'), { contentType: 'application/x-ndjson; charset=utf-8' });
+      const [url] = await file.getSignedUrl({ action: 'read', expires: Date.now() + 15 * 60_000 });
+      files.push({ name: `${collectionId}.jsonl`, url, count: docs.length, truncated: snap.docs.length > READABLE_EXPORT_MAX_DOCS_PER_COLLECTION });
+    }
+    await writeAudit({
+      actor: actorFromCaller(caller, 'admin'),
+      action: 'backup.readable_export',
+      target: { type: 'other', id: exportId, label: `Export lisible (${data.collections.join(', ')})` },
+      reason: data.reason,
+      sensitive: true,
+      request,
+    });
+    return { exportId, files };
+  },
+  { ...READABLE_EXPORT_RUNTIME },
+);
+
 // ------------------------------------------------------------------ Restauration outillée
 
 /**

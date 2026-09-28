@@ -7,6 +7,8 @@ import {
   Button,
   Card,
   CardContent,
+  CardHeader,
+  Checkbox,
   Dialog,
   DialogBody,
   DialogContent,
@@ -27,12 +29,17 @@ import type { Backup, TrashItem } from '@golink/shared';
 import { useDocumentTitle } from '@golink/web';
 import { useCan } from '@/auth/AdminAccess';
 import { errorMessage, toDate, useMutation } from '@/lib/firestore';
-import { checkBackupStatus, getBackupDownloadLinks, purgeTrashItem, restoreFromTrash, runManualBackup } from './api';
+import { checkBackupStatus, exportReadableCollections, getBackupDownloadLinks, purgeTrashItem, restoreFromTrash, runManualBackup } from './api';
 import { ActionDialog, Callout, ErrorPanel, RequirePermission } from './components';
 import { useBackups, useTrash } from './hooks';
 import { PlateformeNav } from './nav';
 
 const BACKUP_STATUS_TONE: Record<Backup['status'], 'info' | 'success' | 'danger'> = { running: 'info', completed: 'success', failed: 'danger' };
+
+/** Collections métier principales proposées pour l'export lisible (§31), bornées à 10 par appel. */
+const READABLE_COLLECTIONS = [
+  'restaurants', 'orders', 'users', 'drivers', 'payments', 'payouts', 'invoices', 'refunds', 'ledgerEntries', 'reviews',
+];
 
 function BackupsTab() {
   const can = useCan();
@@ -46,6 +53,15 @@ function BackupsTab() {
     const result = await links.mutate(id);
     if (result) setDownloadFiles(result.files);
     else toast.error(errorMessage(links.error, 'Téléchargement indisponible.'));
+  };
+
+  const [selected, setSelected] = useState<string[]>([]);
+  const [readableFiles, setReadableFiles] = useState<Array<{ name: string; url: string; count: number; truncated: boolean }> | null>(null);
+  const readable = useMutation(() => exportReadableCollections({ collections: selected }), { errorToast: false });
+  const runReadableExport = async () => {
+    const result = await readable.mutate();
+    if (result) setReadableFiles(result.files);
+    else toast.error(errorMessage(readable.error, 'Export impossible.'));
   };
 
   return (
@@ -89,6 +105,30 @@ function BackupsTab() {
         </Card>
       )}
 
+      {can('backups.manage') && (
+        <Card>
+          <CardHeader
+            title="Export lisible par collection"
+            description="Un fichier JSON par ligne (.jsonl) par collection choisie, lisible sans outil Google Cloud — complémentaire à la sauvegarde native ci-dessus (format managé, binaire). Borné à 10 collections et 5 000 documents chacune."
+          />
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {READABLE_COLLECTIONS.map((c) => (
+                <Checkbox
+                  key={c}
+                  label={c}
+                  checked={selected.includes(c)}
+                  onCheckedChange={(checked) => setSelected((prev) => (checked ? [...prev, c] : prev.filter((x) => x !== c)))}
+                />
+              ))}
+            </div>
+            <Button size="sm" leftIcon={<Download />} loading={readable.loading} disabled={selected.length === 0} onClick={() => void runReadableExport()}>
+              Exporter la sélection
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Dialog open={downloadFiles !== null} onOpenChange={(open) => !open && setDownloadFiles(null)}>
         <DialogContent>
           <DialogHeader
@@ -116,6 +156,35 @@ function BackupsTab() {
           </DialogBody>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setDownloadFiles(null)}>
+              Fermer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={readableFiles !== null} onOpenChange={(open) => !open && setReadableFiles(null)}>
+        <DialogContent>
+          <DialogHeader icon={<Download />} title="Export lisible" description="Liens valables 15 minutes, un fichier .jsonl par collection." />
+          <DialogBody className="max-h-[50vh] space-y-2 overflow-y-auto">
+            {readableFiles?.length ? (
+              readableFiles.map((f) => (
+                <a
+                  key={f.name}
+                  href={f.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 text-sm hover:bg-surface-2"
+                >
+                  <span className="min-w-0 truncate">{f.name}</span>
+                  <span className="shrink-0 text-xs text-fg-subtle">{f.count} doc.{f.truncated ? ' · tronqué' : ''}</span>
+                </a>
+              ))
+            ) : (
+              <p className="text-sm text-fg-muted">Aucun fichier.</p>
+            )}
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setReadableFiles(null)}>
               Fermer
             </Button>
           </DialogFooter>

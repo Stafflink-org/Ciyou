@@ -17,6 +17,17 @@ function productWithoutAlcohol() {
     && incoming().get('containsAlcohol', false) != true;
 }
 
+// Limite de produits de la formule d'abonnement (settings/plans/{code}.limits.maxProducts,
+// null = illimité). `productsCount` est tenu à jour par la Cloud Function `onProductWritten`
+// (jamais modifiable par le restaurant lui-même, cf. restaurantProfileFields()).
+function withinProductLimit(rid) {
+  let commercial = get(/databases/$(database)/documents/restaurants/$(rid)/private/commercial).data;
+  let plan = get(/databases/$(database)/documents/plans/$(commercial.get('planCode', 'basic'))).data;
+  let limit = plan.get('limits', {}).get('maxProducts', null);
+  let count = get(/databases/$(database)/documents/restaurants/$(rid)).data.get('productsCount', 0);
+  return limit == null || count < limit;
+}
+
 match /restaurantGroups/{groupId} {
   allow read: if isSelf(resource.data.ownerId) || isAdmin('restaurants.view');
   // Modification : saveRestaurantGroup (Cloud Function, audit).
@@ -86,7 +97,8 @@ match /restaurants/{rid} {
       && isNonEmptyString(incoming().name, 100)
       && isCents(incoming().priceCents)
       && incoming().salesCount == 0
-      && productWithoutAlcohol();
+      && productWithoutAlcohol()
+      && withinProductLimit(rid);
     allow update: if (
         can(rid, 'menu.edit')
           && keepsUnchanged(['salesCount'])

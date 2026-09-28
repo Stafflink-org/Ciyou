@@ -189,6 +189,9 @@ export const submitGdprRequest = callFunction<
   { requestId: string; dueAt: number }
 >('submitGdprRequest');
 
+/** Lien signé (15 minutes) vers l'export RGPD déjà traité par l'équipe, pour le télécharger soi-même. */
+export const getGdprExportLink = callFunction<{ requestId: string }, { url: string; name: string; expiresInMinutes: number }>('getGdprExportLink');
+
 export const changePlan = callFunction<
   { restaurantId: string; planCode: PlanCode; reason: string | null },
   { status: 'applied' | 'scheduled' | 'cancelled'; planCode: PlanCode; effectiveAt: number | null; trial: boolean }

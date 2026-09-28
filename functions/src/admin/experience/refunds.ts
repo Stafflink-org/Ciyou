@@ -79,6 +79,64 @@ async function executeRefund(refundId: string, refund: Refund, actor: EventActor
   const orderRef = db.collection(COLLECTIONS.orders).doc(refund.orderId);
   const order = (await orderRef.get()).data() as Order | undefined;
   if (!order) throw fail.notFound('Commande');
+  // Méthode « avoir » (settings/refunds.defaultMethod = wallet_credit) : pas d'appel Stripe,
+  // le montant est crédité sur le portefeuille Ciyou Eats du client (même mécanique que l'avoir manuel de ticket).
+  if (refund.method === 'wallet_credit') {
+    const userRef = db.collection(COLLECTIONS.users).doc(refund.customerId);
+    const walletTxRef = db.collection(COLLECTIONS.walletTransactions).doc();
+    const at = Timestamp.now();
+    await db.runTransaction(async (tx) => {
+      const fresh = (await tx.get(orderRef)).data() as Order;
+      const refunded = fresh.amounts.refundedCents + refund.amountCents;
+      const user = (await tx.get(userRef)).data() as User | undefined;
+      const nextBalance = (user?.walletBalanceCents ?? 0) + refund.amountCents;
+      tx.update(orderRef, { 'amounts.refundedCents': refunded, 'flags.refunded': true, updatedAt: at });
+      if (user) tx.update(userRef, { walletBalanceCents: nextBalance, updatedAt: at });
+      const walletTx: WalletTransaction = {
+        userId: refund.customerId,
+        type: 'credit',
+        amountCents: refund.amountCents,
+        balanceAfterCents: nextBalance,
+        reason: 'refund',
+        orderId: refund.orderId,
+        ticketId: refund.ticketId,
+        refundId,
+        expiresAt: null,
+        note: refund.reason,
+        createdAt: at,
+        createdBy: actor.uid ?? 'system',
+      };
+      tx.create(walletTxRef, walletTx);
+      tx.create(db.collection(COLLECTIONS.ledgerEntries).doc(`rf-${refundId}-wc`), {
+        currency: 'EUR' as const,
+        bookingDate: parisDay(at.toDate()),
+        countryId: order.countryId,
+        cityId: order.cityId ?? null,
+        orderId: refund.orderId,
+        refundId,
+        payoutId: null,
+        vatCents: null,
+        createdAt: at,
+        createdBy: actor.uid ?? 'system',
+        reason: refund.reason,
+        accountType: 'customer_wallet',
+        accountId: refund.customerId,
+        type: 'wallet_credit',
+        amountCents: refund.amountCents,
+        description: `Avoir (remboursement) ${order.number}`,
+      } satisfies LedgerEntry);
+      addEvent(tx, refund.orderId, actor, {
+        type: 'refund_issued',
+        from: null,
+        to: null,
+        visibleToCustomer: true,
+        message: `Avoir de ${euros(refund.amountCents)} ajouté au portefeuille Ciyou Eats du client.`,
+        data: { refundCents: refund.amountCents, restaurantCents: refund.allocation.restaurantCents, platformCents: refund.allocation.platformCents, ticketId: refund.ticketId ?? null },
+      }, at);
+      tx.update(db.collection(COLLECTIONS.refunds).doc(refundId), { status: 'processed', providerRefundId: null, processedAt: at });
+    });
+    return 'processed';
+  }
   let providerRefundId: string | null = null;
   const paymentId = order.payment.paymentId ?? null;
   const payment = paymentId ? await db.collection(COLLECTIONS.payments).doc(paymentId).get() : null;
@@ -148,6 +206,10 @@ export const refundFromTicket = experienceCallable(
     const allocation = allocateRefund(data.amountCents, data.cause, rules.refundLiability);
     const limit = await refundLimitOf(admin);
     const needsApproval = data.amountCents > limit;
+    // Méthode par défaut réglable (settings/refunds.defaultMethod) : moyen de paiement d'origine (Stripe)
+    // ou avoir sur le portefeuille Ciyou Eats du client — voir la branche correspondante dans executeRefund().
+    const refundSettingsForMethod = (await db.collection(COLLECTIONS.settings).doc(SETTINGS_DOCS.refunds).get()).data() as RefundSettings | undefined;
+    const defaultMethod = refundSettingsForMethod?.defaultMethod ?? 'original_payment';
     const refundRef = db.collection(COLLECTIONS.refunds).doc();
     const at = Timestamp.now();
     const refund: Refund = {
@@ -160,7 +222,7 @@ export const refundFromTicket = experienceCallable(
       driverId: order.driverId ?? null,
       ticketId: data.ticketId,
       amountCents: data.amountCents,
-      method: 'original_payment',
+      method: defaultMethod,
       cause: data.cause,
       allocation,
       items: null,
@@ -202,7 +264,7 @@ export const refundFromTicket = experienceCallable(
     let status: 'processed' | 'pending_approval' | 'failed' = 'pending_approval';
     if (!needsApproval) {
       status = await executeRefund(refundRef.id, refund, adminActor(admin, caller.uid));
-      await announceRefund(ticket, data.ticketId, admin, caller.uid, data.amountCents, status);
+      await announceRefund(ticket, data.ticketId, admin, caller.uid, data.amountCents, status, refund.method);
     }
     await writeAudit({
       actor: actorFromCaller(caller, 'admin'),
@@ -219,7 +281,7 @@ export const refundFromTicket = experienceCallable(
   },
 );
 
-async function announceRefund(ticket: SupportTicket, ticketId: string, admin: AdminUser, uid: string, amountCents: number, status: 'processed' | 'failed'): Promise<void> {
+async function announceRefund(ticket: SupportTicket, ticketId: string, admin: AdminUser, uid: string, amountCents: number, status: 'processed' | 'failed', method: Refund['method'] = 'original_payment'): Promise<void> {
   const at = Timestamp.now();
   if (status === 'failed') {
     await db.runTransaction(async (tx) => {
@@ -227,7 +289,9 @@ async function announceRefund(ticket: SupportTicket, ticketId: string, admin: Ad
     });
     return;
   }
-  const body = `Nous avons procédé au remboursement de ${euros(amountCents)} sur votre moyen de paiement d’origine. Il apparaîtra sous 5 à 10 jours ouvrés selon votre banque.`;
+  const body = method === 'wallet_credit'
+    ? `Nous avons ajouté un avoir de ${euros(amountCents)} à votre portefeuille Ciyou Eats. Il sera déduit automatiquement de votre prochaine commande.`
+    : `Nous avons procédé au remboursement de ${euros(amountCents)} sur votre moyen de paiement d’origine. Il apparaîtra sous 5 à 10 jours ouvrés selon votre banque.`;
   await db.runTransaction(async (tx) => {
     addTicketMessage(tx, ticketId, { authorType: 'agent', authorId: uid, authorName: agentPublicName(admin), body, internal: false, attachments: [], action: { type: 'refund', detail: euros(amountCents) } }, at);
     tx.update(ticketRef(ticketId), { lastMessageAt: at, lastMessagePreview: preview(body), unreadByRequester: FieldValue.increment(1), ...(ticket.firstResponseAt ? {} : { firstResponseAt: at }) });
@@ -278,7 +342,7 @@ export const reviewTicketRefund = experienceCallable(
         addTicketMessage(tx, ticketId, systemMessage(admin, caller.uid, `Remboursement de ${euros(refund.amountCents)} validé par ${admin.displayName} : ${data.reason}`, { type: 'refund', detail: 'validé' }), at);
       });
       const status = await executeRefund(data.refundId, { ...refund, status: 'approved' }, adminActor(admin, caller.uid));
-      await announceRefund(ticket, ticketId, requester ?? admin, requester ? refund.requestedBy : caller.uid, refund.amountCents, status);
+      await announceRefund(ticket, ticketId, requester ?? admin, requester ? refund.requestedBy : caller.uid, refund.amountCents, status, refund.method);
     }
     await writeAudit({
       actor: actorFromCaller(caller, 'admin'),

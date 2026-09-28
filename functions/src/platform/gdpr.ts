@@ -198,19 +198,57 @@ export const submitGdprRequest = platformCallable(
   },
 );
 
+/** Toutes les sous-collections d'un document (jusqu'à `max` chacune), pour l'export RGPD. */
+async function subcollectionDocs(ref: FirebaseFirestore.DocumentReference, sub: string, max = 500): Promise<Array<Record<string, unknown>>> {
+  const snap = await ref.collection(sub).limit(max).get();
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+/**
+ * Export RGPD (droit d'accès / portabilité) : toutes les catégories de données
+ * personnelles détenues, pas seulement le profil et les commandes. Les moyens de
+ * paiement ne stockent déjà que des informations non sensibles (marque, 4 derniers
+ * chiffres, identifiant Stripe) : rien à masquer de plus ici.
+ */
 async function collectPersonalData(subjectType: GdprRequest['subjectType'], subjectId: string): Promise<Record<string, unknown>> {
   const out: Record<string, unknown> = {};
   if (subjectType === 'client') {
-    const user = await db.collection(COLLECTIONS.users).doc(subjectId).get();
+    const userRef = db.collection(COLLECTIONS.users).doc(subjectId);
+    const user = await userRef.get();
     out.profile = user.data() ?? null;
-    const orders = await db.collection(COLLECTIONS.orders).where('customerId', '==', subjectId).limit(500).get();
+    const [orders, reviews, tickets, wallet] = await Promise.all([
+      db.collection(COLLECTIONS.orders).where('customerId', '==', subjectId).limit(500).get(),
+      db.collection(COLLECTIONS.reviews).where('customerId', '==', subjectId).limit(500).get(),
+      db.collection(COLLECTIONS.supportTickets).where('requesterId', '==', subjectId).limit(500).get(),
+      db.collection(COLLECTIONS.walletTransactions).where('userId', '==', subjectId).limit(500).get(),
+    ]);
     out.orders = orders.docs.map((d) => ({ id: d.id, ...d.data() }));
+    out.reviews = reviews.docs.map((d) => ({ id: d.id, ...d.data() }));
+    out.supportTickets = tickets.docs.map((d) => ({ id: d.id, ...d.data() }));
+    out.walletTransactions = wallet.docs.map((d) => ({ id: d.id, ...d.data() }));
+    out.addresses = await subcollectionDocs(userRef, SUBCOLLECTIONS.users.addresses);
+    out.favorites = await subcollectionDocs(userRef, SUBCOLLECTIONS.users.favorites);
+    out.notifications = await subcollectionDocs(userRef, SUBCOLLECTIONS.users.notifications);
+    out.devices = await subcollectionDocs(userRef, SUBCOLLECTIONS.users.devices);
+    out.paymentMethods = await subcollectionDocs(userRef, SUBCOLLECTIONS.users.paymentMethods);
+    out.consents = await subcollectionDocs(userRef, SUBCOLLECTIONS.users.consents);
   } else if (subjectType === 'driver') {
-    const driver = await db.collection(COLLECTIONS.drivers).doc(subjectId).get();
+    const driverRef = db.collection(COLLECTIONS.drivers).doc(subjectId);
+    const driver = await driverRef.get();
     out.profile = driver.data() ?? null;
+    const [reviews, tickets] = await Promise.all([
+      db.collection(COLLECTIONS.reviews).where('driverId', '==', subjectId).limit(500).get(),
+      db.collection(COLLECTIONS.supportTickets).where('requesterId', '==', subjectId).limit(500).get(),
+    ]);
+    out.reviews = reviews.docs.map((d) => ({ id: d.id, ...d.data() }));
+    out.supportTickets = tickets.docs.map((d) => ({ id: d.id, ...d.data() }));
   } else {
-    const restaurant = await db.collection(COLLECTIONS.restaurants).doc(subjectId).get();
+    const restaurantRef = db.collection(COLLECTIONS.restaurants).doc(subjectId);
+    const restaurant = await restaurantRef.get();
     out.profile = restaurant.data() ?? null;
+    out.legal = (await restaurantRef.collection(SUBCOLLECTIONS.restaurants.private).doc(RESTAURANT_PRIVATE_DOCS.legal).get()).data() ?? null;
+    const tickets = await db.collection(COLLECTIONS.supportTickets).where('restaurantId', '==', subjectId).limit(500).get();
+    out.supportTickets = tickets.docs.map((d) => ({ id: d.id, ...d.data() }));
   }
   return out;
 }
@@ -287,6 +325,38 @@ export const handleGdprRequest = platformCallable(
       request,
     });
     return { status: data.status };
+  },
+);
+
+/**
+ * Remise sécurisée de l'export RGPD à la personne elle-même (ou à un commerce pour son
+ * propre dossier) : lien signé à durée limitée vers le fichier déjà déposé dans Storage
+ * par `handleGdprRequest`. Le fichier n'est jamais rendu public ; l'équipe RGPD (droit
+ * `gdpr.handle`) peut aussi obtenir le lien pour vérification ou renvoi assisté.
+ */
+export const getGdprExportLink = platformCallable(
+  z.object({ requestId: zId }),
+  async (data, request) => {
+    const caller = requireAuth(request);
+    const ref = db.collection(COLLECTIONS.gdprRequests).doc(data.requestId);
+    const snap = await ref.get();
+    if (!snap.exists) throw fail.notFound('Demande RGPD');
+    const gdprRequest = snap.data() as GdprRequest;
+    const isSubject = Boolean(gdprRequest.subjectId) && gdprRequest.subjectId === caller.uid;
+    const isRestaurantOwner = gdprRequest.subjectType === 'restaurant' && Boolean(gdprRequest.subjectId)
+      && (await requireRestaurantAccess(request, gdprRequest.subjectId as string, 'settings.manage').then(() => true).catch(() => false));
+    if (!isSubject && !isRestaurantOwner) await requireSecureAdmin(request, 'gdpr.handle');
+    if (!gdprRequest.export) throw fail.precondition('Aucun export disponible pour cette demande : elle n’a pas encore été traitée.');
+    const [url] = await storage.bucket().file(gdprRequest.export.path).getSignedUrl({ action: 'read', expires: Date.now() + 15 * 60_000 });
+    await writeAudit({
+      actor: actorFromCaller(caller),
+      action: 'gdpr_request.export_link_issued',
+      target: { type: gdprRequest.subjectType, id: gdprRequest.subjectId ?? gdprRequest.email, label: gdprRequest.email },
+      reason: isSubject || isRestaurantOwner ? 'Téléchargement par la personne concernée' : 'Vérification par l’équipe RGPD',
+      sensitive: true,
+      request,
+    });
+    return { url, name: gdprRequest.export.name, expiresInMinutes: 15 };
   },
 );
 
