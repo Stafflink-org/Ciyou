@@ -1,6 +1,6 @@
 # Ciyou Eats — Monorepo
 
-Plateforme de livraison multi-commerces (France, Luxembourg pour commencer).
+Plateforme de livraison multi-commerces (France, Luxembourg, Belgique, Algérie).
 
 ## Structure
 
