@@ -196,6 +196,7 @@ export const LEDGER_ENTRY_TYPES = values([
   'manual_adjustment',
   'payout',
   'payout_reversal',
+  'sales_commission',
 ]);
 export type LedgerEntryType = (typeof LEDGER_ENTRY_TYPES)[number];
 
