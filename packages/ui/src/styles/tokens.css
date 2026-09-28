@@ -1,5 +1,5 @@
 /*
- * Jetons sémantiques GoLink, un jeu par thème.
+ * Jetons sémantiques Ciyou Eats, un jeu par thème.
  * Les composants ne consomment que ces variables (via les utilitaires
  * Tailwind bg-surface, text-fg-muted, border-border…), jamais les hex.
  */
@@ -126,7 +126,7 @@
   --gl-shadow-xl: 0 32px 90px -20px rgb(0 0 0 / 0.75), 0 0 0 1px rgb(255 255 255 / 0.05);
 }
 
-/* Thème « admin » — sombre premium, accent orange GoLink */
+/* Thème « admin » — sombre premium, accent orange Ciyou Eats */
 [data-theme="admin"] {
   --gl-canvas: #0a1012;
   --gl-surface: #10181b;

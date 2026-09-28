@@ -127,7 +127,7 @@ try {
     await fill('EX. BIENVENUE10', `TEST${stamp.replace('h', '')}`);
     await fill('Le déjeuner à prix doux', `TEST parcours ${stamp}`);
     await shot('promo-1-formulaire');
-    await click('Mettre en ligne', { within: '[role=dialog]' }).catch(() => click('Soumettre à GoLink', { within: '[role=dialog]' }));
+    await click('Mettre en ligne', { within: '[role=dialog]' }).catch(() => click('Soumettre à Ciyou Eats', { within: '[role=dialog]' }));
     const t = await toast('');
     await sleep(1500);
     await shot('promo-2-liste');

@@ -2,7 +2,7 @@
 import { gcp, PROJECT_ID } from './gcp-token.mjs';
 
 const body = {
-  displayName: 'GoLink Web Maps',
+  displayName: 'Ciyou Eats Web Maps',
   restrictions: {
     browserKeyRestrictions: { allowedReferrers: ['http://localhost:*/*', 'http://127.0.0.1:*/*', 'https://*.golink.fr/*', 'https://*.web.app/*'] },
     apiTargets: [{ service: 'maps-backend.googleapis.com' }, { service: 'places-backend.googleapis.com' }, { service: 'geocoding-backend.googleapis.com' }],

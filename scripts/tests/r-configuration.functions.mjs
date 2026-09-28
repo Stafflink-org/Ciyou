@@ -119,7 +119,7 @@ await youssef.close();
 // ----------------------------------------------------------------- Manager
 const sofia = await session('sofia.martin@golink.test');
 await expectError(
-  'Manager : espèces refusées (livraison GoLink)',
+  'Manager : espèces refusées (livraison Ciyou Eats)',
   sofia.call('updateRestaurantSettings', {
     restaurantId: MINA,
     section: 'payments',
