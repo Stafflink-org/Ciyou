@@ -67,6 +67,7 @@ import { useAuth, useDocumentTitle } from '@golink/web';
 import { useCan, useRestaurantAccess } from '@/auth/RestaurantAccess';
 import { serverTimestamp, updateDoc } from 'firebase/firestore';
 import { docAt, errorMessage, toDate, useDoc } from '@/lib/firestore';
+import { ProductOffersPanel } from '../annonces/ProductOffersPanel';
 import { AdjustStockDialog } from './menu/AdjustStockDialog';
 import {
   createProduct,
@@ -711,6 +712,12 @@ export function ProductEditorPage() {
               </p>
             )}
           </Panel>
+
+          {!isNew && (
+            <Panel id="visibilite" title="Visibilité" description="Offres automatiques Ciyou Eats en cours sur ce plat, visibles par vos clients.">
+              <ProductOffersPanel restaurantId={restaurantId} productId={id} />
+            </Panel>
+          )}
         </fieldset>
 
         <aside className="min-w-0 space-y-6 lg:sticky lg:top-6 lg:self-start">

@@ -18,4 +18,5 @@ export { onOrderWritten } from './triggers';
 export { enforceAcceptanceTimeout } from './scheduled';
 export { closeCustomerAbsent, logCustomerCall, markDriverArrived } from './customer-absent';
 export { reportItemUnavailable, respondToItemProposal } from './item-unavailable';
+export { adjustOrderItemWeight } from './adjust-weight';
 export { decideOrderClaim, submitOrderClaim } from './claims';

@@ -176,6 +176,7 @@ export const REFUND_CAUSE_LABELS: Record<RefundCause, string> = {
   commercial_gesture: 'Geste commercial',
   platform_error: 'Erreur de la plateforme',
   payment_issue: 'Incident de paiement',
+  weight_adjustment: 'Ajustement poids/prix variable',
 };
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {

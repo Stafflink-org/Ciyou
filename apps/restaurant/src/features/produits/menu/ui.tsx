@@ -23,8 +23,23 @@ export function Thumb({ image, alt, className, size = 'md' }: { image?: ImageRef
   );
 }
 
-export function Price({ cents, className }: { cents: number; className?: string }) {
-  return <span className={cn('num font-mono text-sm font-medium text-fg', className)}>{formatEUR(cents, { cents: true })}</span>;
+/**
+ * Prix affiché ; `suffix` marque un montant indicatif (vente au poids : « /kg » sur le prix de
+ * référence, prix variable : « env. » avant le montant) pour ne jamais afficher un prix fixe trompeur.
+ */
+export function Price({ cents, className, suffix }: { cents: number; className?: string; suffix?: string }) {
+  return (
+    <span className={cn('num font-mono text-sm font-medium text-fg', className)}>
+      {suffix === 'variable' && 'env. '}
+      {formatEUR(cents, { cents: true })}
+      {suffix === 'weight' && <span className="font-sans font-normal text-fg-subtle"> /kg</span>}
+    </span>
+  );
+}
+
+/** Libellé du mode de vente d'un produit, quand il n'est pas à l'unité. */
+export function saleUnitSuffix(product: { saleUnit?: 'unit' | 'weight' | 'variable' }): 'weight' | 'variable' | undefined {
+  return product.saleUnit === 'weight' ? 'weight' : product.saleUnit === 'variable' ? 'variable' : undefined;
 }
 
 /** Pastille ronde colorée + libellé (statut compact). */

@@ -18,6 +18,7 @@ import {
   Flame,
   Flower2,
   Gauge,
+  Gift,
   IceCreamCone,
   Image as ImageIcon,
   LayoutTemplate,
@@ -51,6 +52,7 @@ export function AffichageNav() {
         { to: '/affichage/categories', label: 'Catégories', icon: <Tags /> },
         { to: '/affichage/classement', label: 'Classement', icon: <Gauge /> },
         { to: '/affichage/sponsorise', label: 'Mise en avant payante', icon: <Megaphone /> },
+        { to: '/affichage/offres-plats', label: 'Offres sur les plats', icon: <Gift /> },
         { to: '/affichage/pages', label: 'Pages d’information', icon: <FileText /> },
       ]}
     />

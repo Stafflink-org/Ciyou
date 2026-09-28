@@ -237,3 +237,40 @@ Le modèle de données existe déjà (`driverLocations/{driverId}`, un seul docu
 - **Dernière position connue** : `driverLocations/{driverId}` porte déjà la dernière position (un seul document, écrasé à chaque mise à jour) — pas de collection d'historique séparée aujourd'hui (voir `docs/AUDIT_COUVERTURE_CDC.md`, limite documentée : pas d'historique de trajet conservé). Une app qui a besoin d'un tracé complet du trajet (et non juste du point courant) devra construire sa propre historisation le moment venu — hors périmètre de cette tâche.
 - **Statut en ligne/hors ligne** : le champ `availability` du même document reflète l'état courant (`online`, `busy`, `offline`… selon `DriverAvailability`) ; un lecteur qui veut savoir si un livreur est joignable regarde ce champ plutôt que la fraîcheur de `updatedAt` seule (un livreur qui vient de passer hors ligne peut conserver une position récente).
 - Langues actives : `settings/translator.activeLocales` (fr toujours présent ; en/ar par défaut, extensible). Une langue absente de cette liste n'a jamais de traduction à afficher : repli français normal.
+
+## 25. Vente au poids et à prix variable (app client)
+
+Décision client : tous types de commerces, produits vendus à l'unité, au poids ou à prix variable
+(`docs/DECISIONS_CLIENT.md`). Modèle produit : `Product.saleUnit` (`'unit' | 'weight' | 'variable'`, absent =
+à l'unité), `pricePerKgCents`, `weightStepGrams`/`minWeightGrams`/`maxWeightGrams` (vente au poids),
+`variablePriceMaxCents` (prix variable, `packages/shared/src/models/menu.ts`). Le prix affiché sur la carte
+d'un article `weight`/`variable` est **indicatif** : le montant réellement dû est calculé côté serveur, à la
+commande puis confirmé par le commerce à la préparation.
+
+**Panier envoyé par l'app client (`placeOrder`) :**
+- Article `weight` : la ligne (`lines[]`) doit porter `weightGrams` (poids souhaité, en grammes). Sans cette
+  valeur, le serveur retombe sur `product.minWeightGrams` (ou `weightStepGrams`) ; s'il n'y en a aucun, la
+  commande est refusée (« Indiquez le poids souhaité… »). Le poids est validé contre `minWeightGrams` /
+  `maxWeightGrams` du produit (message d'erreur explicite si hors bornes). Le sous-total de la ligne = prix au
+  kg (`pricePerKgCents`) × poids réel, arrondi au centime le plus proche.
+- Article `variable` : rien à envoyer de plus — le serveur autorise le montant au plafond du produit
+  (`variablePriceMaxCents`, ou `priceCents` si non renseigné) ; c'est ce montant qui est pré-autorisé au
+  paiement. L'app doit afficher ce prix comme **« prix indicatif, confirmé à la préparation »**, jamais comme
+  un prix ferme.
+- Article `unit` : inchangé, aucun champ supplémentaire.
+- La commande créée porte sur chaque ligne concernée `saleUnit`, `pricePerKgCents`, `weightGrams` (poids
+  demandé) — l'app les relit pour afficher « au poids » / « prix variable » sur le récapitulatif et le suivi
+  de commande, plutôt qu'un montant fixe trompeur.
+
+**Ajustement à la préparation (déjà géré par le back-office restaurant, `adjustOrderItemWeight`) :**
+- Le commerce entre le poids réellement pesé (article `weight`) ou fixe le prix final, plafonné au montant
+  pré-autorisé (article `variable`), pendant que la commande est `accepted`/`preparing`.
+- **Le client ne paie jamais plus que le montant indiqué à la commande** : si le montant réel est inférieur,
+  la différence est remboursée automatiquement sur le moyen de paiement d'origine (même mécanique que le
+  retrait d'un article indisponible, cause de remboursement `weight_adjustment`) ; si le poids réel est
+  supérieur à l'estimation, l'écart est absorbé par le commerce, jamais refacturé au client.
+- La commande porte ensuite `actualWeightGrams` (poids réellement pesé) et `finalTotalCents` (montant final
+  de la ligne, éventuellement inférieur à `totalCents`) sur la ligne concernée ; l'app doit afficher
+  `finalTotalCents` (une fois présent) au lieu de `totalCents`, et peut afficher `totalCents` comme montant
+  « indicatif, au poids » avant que l'article ne soit pesé.
+- Un message automatique (`item_weight_adjusted`) est envoyé au client quand un remboursement en résulte.

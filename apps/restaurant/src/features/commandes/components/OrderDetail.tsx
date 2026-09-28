@@ -56,6 +56,7 @@ import { errorMessage, toDate } from '@/lib/firestore';
 import { useNow, useOrderEvents } from '../hooks';
 import { CLOSED_STATUSES, fulfillmentLabel, statusMeta, type OrderRow } from '../lib';
 import { useOrderActions } from './OrderActions';
+import { AdjustWeightButton, WeightAdjustmentBadge } from './AdjustWeight';
 import { ItemAdjustmentBadge, ItemUnavailableButton } from './ItemUnavailable';
 import { Countdown, CourierLine, FulfillmentBadge, OrderStatus as StatusPillFor, PrimaryActions } from './parts';
 import { getLocale, useTranslation } from '@golink/web';
@@ -295,14 +296,24 @@ export function OrderDetail({ order, compactHeader }: { order: OrderRow; compact
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline justify-between gap-3">
                           <p className={cn('text-sm font-semibold text-fg', item.adjustment?.type === 'removed' && 'line-through opacity-60')}>{item.name}</p>
-                          <span className="num shrink-0 font-mono text-sm text-fg">{eur(item.totalCents)}</span>
+                          <span className="num shrink-0 font-mono text-sm text-fg">
+                            {item.finalTotalCents == null && (item.saleUnit === 'weight' || item.saleUnit === 'variable') && '≈ '}
+                            {eur(item.finalTotalCents ?? item.totalCents)}
+                          </span>
                         </div>
                         <p className="text-xs text-fg-subtle">
-                          {eur(item.unitPriceCents)} l’unité{item.optionsPriceCents > 0 && <> · suppléments {eur(item.optionsPriceCents)}</>}
+                          {item.saleUnit === 'weight'
+                            ? <>{item.pricePerKgCents != null && <>{eur(item.pricePerKgCents)} / kg</>}{item.weightGrams != null && <> · {item.weightGrams} g indicatif</>}</>
+                            : item.saleUnit === 'variable'
+                              ? <>Prix indicatif, confirmé à la préparation</>
+                              : <>{eur(item.unitPriceCents)} l’unité</>}
+                          {item.optionsPriceCents > 0 && <> · suppléments {eur(item.optionsPriceCents)}</>}
                         </p>
                         <div className="mt-1.5 flex flex-wrap items-center gap-2">
                           <ItemAdjustmentBadge order={order} item={item} />
+                          <WeightAdjustmentBadge item={item} />
                           <ItemUnavailableButton order={order} item={item} />
+                          <AdjustWeightButton order={order} item={item} />
                         </div>
                         {groups.size > 0 && (
                           <div className="mt-2 space-y-0.5 border-l-2 border-border pl-3 text-xs text-fg-muted">

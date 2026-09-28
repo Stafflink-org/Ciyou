@@ -224,6 +224,13 @@ function Items({ order }: { order: Order }) {
               <p className={cn('text-sm font-medium text-fg', item.adjustment?.type === 'removed' && 'line-through opacity-60')}>{item.name}</p>
               {item.options.length > 0 && <p className="text-xs text-fg-subtle">{item.options.map((o) => `${o.name}${o.quantity > 1 ? ` ×${o.quantity}` : ''}`).join(', ')}</p>}
               {item.comment && <p className="text-xs italic text-fg-muted">« {item.comment} »</p>}
+              {item.saleUnit === 'weight' && (
+                <p className="text-xs text-fg-subtle">
+                  Vente au poids{item.pricePerKgCents != null && <> · {euros(item.pricePerKgCents)}/kg</>}
+                  {item.actualWeightGrams != null ? <> · pesé {item.actualWeightGrams} g</> : item.weightGrams != null ? <> · {item.weightGrams} g indicatif</> : null}
+                </p>
+              )}
+              {item.saleUnit === 'variable' && <p className="text-xs text-fg-subtle">Prix variable{item.finalTotalCents == null ? ' · indicatif, confirmé à la préparation' : ' · confirmé'}</p>}
               {item.adjustment && (
                 <p className="text-xs text-warning">
                   {item.adjustment.type === 'removed' ? 'Retiré' : item.adjustment.type === 'replaced' ? `Remplacé par ${item.adjustment.replacementName ?? '—'}` : 'Quantité réduite'}
@@ -231,7 +238,10 @@ function Items({ order }: { order: Order }) {
                 </p>
               )}
             </div>
-            <span className="font-mono text-sm text-fg num">{euros(item.finalTotalCents ?? item.totalCents)}</span>
+            <span className="font-mono text-sm text-fg num">
+              {item.finalTotalCents == null && (item.saleUnit === 'weight' || item.saleUnit === 'variable') && '≈ '}
+              {euros(item.finalTotalCents ?? item.totalCents)}
+            </span>
           </li>
         ))}
       </ul>

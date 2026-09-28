@@ -102,6 +102,7 @@ export const PLATFORM_MESSAGE_KEYS = [
   'late_credit_issued',
   'item_replacement_proposed',
   'item_removed',
+  'item_weight_adjusted',
   'claim_received',
   'claim_decided',
   'restaurant_new_order',

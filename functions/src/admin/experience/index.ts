@@ -4,6 +4,6 @@ export { assignTickets, contactTicketParty, createTicketAsAgent, escalateTicket,
 export { creditFromTicket, getRefundPolicy, refundFromTicket, reviewTicketRefund } from './refunds';
 export { enforceTicketSla, runTicketSlaNow } from './sla';
 export { decideContentReport, detectRatingDrops, moderateReview, onReviewCreated, runRatingWatchNow } from './reviews';
-export { bookSponsoredPlacement, cancelSponsoredPlacement, publishPage, saveSponsoredOffer, syncSponsoredPlacements, updateExperienceSettings } from './display';
+export { bookSponsoredPlacement, cancelSponsoredPlacement, disableProductOffer, publishPage, saveSponsoredOffer, syncSponsoredPlacements, updateExperienceSettings } from './display';
 export { closeSupportChat, openSupportChat, postSupportChatMessage } from './chat';
 export { computeRankingScores, refreshRankingScores } from './ranking';

@@ -108,7 +108,9 @@ export type RefundCause =
   | 'customer_cancelled'
   | 'commercial_gesture'
   | 'platform_error'
-  | 'payment_issue';
+  | 'payment_issue'
+  /** Vente au poids ou à prix variable : écart entre le montant autorisé et le poids/prix réel constaté à la préparation. */
+  | 'weight_adjustment';
 
 export type RefundPayer = 'restaurant' | 'courier' | 'platform';
 
@@ -130,6 +132,7 @@ export const REFUND_CAUSES: readonly RefundCause[] = [
   'commercial_gesture',
   'platform_error',
   'payment_issue',
+  'weight_adjustment',
 ];
 
 /**
@@ -157,6 +160,7 @@ export const CAUSE_BASED_REFUND_LIABILITY: RefundLiabilityRules = {
   commercial_gesture: { platform: 10_000 },
   platform_error: { platform: 10_000 },
   payment_issue: { platform: 10_000 },
+  weight_adjustment: { restaurant: 10_000 },
 };
 
 export interface RefundAllocation {

@@ -31,7 +31,7 @@ import { AdjustStockDialog } from '../produits/menu/AdjustStockDialog';
 import { menuFunctions, updateProducts, useProducts, useSections, type MenuProduct } from '../produits/menu/data';
 import { matches, plural, saleState, stockState, STOCK_STATE_META, type StockState } from '../produits/menu/helpers';
 import { StockHistorySheet } from '../produits/menu/StockHistorySheet';
-import { Price, Thumb } from '../produits/menu/ui';
+import { Price, saleUnitSuffix, Thumb } from '../produits/menu/ui';
 import { InventoryDialog } from './InventoryDialog';
 
 type Filter = 'all' | 'tracked' | 'low' | 'out' | 'untracked';
@@ -384,7 +384,7 @@ export function StocksPage() {
                         </td>
                         <td className="num px-3 py-2.5 text-right font-mono text-fg-muted">{formatNumber(product.salesCount ?? 0)}</td>
                         <td className="px-3 py-2.5 text-right">
-                          <Price cents={product.priceCents} />
+                          <Price cents={product.saleUnit === 'weight' ? (product.pricePerKgCents ?? product.priceCents) : product.priceCents} suffix={saleUnitSuffix(product)} />
                         </td>
                         <td className="px-3 py-2.5 text-center">
                           {stockControl(product)}
@@ -415,7 +415,7 @@ export function StocksPage() {
                         {product.sectionId ? (sectionById.get(product.sectionId)?.name ?? 'Sans section') : 'Sans section'} · {plural(product.salesCount ?? 0, 'vente')}
                       </p>
                     </Link>
-                    <Price cents={product.priceCents} />
+                    <Price cents={product.saleUnit === 'weight' ? (product.pricePerKgCents ?? product.priceCents) : product.priceCents} suffix={saleUnitSuffix(product)} />
                     {rowMenu(product)}
                   </div>
                   <div className="mt-3 flex flex-wrap items-end justify-between gap-3">

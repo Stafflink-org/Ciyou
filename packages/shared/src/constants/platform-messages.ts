@@ -57,6 +57,10 @@ export const PLATFORM_MESSAGE_DEFAULTS: Record<PlatformMessageKey, PlatformMessa
     key: 'item_removed', event: 'Article retiré et remboursé', audience: 'client', channels: ['push', 'in_app'], subject: null, category: 'order',
     title: 'Article retiré de votre commande', body: '« {{itemName}} » est indisponible et a été retiré de la commande {{orderNumber}}. {{amount}} vous sont remboursés.', variables: ['orderNumber', 'itemName', 'amount'],
   },
+  item_weight_adjusted: {
+    key: 'item_weight_adjusted', event: 'Poids ou prix ajusté à la préparation', audience: 'client', channels: ['push', 'in_app'], subject: null, category: 'order',
+    title: 'Prix ajusté après pesée', body: '« {{itemName}} » a été pesé ou son prix confirmé pour la commande {{orderNumber}} : {{amount}} vous sont remboursés.', variables: ['orderNumber', 'itemName', 'amount'],
+  },
   claim_received: {
     key: 'claim_received', event: 'Réclamation reçue', audience: 'client', channels: ['push', 'in_app'], subject: null, category: 'support',
     title: 'Réclamation reçue', body: 'Nous avons bien reçu votre réclamation pour la commande {{orderNumber}}. Notre équipe l’examine et vous répond rapidement.', variables: ['orderNumber'],
