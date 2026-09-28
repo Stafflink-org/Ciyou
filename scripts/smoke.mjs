@@ -53,7 +53,9 @@ try {
   page.on('pageerror', (error) => errors.push(error.message.slice(0, 300)));
   await page.setViewport(viewport);
 
-  await page.goto(`${base}/connexion`, { waitUntil: 'networkidle0', timeout: 90_000 });
+  // networkidle2 (pas networkidle0) : la page de connexion ouvre déjà une écoute Firestore
+  // (réglages publics : marque, maintenance) qui reste connectée et bloquerait networkidle0.
+  await page.goto(`${base}/connexion`, { waitUntil: 'networkidle2', timeout: 90_000 });
   await page.type('input[type=email]', email);
   await page.type('input[autocomplete=current-password]', password);
   await page.click('button[type=submit]');
@@ -81,6 +83,9 @@ try {
     }
   }
 
+  // Laisse la redirection cliente de la connexion se stabiliser avant une navigation complète
+  // (sinon la page peut encore être en train de rediriger, ce qui détache le cadre en cours).
+  await new Promise((resolve) => setTimeout(resolve, 600));
   // Les écoutes Firestore gardent des connexions ouvertes : networkidle2 et non networkidle0.
   if (path !== '/') await page.goto(`${base}${path}`, { waitUntil: 'networkidle2', timeout: 60_000 });
   await new Promise((resolve) => setTimeout(resolve, 2500));

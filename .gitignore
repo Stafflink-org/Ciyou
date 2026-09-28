@@ -38,8 +38,9 @@ service-account*.json
 # Tests compilés du package partagé
 packages/shared/.test-build/
 
-# Comptes de test générés par le seed (mots de passe)
+# Comptes de test générés par le seed (mots de passe) et secrets 2FA de test (.test-mfa.local.json)
 *.local.md
+*.local.json
 
 # Captures de scripts/smoke.mjs
 .smoke/
