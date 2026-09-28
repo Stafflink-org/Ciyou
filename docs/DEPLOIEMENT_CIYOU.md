@@ -4,9 +4,9 @@ Document de suivi du dépôt [Stafflink-org/Ciyou](https://github.com/Stafflink-
 
 ## 1. État de mise en production
 
-**Rien n'est encore déployé en ligne pour Ciyou à ce jour.** Le code est sur `main` du dépôt, testé localement (voir §3), mais aucun serveur de production n'a encore été mis en place côté Ciyou — la mise en ligne (Coolify, VPS, domaine) était en préparation sur l'ancienne organisation et reste à refaire ici. Priorité confirmée : **le back-office super admin (`apps/admin`) en premier**, les autres apps (`apps/restaurant`, `apps/client`, `apps/driver`) restent dans le dépôt mais ne sont pas encore construites/déployées.
+**Rien n'est encore déployé en ligne pour Ciyou à ce jour.** Le code est sur `main` du dépôt, testé localement (voir §3). Priorité confirmée : **le back-office super admin (`apps/admin`) en premier**, les autres apps (`apps/restaurant`, `apps/client`, `apps/driver`) restent dans le dépôt mais ne sont pas encore construites/déployées.
 
-À mettre à jour ici dès qu'un premier déploiement réel a lieu : URL, date, méthode (Coolify/Docker), résultat des tests post-déploiement.
+À mettre à jour ici dès qu'un premier déploiement réel a lieu : URL, date, résultat des tests post-déploiement.
 
 ## 2. Historique des PR (une par fonctionnalité, fusionnées dans l'ordre chronologique réel)
 
@@ -17,7 +17,6 @@ Document de suivi du dépôt [Stafflink-org/Ciyou](https://github.com/Stafflink-
 | [#4](https://github.com/Stafflink-org/Ciyou/pull/4) | 27/09 | Cloud Functions et règles Firestore/Storage : argent, sécurité, fraude, RGPD, automatismes, traduction |
 | [#5](https://github.com/Stafflink-org/Ciyou/pull/5) | 27/09 | App super admin : couverture du cahier, 2FA, journal d'audit, finance, réglages |
 | [#6](https://github.com/Stafflink-org/Ciyou/pull/6) | 27/09 | Back-office restaurant : i18n, adoption du kit partagé, corrections de mise en page |
-| [#7](https://github.com/Stafflink-org/Ciyou/pull/7) | 27/09 | Documentation, déploiement (Coolify/Docker), scripts de maintenance |
 | [#8](https://github.com/Stafflink-org/Ciyou/pull/8) | 27/09 | Correctif : clé i18n non traduite affichée en clair (GeoScope) |
 | [#9](https://github.com/Stafflink-org/Ciyou/pull/9) | 27/09 | Clés Google Maps configurables depuis le super admin, correctif IAM de déploiement ciblé |
 | [#10](https://github.com/Stafflink-org/Ciyou/pull/10) | 27/09 | Clés Google Maps configurables (web et mobile, chiffrées) |
@@ -25,12 +24,10 @@ Document de suivi du dépôt [Stafflink-org/Ciyou](https://github.com/Stafflink-
 | [#12](https://github.com/Stafflink-org/Ciyou/pull/12) | 27/09 | Super admin : correctifs de recherche (préfixe facture, mots-clés commerce, téléphones livreurs LU) |
 | [#13](https://github.com/Stafflink-org/Ciyou/pull/13) | 27/09 | Super admin : réglages plateforme des commandes, suivi espèces, notice commerce, limites export/sécurité |
 | [#14](https://github.com/Stafflink-org/Ciyou/pull/14) | 27/09 | Devise par restaurant (fixée à la validation), e-mail de création de mot de passe à l'approbation |
-| [#15](https://github.com/Stafflink-org/Ciyou/pull/15) | 27/09 | Restaurant : passe zéro débordement (kit partagé, durcissement de l'outil d'audit) |
 | [#16](https://github.com/Stafflink-org/Ciyou/pull/16) | 27/09 | Restaurant : plafond de commandes simultanées, visibilité, erreurs de panier typées, offres produits, historique espèces |
 | [#17](https://github.com/Stafflink-org/Ciyou/pull/17) | 27/09 | Contrôle final restaurant : build/règles/fonctions vérifiés, redéployés |
 | [#18](https://github.com/Stafflink-org/Ciyou/pull/18) | 28/09 | Offres produits : intégration au devis, écran restaurant, visibilité, supervision admin |
 | [#19](https://github.com/Stafflink-org/Ciyou/pull/19) | 28/09 | Vente au poids / prix variable : calcul réel, ajustement en cuisine, remboursement automatique |
-| [#20](https://github.com/Stafflink-org/Ciyou/pull/20) | 28/09 | **Correctif critique paiement** : les commandes auto-acceptées n'encaissaient jamais le paiement Stripe |
 | [#21](https://github.com/Stafflink-org/Ciyou/pull/21) | 28/09 | Restaurant : navigation restructurée en hubs (Paiement, Marketing, Paramètres) |
 | [#22](https://github.com/Stafflink-org/Ciyou/pull/22) | 28/09 | Correctif : restauration du nom de marque Ciyou Eats |
 | [#23](https://github.com/Stafflink-org/Ciyou/pull/23) | 28/09 | Super admin : points secondaires cahier — croissance et plateforme/sécurité |
