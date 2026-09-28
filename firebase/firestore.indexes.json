@@ -1,6 +1,20 @@
 {
   "indexes": [
     {
+      "collectionGroup": "adminSessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "adminId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "orders",
       "queryScope": "COLLECTION",
       "fields": [

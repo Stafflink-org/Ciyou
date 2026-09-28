@@ -1,5 +1,14 @@
 # État d'avancement — Ciyou Eats
 
+## Vérification manuelle en direct de l'existant — 28/09/2026 (en cours)
+
+Suite à la clôture de la série `cdc-p2-*`, passe de vérification personnelle (navigateur, clavier/souris, pas seulement un compte-rendu de tâche automatisée) sur les points les plus récemment livrés, en commençant par les plus à risque. Deux bugs réels déjà trouvés et corrigés sur l'écran Sécurité > Sessions (annoncé COMPLET par `cdc-p2-g5-g6`) :
+
+1. **Liste des sessions toujours vide** (« Aucune session » affiché même en étant connecté) : index Firestore composite manquant (`adminSessions` : `adminId` + `createdAt`). Ajouté à `firebase/firestore.indexes.json`, déployé, reconfirmé fonctionnel en direct.
+2. **Localisation approximative des sessions ne se remplit jamais** : le code lit l'en-tête `x-appengine-country` (infrastructure App Engine), absent sur Cloud Functions v2/Cloud Run — donc jamais présent, y compris en production. Fonctionnalité codée et déployée mais sans effet possible en l'état. Correction propre = load balancer + Cloud Armor devant les fonctions (coût/complexité d'infra) : **non fait sans validation du client**. §27 repasse de COMPLET à PARTIEL dans `docs/AUDIT_COUVERTURE_CDC.md` : nouveau total **101 COMPLET / 65 PARTIEL / 0 ABSENT / 0 FAUX** (166 lignes, contre 102/64/0/0 avant cette vérification).
+
+Vérification en cours, prochains points : intéressement commercial mensuel (`computeSalesRevenueShare`), verrou consentement marketing sur les messages de service, robustesse du `try/finally` de `bulkRestaurantAction`.
+
 ## Retotalisation du questionnaire client — 28/09/2026 (tâche `qr-retotal`)
 
 **Tâche d'audit pur (aucune correction de code)** : les 36 réponses de `golink-maquette/specs/super-admin/questions-reponses-client.txt` n'avaient jamais été recomptées une par une depuis l'audit initial du 26/09, malgré les corrections réelles apportées entre-temps par `cdc-fix-b/c/d/e/p1`, `cdc-p2-g5-g6`, `cdc-p2-rest`, `cdc-p2-final` et `stripe-autoaccept-fix`. Les anciennes annotations posées entre `cdc-fix-b` et `cdc-fix-c` n'avaient pas été mises à jour avec les correctifs ultérieurs, et le tableau bilan de l'annexe I, volet 1 (`docs/AUDIT_COUVERTURE_CDC.md`) restait figé à l'état de l'audit initial.
