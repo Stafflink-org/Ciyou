@@ -5,7 +5,7 @@
 // entre commerces, fidélité, comptes de paiement et virement manuel (pays sans Stripe), KPI.
 //
 // Le script joue le rôle du client (compte de test créé pour l'occasion), des membres du commerce
-// (comptes de test existants) et de l'équipe GoLink. Les planificateurs sont appelés directement
+// (comptes de test existants) et de l'équipe Ciyou Eats. Les planificateurs sont appelés directement
 // (code des fonctions, identifiants CLI en ADC). Toutes les données créées portent `test: true`
 // et l'identifiant `cdcc-…` ; elles sont supprimées à la fin.
 //
@@ -604,7 +604,7 @@ scenarios.cash = async () => {
   check('Caisse du livreur augmentée', (await db.doc(`driverPrivate/${DRIVER}`).get()).get('cashBalanceCents') === 3049);
   check('Solde reflété sur la fiche livreur du commerce', (await db.doc(`restaurants/${RES}/couriers/${DRIVER}`).get()).get('cashHeldCents') === 3049);
   const fin = await until(async () => (await db.doc(`orderFinancials/${id1}`).get()).exists, 60_000);
-  check('Commande comptabilisée : aucune écriture de caisse pour GoLink (l’argent reste au commerce)', fin && !(await db.collection('ledgerEntries').where('orderId', '==', id1).get()).docs.some((d) => d.get('accountType') === 'driver_cash'));
+  check('Commande comptabilisée : aucune écriture de caisse pour Ciyou Eats (l’argent reste au commerce)', fin && !(await db.collection('ledgerEntries').where('orderId', '==', id1).get()).docs.some((d) => d.get('accountType') === 'driver_cash'));
   await sleep(5000);
   check('Rejeu du déclencheur : jamais de double comptage', (await db.doc(`driverPrivate/${DRIVER}`).get()).get('cashBalanceCents') === 3049);
 
@@ -636,7 +636,7 @@ scenarios.cash = async () => {
   // Administration : remise enregistrée par l'équipe finance.
   await db.doc(`driverPrivate/${DRIVER}`).update({ cashBalanceCents: 1000 });
   const adminRemit = await call(finance, 'recordCashRemittance', { driverId: DRIVER, amountCents: 400, reason: 'Test cdcc : remise déclarée par l’équipe' }).catch((e) => e);
-  check('Remise déclarée par l’équipe GoLink (droit finance)', adminRemit?.cashBalanceCents === 600 || adminRemit?.status === 'PERMISSION_DENIED', JSON.stringify(adminRemit?.cashBalanceCents ?? adminRemit?.message));
+  check('Remise déclarée par l’équipe Ciyou Eats (droit finance)', adminRemit?.cashBalanceCents === 600 || adminRemit?.status === 'PERMISSION_DENIED', JSON.stringify(adminRemit?.cashBalanceCents ?? adminRemit?.message));
   // Espèces refusées avec un livreur de la plateforme (décision client).
   const platformDelivery = await call(CLIENT_TOKEN(), 'placeOrder', { restaurantId: RES, fulfillment: 'pickup', lines: [{ productId: 'cdcc-p1', quantity: 2 }], paymentMethod: 'cash', clientRequestId: `cdcc${Date.now().toString(36)}cash` }).then((r) => ({ ok: true, r }), (e) => ({ ok: false, e }));
   check('Espèces au retrait refusées (décision client)', !platformDelivery.ok && platformDelivery.e.message.includes('espèces'), platformDelivery.ok ? 'accepté' : platformDelivery.e.message);
@@ -894,7 +894,7 @@ scenarios.driverconnect = async () => {
   const token = await testUserSession(uid, 'cdcc-driver-platform@golink.test');
   await clone('drivers/seed-driver-029', `drivers/${uid}`, { type: 'platform', restaurantIds: [], email: 'cdcc-driver-platform@golink.test', displayName: 'Livreur Plateforme C', test: true, seed: true });
   await db.doc(`driverPrivate/${uid}`).set({ cashBalanceCents: 0, cashLimitCents: 15_000, payoutsBlocked: false, vatExempt: true, dac7Complete: false, birthDate: '1990-01-01', nationality: 'FR', address: { line1: '1 rue Test', line2: null, postalCode: '54400', city: 'Longwy', countryCode: 'FR' }, stripeAccountId: null, stripeAccountStatus: null, updatedAt: at(0), test: true });
-  await expectError('Livreur salarié : pas de compte de paiement GoLink', call(await testUserSession(DRIVER, 'cdcc-driver@exemple.test'), 'createDriverConnectAccount', {}), 'FAILED_PRECONDITION', 'salariés');
+  await expectError('Livreur salarié : pas de compte de paiement Ciyou Eats', call(await testUserSession(DRIVER, 'cdcc-driver@exemple.test'), 'createDriverConnectAccount', {}), 'FAILED_PRECONDITION', 'salariés');
   const account = await call(token, 'createDriverConnectAccount', {}).catch((e) => e);
   if (account instanceof Error) {
     // Limite externe : Stripe Connect n'est pas activé sur le compte Stripe de la plateforme.

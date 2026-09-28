@@ -546,7 +546,7 @@ scenarios.inactivity = async () => {
   const s1 = (await db.collection('restaurants').doc(a).get()).data();
   check('20 jours sans commande : alerte envoyée, retrait programmé', r1.alerted === 1 && s1.inactivityAlertAt && s1.inactivityRemovalDueAt, `alerte le ${s1.inactivityAlertAt?.toDate().toISOString().slice(0, 10)}, retrait le ${s1.inactivityRemovalDueAt?.toDate().toISOString().slice(0, 10)}`);
   const mail = await until(async () => (await db.collection('users').doc(`cdcb-owner-${a}`).collection('notifications').get()).docs.find((d) => d.id.startsWith('restaurant_inactivity_warning'))?.data(), 30_000);
-  check('E-mail d’alerte d’inactivité remis (gabarit modifiable)', mail && mail.title.includes('20 jours') && mail.body.includes('retiré de GoLink'), mail?.body?.slice(0, 160));
+  check('E-mail d’alerte d’inactivité remis (gabarit modifiable)', mail && mail.title.includes('20 jours') && mail.body.includes('retiré de Ciyou Eats'), mail?.body?.slice(0, 160));
   const log = await db.collection('notificationLogs').where('templateKey', '==', 'restaurant_inactivity_warning').where('recipientId', '==', `cdcb-owner-${a}`).get();
   check('Envoi e-mail journalisé en simulation', log.docs.some((d) => d.get('channel') === 'email' && d.get('status') === 'queued'));
   const r2 = await call(metz, 'runMerchantLifecycleNow', { restaurantId: a });

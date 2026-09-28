@@ -162,7 +162,7 @@ async function main() {
     });
 
     // ------------------------------------------------------------ Conditions commerciales
-    await expectError('Espèces refusées si livraison GoLink', admin.call('updateCommercialTerms', {
+    await expectError('Espèces refusées si livraison Ciyou Eats', admin.call('updateCommercialTerms', {
       restaurantId: rid, planCode: 'pro', billingMode: null, negotiatedCommission: null, specialOffer: null,
       allowedPaymentMethods: ['card', 'cash'], deliveryFeeOverrideCents: null, minOrderOverrideCents: null, payoutFrequency: null, reason: 'Test espèces',
     }), 'invalid-argument');
@@ -201,7 +201,7 @@ async function main() {
 
     // ------------------------------------------------------------ Actions groupées
     await step('bulkRestaurantAction : message', async () => {
-      const r = await admin.call('bulkRestaurantAction', { restaurantIds: [rid], action: 'send_message', reason: 'Information test', params: { subject: 'Nouveautés GoLink', message: 'Bonjour, voici les nouveautés du mois.' } });
+      const r = await admin.call('bulkRestaurantAction', { restaurantIds: [rid], action: 'send_message', reason: 'Information test', params: { subject: 'Nouveautés Ciyou Eats', message: 'Bonjour, voici les nouveautés du mois.' } });
       created.jobIds.push(r.jobId);
       return `${r.succeeded} ok / ${r.failed} échec`;
     });
