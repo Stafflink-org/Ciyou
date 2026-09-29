@@ -1,0 +1,23 @@
+{
+  "defaultName": "Ciyou Eats customer",
+  "edit": "Edit",
+  "verifyEmail": {
+    "title": "Verify your email",
+    "description": "A confirmation link was sent to {{email}}.",
+    "resent": "Resent",
+    "resend": "Resend the email"
+  },
+  "shortcuts": {
+    "orders": "My orders",
+    "favorites": "My favourites",
+    "addresses": "My addresses",
+    "promotions": "Offers",
+    "referral": "Referral",
+    "notifications": "Notifications",
+    "paymentMethods": "Payment methods",
+    "help": "Help",
+    "support": "Support (my requests)",
+    "language": "Language"
+  },
+  "signOut": "Sign out"
+}

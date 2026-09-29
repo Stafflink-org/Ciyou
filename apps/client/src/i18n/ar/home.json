@@ -1,0 +1,27 @@
+{
+  "address": {
+    "primary": "العنوان الرئيسي",
+    "choose": "اختر مدينتك"
+  },
+  "offers": {
+    "eyebrow": "متع صغيرة، توفير كبير",
+    "title": "العروض الحالية",
+    "seeAll": "كل العروض",
+    "welcomeTitle": "مرحبًا بك في Ciyou Eats",
+    "welcomeDescription": "خصم 20% على طلبك الأول لدى المتاجر المشاركة.",
+    "neighborhoodTitle": "طبق الحي",
+    "neighborhoodDescription": "خصم لدى مجموعة من المتاجر الشريكة هذا الشهر."
+  },
+  "restaurants": {
+    "eyebrow": "اختيارات الحي",
+    "title": "المطاعم الشائعة",
+    "seeAll": "عرض الكل",
+    "emptyCity": "لا يوجد متجر نشط في هذه المدينة حاليًا.",
+    "emptyNoCity": "لا توجد مدينة نشطة بعد على Ciyou Eats."
+  },
+  "products": {
+    "eyebrow": "لا يفوتك",
+    "title": "أطباق تستحق التجربة",
+    "empty": "لا يوجد طبق مميز حاليًا."
+  }
+}

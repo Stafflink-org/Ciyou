@@ -1,0 +1,27 @@
+{
+  "address": {
+    "primary": "Main address",
+    "choose": "Choose your city"
+  },
+  "offers": {
+    "eyebrow": "Small treats, big savings",
+    "title": "Current offers",
+    "seeAll": "All offers",
+    "welcomeTitle": "Welcome to Ciyou Eats",
+    "welcomeDescription": "20% off your first order, at participating merchants.",
+    "neighborhoodTitle": "The neighbourhood dish",
+    "neighborhoodDescription": "A discount at a selection of partner merchants this month."
+  },
+  "restaurants": {
+    "eyebrow": "Local selection",
+    "title": "Popular restaurants",
+    "seeAll": "See all",
+    "emptyCity": "No active merchant in this city right now.",
+    "emptyNoCity": "No city is active on Ciyou Eats yet."
+  },
+  "products": {
+    "eyebrow": "Must try",
+    "title": "Dishes worth craving",
+    "empty": "No featured dish for now."
+  }
+}

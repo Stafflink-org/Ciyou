@@ -16,6 +16,8 @@ import { Button } from '../../ui/Button';
 import { Input } from '../../ui/Input';
 import { Text } from '../../ui/Text';
 import { useActiveSanction, useContestSanction, useDriverProfile } from './hooks';
+import { useTranslation } from '../../i18n/I18nProvider';
+import { LanguagePicker } from '../../i18n/LanguagePicker';
 
 const STATUS_LABEL: Record<string, { label: string; tone: 'success' | 'warning' | 'danger' | 'neutral' }> = {
   active: { label: 'Compte actif', tone: 'success' },
@@ -26,6 +28,8 @@ const STATUS_LABEL: Record<string, { label: string; tone: 'success' | 'warning' 
 
 export function ProfileScreen() {
   const { user, signOut } = useAuth();
+  const { t } = useTranslation('common');
+  const [languageOpen, setLanguageOpen] = useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { data: driver } = useDriverProfile(user?.uid ?? null);
   const { data: sanction } = useActiveSanction(driver);
@@ -72,7 +76,11 @@ export function ProfileScreen() {
         style={{ marginTop: spacing.lg }}
       />
 
+      <Button label={t('language.label')} variant="outline" onPress={() => setLanguageOpen(true)} style={{ marginTop: spacing.md }} />
+
       <Button label="Se déconnecter" variant="outline" onPress={() => signOut()} style={{ marginTop: spacing.md }} />
+
+      <LanguagePicker visible={languageOpen} onClose={() => setLanguageOpen(false)} />
     </ScrollView>
   );
 }
