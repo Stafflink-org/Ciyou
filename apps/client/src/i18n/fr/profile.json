@@ -1,0 +1,23 @@
+{
+  "defaultName": "Client Ciyou Eats",
+  "edit": "Modifier",
+  "verifyEmail": {
+    "title": "Vérifiez votre e-mail",
+    "description": "Un lien de confirmation a été envoyé à {{email}}.",
+    "resent": "Renvoyé",
+    "resend": "Renvoyer l’e-mail"
+  },
+  "shortcuts": {
+    "orders": "Mes commandes",
+    "favorites": "Mes favoris",
+    "addresses": "Mes adresses",
+    "promotions": "Offres",
+    "referral": "Parrainage",
+    "notifications": "Notifications",
+    "paymentMethods": "Modes de paiement",
+    "help": "Aide",
+    "support": "Support (mes demandes)",
+    "language": "Langue"
+  },
+  "signOut": "Se déconnecter"
+}

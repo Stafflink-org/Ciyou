@@ -1,0 +1,23 @@
+{
+  "defaultName": "عميل Ciyou Eats",
+  "edit": "تعديل",
+  "verifyEmail": {
+    "title": "تحقق من بريدك الإلكتروني",
+    "description": "تم إرسال رابط التأكيد إلى {{email}}.",
+    "resent": "تم الإرسال مجددًا",
+    "resend": "إعادة إرسال البريد الإلكتروني"
+  },
+  "shortcuts": {
+    "orders": "طلباتي",
+    "favorites": "المفضلة",
+    "addresses": "عناويني",
+    "promotions": "العروض",
+    "referral": "الإحالة",
+    "notifications": "الإشعارات",
+    "paymentMethods": "وسائل الدفع",
+    "help": "المساعدة",
+    "support": "الدعم (طلباتي)",
+    "language": "اللغة"
+  },
+  "signOut": "تسجيل الخروج"
+}

@@ -1,54 +1,126 @@
-// Socle i18n minimal de l'app client — FR uniquement pour ce lot.
-//
-// Choix documenté (voir docs/CONTRAT_MODULES.md et docs/_deps-demandees.md) :
-// `packages/web/src/i18n` (back-offices, FR/EN/AR + RTL) n'est pas réutilisable
-// tel quel ici, pour deux raisons distinctes du problème Tailwind de
-// `packages/ui` :
-//  1. Ce paquet fait partie de `@golink/web`, qui exporte aussi des écrans DOM
-//     (`<div>`, react-router) que Metro ne peut pas empaqueter pour React Native
-//     — comme pour `lib/firestore.ts`, on ne peut pas importer le paquet entier.
-//  2. Le RTL du web repose sur `dir="rtl"` (CSS) ; React Native le gère
-//     autrement, via `I18nManager.forceRTL()` (redémarrage de l'app requise).
-//     Câbler l'arabe correctement (lots suivants) mérite sa propre passe RTL
-//     plutôt qu'une copie hâtive du mécanisme web.
-//
-// Ce module reprend néanmoins la même forme d'API qu'i18next et que le socle
-// web (espaces de noms, clés à points, `{{variable}}`, suffixes de pluriel
-// `_one`/`_other`) : un futur passage à i18next ou l'ajout de EN/AR ne touchera
-// que ce fichier et `I18nProvider.tsx`, jamais les écrans.
-import { fr } from './fr/common';
+// Moteur de traduction sans dépendance — même forme d'API que
+// `packages/web/src/i18n/core.ts` (espaces de noms, clés à points,
+// `{{variables}}`, suffixes de pluriel `_one`/`_other`), adapté React Native :
+// le sens d'écriture n'est pas posé en CSS (`dir`) mais via `I18nManager`
+// (voir `I18nProvider.tsx`), et la préférence est mémorisée sur l'appareil
+// avec AsyncStorage (async) au lieu de `window.localStorage` (sync).
+import { APP_LOCALES, isRtlLocale, type Locale } from '@golink/shared';
 
 export type TranslationTree = { [key: string]: string | TranslationTree };
 export type TranslateVars = Record<string, string | number | undefined> & { count?: number };
 
-const NAMESPACE = 'common';
-const resources: Record<string, TranslationTree> = { [NAMESPACE]: fr };
+export const DEFAULT_LOCALE: Locale = 'fr';
+export const DEFAULT_NAMESPACE = 'common';
+export const SUPPORTED_LOCALES: readonly Locale[] = APP_LOCALES;
 
-function lookup(path: string): string | undefined {
-  const [namespace, ...rest] = path.includes(':') ? path.split(':') : [NAMESPACE, path];
-  let node: string | TranslationTree | undefined = resources[namespace];
-  for (const part of (rest.length ? rest.join(':') : path).split('.')) {
+const resources = new Map<string, TranslationTree>(); // "langue/namespace" -> arbre
+let currentLocale: Locale = DEFAULT_LOCALE;
+let version = 0;
+const listeners = new Set<() => void>();
+
+function notify(): void {
+  version += 1;
+  listeners.forEach((listener) => listener());
+}
+
+function clone(tree: TranslationTree): TranslationTree {
+  return JSON.parse(JSON.stringify(tree)) as TranslationTree;
+}
+
+function merge(target: TranslationTree, source: TranslationTree): TranslationTree {
+  for (const [key, value] of Object.entries(source)) {
+    const existing = target[key];
+    if (typeof value === 'object' && typeof existing === 'object') merge(existing, value);
+    else target[key] = value;
+  }
+  return target;
+}
+
+/** Enregistre (ou complète) les traductions d'un espace de noms pour une langue. */
+export function addResources(locale: Locale, namespace: string, tree: TranslationTree): void {
+  const id = `${locale}/${namespace}`;
+  resources.set(id, merge(resources.get(id) ?? {}, clone(tree)));
+  notify();
+}
+
+export function isSupportedLocale(value: unknown): value is Locale {
+  return typeof value === 'string' && (SUPPORTED_LOCALES as readonly string[]).includes(value);
+}
+
+export function getLocale(): Locale {
+  return currentLocale;
+}
+
+/** `silent` : pose la langue sans prévenir les abonnés (appel pendant un rendu React). */
+export function setCurrentLocale(locale: Locale, silent = false): void {
+  if (locale === currentLocale) return;
+  currentLocale = locale;
+  if (!silent) notify();
+}
+
+/** Abonnement aux changements de langue ou de ressources (useSyncExternalStore). */
+export function subscribeI18n(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+/** Numéro de version incrémenté à chaque changement de langue ou de ressources. */
+export function i18nVersion(): number {
+  return version;
+}
+
+function lookup(locale: Locale, namespace: string, path: string): string | undefined {
+  let node: string | TranslationTree | undefined = resources.get(`${locale}/${namespace}`);
+  for (const part of path.split('.')) {
     if (typeof node !== 'object' || node === null) return undefined;
     node = node[part];
   }
   return typeof node === 'string' ? node : undefined;
 }
 
-function interpolate(template: string, vars?: TranslateVars): string {
-  if (!vars) return template;
-  return template.replace(/\{\{(\w+)\}\}/g, (match, key: string) => {
-    const value = vars[key];
+function resolve(locale: Locale, namespace: string, path: string, count?: number): string | undefined {
+  if (count !== undefined) {
+    const category = new Intl.PluralRules(locale).select(count);
+    const plural = lookup(locale, namespace, `${path}_${category}`) ?? lookup(locale, namespace, `${path}_other`);
+    if (plural !== undefined) return plural;
+  }
+  return lookup(locale, namespace, path);
+}
+
+/**
+ * Traduit une clé « espace:chemin.de.la.cle » (espace par défaut : common).
+ * Repli : langue demandée, puis français, puis la clé elle-même (jamais un
+ * écran cassé).
+ */
+export function translate(key: string, vars?: TranslateVars, locale: Locale = currentLocale, defaultNamespace = DEFAULT_NAMESPACE): string {
+  const separator = key.indexOf(':');
+  const namespace = separator > 0 ? key.slice(0, separator) : defaultNamespace;
+  const path = separator > 0 ? key.slice(separator + 1) : key;
+  const raw = resolve(locale, namespace, path, vars?.count) ?? resolve(DEFAULT_LOCALE, namespace, path, vars?.count) ?? path;
+  if (!vars) return raw;
+  return raw.replace(/\{\{\s*(\w+)\s*\}\}/g, (match, name: string) => {
+    const value = vars[name];
     return value === undefined ? match : String(value);
   });
 }
 
-/** Traduit une clé (`namespace:a.b.c` ou `a.b.c`) ; clé absente → la clé elle-même (jamais un écran cassé). */
-export function translate(path: string, vars?: TranslateVars): string {
-  const key = vars?.count !== undefined ? `${path}_${new Intl.PluralRules('fr').select(vars.count)}` : path;
-  const found = lookup(key) ?? (vars?.count !== undefined ? lookup(`${path}_other`) : undefined) ?? lookup(path);
-  return found ? interpolate(found, vars) : path;
+/** Vrai si la clé existe dans la langue demandée ou en français (sans repli sur la clé brute). */
+export function hasTranslation(key: string, locale: Locale = currentLocale, defaultNamespace = DEFAULT_NAMESPACE): boolean {
+  const separator = key.indexOf(':');
+  const namespace = separator > 0 ? key.slice(0, separator) : defaultNamespace;
+  const path = separator > 0 ? key.slice(separator + 1) : key;
+  return lookup(locale, namespace, path) !== undefined || lookup(DEFAULT_LOCALE, namespace, path) !== undefined;
 }
 
-export function hasTranslation(path: string): boolean {
-  return lookup(path) !== undefined;
+/** Étiquette BCP 47 pour Intl : chiffres latins en arabe (usage des marchés DZ, MA, TN). */
+export function intlLocale(locale: Locale = currentLocale): string {
+  if (locale === 'ar') return 'ar-u-nu-latn';
+  if (locale === 'en') return 'en-GB';
+  return 'fr-FR';
+}
+
+export function directionOf(locale: Locale): 'ltr' | 'rtl' {
+  return isRtlLocale(locale) ? 'rtl' : 'ltr';
 }

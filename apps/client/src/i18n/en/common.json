@@ -1,0 +1,20 @@
+{
+  "language": {
+    "label": "Language",
+    "names": { "fr": "Français", "en": "English", "ar": "العربية" },
+    "restartRecommended": "Restart the app for full right-to-left display."
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "retry": "Retry",
+    "seeAll": "See all",
+    "back": "Back",
+    "edit": "Edit",
+    "signOut": "Sign out",
+    "loading": "Loading…"
+  },
+  "errors": {
+    "default": "Something went wrong. Please try again."
+  }
+}
