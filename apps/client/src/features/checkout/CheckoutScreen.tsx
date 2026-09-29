@@ -2,9 +2,11 @@
 // (formulaire inline, écrit dans `users/{uid}/addresses`), créneau, paiement,
 // récapitulatif et confirmation réelle via la Cloud Function `placeOrder`
 // (functions/src/orders/place.ts) : c'est elle qui fait foi (prix, stock,
-// zone, promotion, capacité…) — voir les commentaires plus bas pour les
-// limitations assumées de cet aperçu (pas de géocodage, paiement carte préparé
-// mais pas encore branché à un vrai moyen Stripe).
+// zone, promotion, capacité…). Paiement carte réel via Stripe (features/checkout/payment/,
+// voir docs/CONTRAT_MODULES.md §10) : moyen de paiement créé à l'écran (CardField natif
+// ou CardElement web), autorisation côté serveur, authentification forte 3-D Secure gérée
+// via `confirmNextAction` + la Cloud Function `confirmOrderPayment` si nécessaire — voir
+// les commentaires plus bas pour la limitation assumée restante (pas de géocodage d'adresse).
 import { useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { GeoPoint, collection, doc, setDoc } from 'firebase/firestore';
@@ -25,6 +27,8 @@ import { useDefaultCity } from '../home/hooks';
 import { useCart, cartLinesToInput } from '../cart/CartContext';
 import { previewQuote, pricingConfigFor } from '../cart/pricing';
 import { useTranslation } from '../../i18n/I18nProvider';
+import { CardEntry, useCardPayment } from './payment/CardInput';
+import { PaymentProvider } from './payment/PaymentProvider';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Checkout'>;
 
@@ -46,7 +50,18 @@ function parseScheduledDateTime(dateText: string, timeText: string): Date | null
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-export function CheckoutScreen({ navigation }: Props) {
+// Fournisseur Stripe posé au plus près du formulaire (pas au niveau de l'app) : évite de charger
+// Stripe.js/le SDK natif sur les écrans qui n'en ont pas besoin, et garantit que `useCardPayment()`
+// et `<CardEntry>` (qui ont besoin du contexte Elements côté web) restent dans le même sous-arbre.
+export function CheckoutScreen(props: Props) {
+  return (
+    <PaymentProvider>
+      <CheckoutScreenInner {...props} />
+    </PaymentProvider>
+  );
+}
+
+function CheckoutScreenInner({ navigation }: Props) {
   const { t } = useTranslation('checkout');
   const { user } = useAuth();
   const cart = useCart();
@@ -71,8 +86,11 @@ export function CheckoutScreen({ navigation }: Props) {
   // Préremplit avec le code choisi depuis l'écran Promotions (lot 3), le cas échéant.
   const [promoCode, setPromoCode] = useState(cart.promoCode ?? '');
   const [submitting, setSubmitting] = useState(false);
+  const [submittingLabel, setSubmittingLabel] = useState<string | null>(null);
   const [errorText, setErrorText] = useState<string | null>(null);
+  const [cardComplete, setCardComplete] = useState(false);
   const clientRequestId = useRef(newClientRequestId());
+  const cardPayment = useCardPayment();
 
   const availableModes = (restaurant?.fulfillmentModes ?? []).filter((m): m is 'delivery' | 'pickup' => m === 'delivery' || m === 'pickup');
   const activeMode = fulfillment && availableModes.includes(fulfillment as 'delivery' | 'pickup') ? fulfillment : (availableModes[0] ?? null);
@@ -159,13 +177,25 @@ export function CheckoutScreen({ navigation }: Props) {
       }
       scheduledFor = parsed.toISOString();
     }
+    // Carte bancaire : crée un vrai moyen de paiement Stripe (CardField natif ou CardElement web,
+    // selon la plateforme — voir features/checkout/payment/) avant d'appeler `placeOrder`, qui autorise
+    // réellement le montant côté serveur (functions/src/orders/payment.ts::authorizePayment).
+    let paymentMethodId: string | null = null;
     if (activeMethod === 'card') {
-      // Carte bancaire : préparé mais pas encore branché (pas d'écran de saisie Stripe dans ce lot —
-      // il faudrait `@stripe/stripe-react-native` ou Stripe.js web + un PaymentIntent confirmé côté
-      // client). L'appel ci-dessous ira au bout avec `paymentMethod: 'card'` et sans `paymentMethodId` :
-      // la Cloud Function le refusera proprement (« Choisissez un moyen de paiement. »), ce qui est un
-      // comportement réel et honnête plutôt qu'un paiement simulé qui prétendrait avoir débité une carte.
-      toast.show(t('cardNotWiredToast'));
+      if (!cardComplete) {
+        setErrorText(t('cardIncompleteError'));
+        return;
+      }
+      setSubmitting(true);
+      setSubmittingLabel(t('cardPreparingToast'));
+      const created = await cardPayment.createCardPaymentMethod();
+      if ('error' in created) {
+        setErrorText(created.error);
+        setSubmitting(false);
+        setSubmittingLabel(null);
+        return;
+      }
+      paymentMethodId = created.id;
     }
     const input: PlaceOrderInput = {
       restaurantId: cart.restaurantId,
@@ -173,7 +203,7 @@ export function CheckoutScreen({ navigation }: Props) {
       lines: cartLinesToInput(cart.lines),
       addressId: activeMode === 'delivery' ? addressId : null,
       paymentMethod: activeMethod,
-      paymentMethodId: null,
+      paymentMethodId,
       promoCode: promoCode.trim() || null,
       customerNote: null,
       scheduledFor,
@@ -182,15 +212,30 @@ export function CheckoutScreen({ navigation }: Props) {
       expectedTotalCents: quote.totalCents,
     };
     setSubmitting(true);
+    setSubmittingLabel(null);
     try {
       const result = await callFunction<PlaceOrderInput, PlaceOrderResult>('placeOrder')(input);
+      // Authentification forte (3-D Secure) : la commande existe déjà (autorisation en attente),
+      // il faut compléter l'authentification puis rafraîchir son état côté serveur avant de conclure.
+      if (result.payment.status === 'requires_action' && result.payment.clientSecret) {
+        setSubmittingLabel(t('cardAuthenticatingToast'));
+        const next = await cardPayment.confirmNextAction(result.payment.clientSecret);
+        if (next.error) {
+          setErrorText(next.error || t('cardAuthFailedError'));
+          setSubmitting(false);
+          setSubmittingLabel(null);
+          return;
+        }
+        await callFunction<{ orderId: string }, { status: string }>('confirmOrderPayment')({ orderId: result.orderId });
+      }
       cart.clear();
       toast.show(t('orderConfirmedToast'));
       navigation.replace('Confirmation', { orderId: result.orderId });
     } catch (error) {
-      setErrorText(errorMessage(error));
+      setErrorText(errorMessage(error) || t('cardGenericError'));
     } finally {
       setSubmitting(false);
+      setSubmittingLabel(null);
     }
   };
 
@@ -302,6 +347,14 @@ export function CheckoutScreen({ navigation }: Props) {
             {acceptsCard ? <ModeButton testID="button-payment-card" label={t('paymentCard')} active={activeMethod === 'card'} onPress={() => setPaymentMethod('card')} /> : null}
             {acceptsCash ? <ModeButton testID="button-payment-cash" label={t('paymentCash')} active={activeMethod === 'cash'} onPress={() => setPaymentMethod('cash')} /> : null}
           </View>
+          {activeMethod === 'card' ? (
+            <View style={{ marginTop: spacing.md }}>
+              <Text variant="label" color="muted" style={{ marginBottom: spacing.xs }}>
+                {t('cardFieldLabel').toUpperCase()}
+              </Text>
+              <CardEntry onChange={setCardComplete} />
+            </View>
+          ) : null}
         </Section>
 
         <Section title={t('orderTitle')}>
@@ -343,7 +396,7 @@ export function CheckoutScreen({ navigation }: Props) {
       <View style={styles.footer}>
         <Button label={t('confirmOrder')} onPress={onConfirm} loading={submitting} testID="button-place-order" />
         <Text variant="caption" color="subtle" align="center" style={{ marginTop: spacing.xs }}>
-          {t('fakeOrderNote')}
+          {submittingLabel ?? t('fakeOrderNote')}
         </Text>
       </View>
     </View>

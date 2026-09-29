@@ -21,3 +21,9 @@
 ## App client (apps/client) — lot 3 suivi/profil
 
 - `react-native-webview` (13.16.0) ajouté à `apps/client/package.json`, même besoin que le lot 2 livreur (`features/tracking/RouteMap.tsx`, carte de suivi client). `npm install --workspace=@golink/client` exécuté à la racine.
+
+## App client (apps/client) — paiement carte réel (client-stripe-checkout)
+
+- `@stripe/stripe-react-native@0.78.0` ajouté à `apps/client/package.json` : SDK Stripe officiel pour React Native/Expo (saisie de carte native `CardField`, `createPaymentMethod`, `handleNextAction` pour l'authentification forte 3-D Secure). Module natif (pas de support web) : requiert un client de développement personnalisé (`expo-dev-client`/EAS build) sur iOS/Android réels — ne peut pas s'exécuter sous `expo start --web`, le seul mode de test disponible dans cet environnement (voir docs/ETAT_AVANCEMENT.md pour le détail du blocage de test).
+- `@stripe/stripe-js@9.17.0` + `@stripe/react-stripe-js@6.12.0` ajoutés au même package.json : implémentation Stripe.js officielle pour le web, utilisée uniquement par la variante `CardInput.web.tsx` (split de plateforme `.native`/`.web`, résolu automatiquement par Metro) — c'est cette variante qui a permis de mener le test réel bout en bout dans le navigateur intégré (`expo start --web`), faute de pouvoir lancer un build natif ici.
+- `npm install --workspace=@golink/client` exécuté à la racine pour les trois paquets.
