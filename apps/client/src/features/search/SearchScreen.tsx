@@ -18,6 +18,7 @@ import { RestaurantCard, FeaturedProductRow } from '../home/components';
 import { FOOD_TYPES } from '../home/HomeScreen';
 import { useCuisineCategories, useSearchProducts, useSearchRestaurants } from './hooks';
 import { FloatingCartButton } from '../cart/FloatingCartButton';
+import { useFavorites } from '../favorites/hooks';
 
 type Props = CompositeScreenProps<BottomTabScreenProps<MainTabsParamList, 'Search'>, NativeStackScreenProps<MainStackParamList>>;
 
@@ -29,6 +30,7 @@ export function SearchScreen({ route, navigation }: Props) {
   const [foodTypeKey, setFoodTypeKey] = useState<string | null>(route.params?.foodType ?? null);
   const [kind, setKind] = useState<Kind>('all');
   const [cuisineId, setCuisineId] = useState<string | null>(null);
+  const favorites = useFavorites();
 
   // Un type d'envie choisi depuis l'accueil vaut recherche sur son libellé (§4 : « Une envie de
   // burgers ? » + bouton pour retirer le filtre) tant qu'il n'y a pas de taxonomie de plats dédiée.
@@ -190,8 +192,8 @@ export function SearchScreen({ route, navigation }: Props) {
                         <RestaurantCard
                           key={restaurant.id}
                           restaurant={restaurant}
-                          favorite={false}
-                          onToggleFavorite={() => undefined}
+                          favorite={favorites.isFavoriteRestaurant(restaurant.id)}
+                          onToggleFavorite={() => favorites.toggleRestaurant(restaurant.id)}
                           onPress={() => navigation.navigate('Restaurant', { restaurantId: restaurant.id })}
                         />
                       ))}
@@ -210,8 +212,8 @@ export function SearchScreen({ route, navigation }: Props) {
                         <FeaturedProductRow
                           key={`${product.restaurantId}-${product.id}`}
                           product={product}
-                          favorite={false}
-                          onToggleFavorite={() => undefined}
+                          favorite={favorites.isFavoriteProduct(product.id)}
+                          onToggleFavorite={() => favorites.toggleProduct(product.restaurantId, product.id)}
                           onPress={() => navigation.navigate('Product', { productId: product.id, restaurantId: product.restaurantId })}
                         />
                       ))}

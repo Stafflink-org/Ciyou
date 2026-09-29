@@ -16,6 +16,7 @@ import { PlaceholderScreen } from '../shared/PlaceholderScreen';
 import { useActiveProductOffers, useMenuProducts } from '../restaurant/hooks';
 import { useMenuOptions, useOptionGroups } from './hooks';
 import { useCart, type CartLineOption } from '../cart/CartContext';
+import { useFavorites } from '../favorites/hooks';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Product'>;
 
@@ -32,6 +33,8 @@ export function ProductScreen({ route, navigation }: Props) {
   const { data: offers } = useActiveProductOffers(restaurantId);
   const toast = useToast();
   const cart = useCart();
+  const favorites = useFavorites();
+  const favorite = favorites.isFavoriteProduct(productId);
 
   const editingLine = lineId ? cart.lines.find((l) => l.lineId === lineId) : null;
   const [selected, setSelected] = useState<Record<string, string[]>>(() => {
@@ -158,9 +161,9 @@ export function ProductScreen({ route, navigation }: Props) {
             <Text variant="title" style={{ flex: 1 }}>
               {product?.name ?? '…'}
             </Text>
-            <Text style={{ fontSize: 22 }} testID="button-favorite-current-product">
-              🤍
-            </Text>
+            <Pressable onPress={() => favorites.toggleProduct(restaurantId, productId)} accessibilityRole="button" testID="button-favorite-current-product" hitSlop={10}>
+              <Text style={{ fontSize: 22 }}>{favorite ? '❤️' : '🤍'}</Text>
+            </Pressable>
           </View>
           {product?.description ? (
             <Text variant="body" color="muted" style={{ marginTop: 4 }}>
