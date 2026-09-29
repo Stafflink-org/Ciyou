@@ -24,6 +24,7 @@ import { PlaceholderScreen } from '../shared/PlaceholderScreen';
 import { useDefaultCity } from '../home/hooks';
 import { useCart, cartLinesToInput } from '../cart/CartContext';
 import { previewQuote, pricingConfigFor } from '../cart/pricing';
+import { useTranslation } from '../../i18n/I18nProvider';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Checkout'>;
 
@@ -46,6 +47,7 @@ function parseScheduledDateTime(dateText: string, timeText: string): Date | null
 }
 
 export function CheckoutScreen({ navigation }: Props) {
+  const { t } = useTranslation('checkout');
   const { user } = useAuth();
   const cart = useCart();
   const toast = useToast();
@@ -91,13 +93,13 @@ export function CheckoutScreen({ navigation }: Props) {
   );
 
   if (cart.loaded && cart.lines.length === 0) {
-    return <PlaceholderScreen icon="🧾" title="Votre panier est vide" note="Ajoutez un plat avant de passer commande." />;
+    return <PlaceholderScreen icon="🧾" title={t('emptyTitle')} note={t('emptyNote')} />;
   }
 
   const saveAddress = async () => {
     if (!user) return;
     if (!addrStreet.trim()) {
-      toast.show('Indiquez une adresse de livraison.', 'danger');
+      toast.show(t('addressEmptyToast'), 'danger');
       return;
     }
     setSavingAddress(true);
@@ -129,7 +131,7 @@ export function CheckoutScreen({ navigation }: Props) {
       setAddrLabel('');
       setAddrStreet('');
       setAddrDetails('');
-      toast.show('Adresse enregistrée');
+      toast.show(t('addressSavedToast'));
     } catch (error) {
       toast.show(errorMessage(error), 'danger');
     } finally {
@@ -141,18 +143,18 @@ export function CheckoutScreen({ navigation }: Props) {
     if (!restaurant || !cart.restaurantId || !activeMode) return;
     setErrorText(null);
     if (activeMode === 'delivery' && !addressId) {
-      setErrorText('Ajoutez une adresse de livraison.');
+      setErrorText(t('addressMissingError'));
       return;
     }
     if (!activeMethod) {
-      setErrorText('Choisissez un moyen de paiement actuellement accepté.');
+      setErrorText(t('paymentMissingError'));
       return;
     }
     let scheduledFor: string | null = null;
     if (timing === 'later') {
       const parsed = parseScheduledDateTime(scheduledDate, scheduledTime);
       if (!parsed || parsed.getTime() <= Date.now()) {
-        setErrorText('Choisissez une date et une heure à venir.');
+        setErrorText(t('scheduleInvalidError'));
         return;
       }
       scheduledFor = parsed.toISOString();
@@ -163,7 +165,7 @@ export function CheckoutScreen({ navigation }: Props) {
       // client). L'appel ci-dessous ira au bout avec `paymentMethod: 'card'` et sans `paymentMethodId` :
       // la Cloud Function le refusera proprement (« Choisissez un moyen de paiement. »), ce qui est un
       // comportement réel et honnête plutôt qu'un paiement simulé qui prétendrait avoir débité une carte.
-      toast.show('Le paiement par carte n’est pas encore branché dans cette version : choisissez Espèces pour une commande réelle, ou continuez pour voir le refus serveur attendu.');
+      toast.show(t('cardNotWiredToast'));
     }
     const input: PlaceOrderInput = {
       restaurantId: cart.restaurantId,
@@ -183,7 +185,7 @@ export function CheckoutScreen({ navigation }: Props) {
     try {
       const result = await callFunction<PlaceOrderInput, PlaceOrderResult>('placeOrder')(input);
       cart.clear();
-      toast.show('Commande confirmée !');
+      toast.show(t('orderConfirmedToast'));
       navigation.replace('Confirmation', { orderId: result.orderId });
     } catch (error) {
       setErrorText(errorMessage(error));
@@ -196,39 +198,39 @@ export function CheckoutScreen({ navigation }: Props) {
     <View style={styles.root}>
       <ScrollView contentContainerStyle={{ paddingBottom: 160 }}>
         {restaurant && (!restaurant.isOpen || !restaurant.acceptingOrders) ? (
-          <Banner text="Restaurant fermé temporairement : aucune nouvelle commande ne peut être passée." />
+          <Banner text={t('closedBanner')} />
         ) : null}
-        {restaurant?.minOrderCents ? <Banner text={`Commande minimum : ${money(restaurant.minOrderCents)} (hors frais).`} tone="info" /> : null}
-        {activeMode === 'delivery' ? <Banner text="Frais de livraison fixes pour la démo : les zones ne sont pas calculées par géolocalisation." tone="info" /> : null}
+        {restaurant?.minOrderCents ? <Banner text={t('minOrderBanner', { amount: money(restaurant.minOrderCents) })} tone="info" /> : null}
+        {activeMode === 'delivery' ? <Banner text={t('deliveryFeeBanner')} tone="info" /> : null}
 
         <View style={styles.header}>
           <Pressable onPress={() => navigation.navigate('Cart')}>
             <Text variant="bodyStrong" color="primary">
-              ‹ Retour au panier
+              {t('backToCart')}
             </Text>
           </Pressable>
           <Text variant="eyebrow" color="muted" style={{ marginTop: spacing.sm }}>
-            PLUS QU'UNE ÉTAPE
+            {t('eyebrow')}
           </Text>
-          <Text variant="title">Finaliser la commande</Text>
+          <Text variant="title">{t('title')}</Text>
         </View>
 
-        <Section title="Comment souhaitez-vous recevoir votre repas ?">
+        <Section title={t('fulfillmentTitle')}>
           <View style={styles.modeRow}>
-            {availableModes.length === 0 ? <Text color="danger">Aucun mode de commande n'est disponible.</Text> : null}
+            {availableModes.length === 0 ? <Text color="danger">{t('noModeAvailable')}</Text> : null}
             {availableModes.includes('delivery') ? (
-              <ModeButton testID="button-mode-delivery" label="Livraison" active={activeMode === 'delivery'} onPress={() => setFulfillment('delivery')} />
+              <ModeButton testID="button-mode-delivery" label={t('delivery')} active={activeMode === 'delivery'} onPress={() => setFulfillment('delivery')} />
             ) : null}
             {availableModes.includes('pickup') ? (
-              <ModeButton testID="button-mode-pickup" label="Retrait" active={activeMode === 'pickup'} onPress={() => setFulfillment('pickup')} />
+              <ModeButton testID="button-mode-pickup" label={t('pickup')} active={activeMode === 'pickup'} onPress={() => setFulfillment('pickup')} />
             ) : null}
           </View>
         </Section>
 
         {activeMode === 'delivery' ? (
           <Section
-            title="Adresse de livraison"
-            action={{ label: addingAddress ? 'Annuler' : 'Ajouter', onPress: () => setAddingAddress((v) => !v) }}
+            title={t('deliveryAddressTitle')}
+            action={{ label: addingAddress ? t('cancel') : t('add'), onPress: () => setAddingAddress((v) => !v) }}
             actionTestID="button-add-address"
           >
             {addresses.map((a) => (
@@ -243,25 +245,25 @@ export function CheckoutScreen({ navigation }: Props) {
                 {addressId === a.id ? <Text style={{ fontSize: 18 }}>✓</Text> : null}
               </Pressable>
             ))}
-            {addresses.length === 0 && !addingAddress ? <Text color="muted">Ajoutez une adresse de livraison.</Text> : null}
+            {addresses.length === 0 && !addingAddress ? <Text color="muted">{t('noAddressYet')}</Text> : null}
             {addingAddress ? (
               <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
-                <Input label="Étiquette" placeholder="Bureau" value={addrLabel} onChangeText={setAddrLabel} testID="input-address-label" />
-                <Input label="Rue" placeholder="12 rue de la Paix" value={addrStreet} onChangeText={setAddrStreet} testID="input-address-street" />
-                <Input label="Complément" placeholder="54400 Longwy, 2e étage" value={addrDetails} onChangeText={setAddrDetails} testID="input-address-details" />
-                <Button label="Enregistrer l'adresse" onPress={saveAddress} loading={savingAddress} testID="button-save-address" />
+                <Input label={t('addressLabel')} placeholder={t('addressLabelPlaceholder')} value={addrLabel} onChangeText={setAddrLabel} testID="input-address-label" />
+                <Input label={t('addressStreet')} placeholder={t('addressStreetPlaceholder')} value={addrStreet} onChangeText={setAddrStreet} testID="input-address-street" />
+                <Input label={t('addressDetails')} placeholder={t('addressDetailsPlaceholder')} value={addrDetails} onChangeText={setAddrDetails} testID="input-address-details" />
+                <Button label={t('saveAddress')} onPress={saveAddress} loading={savingAddress} testID="button-save-address" />
               </View>
             ) : null}
             <View style={styles.mapPlaceholder}>
               <Text variant="caption" color="muted" align="center">
-                Restaurant — Vous{'\n'}CARTE ILLUSTRATIVE · {(city?.name ?? '').toUpperCase()}
+                {t('mapPlaceholder', { city: (city?.name ?? '').toUpperCase() })}
               </Text>
             </View>
           </Section>
         ) : activeMode === 'pickup' ? (
-          <Section title="Retrait">
+          <Section title={t('pickupTitle')}>
             <Text variant="body" color="muted">
-              Récupérez votre commande directement au restaurant.
+              {t('pickupBody')}
             </Text>
             {/* Les consignes de retrait (`pickupInstructions`) vivent dans le document
                 `restaurants/{rid}/settings/orders`, réservé au personnel du restaurant par les
@@ -270,41 +272,41 @@ export function CheckoutScreen({ navigation }: Props) {
           </Section>
         ) : null}
 
-        <Section title="Quand ?">
+        <Section title={t('whenTitle')}>
           <View style={styles.modeRow}>
-            <ModeButton testID="button-timing-now" label="Dès que possible" active={timing === 'now'} onPress={() => setTiming('now')} />
-            <ModeButton testID="button-timing-later" label="Programmer" active={timing === 'later'} onPress={() => setTiming('later')} />
+            <ModeButton testID="button-timing-now" label={t('asap')} active={timing === 'now'} onPress={() => setTiming('now')} />
+            <ModeButton testID="button-timing-later" label={t('schedule')} active={timing === 'later'} onPress={() => setTiming('later')} />
           </View>
           {timing === 'now' ? (
             <Text variant="caption" color="muted" style={{ marginTop: spacing.xs }}>
-              On s'en occupe tout de suite.
+              {t('asapNote')}
             </Text>
           ) : (
             <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm }}>
               <View style={{ flex: 1 }}>
-                <Input label="Date (JJ/MM/AAAA)" placeholder="28/09/2026" value={scheduledDate} onChangeText={setScheduledDate} testID="input-scheduled-date" />
+                <Input label={t('scheduledDateLabel')} placeholder="28/09/2026" value={scheduledDate} onChangeText={setScheduledDate} testID="input-scheduled-date" />
               </View>
               <View style={{ width: 110 }}>
-                <Input label="Heure (HH:MM)" placeholder="19:00" value={scheduledTime} onChangeText={setScheduledTime} />
+                <Input label={t('scheduledTimeLabel')} placeholder="19:00" value={scheduledTime} onChangeText={setScheduledTime} />
               </View>
             </View>
           )}
         </Section>
 
-        <Section title="Paiement simulé">
+        <Section title={t('paymentTitle')}>
           <Text variant="caption" color="muted" style={{ marginBottom: spacing.sm }}>
-            Démo uniquement : aucune donnée bancaire demandée ni transmise.
+            {t('paymentNote')}
           </Text>
           <View style={styles.modeRow}>
-            {availableMethods.length === 0 ? <Text color="danger">Aucun moyen de paiement disponible pour ce mode.</Text> : null}
-            {acceptsCard ? <ModeButton testID="button-payment-card" label="Carte · démo" active={activeMethod === 'card'} onPress={() => setPaymentMethod('card')} /> : null}
-            {acceptsCash ? <ModeButton testID="button-payment-cash" label="Espèces" active={activeMethod === 'cash'} onPress={() => setPaymentMethod('cash')} /> : null}
+            {availableMethods.length === 0 ? <Text color="danger">{t('noPaymentAvailable')}</Text> : null}
+            {acceptsCard ? <ModeButton testID="button-payment-card" label={t('paymentCard')} active={activeMethod === 'card'} onPress={() => setPaymentMethod('card')} /> : null}
+            {acceptsCash ? <ModeButton testID="button-payment-cash" label={t('paymentCash')} active={activeMethod === 'cash'} onPress={() => setPaymentMethod('cash')} /> : null}
           </View>
         </Section>
 
-        <Section title="Votre commande">
+        <Section title={t('orderTitle')}>
           <Text variant="bodyStrong">
-            {restaurant?.name} · {cart.itemsCount} article(s)
+            {t('orderSummaryLine', { restaurant: restaurant?.name ?? '', count: cart.itemsCount })}
           </Text>
           {cart.lines.map((line) => (
             <Text key={line.lineId} variant="caption" color="muted" style={{ marginTop: 4 }}>
@@ -313,19 +315,19 @@ export function CheckoutScreen({ navigation }: Props) {
           ))}
           <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
             <View style={{ flex: 1 }}>
-              <Input placeholder="Code promotionnel" autoCapitalize="characters" value={promoCode} onChangeText={setPromoCode} testID="input-checkout-promo" />
+              <Input placeholder={t('promoPlaceholder')} autoCapitalize="characters" value={promoCode} onChangeText={setPromoCode} testID="input-checkout-promo" />
             </View>
-            <Pressable style={styles.okButton} testID="button-checkout-apply-promo" onPress={() => toast.show('Le code sera vérifié à la confirmation.')}>
+            <Pressable style={styles.okButton} testID="button-checkout-apply-promo" onPress={() => toast.show(t('promoCheckedToast'))}>
               <Text variant="bodyStrong" style={{ color: colors.primaryFg }}>
                 OK
               </Text>
             </Pressable>
           </View>
-          <SummaryLine label="Sous-total" value={money(quote.subtotalCents)} />
-          <SummaryLine label="Livraison" value={activeMode === 'delivery' ? (quote.deliveryFeeCents > 0 ? money(quote.deliveryFeeCents) : 'Offerte') : 'Non applicable'} />
-          <SummaryLine label="Frais de service" value={money(quote.serviceFeeCents)} />
+          <SummaryLine label={t('subtotal')} value={money(quote.subtotalCents)} />
+          <SummaryLine label={t('delivery')} value={activeMode === 'delivery' ? (quote.deliveryFeeCents > 0 ? money(quote.deliveryFeeCents) : t('deliveryFree')) : t('notApplicable')} />
+          <SummaryLine label={t('serviceFee')} value={money(quote.serviceFeeCents)} />
           <View style={styles.totalRow}>
-            <Text variant="title">Total</Text>
+            <Text variant="title">{t('total')}</Text>
             <Text variant="title" color="primary">
               {money(quote.totalCents)}
             </Text>
@@ -339,9 +341,9 @@ export function CheckoutScreen({ navigation }: Props) {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button label="Confirmer la commande" onPress={onConfirm} loading={submitting} testID="button-place-order" />
+        <Button label={t('confirmOrder')} onPress={onConfirm} loading={submitting} testID="button-place-order" />
         <Text variant="caption" color="subtle" align="center" style={{ marginTop: spacing.xs }}>
-          Commande fictive · Aucun montant débité
+          {t('fakeOrderNote')}
         </Text>
       </View>
     </View>

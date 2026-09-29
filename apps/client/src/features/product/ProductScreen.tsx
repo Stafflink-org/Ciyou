@@ -17,12 +17,14 @@ import { useActiveProductOffers, useMenuProducts } from '../restaurant/hooks';
 import { useMenuOptions, useOptionGroups } from './hooks';
 import { useCart, type CartLineOption } from '../cart/CartContext';
 import { useFavorites } from '../favorites/hooks';
+import { useTranslation } from '../../i18n/I18nProvider';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Product'>;
 
 const money = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} €`;
 
 export function ProductScreen({ route, navigation }: Props) {
+  const { t } = useTranslation('product');
   const { productId, restaurantId, lineId } = route.params;
   const { data: restaurant } = useDoc<{ name: string }>(docAt(`restaurants/${restaurantId}`));
   const { data: product, loading } = useDoc<Product>(docAt(`restaurants/${restaurantId}/products/${productId}`));
@@ -52,7 +54,7 @@ export function ProductScreen({ route, navigation }: Props) {
   const orderedGroups = useMemo(() => groups.filter((g) => (product?.optionGroupIds ?? []).includes(g.id)).sort((a, b) => (product?.optionGroupIds ?? []).indexOf(a.id) - (product?.optionGroupIds ?? []).indexOf(b.id)), [groups, product]);
 
   if (!loading && !product) {
-    return <PlaceholderScreen icon="🍽️" title="Plat introuvable" />;
+    return <PlaceholderScreen icon="🍽️" title={t('notFound')} />;
   }
 
   const optionById = new Map(options.map((o) => [o.id, o]));
@@ -70,7 +72,7 @@ export function ProductScreen({ route, navigation }: Props) {
       }
       if (current.includes(optionId)) return { ...prev, [group.id]: current.filter((id) => id !== optionId) };
       if (current.length >= group.max) {
-        toast.show(`Maximum ${group.max} choix pour ${group.name.toLowerCase()}`, 'danger');
+        toast.show(t('maxChoiceToast', { max: group.max, group: group.name.toLowerCase() }), 'danger');
         return prev;
       }
       return { ...prev, [group.id]: [...current, optionId] };
@@ -83,7 +85,7 @@ export function ProductScreen({ route, navigation }: Props) {
 
   const increaseQuantity = () => {
     if (remainingStock !== null && quantity + 1 > remainingStock) {
-      toast.show(`Stock limité : ${remainingStock} portion(s) disponibles pour ce plat.`, 'danger');
+      toast.show(t('stockLimitedToast', { count: remainingStock }), 'danger');
       return;
     }
     setQuantity((q) => q + 1);
@@ -93,13 +95,13 @@ export function ProductScreen({ route, navigation }: Props) {
   const performAdd = () => {
     if (!product || !restaurant) return;
     if (!product.available || product.stock === 0) {
-      toast.show('Ce plat n’est plus disponible.', 'danger');
+      toast.show(t('unavailableToast'), 'danger');
       return;
     }
     for (const group of orderedGroups) {
       const count = (selected[group.id] ?? []).length;
       if (count < group.min) {
-        toast.show(`Choisissez au moins ${group.min} option(s) : ${group.name}`, 'danger');
+        toast.show(t('minChoiceToast', { min: group.min, group: group.name }), 'danger');
         return;
       }
     }
@@ -124,18 +126,18 @@ export function ProductScreen({ route, navigation }: Props) {
       editingLineId: lineId,
     });
     if (!result.ok) {
-      toast.show('Stock maximum atteint pour ce plat.', 'danger');
+      toast.show(t('stockMaxToast'), 'danger');
       return;
     }
-    toast.show(lineId ? 'Plat modifié dans le panier' : 'Plat ajouté au panier');
+    toast.show(lineId ? t('updatedInCartToast') : t('addedToCartToast'));
     navigation.navigate('Cart');
   };
 
   const onPressAdd = () => {
     if (!lineId && cart.belongsToOtherRestaurant(restaurantId)) {
-      Alert.alert('Remplacer le panier ?', 'Votre panier contient des plats d’un autre restaurant. Le remplacer ?', [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Remplacer', style: 'destructive', onPress: () => { cart.clear(); performAdd(); } },
+      Alert.alert(t('replaceCartTitle'), t('replaceCartBody'), [
+        { text: t('cancel'), style: 'cancel' },
+        { text: t('replace'), style: 'destructive', onPress: () => { cart.clear(); performAdd(); } },
       ]);
       return;
     }
@@ -147,7 +149,7 @@ export function ProductScreen({ route, navigation }: Props) {
       <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
         <Pressable onPress={() => (lineId ? navigation.navigate('Cart') : navigation.navigate('Restaurant', { restaurantId }))}>
           <Text variant="bodyStrong" color="primary" style={styles.backLink}>
-            {lineId ? '‹ Retour au panier' : '‹ Retour au restaurant'}
+            {lineId ? t('backToCart') : t('backToRestaurant')}
           </Text>
         </Pressable>
 
@@ -176,9 +178,9 @@ export function ProductScreen({ route, navigation }: Props) {
 
           {activeOffer ? (
             <View style={styles.offerBox} testID="product-active-offer">
-              <Text variant="bodyStrong">{activeOffer.kind === 'bogo' ? '1 acheté, 1 offert' : 'Le 2e à −50 %'}</Text>
+              <Text variant="bodyStrong">{activeOffer.kind === 'bogo' ? t('offerBogo') : t('offerHalfSecond')}</Text>
               <Text variant="caption" color="muted" style={{ marginTop: 4 }}>
-                Ajoutez deux portions de ce plat : la remise est calculée automatiquement au panier. Les suppléments restent payants.
+                {t('offerHint')}
               </Text>
             </View>
           ) : null}
@@ -189,13 +191,13 @@ export function ProductScreen({ route, navigation }: Props) {
                 <Text variant="bodyStrong">{group.name}</Text>
                 <View style={styles.groupBadge}>
                   <Text variant="label" color="muted">
-                    {group.multiple ? 'MULTIPLE' : 'AU CHOIX'}
+                    {group.multiple ? t('groupMultiple') : t('groupSingle')}
                   </Text>
                 </View>
               </View>
               <Text variant="caption" color="muted">
-                {group.multiple ? `Choisissez jusqu’à ${group.max}` : 'Un seul choix'}
-                {group.min > 0 ? ` · ${group.min} minimum` : ' · facultatif'}
+                {group.multiple ? t('chooseUpTo', { max: group.max }) : t('oneChoiceOnly')}
+                {group.min > 0 ? t('minimumCount', { min: group.min }) : t('optional')}
               </Text>
               {(group.optionIds.map((id) => optionById.get(id)).filter(Boolean) as NonNullable<ReturnType<typeof optionById.get>>[]).map((option) => {
                 const isSelected = (selected[group.id] ?? []).includes(option.id);
@@ -208,7 +210,7 @@ export function ProductScreen({ route, navigation }: Props) {
                       {option.name}
                     </Text>
                     <Text variant="caption" color="muted">
-                      {option.priceCents > 0 ? `+ ${money(option.priceCents)}` : 'Inclus'}
+                      {option.priceCents > 0 ? `+ ${money(option.priceCents)}` : t('included')}
                     </Text>
                   </Pressable>
                 );
@@ -217,12 +219,12 @@ export function ProductScreen({ route, navigation }: Props) {
           ))}
 
           <View style={styles.groupBlock}>
-            <Text variant="bodyStrong">Une précision pour la cuisine ?</Text>
-            <Input placeholder="Sans oignons, sauce à part…" value={comment} onChangeText={setComment} multiline testID="input-product-comment" />
+            <Text variant="bodyStrong">{t('commentTitle')}</Text>
+            <Input placeholder={t('commentPlaceholder')} value={comment} onChangeText={setComment} multiline testID="input-product-comment" />
           </View>
 
           <View style={styles.quantityRow}>
-            <Text variant="bodyStrong">Quantité</Text>
+            <Text variant="bodyStrong">{t('quantity')}</Text>
             <View style={styles.stepper}>
               <Pressable onPress={decreaseQuantity} style={styles.stepperButton} testID="button-product-decrease">
                 <Text variant="title">−</Text>
@@ -239,7 +241,7 @@ export function ProductScreen({ route, navigation }: Props) {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button label={`${lineId ? 'Mettre à jour' : 'Ajouter au panier'} · ${money(totalCents)}`} onPress={onPressAdd} testID="button-product-add-to-cart" />
+        <Button label={`${lineId ? t('update') : t('addToCart')} · ${money(totalCents)}`} onPress={onPressAdd} testID="button-product-add-to-cart" />
       </View>
     </View>
   );

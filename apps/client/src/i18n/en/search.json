@@ -1,0 +1,21 @@
+{
+  "eyebrow": "FIND YOUR NEXT MEAL",
+  "title": "Explore {{city}}",
+  "placeholder": "A dish, a restaurant, a craving…",
+  "foodTypeQuestion": "Craving {{label}}?",
+  "remove": "Remove",
+  "filters": {
+    "all": "All",
+    "restaurants": "Restaurants",
+    "dishes": "Dishes"
+  },
+  "allCuisines": "All cuisines",
+  "loading": "Searching…",
+  "resultCount_one": "{{count}} result",
+  "resultCount_other": "{{count}} results",
+  "emptyTitle": "Nothing found yet",
+  "emptyBody": "Try another keyword or remove a filter.",
+  "clearFilters": "Clear filters",
+  "restaurantsSection": "Restaurants",
+  "dishesSection": "Dishes"
+}

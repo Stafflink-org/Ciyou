@@ -16,10 +16,12 @@ import { Input } from '../../ui/Input';
 import { Button } from '../../ui/Button';
 import { useToast } from '../../ui/Toast';
 import { useOrder, useOrderReview } from './hooks';
+import { useTranslation } from '../../i18n/I18nProvider';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'RateOrder'>;
 
 export function RateOrderScreen({ route, navigation }: Props) {
+  const { t } = useTranslation('orders');
   const { orderId } = route.params;
   const { user } = useAuth();
   const toast = useToast();
@@ -34,7 +36,7 @@ export function RateOrderScreen({ route, navigation }: Props) {
       <View style={[styles.root, styles.center]}>
         <Text style={{ fontSize: 36 }}>✅</Text>
         <Text variant="subtitle" align="center" style={{ marginTop: spacing.md }}>
-          Vous avez déjà noté cette commande
+          {t('alreadyRatedTitle')}
         </Text>
         <Text style={{ marginTop: spacing.sm }}>{'⭐'.repeat(existing.restaurantRating)}</Text>
       </View>
@@ -49,7 +51,7 @@ export function RateOrderScreen({ route, navigation }: Props) {
         orderId,
         restaurantId: order.restaurantId,
         customerId: user.uid,
-        customerDisplayName: user.displayName || 'Client Ciyou Eats',
+        customerDisplayName: user.displayName || t('defaultCustomerName'),
         countryId: order.cityId,
         cityId: order.cityId,
         restaurantRating: rating as 1 | 2 | 3 | 4 | 5,
@@ -60,7 +62,7 @@ export function RateOrderScreen({ route, navigation }: Props) {
         createdAt: serverTimestamp() as never,
       } as unknown as Review;
       await setDoc(docAt(`reviews/${orderId}`), review);
-      toast.show('Merci pour votre avis !');
+      toast.show(t('thankYouToast'));
       navigation.goBack();
     } catch (error) {
       toast.show(errorMessage(error), 'danger');
@@ -71,7 +73,7 @@ export function RateOrderScreen({ route, navigation }: Props) {
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}>
-      <Text variant="title">Votre avis</Text>
+      <Text variant="title">{t('yourReviewTitle')}</Text>
       <Text variant="body" color="muted" style={{ marginTop: 4 }}>
         {order?.restaurantName}
       </Text>
@@ -84,9 +86,9 @@ export function RateOrderScreen({ route, navigation }: Props) {
         ))}
       </View>
 
-      <Input label="Commentaire (facultatif)" placeholder="Votre expérience…" value={comment} onChangeText={setComment} multiline />
+      <Input label={t('commentLabel')} placeholder={t('commentPlaceholder')} value={comment} onChangeText={setComment} multiline />
 
-      <Button label="Envoyer mon avis" onPress={submit} loading={submitting} style={{ marginTop: spacing.xl }} />
+      <Button label={t('sendReview')} onPress={submit} loading={submitting} style={{ marginTop: spacing.xl }} />
     </ScrollView>
   );
 }

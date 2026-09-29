@@ -9,12 +9,15 @@ import { colors, radius, spacing } from '../../theme/tokens';
 import { Text } from '../../ui/Text';
 import { Button } from '../../ui/Button';
 import { PlaceholderScreen } from '../shared/PlaceholderScreen';
+import { useTranslation } from '../../i18n/I18nProvider';
+import { intlLocale } from '../../i18n/core';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Confirmation'>;
 
 const money = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} €`;
 
 export function OrderConfirmationScreen({ route, navigation }: Props) {
+  const { t, locale } = useTranslation('confirmation');
   const { orderId } = route.params;
   const { data: order, loading } = useDoc<Order>(orderId ? docAt(`orders/${orderId}`) : undefined);
 
@@ -22,54 +25,54 @@ export function OrderConfirmationScreen({ route, navigation }: Props) {
     return (
       <View style={styles.root}>
         <Text variant="eyebrow" color="muted">
-          C'EST PARTI !
+          {t('eyebrow')}
         </Text>
         <Text variant="title" style={{ marginTop: 4 }}>
-          Votre commande est confirmée.
+          {t('title')}
         </Text>
         <Text variant="body" color="muted" style={{ marginTop: spacing.sm }}>
-          Référence : <Text variant="bodyStrong" testID="text-confirmation-id">#</Text>
+          {t('reference')} : <Text variant="bodyStrong" testID="text-confirmation-id">#</Text>
         </Text>
       </View>
     );
   }
 
   if (!loading && !order) {
-    return <PlaceholderScreen icon="✅" title="Commande introuvable" note="Cette commande n'est plus disponible." />;
+    return <PlaceholderScreen icon="✅" title={t('notFoundTitle')} note={t('notFoundNote')} />;
   }
 
   const scheduledLabel = order?.scheduledFor
-    ? new Date(order.scheduledFor.toMillis()).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+    ? new Date(order.scheduledFor.toMillis()).toLocaleString(intlLocale(locale), { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
     : null;
 
   return (
     <ScrollView contentContainerStyle={styles.root}>
       <Text variant="eyebrow" color="muted">
-        C'EST PARTI !
+        {t('eyebrow')}
       </Text>
       <Text variant="title" style={{ marginTop: 4 }}>
-        Votre commande est confirmée.
+        {t('title')}
       </Text>
       <Text variant="body" color="muted" style={{ marginTop: spacing.sm }}>
-        La cuisine de {order?.restaurantName ?? '…'} a reçu votre commande. Suivez chaque étape en direct.
+        {t('body', { restaurant: order?.restaurantName ?? '…' })}
       </Text>
 
       <View style={styles.card}>
         <Text variant="caption" color="muted">
-          Référence
+          {t('reference')}
         </Text>
         <Text variant="bodyStrong" testID="text-confirmation-id">
           #{order?.number ?? ''}
         </Text>
         <Text variant="caption" color="muted" style={{ marginTop: spacing.sm }}>
-          À régler (démo)
+          {t('toPayDemo')}
         </Text>
         <Text variant="title" color="primary">
           {money(order?.amounts.chargedCents ?? 0)}
         </Text>
         {scheduledLabel ? (
           <Text variant="body" style={{ marginTop: spacing.sm }}>
-            Prévue le {scheduledLabel}.
+            {t('scheduledOn', { date: scheduledLabel })}
           </Text>
         ) : null}
       </View>
@@ -77,7 +80,7 @@ export function OrderConfirmationScreen({ route, navigation }: Props) {
       {order?.pickupCode ? (
         <View style={styles.pickupCard} testID="pickup-code-confirmation">
           <Text variant="eyebrow" color="muted">
-            CODE DE RETRAIT · À PRÉSENTER AU RESTAURANT
+            {t('pickupCodeEyebrow')}
           </Text>
           <Text variant="display" style={{ marginTop: spacing.xs }}>
             {order.pickupCode}
@@ -87,13 +90,13 @@ export function OrderConfirmationScreen({ route, navigation }: Props) {
 
       <View style={{ gap: spacing.sm, marginTop: spacing.xl }}>
         <Button
-          label="Suivre ma commande"
+          label={t('trackOrder')}
           onPress={() => order && navigation.replace('Tracking', { orderId: order.id })}
           testID="button-confirmation-track"
         />
         <Pressable onPress={() => navigation.navigate('MainTabs', { screen: 'Home' } as never)} style={styles.homeLink} testID="button-confirmation-home">
           <Text variant="bodyStrong" color="primary" align="center">
-            Revenir à l'accueil
+            {t('backHome')}
           </Text>
         </Pressable>
       </View>

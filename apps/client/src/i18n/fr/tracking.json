@@ -1,0 +1,21 @@
+{
+  "steps": {
+    "scheduled": "Commande programmée",
+    "new": "Commande envoyée",
+    "accepted": "Acceptée par le restaurant",
+    "preparing": "En préparation",
+    "ready": "Prête",
+    "assigned": "Livreur en route vers le commerce",
+    "picked_up": "En route vers vous",
+    "delivered": "Livrée",
+    "cancelled": "Annulée"
+  },
+  "orderNotFound": "Commande introuvable.",
+  "orderNumber": "Commande {{number}}",
+  "statusCancelled": "Annulée",
+  "statusDelivered": "Livrée",
+  "statusOngoing": "En cours",
+  "yourDriver": "Votre livreur",
+  "rateOrder": "Noter la commande",
+  "viewOrderDetail": "Voir le détail de la commande"
+}

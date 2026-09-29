@@ -1,0 +1,20 @@
+{
+  "notFoundTitle": "المطعم غير موجود",
+  "notFoundNote": "هذا العنوان لم يعد متاحًا. اكتشف مطاعم أخرى قريبة.",
+  "offers": {
+    "bogo": "اشترِ واحدًا واحصل على الثاني مجانًا",
+    "half_second": "الثاني بخصم 50%"
+  },
+  "favoriteAdded": "أُضيف إلى المفضلة",
+  "favoriteRemoved": "أُزيل من المفضلة",
+  "etaMinutes": "{{min}}–{{max}} دقيقة",
+  "deliveryFee": "التوصيل {{price}} يورو",
+  "freeDelivery": "توصيل مجاني",
+  "menuSoon": "القائمة متوفرة قريبًا.",
+  "dishCount_one": "طبق واحد",
+  "dishCount_other": "{{count}} طبق",
+  "productUnavailableToast": "هذا الطبق لم يعد متاحًا.",
+  "productUnavailableLabel": "غير متاح",
+  "footerNote": "الرسوم المعروضة ثابتة لأغراض العرض التوضيحي: لا يتم احتساب المناطق عبر تحديد الموقع.",
+  "closedBanner": "المطعم مغلق مؤقتًا: الطلبات معلّقة."
+}

@@ -1,0 +1,21 @@
+{
+  "eyebrow": "TROUVEZ VOTRE PROCHAIN REPAS",
+  "title": "Explorer {{city}}",
+  "placeholder": "Un plat, un restaurant, une envie…",
+  "foodTypeQuestion": "Une envie de {{label}} ?",
+  "remove": "Retirer",
+  "filters": {
+    "all": "Tout",
+    "restaurants": "Restaurants",
+    "dishes": "Plats"
+  },
+  "allCuisines": "Toutes cuisines",
+  "loading": "Recherche…",
+  "resultCount_one": "{{count}} résultat",
+  "resultCount_other": "{{count}} résultats",
+  "emptyTitle": "Rien trouvé pour le moment",
+  "emptyBody": "Essayez un autre mot-clé ou retirez un filtre.",
+  "clearFilters": "Effacer les filtres",
+  "restaurantsSection": "Restaurants",
+  "dishesSection": "Plats"
+}

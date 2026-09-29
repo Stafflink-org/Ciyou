@@ -38,31 +38,23 @@ export function useDriverLocation(driverId: string | null | undefined) {
   }, [data, error]);
 }
 
-const STEP_LABELS: Record<string, string> = {
-  scheduled: 'Commande programmée',
-  new: 'Commande envoyée',
-  accepted: 'Acceptée par le restaurant',
-  preparing: 'En préparation',
-  ready: 'Prête',
-  assigned: 'Livreur en route vers le commerce',
-  picked_up: 'En route vers vous',
-  delivered: 'Livrée',
-  cancelled: 'Annulée',
-};
-
-export function stepLabel(status: string): string {
-  return STEP_LABELS[status] ?? status;
+// Les libellés viennent du namespace i18n `tracking` (clés `steps.<status>`) ; `stepLabel`/
+// `trackingSteps` prennent une fonction de traduction en paramètre (appelées depuis un composant,
+// pas un hook, pour rester utilisables hors contexte React si besoin — ex. tests).
+export function stepLabel(status: string, t: (key: string) => string): string {
+  const label = t(`tracking:steps.${status}`);
+  return label === `tracking:steps.${status}` ? status : label;
 }
 
 /** Étapes affichées dans la frise, dans l'ordre, avec leur horodatage s'il est atteint.
  * Le retrait (`pickup`) saute les étapes de livraison (assigned/picked_up). */
-export function trackingSteps(order: Order): { key: string; label: string; at: number | null; done: boolean; current: boolean }[] {
+export function trackingSteps(order: Order, t: (key: string) => string): { key: string; label: string; at: number | null; done: boolean; current: boolean }[] {
   const sequence: (keyof Order['timeline'])[] =
     order.fulfillment === 'delivery' ? ['new', 'accepted', 'preparing', 'ready', 'assigned', 'picked_up', 'delivered'] : ['new', 'accepted', 'preparing', 'ready', 'delivered'];
   const order_ = order.status === 'cancelled' ? sequence.length : sequence.indexOf(order.status as never);
   return sequence.map((key, index) => {
     const ts = order.timeline[key as keyof Order['timeline']];
     const at = ts && typeof ts === 'object' && 'toDate' in ts ? (ts as { toDate(): Date }).toDate().getTime() : null;
-    return { key: key as string, label: stepLabel(key as string), at, done: index < order_ || (index === order_ && order.status === 'delivered'), current: index === order_ && order.status !== 'delivered' };
+    return { key: key as string, label: stepLabel(key as string, t), at, done: index < order_ || (index === order_ && order.status === 'delivered'), current: index === order_ && order.status !== 'delivered' };
   });
 }
