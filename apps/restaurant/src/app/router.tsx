@@ -3,6 +3,7 @@ import { FullScreenLoader, NotFoundPanel, PublicOnly, RequireAuth, RouteErrorScr
 import { AccessDeniedPage, ForgotPasswordPage, InvitationRedirect, LoginPage, SetPasswordPage } from '@/auth/pages';
 import { AccessGate } from '@/auth/Impersonation';
 import { SignupPage } from '@/auth/SignupPage';
+import { LegalGate } from '@/features/legal/LegalGate';
 import { Shell } from '@/layout/Shell';
 import { MODULES } from './modules';
 
@@ -30,8 +31,13 @@ export const router = createBrowserRouter([
             element: <AccessGate />,
             children: [
               {
-                element: <Shell />,
-                children: [...moduleRoutes(MODULES), { path: '*', element: <NotFoundPanel /> }],
+                element: <LegalGate />,
+                children: [
+                  {
+                    element: <Shell />,
+                    children: [...moduleRoutes(MODULES), { path: '*', element: <NotFoundPanel /> }],
+                  },
+                ],
               },
             ],
           },

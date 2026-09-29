@@ -1,6 +1,6 @@
 // Abonnements temps réel du domaine « Plateforme & sécurité ».
 import { useMemo } from 'react';
-import { collection, doc, orderBy, query, where } from 'firebase/firestore';
+import { collection, doc, limit, orderBy, query, where } from 'firebase/firestore';
 import {
   COLLECTIONS,
   SETTINGS_DOCS,
@@ -15,6 +15,7 @@ import {
   type FraudCase,
   type GdprRequest,
   type Incident,
+  type LegalAcceptance,
   type LegalDocument,
   type MapsSettings,
   type PlatformIntegration,
@@ -134,6 +135,17 @@ export function useLegalDocuments() {
 export function useGdprRequests() {
   const q = useMemo(() => query(collection(db, COLLECTIONS.gdprRequests), orderBy('receivedAt', 'desc')), []);
   return useCollection<GdprRequest>(q);
+}
+
+/**
+ * Preuves d'acceptation des documents légaux (§29, « qui a accepté quoi »), les plus
+ * récentes en premier. Un seul tri (`acceptedAt`) sans filtre : aucun index composite
+ * à ajouter. Le filtrage par document/public se fait côté client (volume raisonnable,
+ * les 300 dernières acceptations).
+ */
+export function useLegalAcceptances() {
+  const q = useMemo(() => query(collection(db, COLLECTIONS.legalAcceptances), orderBy('acceptedAt', 'desc'), limit(300)), []);
+  return useCollection<LegalAcceptance>(q);
 }
 
 export function useBackups() {

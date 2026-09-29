@@ -5,6 +5,7 @@ import { colors } from '../theme/tokens';
 import { MainTabs } from './MainTabs';
 import { OrderDetailScreen } from '../features/history/OrderDetailScreen';
 import { ProfileSettingsScreen } from '../features/profile/ProfileSettingsScreen';
+import { GdprScreen } from '../features/gdpr/GdprScreen';
 import { useTranslation } from '../i18n/I18nProvider';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
@@ -23,6 +24,7 @@ export function MainStack() {
       <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
       <Stack.Screen name="OrderDetail" component={OrderDetailScreen} options={{ title: t('screenTitles.orderDetail') }} />
       <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} options={{ title: t('screenTitles.profileSettings') }} />
+      <Stack.Screen name="Gdpr" component={GdprScreen} options={{ title: 'Données personnelles' }} />
     </Stack.Navigator>
   );
 }
