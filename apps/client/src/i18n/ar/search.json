@@ -1,0 +1,21 @@
+{
+  "eyebrow": "اعثر على وجبتك القادمة",
+  "title": "استكشاف {{city}}",
+  "placeholder": "طبق، مطعم، أو رغبة…",
+  "foodTypeQuestion": "هل ترغب في {{label}}؟",
+  "remove": "إزالة",
+  "filters": {
+    "all": "الكل",
+    "restaurants": "مطاعم",
+    "dishes": "أطباق"
+  },
+  "allCuisines": "كل المطابخ",
+  "loading": "جارٍ البحث…",
+  "resultCount_one": "نتيجة واحدة",
+  "resultCount_other": "{{count}} نتيجة",
+  "emptyTitle": "لم يُعثر على شيء بعد",
+  "emptyBody": "جرّب كلمة أخرى أو أزل أحد المرشحات.",
+  "clearFilters": "مسح المرشحات",
+  "restaurantsSection": "مطاعم",
+  "dishesSection": "أطباق"
+}

@@ -13,6 +13,7 @@ import { Skeleton } from '../../ui/Skeleton';
 import { PlaceholderScreen } from '../shared/PlaceholderScreen';
 import { useMyOrders, isActiveOrder } from './hooks';
 import { stepLabel } from '../tracking/hooks';
+import { useTranslation } from '../../i18n/I18nProvider';
 
 type Props = CompositeScreenProps<BottomTabScreenProps<MainTabsParamList, 'Orders'>, NativeStackScreenProps<MainStackParamList>>;
 
@@ -24,6 +25,8 @@ const STATUS_TONE: Record<string, BadgeTone> = {
 };
 
 export function OrdersScreen({ navigation }: Props) {
+  const { t } = useTranslation('orders');
+  const { t: tTracking } = useTranslation('tracking');
   const { data: orders, loading } = useMyOrders();
 
   if (loading) {
@@ -36,7 +39,7 @@ export function OrdersScreen({ navigation }: Props) {
   }
 
   if (orders.length === 0) {
-    return <PlaceholderScreen icon="🧾" title="Aucune commande pour l'instant" note="Vos commandes passées apparaîtront ici." />;
+    return <PlaceholderScreen icon="🧾" title={t('emptyTitle')} note={t('emptyNote')} />;
   }
 
   const active = orders.filter(isActiveOrder);
@@ -45,23 +48,23 @@ export function OrdersScreen({ navigation }: Props) {
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}>
       <Text variant="eyebrow" color="muted">
-        VOS COMMANDES
+        {t('eyebrow')}
       </Text>
       <Text variant="title" style={{ marginTop: 4, marginBottom: spacing.md }}>
-        Commandes
+        {t('title')}
       </Text>
 
       {active.length > 0 ? (
         <View style={{ marginBottom: spacing.lg, gap: spacing.sm }}>
-          <Text variant="bodyStrong">En cours</Text>
+          <Text variant="bodyStrong">{t('ongoing')}</Text>
           {active.map((order) => (
             <Card key={order.id} onPress={() => navigation.navigate('Tracking', { orderId: order.id })} style={styles.card}>
               <View style={styles.row}>
                 <Text variant="bodyStrong">{order.restaurantName}</Text>
-                <Badge label={stepLabel(order.status)} tone="primary" />
+                <Badge label={stepLabel(order.status, tTracking)} tone="primary" />
               </View>
               <Text variant="caption" color="muted" style={{ marginTop: 4 }}>
-                {order.number} · {order.itemsCount} article(s) · {money(order.amounts.totalCents)}
+                {t('itemsLine', { number: order.number, count: order.itemsCount, amount: money(order.amounts.totalCents) })}
               </Text>
             </Card>
           ))}
@@ -70,15 +73,15 @@ export function OrdersScreen({ navigation }: Props) {
 
       {past.length > 0 ? (
         <View style={{ gap: spacing.sm }}>
-          <Text variant="bodyStrong">Historique</Text>
+          <Text variant="bodyStrong">{t('history')}</Text>
           {past.map((order) => (
             <Card key={order.id} onPress={() => navigation.navigate('OrderDetail', { orderId: order.id })} style={styles.card}>
               <View style={styles.row}>
                 <Text variant="bodyStrong">{order.restaurantName}</Text>
-                <Badge label={stepLabel(order.status)} tone={STATUS_TONE[order.status] ?? 'neutral'} />
+                <Badge label={stepLabel(order.status, tTracking)} tone={STATUS_TONE[order.status] ?? 'neutral'} />
               </View>
               <Text variant="caption" color="muted" style={{ marginTop: 4 }}>
-                {order.number} · {order.itemsCount} article(s) · {money(order.amounts.totalCents)}
+                {t('itemsLine', { number: order.number, count: order.itemsCount, amount: money(order.amounts.totalCents) })}
               </Text>
             </Card>
           ))}

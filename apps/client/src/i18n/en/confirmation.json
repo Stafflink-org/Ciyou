@@ -1,0 +1,13 @@
+{
+  "eyebrow": "LET'S GO!",
+  "title": "Your order is confirmed.",
+  "reference": "Reference",
+  "body": "{{restaurant}}'s kitchen has received your order. Follow every step live.",
+  "toPayDemo": "To pay (demo)",
+  "scheduledOn": "Scheduled for {{date}}.",
+  "pickupCodeEyebrow": "PICKUP CODE · SHOW AT THE RESTAURANT",
+  "trackOrder": "Track my order",
+  "backHome": "Back to home",
+  "notFoundTitle": "Order not found",
+  "notFoundNote": "This order is no longer available."
+}

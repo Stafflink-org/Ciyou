@@ -1,0 +1,13 @@
+{
+  "eyebrow": "C'EST PARTI !",
+  "title": "Votre commande est confirmée.",
+  "reference": "Référence",
+  "body": "La cuisine de {{restaurant}} a reçu votre commande. Suivez chaque étape en direct.",
+  "toPayDemo": "À régler (démo)",
+  "scheduledOn": "Prévue le {{date}}.",
+  "pickupCodeEyebrow": "CODE DE RETRAIT · À PRÉSENTER AU RESTAURANT",
+  "trackOrder": "Suivre ma commande",
+  "backHome": "Revenir à l'accueil",
+  "notFoundTitle": "Commande introuvable",
+  "notFoundNote": "Cette commande n'est plus disponible."
+}

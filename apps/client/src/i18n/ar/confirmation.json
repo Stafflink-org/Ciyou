@@ -1,0 +1,13 @@
+{
+  "eyebrow": "انطلقنا!",
+  "title": "تم تأكيد طلبك.",
+  "reference": "المرجع",
+  "body": "استلم مطبخ {{restaurant}} طلبك. تابع كل خطوة مباشرة.",
+  "toPayDemo": "المبلغ المستحق (تجريبي)",
+  "scheduledOn": "مقرر في {{date}}.",
+  "pickupCodeEyebrow": "رمز الاستلام · اعرضه في المطعم",
+  "trackOrder": "تتبّع طلبي",
+  "backHome": "العودة إلى الرئيسية",
+  "notFoundTitle": "الطلب غير موجود",
+  "notFoundNote": "هذا الطلب لم يعد متاحًا."
+}

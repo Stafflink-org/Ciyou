@@ -19,12 +19,14 @@ import { FOOD_TYPES } from '../home/HomeScreen';
 import { useCuisineCategories, useSearchProducts, useSearchRestaurants } from './hooks';
 import { FloatingCartButton } from '../cart/FloatingCartButton';
 import { useFavorites } from '../favorites/hooks';
+import { useTranslation } from '../../i18n/I18nProvider';
 
 type Props = CompositeScreenProps<BottomTabScreenProps<MainTabsParamList, 'Search'>, NativeStackScreenProps<MainStackParamList>>;
 
 type Kind = 'all' | 'restaurants' | 'dishes';
 
 export function SearchScreen({ route, navigation }: Props) {
+  const { t } = useTranslation('search');
   const { city } = useDefaultCity();
   const [text, setText] = useState(route.params?.query ?? '');
   const [foodTypeKey, setFoodTypeKey] = useState<string | null>(route.params?.foodType ?? null);
@@ -74,17 +76,17 @@ export function SearchScreen({ route, navigation }: Props) {
         <View>
             <View style={styles.headerBlock}>
               <Text variant="eyebrow" color="muted">
-                TROUVEZ VOTRE PROCHAIN REPAS
+                {t('search:eyebrow')}
               </Text>
               <Text variant="title" style={{ marginTop: 2 }}>
-                Explorer {city?.name ?? '…'}
+                {t('search:title', { city: city?.name ?? '…' })}
               </Text>
             </View>
 
             <View style={styles.searchRow}>
               <View style={{ flex: 1 }}>
                 <Input
-                  placeholder="Un plat, un restaurant, une envie…"
+                  placeholder={t('search:placeholder')}
                   value={foodType ? '' : text}
                   onChangeText={(v) => {
                     setText(v);
@@ -111,11 +113,11 @@ export function SearchScreen({ route, navigation }: Props) {
             {foodType ? (
               <View style={styles.foodTypePill}>
                 <Text variant="bodyStrong">
-                  {foodType.emoji} Une envie de {foodType.label.toLowerCase()} ?
+                  {t('search:foodTypeQuestion', { label: foodType.emoji + ' ' + foodType.label.toLowerCase() })}
                 </Text>
                 <Pressable testID="button-clear-food-type" onPress={() => setFoodTypeKey(null)}>
                   <Text variant="bodyStrong" color="primary">
-                    Retirer
+                    {t('search:remove')}
                   </Text>
                 </Pressable>
               </View>
@@ -124,9 +126,9 @@ export function SearchScreen({ route, navigation }: Props) {
             <View style={styles.filterRow}>
               {(
                 [
-                  ['all', 'Tout'],
-                  ['restaurants', 'Restaurants'],
-                  ['dishes', 'Plats'],
+                  ['all', t('search:filters.all')],
+                  ['restaurants', t('search:filters.restaurants')],
+                  ['dishes', t('search:filters.dishes')],
                 ] as const
               ).map(([key, label]) => (
                 <Pressable key={key} testID={`button-filter-kind-${key === 'dishes' ? 'Plats' : key === 'restaurants' ? 'Restaurants' : 'Tout'}`} onPress={() => setKind(key)} style={[styles.kindChip, kind === key && styles.kindChipActive]}>
@@ -141,7 +143,7 @@ export function SearchScreen({ route, navigation }: Props) {
               <FlatList
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                data={[{ id: null, name: { fr: 'Toutes cuisines' } }, ...cuisines]}
+                data={[{ id: null, name: { fr: t('search:allCuisines') } }, ...cuisines]}
                 keyExtractor={(item) => item.id ?? 'all'}
                 contentContainerStyle={{ paddingHorizontal: spacing.lg, gap: spacing.sm }}
                 renderItem={({ item }) => (
@@ -156,18 +158,18 @@ export function SearchScreen({ route, navigation }: Props) {
             ) : null}
 
             <Text variant="caption" color="muted" style={styles.countLine}>
-              {loading ? 'Recherche…' : `${totalCount} résultat${totalCount > 1 ? 's' : ''}`}
+              {loading ? t('search:loading') : t('search:resultCount', { count: totalCount })}
             </Text>
 
             {!loading && totalCount === 0 ? (
               <View style={styles.emptyBlock}>
-                <Text variant="subtitle">Rien trouvé pour le moment</Text>
+                <Text variant="subtitle">{t('search:emptyTitle')}</Text>
                 <Text variant="body" color="muted" style={{ marginTop: 4 }}>
-                  Essayez un autre mot-clé ou retirez un filtre.
+                  {t('search:emptyBody')}
                 </Text>
                 <Pressable testID="button-empty-action" onPress={clearFilters} style={styles.emptyButton}>
                   <Text variant="bodyStrong" style={{ color: colors.primaryFg }}>
-                    Effacer les filtres
+                    {t('search:clearFilters')}
                   </Text>
                 </Pressable>
               </View>
@@ -183,7 +185,7 @@ export function SearchScreen({ route, navigation }: Props) {
                 {showRestaurants && restaurantResults.length > 0 ? (
                   <View>
                     <Text variant="bodyStrong" style={styles.blockTitle}>
-                      Restaurants
+                      {t('search:restaurantsSection')}
                     </Text>
                     {restaurantResults
                       .slice()
@@ -203,7 +205,7 @@ export function SearchScreen({ route, navigation }: Props) {
                 {showDishes && productResults.length > 0 ? (
                   <View>
                     <Text variant="bodyStrong" style={styles.blockTitle}>
-                      Plats
+                      {t('search:dishesSection')}
                     </Text>
                     {productResults
                       .slice()

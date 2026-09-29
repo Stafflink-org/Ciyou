@@ -15,10 +15,13 @@ import { Skeleton } from '../../ui/Skeleton';
 import { useGoogleMapsWebKey } from '../../lib/mapsKey';
 import { RouteMap } from './RouteMap';
 import { useDriverLocation, useTrackedOrder, trackingSteps } from './hooks';
+import { useTranslation } from '../../i18n/I18nProvider';
+import { intlLocale } from '../../i18n/core';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Tracking'>;
 
 export function OrderTrackingScreen({ route, navigation }: Props) {
+  const { t, locale } = useTranslation('tracking');
   const { orderId } = route.params;
   const { data: order, loading, missing } = useTrackedOrder(orderId);
   const { data: restaurant } = useDoc<Restaurant>(order ? docAt(`restaurants/${order.restaurantId}`) : null);
@@ -36,13 +39,13 @@ export function OrderTrackingScreen({ route, navigation }: Props) {
     return (
       <View style={[styles.root, styles.center]}>
         <Text variant="body" color="muted">
-          Commande introuvable.
+          {t('orderNotFound')}
         </Text>
       </View>
     );
   }
 
-  const steps = trackingSteps(order);
+  const steps = trackingSteps(order, t);
   const restaurantGeo = restaurant?.address.geo;
   const destGeo = order.delivery?.geo;
 
@@ -50,8 +53,8 @@ export function OrderTrackingScreen({ route, navigation }: Props) {
     <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}>
       <Card>
         <View style={styles.headerRow}>
-          <Text variant="subtitle">Commande {order.number}</Text>
-          <Badge label={order.status === 'cancelled' ? 'Annulée' : order.status === 'delivered' ? 'Livrée' : 'En cours'} tone={order.status === 'cancelled' ? 'danger' : order.status === 'delivered' ? 'success' : 'primary'} />
+          <Text variant="subtitle">{t('orderNumber', { number: order.number })}</Text>
+          <Badge label={order.status === 'cancelled' ? t('statusCancelled') : order.status === 'delivered' ? t('statusDelivered') : t('statusOngoing')} tone={order.status === 'cancelled' ? 'danger' : order.status === 'delivered' ? 'success' : 'primary'} />
         </View>
         <Text variant="caption" color="muted" style={{ marginTop: 2 }}>
           {order.restaurantName}
@@ -70,7 +73,7 @@ export function OrderTrackingScreen({ route, navigation }: Props) {
 
       {order.delivery?.driverName ? (
         <Card style={{ marginTop: spacing.lg }}>
-          <Text variant="bodyStrong">Votre livreur</Text>
+          <Text variant="bodyStrong">{t('yourDriver')}</Text>
           <Text variant="body" style={{ marginTop: 2 }}>
             {order.delivery.driverName}
             {order.delivery.driverVehicle ? ` · ${order.delivery.driverVehicle}` : ''}
@@ -93,7 +96,7 @@ export function OrderTrackingScreen({ route, navigation }: Props) {
               </Text>
               {step.at ? (
                 <Text variant="caption" color="muted">
-                  {new Date(step.at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(step.at).toLocaleTimeString(intlLocale(locale), { hour: '2-digit', minute: '2-digit' })}
                 </Text>
               ) : null}
             </View>
@@ -102,10 +105,10 @@ export function OrderTrackingScreen({ route, navigation }: Props) {
       </View>
 
       {order.status === 'delivered' ? (
-        <Button label="Noter la commande" onPress={() => navigation.navigate('RateOrder', { orderId })} style={{ marginTop: spacing.lg }} />
+        <Button label={t('rateOrder')} onPress={() => navigation.navigate('RateOrder', { orderId })} style={{ marginTop: spacing.lg }} />
       ) : null}
       <Button
-        label="Voir le détail de la commande"
+        label={t('viewOrderDetail')}
         variant="outline"
         onPress={() => navigation.navigate('OrderDetail', { orderId })}
         style={{ marginTop: spacing.sm }}
