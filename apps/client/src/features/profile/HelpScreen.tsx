@@ -1,13 +1,16 @@
-// Aide / support (§19 client.md) — contenu réel statique (aucune collection
-// FAQ dédiée trouvée côté serveur pour ce lot) : questions fréquentes et
-// contact, pas de billetterie support (aucune Cloud Function d'ouverture de
-// ticket appelable directement par ce lot — `openTicket` existe côté serveur
-// mais son branchement complet, avec pièces jointes, est hors périmètre ici).
+// Aide / support (§19 client.md) — FAQ statique (aucune collection FAQ dédiée
+// trouvée côté serveur) + accès réel au support (`Support`/`TicketDetail`,
+// tâche `cdc-mobile-recompte` : ouverture de ticket et chat désormais réels,
+// `functions/src/messaging/client/support.ts`).
 import { Linking, ScrollView, StyleSheet, View } from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { MainStackParamList } from '../../navigation/types';
 import { colors, radius, spacing } from '../../theme/tokens';
 import { Text } from '../../ui/Text';
 import { Card } from '../../ui/Card';
 import { Button } from '../../ui/Button';
+
+type Props = NativeStackScreenProps<MainStackParamList, 'Help'>;
 
 const FAQ: { q: string; a: string }[] = [
   { q: 'Ma commande est en retard, que faire ?', a: 'Consultez le suivi de commande : le statut et la position du livreur (si assigné) s’y actualisent en temps réel.' },
@@ -16,7 +19,7 @@ const FAQ: { q: string; a: string }[] = [
   { q: 'Comment supprimer mon compte ?', a: 'Contactez l’assistance par e-mail : votre demande sera traitée conformément à notre politique de confidentialité.' },
 ];
 
-export function HelpScreen() {
+export function HelpScreen({ navigation }: Props) {
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}>
       <Text variant="title">Aide</Text>
@@ -38,9 +41,10 @@ export function HelpScreen() {
       <Card style={{ marginTop: spacing.lg }}>
         <Text variant="bodyStrong">Nous contacter</Text>
         <Text variant="body" color="muted" style={{ marginTop: 4 }}>
-          support@ciyou-eats.com
+          Ouvrez une demande : notre équipe vous répond directement dans l'application.
         </Text>
-        <Button label="Envoyer un e-mail" variant="outline" onPress={() => Linking.openURL('mailto:support@ciyou-eats.com')} style={{ marginTop: spacing.md }} />
+        <Button label="Contacter le support" onPress={() => navigation.navigate('Support', undefined)} style={{ marginTop: spacing.md }} />
+        <Button label="Envoyer un e-mail" variant="outline" onPress={() => Linking.openURL('mailto:support@ciyou-eats.com')} style={{ marginTop: spacing.sm }} />
       </Card>
     </ScrollView>
   );

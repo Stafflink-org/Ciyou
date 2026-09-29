@@ -107,6 +107,8 @@ export function OrderDetailScreen({ route, navigation }: Props) {
       ) : order.status !== 'cancelled' ? (
         <Button label="Suivre la commande" onPress={() => navigation.navigate('Tracking', { orderId })} style={{ marginTop: spacing.lg }} />
       ) : null}
+
+      <Button label="Signaler un problème" variant="outline" onPress={() => navigation.navigate('Support', { orderId })} style={{ marginTop: spacing.sm }} />
     </ScrollView>
   );
 }
