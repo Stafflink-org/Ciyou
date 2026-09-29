@@ -19,6 +19,9 @@ import { PromotionsScreen } from '../features/promotions/PromotionsScreen';
 import { EditProfileScreen } from '../features/profile/EditProfileScreen';
 import { PaymentMethodsScreen } from '../features/profile/PaymentMethodsScreen';
 import { HelpScreen } from '../features/profile/HelpScreen';
+import { SupportScreen } from '../features/support/SupportScreen';
+import { TicketDetailScreen } from '../features/support/TicketDetailScreen';
+import { ReferralScreen } from '../features/referral/ReferralScreen';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -48,6 +51,9 @@ export function MainStack() {
       <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Modifier le profil' }} />
       <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} options={{ title: 'Modes de paiement' }} />
       <Stack.Screen name="Help" component={HelpScreen} options={{ title: 'Aide' }} />
+      <Stack.Screen name="Support" component={SupportScreen} options={{ title: 'Support' }} />
+      <Stack.Screen name="TicketDetail" component={TicketDetailScreen} options={{ title: 'Votre demande' }} />
+      <Stack.Screen name="Referral" component={ReferralScreen} options={{ title: 'Parrainage' }} />
     </Stack.Navigator>
   );
 }

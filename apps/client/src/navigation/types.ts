@@ -39,6 +39,9 @@ export type MainStackParamList = {
   PaymentMethods: undefined;
   Help: undefined;
   RateOrder: { orderId: string };
+  Support: { orderId?: string } | undefined;
+  TicketDetail: { ticketId: string };
+  Referral: undefined;
 };
 
 /** Pile racine : bascule Auth ⇄ Main selon la session (`RootNavigator`). */

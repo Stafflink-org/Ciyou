@@ -27,9 +27,11 @@ export function ProfileScreen({ navigation }: Props) {
     { label: 'Mes favoris', icon: '❤️', onPress: () => navigation.navigate('MainTabs', { screen: 'Favorites' } as never) },
     { label: 'Mes adresses', icon: '📍', onPress: () => navigation.navigate('Addresses') },
     { label: 'Offres', icon: '🏷️', onPress: () => navigation.navigate('Promotions') },
+    { label: 'Parrainage', icon: '🎁', onPress: () => navigation.navigate('Referral') },
     { label: 'Notifications', icon: '🔔', onPress: () => navigation.navigate('Notifications') },
     { label: 'Modes de paiement', icon: '💳', onPress: () => navigation.navigate('PaymentMethods') },
-    { label: 'Aide', icon: '💬', onPress: () => navigation.navigate('Help') },
+    { label: 'Aide', icon: '❓', onPress: () => navigation.navigate('Help') },
+    { label: 'Support (mes demandes)', icon: '💬', onPress: () => navigation.navigate('Support', undefined) },
   ];
 
   return (

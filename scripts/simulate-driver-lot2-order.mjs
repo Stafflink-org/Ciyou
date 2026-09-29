@@ -10,7 +10,7 @@
  * Usage : node scripts/simulate-driver-lot2-order.mjs --apply
  */
 import { randomBytes, randomUUID } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { FieldValue, GeoPoint, Timestamp } from '@google-cloud/firestore';
 import { auth, db, PROJECT_ID } from './lib/admin.mjs';
@@ -24,12 +24,29 @@ const FIREBASE_REGION = 'europe-west1';
 const apply = process.argv.includes('--apply');
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 const API_KEY = /apiKey:\s*'([^']+)'/.exec(readFileSync(`${repoRoot}/apps/client/src/lib/firebase.ts`, 'utf8'))?.[1] ?? '';
+const CREDENTIALS_FILE = `${repoRoot}/.test-accounts.local.md`;
 
+// createCustomToken indisponible dans cet environnement (pas de clé de compte de
+// service, seulement le jeton OAuth de la session Firebase CLI — voir scripts/lib/admin.mjs) :
+// on repasse par un mot de passe temporaire, mais on restaure TOUJOURS le mot de
+// passe documenté juste après (comme scripts/verify-driver-document-upload.mjs) —
+// bug réel constaté deux fois sans cette restauration : client.lot1@golink.test
+// gardait un mot de passe aléatoire après chaque exécution de ce script.
+function storedPassword(email) {
+  if (!existsSync(CREDENTIALS_FILE)) return null;
+  const match = readFileSync(CREDENTIALS_FILE, 'utf8').match(new RegExp('`' + email + '`\\s*\\|\\s*`([^`]+)`'));
+  return match?.[1] ?? null;
+}
+
+const restoreQueue = [];
 async function signIn(uid) {
   const user = await auth.getUser(uid);
   const email = user.email ?? '';
+  const original = storedPassword(email);
   const password = `${randomBytes(18).toString('base64url')}Aa1`;
   await auth.updateUser(uid, { password });
+  if (original) restoreQueue.push({ uid, email, original });
+  else console.log(`⚠️  Mot de passe de ${email} introuvable dans .test-accounts.local.md : non restauré automatiquement après ce script.`);
   const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_KEY}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -38,6 +55,12 @@ async function signIn(uid) {
   const body = await res.json();
   if (!body.idToken) throw new Error(`Connexion impossible (${email}) : ${body.error?.message ?? res.status}`);
   return body.idToken;
+}
+async function restorePasswords() {
+  for (const { uid, email, original } of restoreQueue) {
+    await auth.updateUser(uid, { password: original });
+    console.log(`Mot de passe restauré pour ${email}.`);
+  }
 }
 
 async function call(name, token, data) {
@@ -161,7 +184,9 @@ async function main() {
   console.log('\nOuvrez/rafraîchissez l’app livreur : la course en cours doit apparaître dans Dispatch.');
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+main()
+  .catch((err) => {
+    console.error(err);
+    process.exitCode = 1;
+  })
+  .finally(() => restorePasswords());

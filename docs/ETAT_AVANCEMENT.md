@@ -8,6 +8,40 @@ Décision explicite du client : pas encore d'environnement de production, pas de
 
 **⚠️ Écart temporaire et documenté par rapport au cahier client (§27 : "double authentification obligatoire pour tous, non désactivable")** — le code lui-même n'a pas changé, seul le réglage `requireMfaForAdmins` a été mis à `false` ; **à remettre à `true` avant toute mise en production**, ce qui suffit à réactiver l'obligation pour tous les administrateurs (chacun s'enrôle alors à sa prochaine connexion — parcours déjà vérifié réellement, voir historique de ce document). `docs/AUDIT_COUVERTURE_CDC.md` §27 mis à jour en conséquence.
 
+## Recompte des lignes mobiles du cahier super admin — 29/09/2026 (tâche `cdc-mobile-recompte`)
+
+Contexte : `apps/client` et `apps/driver` étaient des coquilles vides au moment de l'audit initial (`docs/AUDIT_COUVERTURE_CDC.md`), cause dominante des ~64 lignes PARTIEL. Elles sont désormais construites (lots précédents, §10/§10 bis/§11/§11 bis/§11 ter de `docs/CONTRAT_MODULES.md`). Cette tâche recompte avec preuve les 8 points cités dans le verdict §2 de l'audit comme dépendants de l'absence des apps, corrige ce qui manquait encore et documente honnêtement le reste.
+
+**État réel des 8 points, avant toute correction (vérifié dans le code) :**
+1. Inscription livreur autonome : **pas un manque** — décision client explicite (validation manuelle uniquement, `DECISIONS_CLIENT.md`). La ligne §6 du cahier ne doit pas être lue comme un oubli sur ce point précis.
+2. Position en direct : **déjà réelle** (livreur publie sa position réelle, `watchPosition` → `driverLocations`, consommée par le suivi client) — construite lors d'un lot précédent, jamais recomptée.
+3. Classement + mention « Sponsorisé » côté client : **déjà réel** (tri par `rankingScore`, badge affiché sur l'accueil et la recherche) — idem, jamais recompté.
+4. Contestation de sanction (livreur) : la règle Firestore self-service existait déjà (lot antérieur, jamais consommée) — **manquait un écran**.
+5. Chat et tickets côté client : **manquait tout** (aucune Cloud Function, aucun écran).
+6. Fermeture d'urgence de zone reçue par le client : le serveur transmet déjà le message dans la langue du client à la commande (`cdc-fix-b`), mais **rien ne l'affichait** avant l'ouverture d'une commande.
+7. Capture de consentements/cookies : `setConsent` existait déjà côté serveur (`cdc-fix-e`, jamais appelée par aucune app) — **manquait tout consommateur**.
+8. Code de parrainage (client) : `applyReferralCode` existait déjà côté serveur (`cdc-fix-c`, jamais appelée par aucune app) — **manquait tout consommateur**.
+
+**5 points corrigés réellement (code + type-check + test réel à l'écran) :**
+- **Contestation de sanction livreur** : `apps/driver/src/features/profile/hooks.ts` (`useActiveSanction`, `useContestSanction`) + `ProfileScreen.tsx` (`SanctionCard`). Testé réellement (sanction factice créée par script puis retirée, contestation envoyée depuis l'écran, vérifiée en base `status: 'contested'`, `contest.message`).
+- **Ticket et fil de discussion (chat) côté client** : nouveau module serveur `functions/src/messaging/client/support.ts` (`createClientTicket`, `replyToClientTicket`, `updateClientTicket`, miroir de `messaging/restaurant/support.ts`), déployé. Nouvel écran `apps/client/src/features/support/` (liste, création, chat), accessible depuis Profil, Aide et le détail d'une commande. Aucune règle Firestore à modifier (déjà génériques). **Bug réel trouvé et corrigé pendant le test** : la lecture des messages (`useTicketMessages`) omettait `where('internal','==',false)`, or Firestore refuse une requête de liste qui ne reproduit pas dans la requête la condition `resource.data.internal` de la règle de sécurité — confirmé par un test isolé avec le SDK client (permission refusée sans ce filtre, acceptée avec). Corrigé en reprenant le filtre déjà utilisé côté restaurant. Testé réellement de bout en bout (ouverture d'un ticket, deux messages envoyés et affichés dans l'ordre).
+- **Bannière de fermeture d'urgence côté client** : `apps/client/src/features/home/HomeScreen.tsx` (lit `city.emergencyClosure`, déjà présent dans les données chargées). Vérifiée par lecture de code (aucune fermeture active en base au moment du test, comportement sans casse confirmé).
+- **Bandeau de consentement cookies/marketing côté client** : `apps/client/src/features/legal/LegalGate.tsx`, appelle `setConsent`. Testé réellement à l'écran (bouton « Tout accepter »).
+- **Réacceptation forcée des CGU côté client** : même fichier (`LegalGate.tsx`), compare `acceptedLegal.terms_client` à la version publiée (`legalDocuments`) et bloque l'accès sinon. Testé réellement de bout en bout avec un nouveau compte (blocage confirmé, acceptation réelle via `acceptLegalDocument`, vérifiée en base).
+- **Saisie d'un code de parrainage côté client** : `apps/client/src/features/referral/ReferralScreen.tsx`, affiche le code personnel réel et un champ pour saisir celui d'un ami (`applyReferralCode`). Testé réellement : code personnel affiché correctement, auto-parrainage correctement rejeté par le serveur (vérifié qu'aucun document `referrals` n'a été créé).
+
+**Compte de test client** : `client.lot1@golink.test` a un mot de passe désormais rejeté par Firebase Auth (`INVALID_LOGIN_CREDENTIALS`, confirmé hors navigateur, vraisemblablement modifié par une autre tâche concurrente) — non touché, nouveau compte créé pour ce lot : `client.mobilerecompte@golink.test` (ajouté à `.test-accounts.local.md`).
+
+**Reste ouvert (non traité par ce lot, honnêtement documenté)** :
+- Ouverture d'un ticket/chat par le **livreur** (aucune fonction, aucun écran) — seul le client a été traité.
+- Chat en direct au sens strict (`openSupportChat`/`conversations`/`support_chat`, initié par un agent) : toujours sans consommateur client ou livreur — ce que le client obtient est un ticket avec fil de discussion, un mécanisme distinct qui couvre le besoin fonctionnel du cahier mais pas ce chemin de code précis.
+- Réacceptation des CGU et bandeau cookies : toujours absents côté restaurant et livreur (apps web/mobile respectives).
+- Enregistrement des jetons FCM (push) dans les deux apps : toujours absent, le push réel reste donc sans destinataire.
+- Parrainage restaurant (lien repris à l'inscription) et parrainage livreur : toujours absents (seul le parcours client a été traité).
+- Portefeuille non consommé à la commande (`walletAppliedCents` codé à 0) : connu depuis un audit antérieur, hors périmètre de ce lot.
+
+**Chiffres** : `docs/AUDIT_COUVERTURE_CDC.md` mis à jour ligne par ligne avec preuve fichier:ligne pour chaque point traité (annexes B, D, F, K, N). **Aucune ligne du cahier n'a changé de statut au niveau du tableau §3** (chaque ligne touchée gardait déjà son statut le plus favorable à cause d'un autre manque non traité par ce lot, typiquement le pendant restaurant/livreur) — total inchangé **101 COMPLET / 65 PARTIEL / 0 ABSENT / 0 FAUX** (166 lignes). En revanche, **2 sous-éléments auparavant ABSENT sont désormais PARTIEL avec un vrai consommateur** (réacceptation CGU, consentement cookies, §29) et plusieurs réserves de lignes déjà COMPLET/PARTIEL sont maintenant obsolètes (texte corrigé). Vérifications : `npx tsc --noEmit` vert sur `functions`, `apps/client`, `apps/driver` ; fonctions `createClientTicket`/`replyToClientTicket`/`updateClientTicket` déployées ; aucune règle Firestore/Storage modifiée (déjà suffisantes). Un seul serveur de dev et un seul onglet navigateur à la fois (client puis livreur, jamais en parallèle), arrêtés par leurs PID exacts.
+
 ## App livreur mobile : lot 1 fondations — vérification manuelle en direct (29/09/2026)
 
 Vérification personnelle en direct (navigateur, compte `driver.lot1@golink.test`) après le lot 1 : connexion, bascule en ligne/hors ligne confirmée par écriture Firestore réelle (`drivers/{uid}.availability`), message d'erreur honnête et bien géré quand le navigateur refuse la géolocalisation (headless, comportement attendu, pas un bug).
