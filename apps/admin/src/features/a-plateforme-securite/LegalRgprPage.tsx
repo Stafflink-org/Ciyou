@@ -36,6 +36,7 @@ import {
   type GdprRequest,
   type GdprRequestStatus,
   type GdprRequestType,
+  type LegalAcceptance,
   type LegalDocument,
   type LegalDocumentType,
 } from '@golink/shared';
@@ -45,7 +46,7 @@ import { db } from '@/lib/firebase';
 import { errorMessage, toDate, useCollection, useMutation } from '@/lib/firestore';
 import { getGdprExportLink, handleGdprRequest, receiveGdprRequest, saveLegalDocument } from './api';
 import { ErrorPanel, RequirePermission } from './components';
-import { useGdprRequests, useLegalDocuments } from './hooks';
+import { useGdprRequests, useLegalAcceptances, useLegalDocuments } from './hooks';
 import { PlateformeNav } from './nav';
 
 const STATUS_TONE: Record<GdprRequestStatus, 'info' | 'amber' | 'success' | 'danger'> = { received: 'info', identity_check: 'amber', in_progress: 'amber', completed: 'success', rejected: 'danger' };
@@ -222,6 +223,56 @@ function GdprTab() {
   );
 }
 
+const USER_TYPE_LABELS: Record<LegalAcceptance['userType'], string> = { client: 'Client', restaurant: 'Commerce', driver: 'Livreur' };
+
+/**
+ * « Qui a accepté quoi » (§29, manque signalé par l'audit) : les 300 dernières
+ * preuves d'acceptation (`legalAcceptances`, non modifiables), avec recherche par
+ * identifiant/e-mail et filtre par document. Filtrage côté client (volume limité) :
+ * aucun index composite supplémentaire nécessaire.
+ */
+function AcceptancesTab() {
+  const acceptances = useLegalAcceptances();
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState<LegalDocumentType | 'all'>('all');
+  const filtered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return acceptances.data.filter((a) => {
+      if (typeFilter !== 'all' && a.documentType !== typeFilter) return false;
+      if (!term) return true;
+      return a.userId.toLowerCase().includes(term) || a.signatureName?.toLowerCase().includes(term) || a.version.toLowerCase().includes(term);
+    });
+  }, [acceptances.data, search, typeFilter]);
+  const columns = useMemo(() => {
+    const helper = createColumnHelper<LegalAcceptance & { id: string }>();
+    return [
+      helper.accessor('userId', { header: 'Compte', cell: (c) => <span className="font-mono text-xs">{c.getValue()}</span> }),
+      helper.accessor('userType', { header: 'Public', cell: (c) => <Badge tone="neutral">{USER_TYPE_LABELS[c.getValue()]}</Badge> }),
+      helper.accessor('documentType', { header: 'Document', cell: (c) => LEGAL_DOCUMENT_LABELS[c.getValue()] }),
+      helper.accessor('version', { header: 'Version' }),
+      helper.accessor('acceptedAt', { header: 'Accepté le', cell: (c) => formatDateTime(toDate(c.getValue()) ?? new Date()) }),
+    ];
+  }, []);
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher un compte, une version…" className="max-w-xs" />
+        <Select
+          value={typeFilter}
+          onValueChange={(v) => setTypeFilter(v as LegalDocumentType | 'all')}
+          options={[{ value: 'all', label: 'Tous les documents' }, ...Object.entries(LEGAL_DOCUMENT_LABELS).map(([v, label]) => ({ value: v, label }))]}
+        />
+        <span className="text-xs text-fg-subtle">{filtered.length} sur {acceptances.data.length} (300 plus récentes)</span>
+      </div>
+      {acceptances.error ? (
+        <ErrorPanel error={acceptances.error} />
+      ) : (
+        <DataTable data={filtered} columns={columns} loading={acceptances.loading} itemLabel="acceptations" emptyState={<EmptyState icon={<FileCheck />} title="Aucune acceptation" />} />
+      )}
+    </div>
+  );
+}
+
 export function LegalRgprPage() {
   useDocumentTitle('Légal & RGPD · Ciyou Eats Admin');
   const can = useCan();
@@ -238,9 +289,11 @@ export function LegalRgprPage() {
           <TabsList>
             {canGdpr && <TabsTrigger value="requests">Demandes RGPD</TabsTrigger>}
             {canLegal && <TabsTrigger value="documents">Documents légaux</TabsTrigger>}
+            {canLegal && <TabsTrigger value="acceptances">Acceptations</TabsTrigger>}
           </TabsList>
           {canGdpr && <TabsContent value="requests" className="pt-4"><GdprTab /></TabsContent>}
           {canLegal && <TabsContent value="documents" className="pt-4"><LegalDocsTab /></TabsContent>}
+          {canLegal && <TabsContent value="acceptances" className="pt-4"><AcceptancesTab /></TabsContent>}
         </Tabs>
       </RequirePermission>
     </PageContainer>

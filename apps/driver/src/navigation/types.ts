@@ -23,6 +23,7 @@ export type MainStackParamList = {
   MainTabs: undefined;
   OrderDetail: { orderId: string };
   ProfileSettings: undefined;
+  Gdpr: undefined;
 };
 
 /** Pile racine : bascule Auth ⇄ Main selon la session (`RootNavigator`). */
