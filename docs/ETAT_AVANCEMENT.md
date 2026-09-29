@@ -1,5 +1,13 @@
 # État d'avancement — Ciyou Eats
 
+## Double authentification désactivée pour les tests pré-production (29/09/2026)
+
+Décision explicite du client : pas encore d'environnement de production, pas de vraies adresses e-mail pour les comptes de test — la 2FA obligatoire (cahier §27) est mise de côté le temps des tests, pour ne pas bloquer les personnes qui testent avec un QR code / une application d'authentification.
+
+**Fait** : `settings/security.requireMfaForAdmins` → `false` (Firestore, `golink-9f16d`) ; les 5 comptes admin de test désenrôlés (`admins/{uid}.mfaEnrolled` → `false` via `scripts/reset-test-2fa.mjs`, limité aux comptes `@golink.test`). Revérifié en direct dans le navigateur : connexion `finance@golink.test` → tableau de bord immédiat, aucun écran de 2FA.
+
+**⚠️ Écart temporaire et documenté par rapport au cahier client (§27 : "double authentification obligatoire pour tous, non désactivable")** — le code lui-même n'a pas changé, seul le réglage `requireMfaForAdmins` a été mis à `false` ; **à remettre à `true` avant toute mise en production**, ce qui suffit à réactiver l'obligation pour tous les administrateurs (chacun s'enrôle alors à sa prochaine connexion — parcours déjà vérifié réellement, voir historique de ce document). `docs/AUDIT_COUVERTURE_CDC.md` §27 mis à jour en conséquence.
+
 ## App livreur mobile : lot 1 fondations — vérification manuelle en direct (29/09/2026)
 
 Vérification personnelle en direct (navigateur, compte `driver.lot1@golink.test`) après le lot 1 : connexion, bascule en ligne/hors ligne confirmée par écriture Firestore réelle (`drivers/{uid}.availability`), message d'erreur honnête et bien géré quand le navigateur refuse la géolocalisation (headless, comportement attendu, pas un bug).
