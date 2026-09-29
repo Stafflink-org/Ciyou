@@ -102,6 +102,12 @@ export interface OrderDelivery {
   proof?: { type: 'photo' | 'code' | 'signature' | 'handover'; value?: string | null; at: Timestamp; geo?: GeoPoint | null } | null;
   /** Code à 4 chiffres pour la remise en main propre (alcool, montants élevés). */
   handoverCodeRequired: boolean;
+  /** Code à 4 chiffres communiqué par le commerce au livreur à la récupération (lot 2 driver,
+   * pas une exigence client écrite — mesure de bon sens documentée dans CONTRAT_MODULES.md §11).
+   * Optionnel et rétrocompatible : absent sur les commandes créées avant ce champ, dans ce cas
+   * `markOrderPickedUp` ne demande aucun code. */
+  collectionCode?: string | null;
+  collectionVerified?: boolean;
   /** Demande de livreur (manuelle ou automatique avant la fin de préparation). */
   courierRequestedAt?: Timestamp | null;
   /** État de l'attribution : recherche en cours, attribuée, aucun livreur disponible. */

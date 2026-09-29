@@ -9,3 +9,7 @@
 ## App livreur (apps/driver) — lot 1 fondations
 
 - Alignement de `apps/driver/package.json` sur `apps/client/package.json` (mêmes dépendances : navigation, firebase, async-storage, gesture-handler, safe-area-context, screens, react-native-web) — nécessaire pour reprendre les mêmes patterns (auth, hooks Firestore, design system) que l'app client. `npm install` exécuté à la racine du monorepo pour matérialiser ces dépendances dans `apps/driver/node_modules`/le lockfile racine.
+
+## App livreur (apps/driver) — lot 2 course active
+
+- `react-native-webview` (13.16.0) ajouté à `apps/driver/package.json` : nécessaire pour la carte/itinéraire réel (Google Maps Embed Directions, cartographie non modélisée en RN pur). `npm install --workspace=@golink/driver` exécuté à la racine. Sur web (Expo web), le composant équivalent (`RouteMap.web.tsx`) utilise un `<iframe>` natif au lieu de la WebView (react-native-webview ne supporte pas la cible web) : les deux partagent la même URL Google Maps Embed.

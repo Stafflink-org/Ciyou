@@ -681,6 +681,9 @@ export const placeOrder = callable(
 
         const pickupCode =
           data.fulfillment !== 'delivery' || quote.totalCents > HANDOVER_CODE_THRESHOLD_CENTS || containsAlcohol ? generateFourDigitCode() : null;
+        // Code de collecte livreur ↔ commerce (voir docs/CONTRAT_MODULES.md §11) : distinct du
+        // code de remise au client (`pickupCode`), généré pour toute commande en livraison.
+        const collectionCode = data.fulfillment === 'delivery' ? generateFourDigitCode() : null;
         const etaMin = (restaurant.etaMinutes?.min ?? prepMinutes + travelMinutes) + (restaurant.busyExtraMinutes ?? 0);
         const etaMax = (restaurant.etaMinutes?.max ?? prepMinutes + travelMinutes + 10) + (restaurant.busyExtraMinutes ?? 0);
         const base = (scheduledFor ?? now).getTime();
@@ -751,6 +754,8 @@ export const placeOrder = callable(
                   estimatedArrivalAt: promisedTo,
                   proof: null,
                   handoverCodeRequired: pickupCode !== null,
+                  collectionCode,
+                  collectionVerified: false,
                   courierRequestedAt: null,
                   dispatchStatus: null,
                   dispatchAttempts: 0,

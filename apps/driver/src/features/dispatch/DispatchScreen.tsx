@@ -1,14 +1,16 @@
 // Dispatch (onglet principal, golink-maquette/v2/livreur-admin.md §1.2/§1.6) :
 // bascule de disponibilité réelle, réception réelle d'une offre de course
 // (dispatchOffers, temps réel), compte à rebours d'expiration réel,
-// accepter/refuser via `respondToOffer`, puis suivi de la course active
-// (récupération au commerce, remise au client). Rien n'est simulé : pas
-// d'adresse ni de montant codés en dur (contrairement à la maquette Replit,
-// volontairement pauvre pour cet espace — voir §1.6 du document).
+// accepter/refuser via `respondToOffer`, puis suivi complet de la course active
+// (carte/itinéraire réels, code de collecte au commerce, code de remise au
+// client — jamais avant —, client absent, messagerie, espèces détenues). Rien
+// n'est simulé : pas d'adresse ni de montant codés en dur (contrairement à la
+// maquette Replit, volontairement pauvre pour cet espace — voir §1.6).
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useAuth } from '../../auth/AuthContext';
 import { colors, radius, spacing } from '../../theme/tokens';
+import { useGoogleMapsWebKey } from '../../lib/mapsKey';
 import { Badge } from '../../ui/Badge';
 import { Button } from '../../ui/Button';
 import { Card } from '../../ui/Card';
@@ -16,17 +18,23 @@ import { Input } from '../../ui/Input';
 import { Text } from '../../ui/Text';
 import { useToast } from '../../ui/Toast';
 import { errorMessage } from '../../lib/firestore';
+import { CashBalanceCard, CustomerAbsentPanel, MessagingPanel } from './ActiveOrderPanels';
 import { Countdown, InfoRow } from './components';
+import { RouteMap } from './RouteMap';
 import {
   completeOrder,
   markOrderPickedUp,
   respondToOffer,
   useAvailabilityToggle,
+  useConversationMessages,
   useDriver,
   useDriverLocation,
+  useDriverPrivate,
   useIncomingOffers,
   useLiveLocation,
   useOrder,
+  useOrderConversation,
+  useRestaurant,
   type Availability,
 } from './hooks';
 
@@ -52,6 +60,11 @@ export function DispatchScreen() {
 
   const activeOrderId = driver?.activeOrderIds?.[0] ?? null;
   const { data: activeOrder } = useOrder(activeOrderId);
+  const { data: activeRestaurant } = useRestaurant(activeOrder?.restaurantId ?? null);
+  const { data: conversation, loading: conversationLoading } = useOrderConversation(activeOrderId);
+  const { data: messages } = useConversationMessages(conversation?.id ?? null);
+  const { data: driverPrivate } = useDriverPrivate(driver?.type === 'restaurant' ? uid : null);
+  const mapsKey = useGoogleMapsWebKey();
 
   const isOnline = driver?.availability === 'online';
   const isOnDelivery = driver?.availability === 'on_delivery';
@@ -65,6 +78,7 @@ export function DispatchScreen() {
   const [offerBusy, setOfferBusy] = useState(false);
   const [orderBusy, setOrderBusy] = useState(false);
   const [handoverCode, setHandoverCode] = useState('');
+  const [collectionCode, setCollectionCode] = useState('');
 
   const toggleAvailability = async () => {
     if (isOnDelivery) return;
@@ -102,9 +116,14 @@ export function DispatchScreen() {
 
   const markPickedUp = async () => {
     if (!activeOrderId) return;
+    if (activeOrder?.delivery?.collectionCode && !collectionCode.trim()) {
+      toast.show('Demandez au commerce le code de collecte affiché sur son écran.', 'danger');
+      return;
+    }
     setOrderBusy(true);
     try {
-      await markOrderPickedUp({ orderId: activeOrderId });
+      await markOrderPickedUp({ orderId: activeOrderId, code: collectionCode.trim() || null });
+      setCollectionCode('');
       toast.show('Commande récupérée : direction le client.');
     } catch (err) {
       toast.show(errorMessage(err, 'Impossible de marquer la commande récupérée.'), 'danger');
@@ -117,6 +136,14 @@ export function DispatchScreen() {
     const p = location?.position;
     return p ? { lat: p.latitude, lng: p.longitude } : null;
   }, [location]);
+
+  // Itinéraire réel (mission point 2) : vers le commerce avant récupération, puis vers le
+  // client. La position du livreur sert d'origine quand elle est disponible (course en
+  // cours) ; sinon on relie simplement commerce → client pour donner le trajet à venir.
+  const restaurantGeo = activeRestaurant?.address.geo ? { lat: activeRestaurant.address.geo.latitude, lng: activeRestaurant.address.geo.longitude } : null;
+  const clientGeo = activeOrder?.delivery ? { lat: activeOrder.delivery.geo.latitude, lng: activeOrder.delivery.geo.longitude } : null;
+  const routeOrigin = geo ?? restaurantGeo;
+  const routeDestination = activeOrder?.status === 'picked_up' ? clientGeo : restaurantGeo;
 
   const complete = async () => {
     if (!activeOrderId) return;
@@ -185,32 +212,49 @@ export function DispatchScreen() {
       </View>
 
       {activeOrder ? (
-        <Card style={{ marginTop: spacing.lg }}>
-          <Text variant="eyebrow" color="primary">
-            Course en cours
-          </Text>
-          <Text variant="subtitle" style={{ marginTop: 4 }}>
-            {activeOrder.restaurantName} · {activeOrder.number}
-          </Text>
-          <InfoRow label="Client" value={activeOrder.customerName} />
-          {activeOrder.delivery ? (
-            <InfoRow label="Adresse" value={`${activeOrder.delivery.address.line1}, ${activeOrder.delivery.address.city}`} />
-          ) : null}
-          <InfoRow label="Articles" value={String(activeOrder.itemsCount)} />
-          <InfoRow label="Étape" value={activeOrder.status === 'assigned' ? 'À récupérer au commerce' : activeOrder.status === 'picked_up' ? 'En route vers le client' : activeOrder.status} />
+        <>
+          <Card style={{ marginTop: spacing.lg }}>
+            <Text variant="eyebrow" color="primary">
+              Course en cours
+            </Text>
+            <Text variant="subtitle" style={{ marginTop: 4 }}>
+              {activeOrder.restaurantName} · {activeOrder.number}
+            </Text>
+            <InfoRow label="Client" value={activeOrder.customerName} />
+            {activeOrder.delivery ? (
+              <InfoRow label="Adresse" value={`${activeOrder.delivery.address.line1}, ${activeOrder.delivery.address.city}`} />
+            ) : null}
+            <InfoRow label="Articles" value={String(activeOrder.itemsCount)} />
+            <InfoRow label="Étape" value={activeOrder.status === 'assigned' ? 'À récupérer au commerce' : activeOrder.status === 'picked_up' ? 'En route vers le client' : activeOrder.status} />
 
-          {activeOrder.status === 'assigned' ? (
-            <Button label="Commande récupérée" onPress={markPickedUp} loading={orderBusy} style={{ marginTop: spacing.md }} />
-          ) : null}
-          {activeOrder.status === 'picked_up' ? (
-            <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
-              {activeOrder.delivery?.handoverCodeRequired ? (
-                <Input label="Code de remise du client" value={handoverCode} onChangeText={setHandoverCode} keyboardType="number-pad" placeholder="1234" maxLength={12} />
-              ) : null}
-              <Button label="Terminer la livraison" onPress={complete} loading={orderBusy} />
-            </View>
-          ) : null}
-        </Card>
+            {routeOrigin && routeDestination ? (
+              <View style={{ marginTop: spacing.md }}>
+                <RouteMap apiKey={mapsKey} origin={routeOrigin} destination={routeDestination} />
+              </View>
+            ) : null}
+
+            {activeOrder.status === 'assigned' ? (
+              <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
+                {activeOrder.delivery?.collectionCode ? (
+                  <Input label="Code de collecte du commerce" value={collectionCode} onChangeText={setCollectionCode} keyboardType="number-pad" placeholder="1234" maxLength={12} />
+                ) : null}
+                <Button label="Commande récupérée" onPress={markPickedUp} loading={orderBusy} />
+              </View>
+            ) : null}
+            {activeOrder.status === 'picked_up' ? (
+              <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
+                {activeOrder.delivery?.handoverCodeRequired ? (
+                  <Input label="Code de remise du client" value={handoverCode} onChangeText={setHandoverCode} keyboardType="number-pad" placeholder="1234" maxLength={12} />
+                ) : null}
+                <Button label="Terminer la livraison" onPress={complete} loading={orderBusy} />
+                <CustomerAbsentPanel orderId={activeOrder.id} order={activeOrder} />
+              </View>
+            ) : null}
+          </Card>
+
+          <MessagingPanel uid={uid ?? ''} displayName={driver.displayName} conversation={conversation} messages={messages} loading={conversationLoading} />
+          {driver.type === 'restaurant' ? <CashBalanceCard driverPrivate={driverPrivate} /> : null}
+        </>
       ) : offer ? (
         <Card style={{ marginTop: spacing.lg }}>
           <View style={styles.offerHeader}>
