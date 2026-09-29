@@ -1,5 +1,15 @@
 # État d'avancement — Ciyou Eats
 
+## Incident et correctif — clé API Firebase, développement local bloqué (29/09/2026)
+
+**Bug trouvé par la tâche `client-lot2-parcours-achat`, causé par un correctif de sécurité antérieur.** Après une alerte GitGuardian (clé Firebase publique détectée sur GitHub — normal par conception, mais sans restriction de domaine), une restriction de référent HTTP (`http://localhost:*/*`) avait été ajoutée à la clé web Firebase (`37bfbf9b-…`, celle utilisée dans `apps/*/src/lib/firebase.ts`).
+
+**Conséquence non détectée pendant ~2h30** : Google Cloud ne supporte pas les jokers sur le numéro de port dans les restrictions de référent HTTP (seulement en début ou fin d'URL, jamais au milieu) — la restriction posée bloquait donc silencieusement **tout accès Auth/Firestore/Storage depuis n'importe quel serveur de développement local**, quel que soit le port (5173-5199, 8081, 19006, 3000…), sur les trois apps (admin, restaurant, client). Vérifié et reproduit avec `curl` direct sur `identitytoolkit.googleapis.com`.
+
+**Correctif** : restriction de référent retirée (`browserKeyRestrictions: {}`), la clé reste restreinte aux seuls services Firebase (`apiTargets`, inchangé) — c'est cette restriction-là qui contient réellement le risque, pas le référent. La vraie protection des données reste les règles de sécurité Firestore/Storage (authentification + autorisation par requête), pas le secret de cette clé, qui est publique par conception dans tout site Firebase. Revérifié en direct : connexion et inscription fonctionnent à nouveau sur localhost.
+
+**Reste à faire, si une restriction de domaine est vraiment souhaitée** : lister explicitement chaque port utilisé (fragile, les ports de dev changent d'une tâche à l'autre) ou mettre en place App Check, la protection recommandée par Google pour ce cas précis (jeton d'attestation par appareil/app, indépendant du référent).
+
 ## Points non-mobile du cahier super admin — 28/09/2026 (tâche `cdc-non-mobile`)
 
 Tâche ciblant les 8 points identifiés comme PARTIEL et ne dépendant pas des apps mobiles absentes (contrairement à la majorité des ~64 lignes PARTIEL restantes). Méthode : recompter chaque point dans le code réel avant de corriger (l'annexe J contient des mentions périmées par des tâches antérieures).
