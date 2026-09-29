@@ -1,11 +1,13 @@
 // Profil (onglet) : identité réelle (Firebase Auth + fiche drivers/{uid}),
 // statut du compte, véhicule, distance maximale choisie (docs/DECISIONS_CLIENT.md
-// « Distance max : choisie par le livreur »), déconnexion. Les réglages
-// (modifier le véhicule, la distance, les documents) restent une coquille pour
-// ce lot — non listés parmi les écrans à construire en lot 1.
+// « Distance max : choisie par le livreur »), déconnexion. Réglages (véhicule,
+// distance, documents) : ProfileSettingsScreen (lot 3).
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { VEHICLE_LABELS } from '@golink/shared';
 import { useAuth } from '../../auth/AuthContext';
+import type { MainStackParamList } from '../../navigation/types';
 import { colors, radius, spacing } from '../../theme/tokens';
 import { Badge } from '../../ui/Badge';
 import { Card } from '../../ui/Card';
@@ -22,6 +24,7 @@ const STATUS_LABEL: Record<string, { label: string; tone: 'success' | 'warning' 
 
 export function ProfileScreen() {
   const { user, signOut } = useAuth();
+  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { data: driver } = useDriverProfile(user?.uid ?? null);
   const initials = (driver?.displayName ?? user?.email ?? '?').trim().slice(0, 1).toUpperCase();
   const status = driver ? (STATUS_LABEL[driver.status] ?? { label: driver.status, tone: 'neutral' as const }) : null;
@@ -57,11 +60,14 @@ export function ProfileScreen() {
         </View>
       ) : null}
 
-      <Text variant="caption" color="muted" style={{ marginTop: spacing.lg }}>
-        La modification du véhicule, de la distance maximale et des documents sera ajoutée dans un lot suivant.
-      </Text>
+      <Button
+        label="Véhicule, distance et documents"
+        variant="outline"
+        onPress={() => navigation.navigate('ProfileSettings')}
+        style={{ marginTop: spacing.lg }}
+      />
 
-      <Button label="Se déconnecter" variant="outline" onPress={() => signOut()} style={{ marginTop: spacing.xl }} />
+      <Button label="Se déconnecter" variant="outline" onPress={() => signOut()} style={{ marginTop: spacing.md }} />
     </ScrollView>
   );
 }

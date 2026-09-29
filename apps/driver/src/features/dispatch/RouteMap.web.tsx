@@ -2,7 +2,11 @@
 // ce fichier `.web.tsx` à la place de `RouteMap.tsx` sur la cible web : un simple
 // <iframe> (react-native-webview ne cible pas le web) chargeant Google Maps Embed
 // Directions avec la clé « web » distribuée par `getPublicRuntimeConfig`
-// (docs/CONTRATS_APPS_MOBILES.md §23). Repli clair si la clé n'est pas configurée.
+// (docs/CONTRATS_APPS_MOBILES.md §23). Repli clair si la clé n'est pas configurée, et
+// (mission lot 3, point 4) message FR si la clé existe mais que l'API « Maps Embed »
+// précise n'est pas activée côté Google Cloud (`mapsEmbedActivated`, vérifié serveur par
+// `getPublicRuntimeConfig`/`functions/src/platform/maps.ts`) au lieu de l'erreur brute de
+// Google affichée dans l'iframe.
 import { View } from 'react-native';
 import type { LatLng } from './RouteMap.shared';
 import { buildEmbedUrl } from './RouteMap.shared';
@@ -11,20 +15,27 @@ import { Text } from '../../ui/Text';
 
 export interface RouteMapProps {
   apiKey: string | null | undefined;
+  /** true/false vérifié côté serveur, `null` si jamais vérifiable (ne bloque jamais l'affichage). */
+  embedActivated?: boolean | null;
   origin: LatLng;
   destination: LatLng;
   height?: number;
 }
 
-export function RouteMap({ apiKey, origin, destination, height = 220 }: RouteMapProps) {
-  if (!apiKey) {
-    return (
-      <View style={{ height, borderRadius: radius.lg, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-        <Text variant="body" color="muted" align="center">
-          Cartographie non configurée, contactez votre administrateur.
-        </Text>
-      </View>
-    );
+function Fallback({ height, message }: { height: number; message: string }) {
+  return (
+    <View style={{ height, borderRadius: radius.lg, backgroundColor: colors.surfaceAlt, alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <Text variant="body" color="muted" align="center">
+        {message}
+      </Text>
+    </View>
+  );
+}
+
+export function RouteMap({ apiKey, embedActivated, origin, destination, height = 220 }: RouteMapProps) {
+  if (!apiKey) return <Fallback height={height} message="Cartographie non configurée, contactez votre administrateur." />;
+  if (embedActivated === false) {
+    return <Fallback height={height} message="Itinéraire momentanément indisponible (cartographie non activée côté serveur), contactez votre administrateur." />;
   }
   const url = buildEmbedUrl(apiKey, origin, destination);
   return (

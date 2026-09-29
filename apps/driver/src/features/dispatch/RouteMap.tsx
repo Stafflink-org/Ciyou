@@ -14,17 +14,28 @@ import { Text } from '../../ui/Text';
 
 export interface RouteMapProps {
   apiKey: string | null | undefined;
+  /** true/false vérifié côté serveur, `null` si jamais vérifiable (ne bloque jamais l'affichage). */
+  embedActivated?: boolean | null;
   origin: LatLng;
   destination: LatLng;
   height?: number;
 }
 
-export function RouteMap({ apiKey, origin, destination, height = 220 }: RouteMapProps) {
+export function RouteMap({ apiKey, embedActivated, origin, destination, height = 220 }: RouteMapProps) {
   if (!apiKey) {
     return (
       <View style={[styles.fallback, { height }]}>
         <Text variant="body" color="muted" align="center">
           Cartographie non configurée, contactez votre administrateur.
+        </Text>
+      </View>
+    );
+  }
+  if (embedActivated === false) {
+    return (
+      <View style={[styles.fallback, { height }]}>
+        <Text variant="body" color="muted" align="center">
+          Itinéraire momentanément indisponible (cartographie non activée côté serveur), contactez votre administrateur.
         </Text>
       </View>
     );

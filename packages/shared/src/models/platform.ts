@@ -451,6 +451,16 @@ export interface MapsSettings {
   lastError?: string | null;
   lastTestAt?: Timestamp | null;
   lastTestOk?: boolean | null;
+  /**
+   * L'API « Maps Embed » (distincte de « Maps JavaScript », déjà testée par
+   * `lastTestOk` via Geocoding) doit être activée séparément dans Google Cloud
+   * Console pour que les apps mobiles (RouteMap) affichent un itinéraire — sinon
+   * Google répond 403 « This API project is not authorized to use this API »
+   * (voir docs/CONTRAT_MODULES.md §11 bis/ter). Vérifié paresseusement (mis en
+   * cache) par `getPublicRuntimeConfig`, jamais par un appel du super admin.
+   */
+  embedActivated?: boolean | null;
+  embedCheckedAt?: Timestamp | null;
   updatedAt: Timestamp;
   updatedBy: string;
 }
@@ -475,6 +485,8 @@ export interface PublicRuntimeConfig {
   /** Clé Google Maps « web », ou `null` si non configurée (l'appelant doit alors afficher un repli, jamais un écran cassé). */
   googleMapsWebKey: string | null;
   mapsConfigured: boolean;
+  /** true/false si vérifié (mis en cache), `null` si jamais vérifié ou clé absente — l'appelant affiche l'erreur brute Google dans ce cas, jamais bloquant. */
+  mapsEmbedActivated: boolean | null;
 }
 
 /** settings/maintenance : mode maintenance par application. */

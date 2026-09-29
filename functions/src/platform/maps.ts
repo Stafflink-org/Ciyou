@@ -213,6 +213,41 @@ export const testMapsConnection = platformCallable(testSchema, async (input, req
   return { ok: result.ok, error };
 }, { ...PLATFORM_RUNTIME, ...SECRET_OPTIONS, timeoutSeconds: 15 });
 
+/** Fraîcheur acceptée du dernier test « Maps Embed » avant nouvelle vérification (évite un appel Google à chaque ouverture d'écran). */
+const EMBED_CHECK_TTL_MS = 30 * 60 * 1000;
+
+/**
+ * Vérifie (avec cache) que l'API « Maps Embed » est activée pour la clé web — distincte
+ * de « Maps JavaScript »/Geocoding déjà testée par `testMapsConnection`. Constat réel
+ * (docs/CONTRAT_MODULES.md §11 bis) : une clé peut fonctionner pour l'une et être
+ * refusée pour l'autre (403 « This API project is not authorized to use this API »).
+ * `null` = jamais vérifiable (réseau) : l'appelant affiche alors l'erreur brute de
+ * Google plutôt que de bloquer l'écran.
+ */
+async function embedActivated(apiKey: string): Promise<boolean | null> {
+  const settings = await loadSettings();
+  const cached = settings?.embedActivated;
+  const checkedAt = settings?.embedCheckedAt?.toMillis?.() ?? 0;
+  if (cached !== undefined && cached !== null && Date.now() - checkedAt < EMBED_CHECK_TTL_MS) return cached;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  let result: boolean | null = null;
+  try {
+    const url = `https://www.google.com/maps/embed/v1/directions?origin=48.8566,2.3522&destination=48.8606,2.3376&key=${encodeURIComponent(apiKey)}`;
+    const res = await fetch(url, { signal: controller.signal });
+    result = res.status !== 403;
+  } catch {
+    result = null;
+  } finally {
+    clearTimeout(timeout);
+  }
+  if (result !== null) {
+    await mapsSettingsRef().set({ embedActivated: result, embedCheckedAt: Timestamp.now() }, { merge: true }).catch(() => undefined);
+  }
+  return result;
+}
+
 // ------------------------------------------------------------------ Distribution publique (web + futures apps mobiles)
 
 /**
@@ -230,6 +265,7 @@ export const getPublicRuntimeConfig = platformCallable(z.object({}), async (_inp
   const config: PublicRuntimeConfig = {
     googleMapsWebKey,
     mapsConfigured: Boolean(googleMapsWebKey),
+    mapsEmbedActivated: googleMapsWebKey ? await embedActivated(googleMapsWebKey) : null,
   };
   return config;
 }, { ...PLATFORM_RUNTIME, ...SECRET_OPTIONS, timeoutSeconds: 10 });
