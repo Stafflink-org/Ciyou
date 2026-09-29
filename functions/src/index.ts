@@ -4,6 +4,7 @@ import './lib/runtime';
 
 export * from './core';
 export * from './restaurant';
+export * from './drivers';
 export * from './orders';
 export * from './menu';
 export * from './finance';

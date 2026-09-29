@@ -14,6 +14,10 @@
 
 - `react-native-webview` (13.16.0) ajouté à `apps/driver/package.json` : nécessaire pour la carte/itinéraire réel (Google Maps Embed Directions, cartographie non modélisée en RN pur). `npm install --workspace=@golink/driver` exécuté à la racine. Sur web (Expo web), le composant équivalent (`RouteMap.web.tsx`) utilise un `<iframe>` natif au lieu de la WebView (react-native-webview ne supporte pas la cible web) : les deux partagent la même URL Google Maps Embed.
 
+## App livreur (apps/driver) — lot 3 réglages profil
+
+- `expo-document-picker` (`~57.0.3`, installé via `npx expo install expo-document-picker` pour la version compatible SDK 57) ajouté à `apps/driver/package.json` : nécessaire pour choisir un fichier (justificatif) depuis l'app — fonctionne aussi bien en natif qu'en web (Expo web), une seule implémentation au lieu d'un split `.web.tsx`/`.tsx`.
+
 ## App client (apps/client) — lot 3 suivi/profil
 
 - `react-native-webview` (13.16.0) ajouté à `apps/client/package.json`, même besoin que le lot 2 livreur (`features/tracking/RouteMap.tsx`, carte de suivi client). `npm install --workspace=@golink/client` exécuté à la racine.
