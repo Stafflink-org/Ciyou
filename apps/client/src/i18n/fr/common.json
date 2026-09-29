@@ -1,0 +1,20 @@
+{
+  "language": {
+    "label": "Langue",
+    "names": { "fr": "Français", "en": "English", "ar": "العربية" },
+    "restartRecommended": "Redémarrez l'application pour un affichage de droite à gauche complet."
+  },
+  "actions": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "retry": "Réessayer",
+    "seeAll": "Voir tout",
+    "back": "Retour",
+    "edit": "Modifier",
+    "signOut": "Se déconnecter",
+    "loading": "Chargement…"
+  },
+  "errors": {
+    "default": "Une erreur est survenue. Réessayez dans un instant."
+  }
+}

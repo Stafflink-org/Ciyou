@@ -18,6 +18,7 @@ import { Text } from '../../ui/Text';
 import { RestaurantCardSkeleton } from '../../ui/Skeleton';
 import { useCityRestaurants, useDefaultCity, useFeaturedProducts } from './hooks';
 import { useFavorites } from '../favorites/hooks';
+import { useTranslation } from '../../i18n/I18nProvider';
 import {
   DeliveryContextBar,
   FOOD_TYPES,
@@ -35,6 +36,7 @@ type Props = CompositeScreenProps<BottomTabScreenProps<MainTabsParamList, 'Home'
 
 export function HomeScreen({ navigation }: Props) {
   const { user } = useAuth();
+  const { t } = useTranslation('home');
   const { city, loading: cityLoading } = useDefaultCity();
   const { data: restaurants, loading: restaurantsLoading } = useCityRestaurants(city?.id ?? null);
   const { data: featuredProducts, loading: productsLoading } = useFeaturedProducts();
@@ -45,7 +47,7 @@ export function HomeScreen({ navigation }: Props) {
 
   const firstName = user?.displayName?.split(' ')[0] ?? '';
   const cityLabel = city?.name ?? '';
-  const addressLine = cityLabel ? `${cityLabel}` : 'Choisissez votre ville';
+  const addressLine = cityLabel ? `${cityLabel}` : t('address.choose');
 
   const goToSearch = (params?: MainTabsParamList['Search']) => navigation.navigate('MainTabs', { screen: 'Search', params } as never);
   const onPressFoodType = (foodType: FoodType) => goToSearch({ foodType: foodType.key });
@@ -70,7 +72,7 @@ export function HomeScreen({ navigation }: Props) {
       {city?.emergencyClosure?.active ? <EmergencyClosureBanner message={city.emergencyClosure.message.fr} /> : null}
 
       <DeliveryContextBar
-        addressLabel="Adresse principale"
+        addressLabel={t('address.primary')}
         addressLine={addressLine}
         mode={mode}
         onPressAddress={() => navigation.navigate('Addresses')}
@@ -81,20 +83,20 @@ export function HomeScreen({ navigation }: Props) {
 
       <FoodTypeTiles onPress={onPressFoodType} />
 
-      <SectionHeading eyebrow="Petits plaisirs, belles économies" title="Les offres du moment" action={{ label: 'Toutes les offres', onPress: () => navigation.navigate('Promotions') }} />
+      <SectionHeading eyebrow={t('offers.eyebrow')} title={t('offers.title')} action={{ label: t('offers.seeAll'), onPress: () => navigation.navigate('Promotions') }} />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: spacing.lg }}>
-        <OfferCard title="Bienvenue chez Ciyou Eats" description="20 % de remise sur votre première commande, dans les commerces participants." badge="CIYOU20" />
-        <OfferCard title="Le plat du quartier" description="Une remise chez une sélection de commerces partenaires ce mois-ci." />
+        <OfferCard title={t('offers.welcomeTitle')} description={t('offers.welcomeDescription')} badge="CIYOU20" />
+        <OfferCard title={t('offers.neighborhoodTitle')} description={t('offers.neighborhoodDescription')} />
       </ScrollView>
 
-      <SectionHeading eyebrow="Sélection du quartier" title="Restaurants populaires" action={{ label: 'Voir tout', onPress: () => goToSearch() }} />
+      <SectionHeading eyebrow={t('restaurants.eyebrow')} title={t('restaurants.title')} action={{ label: t('restaurants.seeAll'), onPress: () => goToSearch() }} />
       {loading ? (
         <View style={{ paddingHorizontal: spacing.lg, gap: spacing.lg }}>
           <RestaurantCardSkeleton />
           <RestaurantCardSkeleton />
         </View>
       ) : restaurants.length === 0 ? (
-        <EmptyNote text={city ? 'Aucun commerce actif dans cette ville pour le moment.' : "Aucune ville n'est encore active sur Ciyou Eats."} />
+        <EmptyNote text={city ? t('restaurants.emptyCity') : t('restaurants.emptyNoCity')} />
       ) : (
         restaurants
           .slice()
@@ -110,13 +112,13 @@ export function HomeScreen({ navigation }: Props) {
           ))
       )}
 
-      <SectionHeading eyebrow="À goûter absolument" title="Les plats qui font envie" />
+      <SectionHeading eyebrow={t('products.eyebrow')} title={t('products.title')} />
       {productsLoading ? (
         <View style={{ paddingHorizontal: spacing.lg }}>
           <RestaurantCardSkeleton />
         </View>
       ) : featuredProducts.length === 0 ? (
-        <EmptyNote text="Aucun plat mis en avant pour l'instant." />
+        <EmptyNote text={t('products.empty')} />
       ) : (
         featuredProducts.map((product) => (
           <FeaturedProductRow

@@ -14,24 +14,29 @@ import { Text } from '../../ui/Text';
 import { Card } from '../../ui/Card';
 import { Badge } from '../../ui/Badge';
 import { Button } from '../../ui/Button';
+import { useTranslation } from '../../i18n/I18nProvider';
+import { LanguagePicker } from '../../i18n/LanguagePicker';
 
 type Props = CompositeScreenProps<BottomTabScreenProps<MainTabsParamList, 'Profile'>, NativeStackScreenProps<MainStackParamList>>;
 
 export function ProfileScreen({ navigation }: Props) {
   const { user, signOut, resendVerificationEmail } = useAuth();
+  const { t } = useTranslation('profile');
   const [resent, setResent] = useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
   const initials = (user?.displayName ?? user?.email ?? '?').trim().slice(0, 1).toUpperCase();
 
   const shortcuts: { label: string; icon: string; onPress: () => void }[] = [
-    { label: 'Mes commandes', icon: '🧾', onPress: () => navigation.navigate('MainTabs', { screen: 'Orders' } as never) },
-    { label: 'Mes favoris', icon: '❤️', onPress: () => navigation.navigate('MainTabs', { screen: 'Favorites' } as never) },
-    { label: 'Mes adresses', icon: '📍', onPress: () => navigation.navigate('Addresses') },
-    { label: 'Offres', icon: '🏷️', onPress: () => navigation.navigate('Promotions') },
-    { label: 'Parrainage', icon: '🎁', onPress: () => navigation.navigate('Referral') },
-    { label: 'Notifications', icon: '🔔', onPress: () => navigation.navigate('Notifications') },
-    { label: 'Modes de paiement', icon: '💳', onPress: () => navigation.navigate('PaymentMethods') },
-    { label: 'Aide', icon: '❓', onPress: () => navigation.navigate('Help') },
-    { label: 'Support (mes demandes)', icon: '💬', onPress: () => navigation.navigate('Support', undefined) },
+    { label: t('shortcuts.orders'), icon: '🧾', onPress: () => navigation.navigate('MainTabs', { screen: 'Orders' } as never) },
+    { label: t('shortcuts.favorites'), icon: '❤️', onPress: () => navigation.navigate('MainTabs', { screen: 'Favorites' } as never) },
+    { label: t('shortcuts.addresses'), icon: '📍', onPress: () => navigation.navigate('Addresses') },
+    { label: t('shortcuts.promotions'), icon: '🏷️', onPress: () => navigation.navigate('Promotions') },
+    { label: t('shortcuts.referral'), icon: '🎁', onPress: () => navigation.navigate('Referral') },
+    { label: t('shortcuts.notifications'), icon: '🔔', onPress: () => navigation.navigate('Notifications') },
+    { label: t('shortcuts.paymentMethods'), icon: '💳', onPress: () => navigation.navigate('PaymentMethods') },
+    { label: t('shortcuts.language'), icon: '🌐', onPress: () => setLanguageOpen(true) },
+    { label: t('shortcuts.help'), icon: '❓', onPress: () => navigation.navigate('Help') },
+    { label: t('shortcuts.support'), icon: '💬', onPress: () => navigation.navigate('Support', undefined) },
   ];
 
   return (
@@ -45,7 +50,7 @@ export function ProfileScreen({ navigation }: Props) {
           </View>
           <View style={{ flex: 1 }}>
             <Text variant="subtitle" numberOfLines={1}>
-              {user?.displayName || 'Client Ciyou Eats'}
+              {user?.displayName || t('defaultName')}
             </Text>
             <Text variant="caption" color="muted" numberOfLines={1}>
               {user?.email}
@@ -53,7 +58,7 @@ export function ProfileScreen({ navigation }: Props) {
           </View>
           <Pressable onPress={() => navigation.navigate('EditProfile')}>
             <Text variant="bodyStrong" color="primary">
-              Modifier
+              {t('edit')}
             </Text>
           </Pressable>
         </View>
@@ -61,21 +66,23 @@ export function ProfileScreen({ navigation }: Props) {
 
       {user && !user.emailVerified ? (
         <Card style={{ marginTop: spacing.md }}>
-          <Text variant="bodyStrong">Vérifiez votre e-mail</Text>
+          <Text variant="bodyStrong">{t('verifyEmail.title')}</Text>
           <Text variant="caption" color="muted" style={{ marginTop: 2 }}>
-            Un lien de confirmation a été envoyé à {user.email}.
+            {t('verifyEmail.description', { email: user.email ?? '' })}
           </Text>
           {resent ? (
-            <Badge label="Renvoyé" tone="success" style={{ marginTop: spacing.sm }} />
+            <Badge label={t('verifyEmail.resent')} tone="success" style={{ marginTop: spacing.sm }} />
           ) : (
             <Pressable onPress={() => resendVerificationEmail().then(() => setResent(true))} style={{ marginTop: spacing.sm }}>
               <Text variant="bodyStrong" color="primary">
-                Renvoyer l’e-mail
+                {t('verifyEmail.resend')}
               </Text>
             </Pressable>
           )}
         </Card>
       ) : null}
+
+      <LanguagePicker visible={languageOpen} onClose={() => setLanguageOpen(false)} />
 
       <View style={styles.shortcuts}>
         {shortcuts.map((item) => (
@@ -91,7 +98,7 @@ export function ProfileScreen({ navigation }: Props) {
         ))}
       </View>
 
-      <Button label="Se déconnecter" variant="outline" onPress={() => signOut()} style={{ marginTop: spacing.xl }} />
+      <Button label={t('signOut')} variant="outline" onPress={() => signOut()} style={{ marginTop: spacing.xl }} />
     </ScrollView>
   );
 }

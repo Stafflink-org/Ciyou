@@ -9,11 +9,13 @@ import { AuthLayout } from './AuthLayout';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Text } from '../ui/Text';
+import { useTranslation } from '../i18n/I18nProvider';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SignIn'>;
 
 export function SignInScreen({ navigation }: Props) {
   const { signIn } = useAuth();
+  const { t } = useTranslation('auth');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +23,7 @@ export function SignInScreen({ navigation }: Props) {
 
   const submit = async () => {
     if (!email.trim() || !password) {
-      setError('Renseignez votre e-mail et votre mot de passe.');
+      setError(t('login.missingFields'));
       return;
     }
     setError(null);
@@ -39,26 +41,26 @@ export function SignInScreen({ navigation }: Props) {
 
   return (
     <AuthLayout
-      title="Content de vous revoir"
-      subtitle="Connectez-vous pour retrouver vos commandes et vos adresses."
+      title={t('login.title')}
+      subtitle={t('login.subtitle')}
       footer={
         <View style={{ flexDirection: 'row', gap: 4 }}>
           <Text variant="body" color="muted">
-            Pas encore de compte ?
+            {t('login.noAccount')}
           </Text>
           <Pressable onPress={() => navigation.navigate('SignUp')}>
             <Text variant="bodyStrong" color="primary">
-              Créer un compte
+              {t('login.createAccount')}
             </Text>
           </Pressable>
         </View>
       }
     >
-      <Input label="E-mail" autoCapitalize="none" keyboardType="email-address" autoComplete="email" value={email} onChangeText={setEmail} placeholder="vous@exemple.com" />
-      <Input label="Mot de passe" secure autoComplete="password" value={password} onChangeText={setPassword} placeholder="••••••••" />
+      <Input label={t('login.email')} autoCapitalize="none" keyboardType="email-address" autoComplete="email" value={email} onChangeText={setEmail} placeholder={t('login.emailPlaceholder')} />
+      <Input label={t('login.password')} secure autoComplete="password" value={password} onChangeText={setPassword} placeholder={t('login.passwordPlaceholder')} />
       <Pressable onPress={() => navigation.navigate('ForgotPassword')} style={{ alignSelf: 'flex-end' }}>
         <Text variant="caption" color="primary">
-          Mot de passe oublié ?
+          {t('login.forgot')}
         </Text>
       </Pressable>
       {error ? (
@@ -66,7 +68,7 @@ export function SignInScreen({ navigation }: Props) {
           {error}
         </Text>
       ) : null}
-      <Button label="Se connecter" onPress={submit} loading={loading} />
+      <Button label={t('login.submit')} onPress={submit} loading={loading} />
     </AuthLayout>
   );
 }
