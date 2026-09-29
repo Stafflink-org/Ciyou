@@ -1,0 +1,21 @@
+{
+  "steps": {
+    "scheduled": "Order scheduled",
+    "new": "Order sent",
+    "accepted": "Accepted by the restaurant",
+    "preparing": "Being prepared",
+    "ready": "Ready",
+    "assigned": "Driver on the way to the store",
+    "picked_up": "On the way to you",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled"
+  },
+  "orderNotFound": "Order not found.",
+  "orderNumber": "Order {{number}}",
+  "statusCancelled": "Cancelled",
+  "statusDelivered": "Delivered",
+  "statusOngoing": "Ongoing",
+  "yourDriver": "Your driver",
+  "rateOrder": "Rate the order",
+  "viewOrderDetail": "View order detail"
+}

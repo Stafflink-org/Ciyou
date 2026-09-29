@@ -1,0 +1,20 @@
+{
+  "notFoundTitle": "Restaurant not found",
+  "notFoundNote": "This place is no longer available. Find restaurants nearby.",
+  "offers": {
+    "bogo": "Buy 1, get 1 free",
+    "half_second": "2nd at −50%"
+  },
+  "favoriteAdded": "Added to favorites",
+  "favoriteRemoved": "Removed from favorites",
+  "etaMinutes": "{{min}}–{{max}} min",
+  "deliveryFee": "Delivery €{{price}}",
+  "freeDelivery": "Free delivery",
+  "menuSoon": "Menu coming soon.",
+  "dishCount_one": "{{count}} dish",
+  "dishCount_other": "{{count}} dishes",
+  "productUnavailableToast": "This dish is no longer available.",
+  "productUnavailableLabel": "Unavailable",
+  "footerNote": "Fees shown are fixed for the demo: zones are not calculated by geolocation.",
+  "closedBanner": "Restaurant temporarily closed: orders are suspended."
+}

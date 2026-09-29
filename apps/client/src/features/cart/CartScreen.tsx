@@ -15,12 +15,14 @@ import { useToast } from '../../ui/Toast';
 import { PlaceholderScreen } from '../shared/PlaceholderScreen';
 import { useCart, cartLineTotal, type CartLine } from './CartContext';
 import { previewQuote, pricingConfigFor } from './pricing';
+import { useTranslation } from '../../i18n/I18nProvider';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Cart'>;
 
 const money = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} €`;
 
 export function CartScreen({ navigation }: Props) {
+  const { t } = useTranslation('cart');
   const cart = useCart();
   const toast = useToast();
   const [promoCode, setPromoCode] = useState('');
@@ -30,8 +32,8 @@ export function CartScreen({ navigation }: Props) {
     return (
       <PlaceholderScreen
         icon="🛒"
-        title="Le panier attend vos envies"
-        note="Explorez les restaurants de votre ville et ajoutez votre premier plat."
+        title={t('emptyTitle')}
+        note={t('emptyNote')}
       />
     );
   }
@@ -41,10 +43,10 @@ export function CartScreen({ navigation }: Props) {
 
   const applyPromo = () => {
     if (!promoCode.trim()) {
-      toast.show('Saisissez un code promotionnel.', 'danger');
+      toast.show(t('promoEmptyToast'), 'danger');
       return;
     }
-    toast.show('Code enregistré : il sera vérifié à la confirmation de la commande.');
+    toast.show(t('promoSavedToast'));
   };
 
   return (
@@ -53,13 +55,13 @@ export function CartScreen({ navigation }: Props) {
         <View style={styles.header}>
           <Pressable onPress={() => navigation.navigate('Restaurant', { restaurantId: cart.restaurantId! })}>
             <Text variant="bodyStrong" color="primary">
-              ‹ Continuer à explorer
+              {t('continueExploring')}
             </Text>
           </Pressable>
           <Text variant="caption" color="muted" style={{ marginTop: spacing.sm }}>
-            {cart.itemsCount} ARTICLE{cart.itemsCount > 1 ? 'S' : ''}
+            {t('itemCount', { count: cart.itemsCount }).toUpperCase()}
           </Text>
-          <Text variant="title">Votre panier</Text>
+          <Text variant="title">{t('title')}</Text>
           <Text variant="bodyStrong" color="muted">
             {cart.restaurantName ?? restaurant?.name ?? ''}
           </Text>
@@ -71,37 +73,37 @@ export function CartScreen({ navigation }: Props) {
 
         <Pressable onPress={() => navigation.navigate('Restaurant', { restaurantId: cart.restaurantId! })} style={styles.addMore} testID="button-add-more-items">
           <Text variant="bodyStrong" color="primary">
-            + Ajouter un autre plat
+            {t('addMore')}
           </Text>
         </Pressable>
 
         <View style={styles.summaryCard}>
-          <Text variant="title">Votre récapitulatif</Text>
+          <Text variant="title">{t('summaryTitle')}</Text>
 
           <Text variant="bodyStrong" style={{ marginTop: spacing.md }}>
-            Un code promo ?
+            {t('promoQuestion')}
           </Text>
           <View style={styles.promoRow}>
             <View style={{ flex: 1 }}>
-              <Input placeholder="CODE" autoCapitalize="characters" value={promoCode} onChangeText={setPromoCode} testID="input-promo" />
+              <Input placeholder={t('promoPlaceholder')} autoCapitalize="characters" value={promoCode} onChangeText={setPromoCode} testID="input-promo" />
             </View>
             <Pressable onPress={applyPromo} style={styles.promoButton} testID="button-apply-promo">
               <Text variant="bodyStrong" style={{ color: colors.primaryFg }}>
-                Appliquer
+                {t('apply')}
               </Text>
             </Pressable>
           </View>
 
-          <SummaryLine label="Sous-total" value={money(quote.subtotalCents)} />
-          <SummaryLine label="Livraison" value={quote.deliveryFeeCents > 0 ? money(quote.deliveryFeeCents) : 'Offerte'} />
-          <SummaryLine label="Frais de service" value={money(quote.serviceFeeCents)} />
+          <SummaryLine label={t('subtotal')} value={money(quote.subtotalCents)} />
+          <SummaryLine label={t('delivery')} value={quote.deliveryFeeCents > 0 ? money(quote.deliveryFeeCents) : t('deliveryFree')} />
+          <SummaryLine label={t('serviceFee')} value={money(quote.serviceFeeCents)} />
           {quote.subtotalCents > 0 && restaurant?.minOrderCents ? (
             <Text variant="caption" color="muted" style={{ marginTop: 2 }}>
-              Minimum de commande : {money(restaurant.minOrderCents)}.
+              {t('minOrderNote', { amount: money(restaurant.minOrderCents) })}
             </Text>
           ) : null}
           <View style={styles.totalRow}>
-            <Text variant="title">Total</Text>
+            <Text variant="title">{t('total')}</Text>
             <Text variant="title" color="primary" testID="text-cart-total">
               {money(quote.totalCents)}
             </Text>
@@ -110,13 +112,14 @@ export function CartScreen({ navigation }: Props) {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button label="Passer commande" onPress={() => navigation.navigate('Checkout')} testID="button-go-checkout" />
+        <Button label={t('checkout')} onPress={() => navigation.navigate('Checkout')} testID="button-go-checkout" />
       </View>
     </View>
   );
 }
 
 function CartLineRow({ line, navigation }: { line: CartLine; navigation: Props['navigation'] }) {
+  const { t } = useTranslation('cart');
   const cart = useCart();
   const toast = useToast();
   const optionsLabel = line.options.map((o) => o.name).join(' · ');
@@ -150,7 +153,7 @@ function CartLineRow({ line, navigation }: { line: CartLine; navigation: Props['
             <Pressable
               onPress={() => {
                 const result = cart.increaseLine(line.lineId);
-                if (!result.ok) toast.show('Stock maximum atteint pour ce plat.', 'danger');
+                if (!result.ok) toast.show(t('stockMaxToast'), 'danger');
               }}
               style={styles.qtyButton}
               testID={`button-increase-line-${line.lineId}`}
@@ -160,12 +163,12 @@ function CartLineRow({ line, navigation }: { line: CartLine; navigation: Props['
           </View>
           <Pressable onPress={() => navigation.navigate('Product', { productId: line.productId, restaurantId: line.restaurantId, lineId: line.lineId })} testID={`button-edit-line-${line.lineId}`}>
             <Text variant="bodyStrong" color="primary">
-              Options
+              {t('options')}
             </Text>
           </Pressable>
           <Pressable onPress={() => cart.removeLine(line.lineId)} testID={`button-remove-line-${line.lineId}`}>
             <Text variant="bodyStrong" color="danger">
-              Supprimer
+              {t('remove')}
             </Text>
           </Pressable>
         </View>

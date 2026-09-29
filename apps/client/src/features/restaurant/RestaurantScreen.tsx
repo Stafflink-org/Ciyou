@@ -17,12 +17,13 @@ import { PlaceholderScreen } from '../shared/PlaceholderScreen';
 import { useActiveProductOffers, useMenuProducts, useMenuSections } from './hooks';
 import { FloatingCartButton } from '../cart/FloatingCartButton';
 import { useFavorites } from '../favorites/hooks';
+import { useTranslation } from '../../i18n/I18nProvider';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Restaurant'>;
 
-const OFFER_LABEL: Record<string, string> = { bogo: '1 acheté, 1 offert', half_second: 'Le 2e à −50 %' };
-
 export function RestaurantScreen({ route, navigation }: Props) {
+  const { t } = useTranslation('restaurant');
+  const OFFER_LABEL: Record<string, string> = { bogo: t('restaurant:offers.bogo'), half_second: t('restaurant:offers.half_second') };
   const { restaurantId } = route.params;
   const { data: restaurant, loading } = useDoc<Restaurant>(docAt(paths.restaurant(restaurantId)));
   const { data: sections } = useMenuSections(restaurantId);
@@ -46,7 +47,7 @@ export function RestaurantScreen({ route, navigation }: Props) {
   );
 
   if (!loading && !restaurant) {
-    return <PlaceholderScreen icon="🏬" title="Restaurant introuvable" note="Cette adresse n'est plus disponible. Retrouvez les restaurants du quartier." />;
+    return <PlaceholderScreen icon="🏬" title={t('notFoundTitle')} note={t('notFoundNote')} />;
   }
 
   const visibleSections = sections.filter((s) => products.some((p) => p.sectionId === s.id));
@@ -70,7 +71,7 @@ export function RestaurantScreen({ route, navigation }: Props) {
 
   const toggleFavorite = () => {
     favorites.toggleRestaurant(restaurantId);
-    toast.show(favorite ? 'Retiré des favoris' : 'Ajouté aux favoris');
+    toast.show(favorite ? t('favoriteRemoved') : t('favoriteAdded'));
   };
 
   return (
@@ -100,8 +101,8 @@ export function RestaurantScreen({ route, navigation }: Props) {
           </Text>
           <View style={styles.metaRow}>
             <Badge label={`★ ${(restaurant?.rating.average ?? 0).toFixed(1)}`} tone="primary" />
-            <Badge label={`${restaurant?.etaMinutes.min ?? 20}–${restaurant?.etaMinutes.max ?? 35} min`} tone="neutral" />
-            <Badge label={restaurant?.ownDeliveryFeeCents != null ? `Livraison ${(restaurant.ownDeliveryFeeCents / 100).toFixed(2).replace('.', ',')} €` : 'Livraison offerte'} tone="neutral" />
+            <Badge label={t('etaMinutes', { min: restaurant?.etaMinutes.min ?? 20, max: restaurant?.etaMinutes.max ?? 35 })} tone="neutral" />
+            <Badge label={restaurant?.ownDeliveryFeeCents != null ? t('deliveryFee', { price: (restaurant.ownDeliveryFeeCents / 100).toFixed(2).replace('.', ',') }) : t('freeDelivery')} tone="neutral" />
           </View>
         </View>
 
@@ -125,7 +126,7 @@ export function RestaurantScreen({ route, navigation }: Props) {
         {visibleSections.length === 0 ? (
           <View style={{ paddingHorizontal: spacing.lg, paddingVertical: spacing.xxl }}>
             <Text variant="body" color="muted" align="center">
-              Menu bientôt disponible.
+              {t('menuSoon')}
             </Text>
           </View>
         ) : (
@@ -136,7 +137,7 @@ export function RestaurantScreen({ route, navigation }: Props) {
                 <View style={styles.sectionHeader}>
                   <Text variant="title">{section.name}</Text>
                   <Text variant="caption" color="muted">
-                    {items.length} plat{items.length > 1 ? 's' : ''}
+                    {t('dishCount', { count: items.length })}
                   </Text>
                 </View>
                 {items.map((product) => (
@@ -146,7 +147,7 @@ export function RestaurantScreen({ route, navigation }: Props) {
                     offerLabel={offerByProduct.has(product.id) ? OFFER_LABEL[offerByProduct.get(product.id) as string] : null}
                     onPress={() => {
                       if (!product.available || product.stock === 0) {
-                        toast.show('Ce plat n’est plus disponible.', 'danger');
+                        toast.show(t('productUnavailableToast'), 'danger');
                         return;
                       }
                       navigation.navigate('Product', { productId: product.id, restaurantId });
@@ -159,14 +160,14 @@ export function RestaurantScreen({ route, navigation }: Props) {
         )}
 
         <Text variant="caption" color="subtle" style={styles.footerNote}>
-          Frais affichés fixes pour la démo : les zones ne sont pas calculées par géolocalisation.
+          {t('footerNote')}
         </Text>
       </ScrollView>
 
       {restaurant && !restaurant.isOpen ? (
         <View style={styles.closedBanner}>
           <Text variant="bodyStrong" style={{ color: colors.onDark }} align="center">
-            Restaurant fermé temporairement : les commandes sont suspendues.
+            {t('closedBanner')}
           </Text>
         </View>
       ) : (
@@ -177,6 +178,7 @@ export function RestaurantScreen({ route, navigation }: Props) {
 }
 
 function ProductRow({ product, offerLabel, onPress }: { product: WithId<Product>; offerLabel: string | null; onPress: () => void }) {
+  const { t } = useTranslation('restaurant');
   const unavailable = !product.available || product.stock === 0;
   return (
     <Pressable
@@ -205,7 +207,7 @@ function ProductRow({ product, offerLabel, onPress }: { product: WithId<Product>
         </Text>
         {unavailable ? (
           <Text variant="label" color="danger" testID={`status-product-unavailable-${product.id}`} style={{ marginTop: 4 }}>
-            Produit indisponible
+            {t('productUnavailableLabel')}
           </Text>
         ) : null}
       </View>

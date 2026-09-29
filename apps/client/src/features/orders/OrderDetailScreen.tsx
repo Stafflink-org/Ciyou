@@ -11,12 +11,16 @@ import { Button } from '../../ui/Button';
 import { Skeleton } from '../../ui/Skeleton';
 import { useOrder, useOrderReview } from './hooks';
 import { stepLabel } from '../tracking/hooks';
+import { useTranslation } from '../../i18n/I18nProvider';
+import { intlLocale } from '../../i18n/core';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'OrderDetail'>;
 
 const money = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} €`;
 
 export function OrderDetailScreen({ route, navigation }: Props) {
+  const { t, locale } = useTranslation('orders');
+  const { t: tTracking } = useTranslation('tracking');
   const { orderId } = route.params;
   const { data: order, loading, missing } = useOrder(orderId);
   const { data: review } = useOrderReview(orderId);
@@ -27,7 +31,7 @@ export function OrderDetailScreen({ route, navigation }: Props) {
   if (missing || !order) {
     return (
       <View style={[styles.root, styles.center]}>
-        <Text color="muted">Commande introuvable.</Text>
+        <Text color="muted">{t('orderNotFound')}</Text>
       </View>
     );
   }
@@ -39,19 +43,19 @@ export function OrderDetailScreen({ route, navigation }: Props) {
       <Card>
         <View style={styles.row}>
           <Text variant="subtitle">{order.number}</Text>
-          <Badge label={stepLabel(order.status)} tone={order.status === 'delivered' ? 'success' : order.status === 'cancelled' ? 'danger' : 'primary'} />
+          <Badge label={stepLabel(order.status, tTracking)} tone={order.status === 'delivered' ? 'success' : order.status === 'cancelled' ? 'danger' : 'primary'} />
         </View>
         <Text variant="caption" color="muted" style={{ marginTop: 2 }}>
-          {order.restaurantName} · {createdAt ? createdAt.toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) : ''}
+          {order.restaurantName} · {createdAt ? createdAt.toLocaleString(intlLocale(locale), { dateStyle: 'medium', timeStyle: 'short' }) : ''}
         </Text>
         <Text variant="caption" color="muted" style={{ marginTop: 2 }}>
-          {order.fulfillment === 'delivery' ? 'Livraison' : order.fulfillment === 'pickup' ? 'Retrait' : 'Sur place'}
+          {order.fulfillment === 'delivery' ? t('delivery') : order.fulfillment === 'pickup' ? t('pickup') : t('dineIn')}
         </Text>
       </Card>
 
       {order.fulfillment === 'delivery' && order.delivery ? (
         <Card style={{ marginTop: spacing.md }}>
-          <Text variant="bodyStrong">Adresse de livraison</Text>
+          <Text variant="bodyStrong">{t('deliveryAddress')}</Text>
           <Text variant="body" style={{ marginTop: 4 }}>
             {order.delivery.address.label ? `${order.delivery.address.label} · ` : ''}
             {order.delivery.address.line1}
@@ -61,7 +65,7 @@ export function OrderDetailScreen({ route, navigation }: Props) {
 
       <Card style={{ marginTop: spacing.md }}>
         <Text variant="bodyStrong" style={{ marginBottom: spacing.sm }}>
-          Articles
+          {t('articles')}
         </Text>
         {order.items.map((item) => (
           <View key={item.lineId} style={styles.itemRow}>
@@ -72,18 +76,18 @@ export function OrderDetailScreen({ route, navigation }: Props) {
           </View>
         ))}
         <View style={styles.divider} />
-        <SummaryLine label="Sous-total" value={money(order.amounts.subtotalCents)} />
-        {order.amounts.deliveryFeeCents > 0 ? <SummaryLine label="Livraison" value={money(order.amounts.deliveryFeeCents)} /> : null}
-        {order.amounts.serviceFeeCents > 0 ? <SummaryLine label="Frais de service" value={money(order.amounts.serviceFeeCents)} /> : null}
-        {order.amounts.discount.totalCents > 0 ? <SummaryLine label="Réduction" value={`− ${money(order.amounts.discount.totalCents)}`} /> : null}
+        <SummaryLine label={t('subtotal')} value={money(order.amounts.subtotalCents)} />
+        {order.amounts.deliveryFeeCents > 0 ? <SummaryLine label={t('deliveryFee')} value={money(order.amounts.deliveryFeeCents)} /> : null}
+        {order.amounts.serviceFeeCents > 0 ? <SummaryLine label={t('serviceFee')} value={money(order.amounts.serviceFeeCents)} /> : null}
+        {order.amounts.discount.totalCents > 0 ? <SummaryLine label={t('discount')} value={`− ${money(order.amounts.discount.totalCents)}`} /> : null}
         <View style={styles.totalRow}>
-          <Text variant="bodyStrong">Total</Text>
+          <Text variant="bodyStrong">{t('total')}</Text>
           <Text variant="bodyStrong" color="primary">
             {money(order.amounts.totalCents)}
           </Text>
         </View>
         <Text variant="caption" color="muted" style={{ marginTop: spacing.xs }}>
-          {order.payment.method === 'card' ? 'Carte' : order.payment.method === 'cash' ? 'Espèces' : order.payment.method}
+          {order.payment.method === 'card' ? t('paymentCard') : order.payment.method === 'cash' ? t('paymentCash') : order.payment.method}
           {order.payment.label ? ` · ${order.payment.label}` : ''}
         </Text>
       </Card>
@@ -91,7 +95,7 @@ export function OrderDetailScreen({ route, navigation }: Props) {
       {order.status === 'delivered' ? (
         review ? (
           <Card style={{ marginTop: spacing.md }}>
-            <Text variant="bodyStrong">Votre avis</Text>
+            <Text variant="bodyStrong">{t('yourReview')}</Text>
             <Text variant="body" style={{ marginTop: 4 }}>
               {'⭐'.repeat(review.restaurantRating)}
             </Text>
@@ -102,13 +106,13 @@ export function OrderDetailScreen({ route, navigation }: Props) {
             ) : null}
           </Card>
         ) : (
-          <Button label="Noter cette commande" variant="outline" onPress={() => navigation.navigate('RateOrder', { orderId })} style={{ marginTop: spacing.lg }} />
+          <Button label={t('rateThisOrder')} variant="outline" onPress={() => navigation.navigate('RateOrder', { orderId })} style={{ marginTop: spacing.lg }} />
         )
       ) : order.status !== 'cancelled' ? (
-        <Button label="Suivre la commande" onPress={() => navigation.navigate('Tracking', { orderId })} style={{ marginTop: spacing.lg }} />
+        <Button label={t('trackOrder')} onPress={() => navigation.navigate('Tracking', { orderId })} style={{ marginTop: spacing.lg }} />
       ) : null}
 
-      <Button label="Signaler un problème" variant="outline" onPress={() => navigation.navigate('Support', { orderId })} style={{ marginTop: spacing.sm }} />
+      <Button label={t('reportProblem')} variant="outline" onPress={() => navigation.navigate('Support', { orderId })} style={{ marginTop: spacing.sm }} />
     </ScrollView>
   );
 }

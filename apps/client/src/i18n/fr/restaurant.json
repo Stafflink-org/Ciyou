@@ -1,0 +1,20 @@
+{
+  "notFoundTitle": "Restaurant introuvable",
+  "notFoundNote": "Cette adresse n'est plus disponible. Retrouvez les restaurants du quartier.",
+  "offers": {
+    "bogo": "1 acheté, 1 offert",
+    "half_second": "Le 2e à −50 %"
+  },
+  "favoriteAdded": "Ajouté aux favoris",
+  "favoriteRemoved": "Retiré des favoris",
+  "etaMinutes": "{{min}}–{{max}} min",
+  "deliveryFee": "Livraison {{price}} €",
+  "freeDelivery": "Livraison offerte",
+  "menuSoon": "Menu bientôt disponible.",
+  "dishCount_one": "{{count}} plat",
+  "dishCount_other": "{{count}} plats",
+  "productUnavailableToast": "Ce plat n'est plus disponible.",
+  "productUnavailableLabel": "Produit indisponible",
+  "footerNote": "Frais affichés fixes pour la démo : les zones ne sont pas calculées par géolocalisation.",
+  "closedBanner": "Restaurant fermé temporairement : les commandes sont suspendues."
+}

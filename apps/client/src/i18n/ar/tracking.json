@@ -1,0 +1,21 @@
+{
+  "steps": {
+    "scheduled": "طلب مجدول",
+    "new": "تم إرسال الطلب",
+    "accepted": "قُبل من المطعم",
+    "preparing": "قيد التحضير",
+    "ready": "جاهز",
+    "assigned": "السائق في طريقه إلى المتجر",
+    "picked_up": "في طريقه إليك",
+    "delivered": "تم التسليم",
+    "cancelled": "أُلغي"
+  },
+  "orderNotFound": "الطلب غير موجود.",
+  "orderNumber": "الطلب {{number}}",
+  "statusCancelled": "أُلغي",
+  "statusDelivered": "تم التسليم",
+  "statusOngoing": "جارٍ",
+  "yourDriver": "سائقك",
+  "rateOrder": "تقييم الطلب",
+  "viewOrderDetail": "عرض تفاصيل الطلب"
+}
