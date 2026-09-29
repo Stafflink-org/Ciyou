@@ -54,6 +54,7 @@ hr { border: 0; border-top: 1px dashed #000; margin: 8px 0; }
 <hr>
 <div class="big">${escape(order.customerName)}</div>
 ${order.pickupCode && order.fulfillment !== 'delivery' ? `<div>Code de retrait : <b>${escape(order.pickupCode)}</b></div>` : ''}
+${order.delivery?.collectionCode ? `<div>Code livreur : <b>${escape(order.delivery.collectionCode)}</b></div>` : ''}
 <hr>
 ${lines}
 <hr>

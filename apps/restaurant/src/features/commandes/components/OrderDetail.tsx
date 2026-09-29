@@ -398,6 +398,11 @@ export function OrderDetail({ order, compactHeader }: { order: OrderRow; compact
                 {d.promisedTo && !closed && <Line label="Promise au client" text value={`avant ${formatTime(toDate(d.promisedTo) ?? new Date())}`} />}
                 {d.estimatedArrivalAt && order.status === 'picked_up' && <Line label="Arrivée estimée" value={formatTime(toDate(d.estimatedArrivalAt) ?? new Date())} />}
               </div>
+              {d.collectionCode && ['assigned', 'ready'].includes(order.status) && !d.collectionVerified && (
+                <p className="mt-2 text-xs text-fg-subtle">
+                  Communiquez le code <span className="font-semibold text-fg">{d.collectionCode}</span> au livreur à la récupération.
+                </p>
+              )}
               {(d.driverName || !closed) && (
                 <div className="mt-3 rounded-lg bg-surface-2 px-3 py-2.5">
                   {d.driverName ? (
