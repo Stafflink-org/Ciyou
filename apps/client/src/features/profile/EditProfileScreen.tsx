@@ -1,6 +1,86 @@
-// Modification du profil (§19 client.md) : lot « profil » à venir.
-import { PlaceholderScreen } from '../shared/PlaceholderScreen';
+// Modification du profil (§19 client.md) — écriture réelle de `users/{uid}`
+// (champs autorisés par `userEditableFields()` : firstName/lastName/phone,
+// displayName synchronisé aussi côté Firebase Auth) et des préférences de
+// notification.
+import { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { updateProfile as updateAuthProfile } from '@firebase/auth';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { MainStackParamList } from '../../navigation/types';
+import type { UserProfile } from '@golink/shared';
+import { auth } from '../../lib/firebase';
+import { useAuth } from '../../auth/AuthContext';
+import { docAt, updatedFields, useDoc, errorMessage } from '../../lib/firestore';
+import { updateDoc } from 'firebase/firestore';
+import { colors, spacing } from '../../theme/tokens';
+import { Text } from '../../ui/Text';
+import { Input } from '../../ui/Input';
+import { Button } from '../../ui/Button';
+import { useToast } from '../../ui/Toast';
 
-export function EditProfileScreen() {
-  return <PlaceholderScreen icon="✏️" title="Modifier le profil" />;
+type Props = NativeStackScreenProps<MainStackParamList, 'EditProfile'>;
+
+export function EditProfileScreen({ navigation }: Props) {
+  const { user } = useAuth();
+  const { data: profile, loading } = useDoc<UserProfile>(user ? docAt(`users/${user.uid}`) : null);
+  const toast = useToast();
+
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setFirstName(profile.firstName ?? '');
+      setLastName(profile.lastName ?? '');
+      setPhone(profile.phone ?? '');
+    }
+  }, [profile]);
+
+  const save = async () => {
+    if (!user) return;
+    if (!firstName.trim() || !lastName.trim()) {
+      toast.show('Prénom et nom sont obligatoires.', 'danger');
+      return;
+    }
+    setSaving(true);
+    try {
+      const displayName = `${firstName.trim()} ${lastName.trim()}`.trim();
+      await updateDoc(docAt(`users/${user.uid}`), {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        displayName,
+        phone: phone.trim() || null,
+        ...updatedFields(user.uid),
+      });
+      if (auth.currentUser) await updateAuthProfile(auth.currentUser, { displayName }).catch(() => undefined);
+      toast.show('Profil mis à jour');
+      navigation.goBack();
+    } catch (error) {
+      toast.show(errorMessage(error), 'danger');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return null;
+
+  return (
+    <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing.lg, gap: spacing.md }}>
+      <Text variant="title">Modifier le profil</Text>
+      <Input label="Prénom" value={firstName} onChangeText={setFirstName} />
+      <Input label="Nom" value={lastName} onChangeText={setLastName} />
+      <Input label="Téléphone" placeholder="06 12 34 56 78" keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
+      <Input label="E-mail" value={user?.email ?? ''} editable={false} />
+      <Text variant="caption" color="muted">
+        L'e-mail n'est pas modifiable ici : contactez l'assistance pour en changer.
+      </Text>
+      <Button label="Enregistrer" onPress={save} loading={saving} style={{ marginTop: spacing.md }} />
+    </ScrollView>
+  );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.canvas },
+});

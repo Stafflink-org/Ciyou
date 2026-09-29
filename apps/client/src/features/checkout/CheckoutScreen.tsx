@@ -66,7 +66,8 @@ export function CheckoutScreen({ navigation }: Props) {
   const [scheduledTime, setScheduledTime] = useState('');
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
-  const [promoCode, setPromoCode] = useState('');
+  // Préremplit avec le code choisi depuis l'écran Promotions (lot 3), le cas échéant.
+  const [promoCode, setPromoCode] = useState(cart.promoCode ?? '');
   const [submitting, setSubmitting] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
   const clientRequestId = useRef(newClientRequestId());

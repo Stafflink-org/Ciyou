@@ -16,6 +16,7 @@ import { useToast } from '../../ui/Toast';
 import { PlaceholderScreen } from '../shared/PlaceholderScreen';
 import { useActiveProductOffers, useMenuProducts, useMenuSections } from './hooks';
 import { FloatingCartButton } from '../cart/FloatingCartButton';
+import { useFavorites } from '../favorites/hooks';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Restaurant'>;
 
@@ -28,7 +29,8 @@ export function RestaurantScreen({ route, navigation }: Props) {
   const { data: products } = useMenuProducts(restaurantId);
   const { data: offers } = useActiveProductOffers(restaurantId);
   const toast = useToast();
-  const [favorite, setFavorite] = useState(false);
+  const favorites = useFavorites();
+  const favorite = favorites.isFavoriteRestaurant(restaurantId);
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   const sectionOffsets = useRef<Record<string, number>>({});
@@ -67,8 +69,8 @@ export function RestaurantScreen({ route, navigation }: Props) {
   };
 
   const toggleFavorite = () => {
-    setFavorite((v) => !v);
-    toast.show('Favoris mis à jour');
+    favorites.toggleRestaurant(restaurantId);
+    toast.show(favorite ? 'Retiré des favoris' : 'Ajouté aux favoris');
   };
 
   return (

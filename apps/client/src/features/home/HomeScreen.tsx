@@ -2,9 +2,10 @@
 // capture `v2/captures/client/mobile/01-home.png`) : contexte de livraison,
 // héros de recherche, types de nourriture, offres, restaurants populaires et
 // plats mis en avant. Restaurants et plats viennent de la vraie base
-// golink-9f16d (aucune donnée fictive) ; adresse, mode et favoris sont encore
-// des états locaux (lots « adresses » et « favoris » à venir — voir
-// docs/CONTRAT_MODULES.md).
+// golink-9f16d (aucune donnée fictive) ; les favoris sont réels (`useFavorites`,
+// lot 3, mêmes cœurs que `FavoritesScreen`) ; adresse et mode restent des
+// états locaux (lot « adresses dans le tunnel d'achat » hors périmètre —
+// voir docs/CONTRAT_MODULES.md).
 import { useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -16,6 +17,7 @@ import { colors, spacing } from '../../theme/tokens';
 import { Text } from '../../ui/Text';
 import { RestaurantCardSkeleton } from '../../ui/Skeleton';
 import { useCityRestaurants, useDefaultCity, useFeaturedProducts } from './hooks';
+import { useFavorites } from '../favorites/hooks';
 import {
   DeliveryContextBar,
   FOOD_TYPES,
@@ -38,8 +40,7 @@ export function HomeScreen({ navigation }: Props) {
   const { data: featuredProducts, loading: productsLoading } = useFeaturedProducts();
   const [mode, setMode] = useState<'delivery' | 'pickup'>('delivery');
   const [query, setQuery] = useState('');
-  const [favoriteRestaurants, setFavoriteRestaurants] = useState<Set<string>>(new Set());
-  const [favoriteProducts, setFavoriteProducts] = useState<Set<string>>(new Set());
+  const favorites = useFavorites();
   const [refreshTick, setRefreshTick] = useState(0);
 
   const firstName = user?.displayName?.split(' ')[0] ?? '';
@@ -48,19 +49,6 @@ export function HomeScreen({ navigation }: Props) {
 
   const goToSearch = (params?: MainTabsParamList['Search']) => navigation.navigate('MainTabs', { screen: 'Search', params } as never);
   const onPressFoodType = (foodType: FoodType) => goToSearch({ foodType: foodType.key });
-
-  const toggleFavoriteRestaurant = (id: string) =>
-    setFavoriteRestaurants((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  const toggleFavoriteProduct = (id: string) =>
-    setFavoriteProducts((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
 
   const loading = cityLoading || restaurantsLoading;
 
@@ -113,8 +101,8 @@ export function HomeScreen({ navigation }: Props) {
             <RestaurantCard
               key={restaurant.id}
               restaurant={restaurant}
-              favorite={favoriteRestaurants.has(restaurant.id)}
-              onToggleFavorite={() => toggleFavoriteRestaurant(restaurant.id)}
+              favorite={favorites.isFavoriteRestaurant(restaurant.id)}
+              onToggleFavorite={() => favorites.toggleRestaurant(restaurant.id)}
               onPress={() => navigation.navigate('Restaurant', { restaurantId: restaurant.id })}
             />
           ))
@@ -132,8 +120,8 @@ export function HomeScreen({ navigation }: Props) {
           <FeaturedProductRow
             key={product.id}
             product={product}
-            favorite={favoriteProducts.has(product.id)}
-            onToggleFavorite={() => toggleFavoriteProduct(product.id)}
+            favorite={favorites.isFavoriteProduct(product.id)}
+            onToggleFavorite={() => favorites.toggleProduct(product.restaurantId, product.id)}
             onPress={() => navigation.navigate('Product', { productId: product.id, restaurantId: product.restaurantId })}
           />
         ))
