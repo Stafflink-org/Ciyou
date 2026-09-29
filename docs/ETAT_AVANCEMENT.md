@@ -1,5 +1,13 @@
 # État d'avancement — Ciyou Eats
 
+## App livreur mobile : lot 1 fondations — vérification manuelle en direct (29/09/2026)
+
+Vérification personnelle en direct (navigateur, compte `driver.lot1@golink.test`) après le lot 1 : connexion, bascule en ligne/hors ligne confirmée par écriture Firestore réelle (`drivers/{uid}.availability`), message d'erreur honnête et bien géré quand le navigateur refuse la géolocalisation (headless, comportement attendu, pas un bug).
+
+**Réception d'une offre de course** — non observée dans l'UI, mais le mécanisme de dispatch a été prouvé fonctionnel de bout en bout par un test dédié : commande réelle créée (`placeOrder`, compte client), position GPS du livreur de test simulée par écriture directe (`driverLocations`), dispatch manuel déclenché (`requestCourier`) → **un livreur a été réellement assigné automatiquement** (`sim-driver-longwy-2`, algorithme de proximité). Le livreur assigné n'était pas notre compte de test (un livreur simulé existant était plus proche/prioritaire), donc l'écran de l'app n'a pas pu être vérifié visuellement recevant l'offre — mais le pipeline serveur (commande → `dispatchOffers` → assignation réelle) est confirmé opérationnel, et le code côté app (écoute temps réel de `dispatchOffers` filtrée par `driverId`) a été relu et typé sans erreur. Décor de test entièrement nettoyé (commande, offre, position simulée, horaires de commerce/ville temporairement ouverts puis restaurés à l'identique — vérifié).
+
+**Point technique découvert pendant le test, non bloquant pour ce lot** : le dispatch automatique (planifié) ne se déclenche que pour les commandes en statut `preparing`/`ready` proches de l'heure prête, pas immédiatement à l'acceptation — cohérent avec le modèle documenté dans `docs/SCHEMA_FIRESTORE.md`, qui gagnerait à préciser ce délai.
+
 ## Incident et correctif — clé API Firebase, développement local bloqué (29/09/2026)
 
 **Bug trouvé par la tâche `client-lot2-parcours-achat`, causé par un correctif de sécurité antérieur.** Après une alerte GitGuardian (clé Firebase publique détectée sur GitHub — normal par conception, mais sans restriction de domaine), une restriction de référent HTTP (`http://localhost:*/*`) avait été ajoutée à la clé web Firebase (`37bfbf9b-…`, celle utilisée dans `apps/*/src/lib/firebase.ts`).
