@@ -13,6 +13,18 @@ match /drivers/{driverId} {
       && (incoming().availability == 'offline' || existing().status == 'active')
       && existing().activeOrderIds.size() == 0
       && updatedNow()
+    // Véhicule et distance maximale : réglages choisis par le livreur (docs/DECISIONS_CLIENT.md
+    // « Distance max : choisie par le livreur »), jamais en cours de course.
+    || isSelf(driverId)
+      && onlyChanges(['vehicle', 'maxDistanceMeters', 'updatedAt', 'updatedBy'])
+      && incoming().vehicle.type in ['bike', 'e_bike', 'cargo_bike', 'scooter', 'motorbike', 'car', 'on_foot']
+      && isOptionalString(incoming().vehicle.get('plate', null), 20)
+      && isOptionalString(incoming().vehicle.get('model', null), 60)
+      && isOptionalString(incoming().vehicle.get('color', null), 30)
+      && (incoming().get('maxDistanceMeters', null) == null
+        || (incoming().maxDistanceMeters is int && incoming().maxDistanceMeters >= 500 && incoming().maxDistanceMeters <= 50000))
+      && existing().activeOrderIds.size() == 0
+      && updatedNow()
     || isAdminIn('drivers.edit', resource.data.cityId)
       && onlyChanges(['firstName', 'lastName', 'displayName', 'phone', 'zoneIds', 'acceptsCash', 'searchKeywords', 'updatedAt', 'updatedBy'])
       && updatedNow();

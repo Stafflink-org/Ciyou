@@ -10,7 +10,7 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useAuth } from '../../auth/AuthContext';
 import { colors, radius, spacing } from '../../theme/tokens';
-import { useGoogleMapsWebKey } from '../../lib/mapsKey';
+import { useGoogleMapsRuntime } from '../../lib/mapsKey';
 import { Badge } from '../../ui/Badge';
 import { Button } from '../../ui/Button';
 import { Card } from '../../ui/Card';
@@ -64,7 +64,7 @@ export function DispatchScreen() {
   const { data: conversation, loading: conversationLoading } = useOrderConversation(activeOrderId);
   const { data: messages } = useConversationMessages(conversation?.id ?? null);
   const { data: driverPrivate } = useDriverPrivate(driver?.type === 'restaurant' ? uid : null);
-  const mapsKey = useGoogleMapsWebKey();
+  const { key: mapsKey, embedActivated } = useGoogleMapsRuntime();
 
   const isOnline = driver?.availability === 'online';
   const isOnDelivery = driver?.availability === 'on_delivery';
@@ -229,7 +229,7 @@ export function DispatchScreen() {
 
             {routeOrigin && routeDestination ? (
               <View style={{ marginTop: spacing.md }}>
-                <RouteMap apiKey={mapsKey} origin={routeOrigin} destination={routeDestination} />
+                <RouteMap apiKey={mapsKey} embedActivated={embedActivated} origin={routeOrigin} destination={routeDestination} />
               </View>
             ) : null}
 
