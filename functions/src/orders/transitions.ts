@@ -190,18 +190,32 @@ export const confirmPickup = callable(
   },
 );
 
-/** Le livreur a récupéré la commande au restaurant. */
-export const markOrderPickedUp = callable(orderIdSchema, async (data, request) => {
-  const order = await loadOrder(data.orderId);
-  const eventActor = await courierActor(request, order);
-  if (order.fulfillment !== 'delivery' || !order.driverId) throw fail.precondition('Aucun livreur n’est attribué à cette commande.');
-  await transition(data.orderId, eventActor, ['assigned', 'ready'], (current, at) => ({
-    to: 'picked_up',
-    fields: current.timeline.assigned ? {} : { 'timeline.assigned': at },
-    message: 'Commande récupérée par le livreur.',
-  }));
-  return { status: 'picked_up' as const };
-});
+/**
+ * Le livreur a récupéré la commande au restaurant. Si un code de collecte a été
+ * généré pour cette commande (`delivery.collectionCode`, voir docs/CONTRAT_MODULES.md
+ * §11), il doit être communiqué par le commerce et saisi ici ; les commandes plus
+ * anciennes sans ce champ (avant son ajout) ne demandent aucun code (rétrocompatible).
+ */
+export const markOrderPickedUp = callable(
+  z.object({ orderId: zId, code: z.string().trim().max(12).nullish() }),
+  async (data, request) => {
+    const order = await loadOrder(data.orderId);
+    const eventActor = await courierActor(request, order);
+    if (order.fulfillment !== 'delivery' || !order.driverId) throw fail.precondition('Aucun livreur n’est attribué à cette commande.');
+    if (order.delivery?.collectionCode && eventActor.type === 'driver' && !sameCode(order.delivery.collectionCode, data.code ?? '')) {
+      throw fail.invalid('Code de collecte incorrect : demandez au commerce le code affiché sur son écran.');
+    }
+    await transition(data.orderId, eventActor, ['assigned', 'ready'], (current, at) => ({
+      to: 'picked_up',
+      fields: {
+        ...(current.timeline.assigned ? {} : { 'timeline.assigned': at }),
+        ...(current.delivery?.collectionCode ? { 'delivery.collectionVerified': true } : {}),
+      },
+      message: 'Commande récupérée par le livreur.',
+    }));
+    return { status: 'picked_up' as const };
+  },
+);
 
 /** Acteur autorisé pour les étapes du livreur : le livreur attribué, ou le restaurant pour ses propres livreurs. */
 export async function courierActor(request: CallableRequest<unknown>, order: Order): Promise<EventActor> {

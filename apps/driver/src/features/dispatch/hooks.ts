@@ -3,12 +3,32 @@
 // est lu/écrit sur golink-9f16d (docs/CONTRATS_APPS_MOBILES.md §24,
 // docs/SCHEMA_FIRESTORE.md §6, firebase/rules/drivers.rules).
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { GeoPoint, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
-import { encodeGeohash, type Driver, type DriverLocation, type DispatchOffer, type Order, type WithId } from '@golink/shared';
+import { GeoPoint, addDoc, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
+import {
+  encodeGeohash,
+  type Conversation,
+  type ConversationMessage,
+  type Driver,
+  type DriverPrivate,
+  type DriverLocation,
+  type DispatchOffer,
+  type Order,
+  type Restaurant,
+  type WithId,
+} from '@golink/shared';
 import { callFunction, collectionAt, docAt, useCollection, useDoc } from '../../lib/firestore';
 
 export function useDriver(uid: string | null) {
   return useDoc<Driver>(uid ? docAt(`drivers/${uid}`) : null);
+}
+
+/** Données privées du livreur (KYC, espèces) — lisibles seulement par lui-même (firebase/rules/drivers.rules). */
+export function useDriverPrivate(uid: string | null) {
+  return useDoc<DriverPrivate>(uid ? docAt(`driverPrivate/${uid}`) : null);
+}
+
+export function useRestaurant(restaurantId: string | null) {
+  return useDoc<Restaurant>(restaurantId ? docAt(`restaurants/${restaurantId}`) : null);
 }
 
 export function useDriverLocation(uid: string | null) {
@@ -134,8 +154,49 @@ export function useLiveLocation(uid: string | null, cityId: string | null, optio
 /** Réponse à une offre de course (functions/src/admin/operations/dispatch.ts). */
 export const respondToOffer = callFunction<{ offerId: string; accept: boolean; reason?: string | null }, { status: DispatchOffer['status'] }>('respondToOffer');
 
-/** Le livreur a récupéré la commande au commerce (functions/src/orders/transitions.ts). */
-export const markOrderPickedUp = callFunction<{ orderId: string }, { status: Order['status'] }>('markOrderPickedUp');
+/** Le livreur a récupéré la commande au commerce. Code de collecte exigé si `delivery.collectionCode`. */
+export const markOrderPickedUp = callFunction<{ orderId: string; code?: string | null }, { status: Order['status'] }>('markOrderPickedUp');
 
 /** Remise au client : code de remise exigé si `delivery.handoverCodeRequired`. */
 export const completeOrder = callFunction<{ orderId: string; code?: string | null; geo?: { lat: number; lng: number } | null }, { status: Order['status'] }>('completeOrder');
+
+/* --------------------------- Client absent (functions/src/orders/customer-absent.ts) --------------------------- */
+
+export const markDriverArrived = callFunction<{ orderId: string }, { arrivedAt: number; waitUntil: number }>('markDriverArrived');
+export const logCustomerCall = callFunction<{ orderId: string }, { calls: number }>('logCustomerCall');
+export const closeCustomerAbsent = callFunction<{ orderId: string }, { status: 'delivered'; closedAs: 'customer_absent'; refundedCents: number }>('closeCustomerAbsent');
+
+/* --------------------------------------- Messagerie course (conversations/{id}) --------------------------------------- */
+
+/** Identifiant déterministe du fil commerce ↔ livreur (functions/src/messaging/restaurant/conversations.ts). */
+export function driverConversationId(orderId: string): string {
+  return `convd-${orderId}`;
+}
+
+/**
+ * Fil de messagerie avec le commerce pour la course en cours. Le fil est créé par le
+ * commerce (Cloud Function `openOrderConversation`, jamais par le livreur) : tant qu'il
+ * n'a pas écrit une première fois, aucun document n'existe encore ici — état vide, pas
+ * une erreur (voir firebase/rules/support.rules, création de fil interdite côté règles).
+ */
+export function useOrderConversation(orderId: string | null) {
+  return useDoc<Conversation>(orderId ? docAt(`conversations/${driverConversationId(orderId)}`) : null);
+}
+
+export function useConversationMessages(conversationId: string | null) {
+  const target = conversationId ? query(collectionAt(`conversations/${conversationId}/messages`), orderBy('createdAt', 'asc')) : null;
+  return useCollection<ConversationMessage>(target);
+}
+
+/** Écriture directe autorisée par les règles (membre du fil) — pas de Cloud Function dédiée. */
+export async function sendConversationMessage(conversationId: string, uid: string, senderName: string, text: string): Promise<void> {
+  await addDoc(collectionAt(`conversations/${conversationId}/messages`), {
+    senderId: uid,
+    senderRole: 'driver',
+    text,
+    attachments: [],
+    readBy: [uid],
+    createdAt: serverTimestamp(),
+    senderName,
+  });
+}
