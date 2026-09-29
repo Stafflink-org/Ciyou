@@ -1,10 +1,57 @@
 import { useCallback, useState } from 'react';
 import { orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
-import type { Driver, PartnerDocument, PartnerDocumentType, VehicleType, WithId } from '@golink/shared';
+import type { Driver, DriverSanction, PartnerDocument, PartnerDocumentType, VehicleType, WithId } from '@golink/shared';
 import { callFunction, collectionAt, docAt, useCollection, useDoc } from '../../lib/firestore';
 
 export function useDriverProfile(uid: string | null) {
   return useDoc<Driver>(uid ? docAt(`drivers/${uid}`) : null);
+}
+
+/**
+ * Sanction active du livreur (`drivers/{uid}.activeSanctionId`), s'il y en a une.
+ * Permet de la lire et, si elle n'a pas déjà été contestée, de la contester
+ * (`docs/AUDIT_COUVERTURE_CDC.md` §6, point P0 « Contestation »).
+ */
+export function useActiveSanction(driver: WithId<Driver> | null): { data: WithId<DriverSanction> | null; loading: boolean } {
+  const sanctionState = useDoc<DriverSanction>(driver?.activeSanctionId ? docAt(`driverSanctions/${driver.activeSanctionId}`) : null);
+  if (!driver?.activeSanctionId) return { data: null, loading: false };
+  return { data: sanctionState.data, loading: sanctionState.loading };
+}
+
+/**
+ * Contestation réelle par le livreur : écriture directe `driverSanctions/{id}`
+ * (autorisée par `firebase/rules/drivers.rules`, self-service, une seule fois
+ * par sanction). La décision (maintenue/annulée) est ensuite prise par l'équipe
+ * (`decideSanctionContest`, back-office).
+ */
+export function useContestSanction(uid: string | null) {
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = useCallback(
+    async (sanctionId: string, message: string) => {
+      if (!uid) return false;
+      setError(null);
+      setPending(true);
+      try {
+        await updateDoc(docAt(`driverSanctions/${sanctionId}`), {
+          status: 'contested',
+          contest: { message, submittedAt: serverTimestamp(), decision: null },
+          updatedAt: serverTimestamp(),
+          updatedBy: uid,
+        });
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Impossible d’envoyer votre contestation.');
+        return false;
+      } finally {
+        setPending(false);
+      }
+    },
+    [uid],
+  );
+
+  return { submit, pending, error };
 }
 
 /**

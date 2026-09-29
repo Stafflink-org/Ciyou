@@ -6,6 +6,7 @@ import { useAuth } from '../auth/AuthContext';
 import { colors } from '../theme/tokens';
 import { AuthStack } from './AuthStack';
 import { MainStack } from './MainStack';
+import { LegalGate } from '../features/legal/LegalGate';
 
 export function RootNavigator() {
   const { status } = useAuth();
@@ -18,5 +19,11 @@ export function RootNavigator() {
     );
   }
 
-  return status === 'signed-in' ? <MainStack /> : <AuthStack />;
+  return status === 'signed-in' ? (
+    <LegalGate>
+      <MainStack />
+    </LegalGate>
+  ) : (
+    <AuthStack />
+  );
 }

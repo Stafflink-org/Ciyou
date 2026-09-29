@@ -67,6 +67,8 @@ export function HomeScreen({ navigation }: Props) {
         onOpenMenu={() => navigation.navigate('MainTabs', { screen: 'Profile' } as never)}
       />
 
+      {city?.emergencyClosure?.active ? <EmergencyClosureBanner message={city.emergencyClosure.message.fr} /> : null}
+
       <DeliveryContextBar
         addressLabel="Adresse principale"
         addressLine={addressLine}
@@ -140,8 +142,34 @@ function EmptyNote({ text }: { text: string }) {
   );
 }
 
+/**
+ * Fermeture d'urgence de la ville (`cities/{id}.emergencyClosure`, réglée par
+ * un admin) : bannière réelle côté client — `docs/AUDIT_COUVERTURE_CDC.md` §2
+ * verdict, point cité comme dépendant de l'app client.
+ */
+function EmergencyClosureBanner({ message }: { message: string }) {
+  return (
+    <View style={styles.emergencyBanner}>
+      <Text style={{ fontSize: 16 }}>⚠️</Text>
+      <Text variant="caption" style={{ flex: 1, color: colors.dangerSoftFg }}>
+        {message}
+      </Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.canvas },
+  emergencyBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+    padding: spacing.md,
+    borderRadius: 14,
+    backgroundColor: colors.dangerSoft,
+  },
 });
 
 // Types de nourriture réexportés pour la recherche (lot suivant).
