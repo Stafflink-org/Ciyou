@@ -1,0 +1,29 @@
+{
+  "vehicle": {
+    "title": "Véhicule",
+    "plate": "Plaque d’immatriculation",
+    "model": "Modèle",
+    "color": "Couleur"
+  },
+  "distance": {
+    "title": "Distance maximale",
+    "description": "Distance la plus longue que vous acceptez de parcourir pour une course, en kilomètres.",
+    "label": "Distance (km)",
+    "error": "Entre 0,5 et 50 km."
+  },
+  "save": "Enregistrer",
+  "toast": {
+    "saved": "Réglages enregistrés.",
+    "saveError": "Impossible d’enregistrer.",
+    "uploaded": "{{label}} envoyé, en attente de vérification.",
+    "uploadError": "Le dépôt a échoué. Réessayez."
+  },
+  "documents": {
+    "title": "Documents",
+    "description": "Déposez vos justificatifs (identité, assurance, permis…) pour vérification par Ciyou Eats.",
+    "none": "Aucun document déposé",
+    "progress": "{{percent}} %",
+    "replace": "Remplacer",
+    "upload": "Déposer"
+  }
+}

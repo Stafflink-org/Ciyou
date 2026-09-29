@@ -1,8 +1,39 @@
 {
+  "nav": {
+    "tabs": {
+      "home": "الرئيسية",
+      "search": "بحث",
+      "orders": "الطلبات",
+      "favorites": "المفضلة",
+      "profile": "الملف الشخصي"
+    }
+  },
   "language": {
     "label": "اللغة",
     "names": { "fr": "Français", "en": "English", "ar": "العربية" },
     "restartRecommended": "أعد تشغيل التطبيق لعرض كامل من اليمين إلى اليسار."
+  },
+  "placeholder": {
+    "comingSoon": "قريبًا"
+  },
+  "screenTitles": {
+    "product": "المنتج",
+    "cart": "السلة",
+    "checkout": "الطلب",
+    "confirmation": "التأكيد",
+    "tracking": "التتبع",
+    "orderDetail": "تفاصيل الطلب",
+    "rateOrder": "رأيك",
+    "notifications": "الإشعارات",
+    "addresses": "عناوينك",
+    "addressForm": "العنوان",
+    "promotions": "العروض",
+    "editProfile": "تعديل الملف الشخصي",
+    "paymentMethods": "طرق الدفع",
+    "help": "المساعدة",
+    "support": "الدعم",
+    "ticketDetail": "طلبك",
+    "referral": "الإحالة"
   },
   "actions": {
     "save": "حفظ",

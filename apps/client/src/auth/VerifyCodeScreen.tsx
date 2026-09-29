@@ -9,11 +9,13 @@ import { useAuth } from './AuthContext';
 import { AuthLayout } from './AuthLayout';
 import { Button } from '../ui/Button';
 import { Text } from '../ui/Text';
+import { useTranslation } from '../i18n/I18nProvider';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'VerifyCode'>;
 
 export function VerifyCodeScreen({ navigation }: Props) {
   const { user, resendVerificationEmail } = useAuth();
+  const { t } = useTranslation('auth');
   const [resent, setResent] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -28,17 +30,17 @@ export function VerifyCodeScreen({ navigation }: Props) {
   };
 
   return (
-    <AuthLayout title="Vérifiez votre e-mail" subtitle={`Un lien de confirmation a été envoyé à ${user?.email ?? 'votre adresse'}.`}>
+    <AuthLayout title={t('verifyCode.title')} subtitle={t('verifyCode.subtitle', { email: user?.email ?? t('verifyCode.fallbackEmail') })}>
       <Text variant="body" color="muted">
-        Vous pouvez commander dès maintenant ; la vérification confirme simplement que cette adresse vous appartient.
+        {t('verifyCode.info')}
       </Text>
       {resent ? (
         <Text variant="caption" color="success">
-          E-mail renvoyé.
+          {t('verifyCode.resent')}
         </Text>
       ) : null}
-      <Button label="Renvoyer l’e-mail" variant="outline" onPress={resend} loading={loading} />
-      <Button label="Continuer" onPress={() => navigation.navigate('SignIn')} />
+      <Button label={t('verifyCode.resend')} variant="outline" onPress={resend} loading={loading} />
+      <Button label={t('verifyCode.continue')} onPress={() => navigation.navigate('SignIn')} />
     </AuthLayout>
   );
 }

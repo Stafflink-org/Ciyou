@@ -7,24 +7,26 @@ import { colors, radius, spacing } from '../theme/tokens';
 import { LOGO_FULL } from '../theme/logo';
 import { Button } from '../ui/Button';
 import { Text } from '../ui/Text';
+import { useTranslation } from '../i18n/I18nProvider';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Welcome'>;
 
 export function WelcomeScreen({ navigation }: Props) {
+  const { t } = useTranslation('auth');
   return (
     <View style={styles.root}>
       <View style={styles.top}>
         <Image source={LOGO_FULL} style={styles.logo} resizeMode="contain" />
         <Text variant="display" color="inverted" align="center" style={styles.title}>
-          Vos commerces préférés, livrés vite.
+          {t('welcome.title')}
         </Text>
         <Text variant="body" color="inverted" align="center" style={styles.tagline}>
-          Restaurants, épiceries et plus encore, en livraison ou à retirer près de chez vous.
+          {t('welcome.tagline')}
         </Text>
       </View>
       <View style={styles.actions}>
-        <Button label="Se connecter" onPress={() => navigation.navigate('SignIn')} />
-        <Button label="Créer un compte" variant="outlineInverted" onPress={() => navigation.navigate('SignUp')} />
+        <Button label={t('login.submit')} onPress={() => navigation.navigate('SignIn')} />
+        <Button label={t('login.createAccount')} variant="outlineInverted" onPress={() => navigation.navigate('SignUp')} />
       </View>
     </View>
   );

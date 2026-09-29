@@ -1,0 +1,15 @@
+{
+  "eyebrow": "REFERRAL",
+  "title": "Invite your friends",
+  "intro": "Share your code: your friends enjoy a reward when they sign up, and you're rewarded on their first order.",
+  "yourCode": "Your personal code",
+  "shareButton": "Share my code",
+  "shareMessage": "Join me on Ciyou Eats and get a discount with my code {{code}}!",
+  "enterCodeTitle": "Got a code to enter?",
+  "alreadyReferred": "A referral code is already registered on your account.",
+  "alreadyOrdered": "A referral code must be entered before your first order: it's no longer possible on this account.",
+  "inputPlaceholder": "Your referrer's code",
+  "validateButton": "Validate the code",
+  "invalidCode": "Enter a valid code.",
+  "codeAccepted": "Code accepted: €{{amount}} off your first order."
+}

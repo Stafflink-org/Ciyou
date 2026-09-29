@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { colors, radius, spacing } from '../../theme/tokens';
 import { Text } from '../../ui/Text';
+import { useTranslation } from '../../i18n/I18nProvider';
 
 export function Countdown({ untilMillis, onExpire }: { untilMillis: number; onExpire?: () => void }) {
+  const { t } = useTranslation('dispatch');
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -25,7 +27,7 @@ export function Countdown({ untilMillis, onExpire }: { untilMillis: number; onEx
   return (
     <View style={[styles.badge, isUrgent && styles.badgeUrgent]}>
       <Text variant="bodyStrong" style={{ color: isUrgent ? colors.white : colors.ink }}>
-        {seconds > 0 ? `${seconds}s` : 'Expiré'}
+        {seconds > 0 ? t('countdown.seconds', { seconds }) : t('countdown.expired')}
       </Text>
     </View>
   );

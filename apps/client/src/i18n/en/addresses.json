@@ -1,0 +1,32 @@
+{
+  "empty": {
+    "title": "No saved address",
+    "note": "Add an address to check out faster next time."
+  },
+  "default": "Default",
+  "edit": "Edit",
+  "setDefault": "Set as default",
+  "remove": "Remove",
+  "removed": "Address removed",
+  "add": "Add an address",
+  "form": {
+    "editTitle": "Edit address",
+    "newTitle": "New address",
+    "labelField": "Label",
+    "labelPlaceholder": "Home, Office…",
+    "line1Field": "Address",
+    "line1Placeholder": "12 rue de la Paix, 54400 Longwy",
+    "detailsField": "Additional details",
+    "detailsPlaceholder": "2nd floor, door code…",
+    "floorField": "Floor",
+    "floorPlaceholder": "2",
+    "doorCodeField": "Door code",
+    "doorCodePlaceholder": "A1234",
+    "instructionsField": "Instructions for the courier",
+    "instructionsPlaceholder": "Ring the Dupont intercom",
+    "save": "Save",
+    "missingLine1": "Please enter an address.",
+    "updated": "Address updated",
+    "created": "Address added"
+  }
+}

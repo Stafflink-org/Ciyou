@@ -1,4 +1,16 @@
 {
+  "nav": {
+    "tabs": {
+      "dispatch": "Dispatch",
+      "earnings": "Gains",
+      "history": "Historique",
+      "profile": "Profil"
+    }
+  },
+  "screenTitles": {
+    "orderDetail": "Détail de la course",
+    "profileSettings": "Réglages du profil"
+  },
   "language": {
     "label": "Langue",
     "names": { "fr": "Français", "en": "English", "ar": "العربية" },

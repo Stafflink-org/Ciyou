@@ -1,0 +1,12 @@
+{
+  "emptyTitle": "Aucune offre pour le moment",
+  "emptyNote": "Revenez bientôt : les offres des commerces apparaîtront ici.",
+  "eyebrow": "BONS PLANS",
+  "title": "Toutes les offres",
+  "minSubtotal": "Dès {{amount}} € d'achat",
+  "code": "Code {{code}}",
+  "autoApplied": "Appliquée automatiquement",
+  "apply": "Appliquer",
+  "appliedNoCode": "Offre appliquée automatiquement au panier, sans code.",
+  "appliedWithCode": "Code {{code}} ajouté à votre panier"
+}

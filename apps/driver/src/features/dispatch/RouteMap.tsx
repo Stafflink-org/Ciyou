@@ -11,6 +11,7 @@ import type { LatLng } from './RouteMap.shared';
 import { buildEmbedUrl } from './RouteMap.shared';
 import { colors, radius } from '../../theme/tokens';
 import { Text } from '../../ui/Text';
+import { useTranslation } from '../../i18n/I18nProvider';
 
 export interface RouteMapProps {
   apiKey: string | null | undefined;
@@ -22,11 +23,12 @@ export interface RouteMapProps {
 }
 
 export function RouteMap({ apiKey, embedActivated, origin, destination, height = 220 }: RouteMapProps) {
+  const { t } = useTranslation('dispatch');
   if (!apiKey) {
     return (
       <View style={[styles.fallback, { height }]}>
         <Text variant="body" color="muted" align="center">
-          Cartographie non configurée, contactez votre administrateur.
+          {t('routeMap.notConfigured')}
         </Text>
       </View>
     );
@@ -35,7 +37,7 @@ export function RouteMap({ apiKey, embedActivated, origin, destination, height =
     return (
       <View style={[styles.fallback, { height }]}>
         <Text variant="body" color="muted" align="center">
-          Itinéraire momentanément indisponible (cartographie non activée côté serveur), contactez votre administrateur.
+          {t('routeMap.embedDisabled')}
         </Text>
       </View>
     );

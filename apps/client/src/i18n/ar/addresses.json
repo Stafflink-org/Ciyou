@@ -1,0 +1,32 @@
+{
+  "empty": {
+    "title": "لا يوجد عنوان مسجل",
+    "note": "أضف عنوانًا لتسريع عملية الطلب في المرة القادمة."
+  },
+  "default": "افتراضي",
+  "edit": "تعديل",
+  "setDefault": "تعيين كافتراضي",
+  "remove": "حذف",
+  "removed": "تم حذف العنوان",
+  "add": "إضافة عنوان",
+  "form": {
+    "editTitle": "تعديل العنوان",
+    "newTitle": "عنوان جديد",
+    "labelField": "التسمية",
+    "labelPlaceholder": "المنزل، المكتب…",
+    "line1Field": "العنوان",
+    "line1Placeholder": "12 rue de la Paix, 54400 Longwy",
+    "detailsField": "تفاصيل إضافية",
+    "detailsPlaceholder": "الطابق الثاني، رمز الدخول…",
+    "floorField": "الطابق",
+    "floorPlaceholder": "2",
+    "doorCodeField": "رمز الدخول",
+    "doorCodePlaceholder": "A1234",
+    "instructionsField": "تعليمات لعامل التوصيل",
+    "instructionsPlaceholder": "اضغط على جرس اسم دوبون",
+    "save": "حفظ",
+    "missingLine1": "يرجى إدخال عنوان.",
+    "updated": "تم تعديل العنوان",
+    "created": "تمت إضافة العنوان"
+  }
+}

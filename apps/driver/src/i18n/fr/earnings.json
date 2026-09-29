@@ -1,0 +1,21 @@
+{
+  "header": {
+    "thisWeek": "Cette semaine"
+  },
+  "kpi": {
+    "deliveries": "Courses",
+    "tips": "Pourboires"
+  },
+  "list": {
+    "title": "Relevé récent",
+    "empty": "Aucun gain enregistré pour le moment. Passez en ligne dans Dispatch pour recevoir des courses.",
+    "tipBadge": "dont {{amount}} pourboire"
+  },
+  "kind": {
+    "delivery": "Course",
+    "bonus": "Prime",
+    "hourly_guarantee": "Garantie horaire",
+    "referral": "Parrainage",
+    "adjustment": "Ajustement"
+  }
+}

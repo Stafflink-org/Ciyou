@@ -8,6 +8,7 @@ import { DispatchScreen } from '../features/dispatch/DispatchScreen';
 import { EarningsScreen } from '../features/earnings/EarningsScreen';
 import { HistoryScreen } from '../features/history/HistoryScreen';
 import { ProfileScreen } from '../features/profile/ProfileScreen';
+import { useTranslation } from '../i18n/I18nProvider';
 
 const Tab = createBottomTabNavigator<MainTabsParamList>();
 
@@ -18,14 +19,14 @@ const TAB_ICON: Record<keyof MainTabsParamList, string> = {
   Profile: '👤',
 };
 
-const TAB_LABEL: Record<keyof MainTabsParamList, string> = {
-  Dispatch: 'Dispatch',
-  Earnings: 'Gains',
-  History: 'Historique',
-  Profile: 'Profil',
-};
-
 export function MainTabs() {
+  const { t } = useTranslation('common');
+  const TAB_LABEL: Record<keyof MainTabsParamList, string> = {
+    Dispatch: t('nav.tabs.dispatch'),
+    Earnings: t('nav.tabs.earnings'),
+    History: t('nav.tabs.history'),
+    Profile: t('nav.tabs.profile'),
+  };
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({

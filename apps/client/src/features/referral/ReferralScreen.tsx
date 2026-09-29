@@ -14,6 +14,7 @@ import { Skeleton } from '../../ui/Skeleton';
 import { useToast } from '../../ui/Toast';
 import { useAuth } from '../../auth/AuthContext';
 import { docAt, errorMessage, useDoc, callFunction } from '../../lib/firestore';
+import { useTranslation } from '../../i18n/I18nProvider';
 
 const applyReferralCode = callFunction<{ code: string }, { referralId: string; rewardCents: number; minFirstOrderCents: number }>('applyReferralCode');
 
@@ -21,6 +22,7 @@ export function ReferralScreen() {
   const { user } = useAuth();
   const { data: profile, loading } = useDoc<UserProfile>(user ? docAt(`users/${user.uid}`) : null);
   const toast = useToast();
+  const { t } = useTranslation('referral');
   const [code, setCode] = useState('');
   const [sending, setSending] = useState(false);
 
@@ -29,18 +31,18 @@ export function ReferralScreen() {
 
   const share = async () => {
     if (!profile?.referralCode) return;
-    await Share.share({ message: `Rejoins-moi sur Ciyou Eats et profite d'une remise avec mon code ${profile.referralCode} !` }).catch(() => undefined);
+    await Share.share({ message: t('referral:shareMessage', { code: profile.referralCode }) }).catch(() => undefined);
   };
 
   const apply = async () => {
     if (code.trim().length < 4) {
-      toast.show('Saisissez un code valide.', 'danger');
+      toast.show(t('referral:invalidCode'), 'danger');
       return;
     }
     setSending(true);
     try {
       const result = await applyReferralCode({ code: code.trim() });
-      toast.show(`Code accepté : ${(result.rewardCents / 100).toFixed(2).replace('.', ',')} € offerts à votre première commande.`);
+      toast.show(t('referral:codeAccepted', { amount: (result.rewardCents / 100).toFixed(2).replace('.', ',') }));
       setCode('');
     } catch (error) {
       toast.show(errorMessage(error), 'danger');
@@ -60,39 +62,39 @@ export function ReferralScreen() {
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.md }}>
       <Text variant="eyebrow" color="muted">
-        PARRAINAGE
+        {t('referral:eyebrow')}
       </Text>
       <Text variant="title" style={{ marginBottom: 4 }}>
-        Invitez vos proches
+        {t('referral:title')}
       </Text>
       <Text variant="body" color="muted">
-        Partagez votre code : vos proches en profitent à leur inscription, et vous êtes récompensé(e) à leur première commande.
+        {t('referral:intro')}
       </Text>
 
       <Card>
         <Text variant="caption" color="muted">
-          Votre code personnel
+          {t('referral:yourCode')}
         </Text>
         <Text variant="title" style={{ marginTop: 4, letterSpacing: 1 }}>
           {profile?.referralCode ?? '—'}
         </Text>
-        <Button label="Partager mon code" onPress={share} style={{ marginTop: spacing.md }} />
+        <Button label={t('referral:shareButton')} onPress={share} style={{ marginTop: spacing.md }} />
       </Card>
 
       <Card>
-        <Text variant="bodyStrong">Un code à saisir ?</Text>
+        <Text variant="bodyStrong">{t('referral:enterCodeTitle')}</Text>
         {alreadyReferred ? (
           <Text variant="body" color="muted" style={{ marginTop: 4 }}>
-            Un code de parrainage est déjà enregistré sur votre compte.
+            {t('referral:alreadyReferred')}
           </Text>
         ) : alreadyOrdered ? (
           <Text variant="body" color="muted" style={{ marginTop: 4 }}>
-            Le code de parrainage se saisit avant votre première commande : ce n'est plus possible sur ce compte.
+            {t('referral:alreadyOrdered')}
           </Text>
         ) : (
           <View style={{ marginTop: spacing.sm, gap: spacing.sm }}>
-            <Input placeholder="Code de votre parrain" value={code} onChangeText={(v) => setCode(v.toUpperCase())} autoCapitalize="characters" />
-            <Button label="Valider le code" variant="outline" onPress={apply} loading={sending} disabled={code.trim().length < 4} />
+            <Input placeholder={t('referral:inputPlaceholder')} value={code} onChangeText={(v) => setCode(v.toUpperCase())} autoCapitalize="characters" />
+            <Button label={t('referral:validateButton')} variant="outline" onPress={apply} loading={sending} disabled={code.trim().length < 4} />
           </View>
         )}
       </Card>

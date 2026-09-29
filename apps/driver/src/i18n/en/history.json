@@ -1,0 +1,9 @@
+{
+  "empty": "No delivered orders yet.",
+  "detail": {
+    "client": "Customer",
+    "items": "Items",
+    "earning": "Delivery earning",
+    "includingTip": "including {{amount}} tip"
+  }
+}

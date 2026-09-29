@@ -1,0 +1,9 @@
+{
+  "empty": "Aucune course livrée pour le moment.",
+  "detail": {
+    "client": "Client",
+    "items": "Articles",
+    "earning": "Gain de la course",
+    "includingTip": "dont {{amount}} de pourboire"
+  }
+}

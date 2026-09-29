@@ -1,0 +1,13 @@
+{
+  "reacceptance": {
+    "title": "Nos conditions ont changé",
+    "description": "Merci d'accepter la nouvelle version ({{version}}) pour continuer à utiliser Ciyou Eats.",
+    "whatChanges": "Ce qui change",
+    "accept": "J'accepte les conditions"
+  },
+  "cookieBanner": {
+    "text": "Ciyou Eats utilise des cookies et données de mesure d'audience, et peut vous envoyer des offres par e-mail. Vous pouvez tout refuser sauf le strict nécessaire.",
+    "refuseAll": "Tout refuser",
+    "acceptAll": "Tout accepter"
+  }
+}

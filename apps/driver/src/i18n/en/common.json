@@ -1,4 +1,16 @@
 {
+  "nav": {
+    "tabs": {
+      "dispatch": "Dispatch",
+      "earnings": "Earnings",
+      "history": "History",
+      "profile": "Profile"
+    }
+  },
+  "screenTitles": {
+    "orderDetail": "Delivery detail",
+    "profileSettings": "Profile settings"
+  },
   "language": {
     "label": "Language",
     "names": { "fr": "Français", "en": "English", "ar": "العربية" },

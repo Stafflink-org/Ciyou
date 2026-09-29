@@ -23,10 +23,40 @@ import {
 import frCommon from './fr/common.json';
 import enCommon from './en/common.json';
 import arCommon from './ar/common.json';
+import frDispatch from './fr/dispatch.json';
+import enDispatch from './en/dispatch.json';
+import arDispatch from './ar/dispatch.json';
+import frEarnings from './fr/earnings.json';
+import enEarnings from './en/earnings.json';
+import arEarnings from './ar/earnings.json';
+import frHistory from './fr/history.json';
+import enHistory from './en/history.json';
+import arHistory from './ar/history.json';
+import frProfileSettings from './fr/profileSettings.json';
+import enProfileSettings from './en/profileSettings.json';
+import arProfileSettings from './ar/profileSettings.json';
+import frProfile from './fr/profile.json';
+import enProfile from './en/profile.json';
+import arProfile from './ar/profile.json';
 
 addResources('fr', 'common', frCommon);
 addResources('en', 'common', enCommon);
 addResources('ar', 'common', arCommon);
+addResources('fr', 'dispatch', frDispatch);
+addResources('en', 'dispatch', enDispatch);
+addResources('ar', 'dispatch', arDispatch);
+addResources('fr', 'earnings', frEarnings);
+addResources('en', 'earnings', enEarnings);
+addResources('ar', 'earnings', arEarnings);
+addResources('fr', 'history', frHistory);
+addResources('en', 'history', enHistory);
+addResources('ar', 'history', arHistory);
+addResources('fr', 'profileSettings', frProfileSettings);
+addResources('en', 'profileSettings', enProfileSettings);
+addResources('ar', 'profileSettings', arProfileSettings);
+addResources('fr', 'profile', frProfile);
+addResources('en', 'profile', enProfile);
+addResources('ar', 'profile', arProfile);
 
 const STORAGE_KEY = 'golink-driver:locale';
 

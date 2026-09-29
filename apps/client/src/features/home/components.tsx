@@ -13,6 +13,7 @@ import type { Restaurant, WithId } from '@golink/shared';
 import { colors, radius, spacing, shadow } from '../../theme/tokens';
 import { Text } from '../../ui/Text';
 import { Badge } from '../../ui/Badge';
+import { useTranslation } from '../../i18n/I18nProvider';
 import type { FeaturedProduct } from './hooks';
 
 /* --------------------------------- En-tête ---------------------------------- */
@@ -30,10 +31,11 @@ export function HomeHeader({
   onOpenCart: () => void;
   onOpenMenu: () => void;
 }) {
+  const { t } = useTranslation('home');
   return (
     <View style={styles.header}>
       <View style={styles.headerTopRow}>
-        <Pressable onPress={onOpenMenu} hitSlop={10} accessibilityLabel="Menu">
+        <Pressable onPress={onOpenMenu} hitSlop={10} accessibilityLabel={t('header.menu')}>
           <Text style={styles.headerGlyph}>☰</Text>
         </Pressable>
         <Text variant="eyebrow" color="muted">
@@ -43,11 +45,11 @@ export function HomeHeader({
       </View>
       <View style={styles.headerGreetingRow}>
         <Text variant="title" style={styles.greeting}>
-          Bonjour {firstName || ''}.
+          {t('header.greeting', { firstName: firstName || '' })}
         </Text>
         <View style={styles.headerActions}>
-          <IconButton glyph="🔔" onPress={onOpenNotifications} accessibilityLabel="Notifications" />
-          <IconButton glyph="🛍️" onPress={onOpenCart} accessibilityLabel="Panier" />
+          <IconButton glyph="🔔" onPress={onOpenNotifications} accessibilityLabel={t('header.notifications')} />
+          <IconButton glyph="🛍️" onPress={onOpenCart} accessibilityLabel={t('header.cart')} />
         </View>
       </View>
     </View>
@@ -77,13 +79,14 @@ export function DeliveryContextBar({
   onPressAddress: () => void;
   onToggleMode: () => void;
 }) {
+  const { t } = useTranslation('home');
   return (
     <View style={styles.contextRow}>
       <Pressable onPress={onPressAddress} style={styles.contextAddress}>
         <Text style={{ fontSize: 15 }}>📍</Text>
         <View>
           <Text variant="caption" color="muted">
-            Livrer à · {addressLabel}
+            {t('delivery.prefix')} · {addressLabel}
           </Text>
           <Text variant="bodyStrong" numberOfLines={1}>
             {addressLine}
@@ -92,7 +95,7 @@ export function DeliveryContextBar({
       </Pressable>
       <Pressable onPress={onToggleMode} style={styles.modePill}>
         <Text variant="label" style={{ color: colors.primaryFg }}>
-          {mode === 'delivery' ? 'En livraison' : 'À emporter'} ⌄
+          {mode === 'delivery' ? t('delivery.modeDelivery') : t('delivery.modePickup')} ⌄
         </Text>
       </Pressable>
     </View>
@@ -102,13 +105,14 @@ export function DeliveryContextBar({
 /* ----------------------------------- Héros ------------------------------------ */
 
 export function HomeHero({ addressLine, query, onChangeQuery, onSubmit }: { addressLine: string; query: string; onChangeQuery: (v: string) => void; onSubmit: () => void }) {
+  const { t } = useTranslation('home');
   return (
     <View style={styles.hero}>
       <Text variant="eyebrow" style={styles.heroEyebrow}>
-        Les bonnes adresses près de chez vous
+        {t('hero.eyebrow')}
       </Text>
       <Text variant="display" color="inverted" style={styles.heroTitle}>
-        Qu’est-ce qu’on mange aujourd’hui ?
+        {t('hero.title')}
       </Text>
       <View style={styles.heroAddressRow}>
         <Text style={{ fontSize: 13 }}>📍</Text>
@@ -122,11 +126,11 @@ export function HomeHero({ addressLine, query, onChangeQuery, onSubmit }: { addr
           {/* Champ contrôlé minimal : la vraie saisie/instantanéité arrive avec l'écran Recherche. */}
           <Pressable onPress={onSubmit}>
             <Text variant="body" color="inverted" style={{ opacity: query ? 1 : 0.55 }} numberOfLines={1}>
-              {query || 'Un plat, un restaurant, une envie…'}
+              {query || t('hero.placeholder')}
             </Text>
           </Pressable>
         </View>
-        <Pressable onPress={onSubmit} style={styles.heroSearchButton} accessibilityLabel="Rechercher">
+        <Pressable onPress={onSubmit} style={styles.heroSearchButton} accessibilityLabel={t('hero.search')}>
           <Text style={{ color: colors.primaryFg, fontSize: 16 }}>→</Text>
         </Pressable>
       </View>
@@ -155,9 +159,10 @@ export const FOOD_TYPES: FoodType[] = [
 ];
 
 export function FoodTypeTiles({ onPress }: { onPress: (foodType: FoodType) => void }) {
+  const { t } = useTranslation('home');
   return (
     <View>
-      <SectionHeading eyebrow="À chaque envie son assiette" title="Qu’est-ce qui vous tente ?" subtitle="Des plats vraiment disponibles dans les menus du quartier." />
+      <SectionHeading eyebrow={t('foodTypes.eyebrow')} title={t('foodTypes.title')} subtitle={t('foodTypes.subtitle')} />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.foodTypeRow}>
         {FOOD_TYPES.map((item) => (
           <Pressable key={item.key} onPress={() => onPress(item)} style={styles.foodTypeTile}>
@@ -165,7 +170,7 @@ export function FoodTypeTiles({ onPress }: { onPress: (foodType: FoodType) => vo
               <Text style={{ fontSize: 26 }}>{item.emoji}</Text>
             </View>
             <Text variant="caption" align="center" style={{ marginTop: 6 }}>
-              {item.label}
+              {t(`foodTypes.items.${item.key}`)}
             </Text>
           </Pressable>
         ))}
@@ -224,6 +229,7 @@ export function OfferCard({ title, description, badge }: { title: string; descri
 /* -------------------------------- Carte restaurant ------------------------------- */
 
 export function RestaurantCard({ restaurant, onPress, onToggleFavorite, favorite }: { restaurant: WithId<Restaurant>; onPress: () => void; onToggleFavorite: () => void; favorite: boolean }) {
+  const { t } = useTranslation('home');
   const initials = restaurant.mark || restaurant.name.slice(0, 2).toUpperCase();
   const cuisines = restaurant.cuisineIds.slice(0, 2).join(' · ');
   return (
@@ -245,14 +251,14 @@ export function RestaurantCard({ restaurant, onPress, onToggleFavorite, favorite
         {!restaurant.isOpen ? (
           <View style={styles.closedBadge}>
             <Text variant="label" color="inverted">
-              Fermé temporairement
+              {t('restaurantCard.closed')}
             </Text>
           </View>
         ) : null}
         {restaurant.sponsored ? (
           <View style={styles.sponsoredBadge}>
             <Text variant="label" style={{ color: colors.primaryFg }}>
-              Sponsorisé
+              {t('restaurantCard.sponsored')}
             </Text>
           </View>
         ) : null}
@@ -270,7 +276,9 @@ export function RestaurantCard({ restaurant, onPress, onToggleFavorite, favorite
           </Text>
         ) : null}
         <Text variant="caption" color="primary" style={{ marginTop: 2 }}>
-          {restaurant.ownDeliveryFeeCents != null ? `Livraison ${(restaurant.ownDeliveryFeeCents / 100).toFixed(2).replace('.', ',')} €` : 'Livraison offerte'}
+          {restaurant.ownDeliveryFeeCents != null
+            ? t('restaurantCard.deliveryFee', { amount: (restaurant.ownDeliveryFeeCents / 100).toFixed(2).replace('.', ',') })
+            : t('restaurantCard.freeDelivery')}
         </Text>
       </View>
     </Pressable>
@@ -280,11 +288,12 @@ export function RestaurantCard({ restaurant, onPress, onToggleFavorite, favorite
 /* -------------------------------- Ligne produit ---------------------------------- */
 
 export function FeaturedProductRow({ product, onPress, onToggleFavorite, favorite }: { product: FeaturedProduct; onPress: () => void; onToggleFavorite: () => void; favorite: boolean }) {
+  const { t } = useTranslation('home');
   return (
     <Pressable onPress={onPress} style={styles.productRow}>
       <View style={{ flex: 1, paddingRight: spacing.md }}>
         <Text variant="eyebrow" color="muted">
-          {product.tags?.[0] ?? 'Suggestion'}
+          {product.tags?.[0] ?? t('product.suggestion')}
         </Text>
         <Text variant="bodyStrong" numberOfLines={1} style={{ marginTop: 2 }}>
           {product.name}
@@ -303,7 +312,7 @@ export function FeaturedProductRow({ product, onPress, onToggleFavorite, favorit
         <Pressable onPress={onToggleFavorite} style={styles.productHeart} hitSlop={8}>
           <Text style={{ fontSize: 13 }}>{favorite ? '❤️' : '🤍'}</Text>
         </Pressable>
-        <Pressable onPress={onPress} style={styles.productAdd} hitSlop={8} accessibilityLabel="Ajouter">
+        <Pressable onPress={onPress} style={styles.productAdd} hitSlop={8} accessibilityLabel={t('product.add')}>
           <Text style={{ color: colors.primaryFg, fontSize: 16, fontWeight: '700' }}>+</Text>
         </Pressable>
       </View>

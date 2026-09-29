@@ -5,6 +5,7 @@ import { colors } from '../theme/tokens';
 import { MainTabs } from './MainTabs';
 import { OrderDetailScreen } from '../features/history/OrderDetailScreen';
 import { ProfileSettingsScreen } from '../features/profile/ProfileSettingsScreen';
+import { useTranslation } from '../i18n/I18nProvider';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -16,11 +17,12 @@ const HEADER_OPTIONS = {
 };
 
 export function MainStack() {
+  const { t } = useTranslation('common');
   return (
     <Stack.Navigator screenOptions={HEADER_OPTIONS}>
       <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
-      <Stack.Screen name="OrderDetail" component={OrderDetailScreen} options={{ title: 'Détail de la course' }} />
-      <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} options={{ title: 'Réglages du profil' }} />
+      <Stack.Screen name="OrderDetail" component={OrderDetailScreen} options={{ title: t('screenTitles.orderDetail') }} />
+      <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} options={{ title: t('screenTitles.profileSettings') }} />
     </Stack.Navigator>
   );
 }

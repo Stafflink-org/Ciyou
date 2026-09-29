@@ -17,24 +17,34 @@ import { Input } from '../../ui/Input';
 import { Text } from '../../ui/Text';
 import { useActiveSanction, useContestSanction, useDriverProfile } from './hooks';
 import { useTranslation } from '../../i18n/I18nProvider';
+import { intlLocale } from '../../i18n/core';
 import { LanguagePicker } from '../../i18n/LanguagePicker';
 
-const STATUS_LABEL: Record<string, { label: string; tone: 'success' | 'warning' | 'danger' | 'neutral' }> = {
-  active: { label: 'Compte actif', tone: 'success' },
-  onboarding: { label: 'Dossier en cours de validation', tone: 'warning' },
-  suspended: { label: 'Compte suspendu', tone: 'danger' },
-  deactivated: { label: 'Compte désactivé', tone: 'danger' },
+const STATUS_KEY: Record<string, string> = {
+  active: 'profile:status.active',
+  onboarding: 'profile:status.onboarding',
+  suspended: 'profile:status.suspended',
+  deactivated: 'profile:status.deactivated',
+};
+const STATUS_TONE: Record<string, 'success' | 'warning' | 'danger' | 'neutral'> = {
+  active: 'success',
+  onboarding: 'warning',
+  suspended: 'danger',
+  deactivated: 'danger',
 };
 
 export function ProfileScreen() {
   const { user, signOut } = useAuth();
-  const { t } = useTranslation('common');
+  const { t: tCommon } = useTranslation('common');
+  const { t } = useTranslation('profile');
   const [languageOpen, setLanguageOpen] = useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { data: driver } = useDriverProfile(user?.uid ?? null);
   const { data: sanction } = useActiveSanction(driver);
   const initials = (driver?.displayName ?? user?.email ?? '?').trim().slice(0, 1).toUpperCase();
-  const status = driver ? (STATUS_LABEL[driver.status] ?? { label: driver.status, tone: 'neutral' as const }) : null;
+  const status = driver
+    ? { label: t(STATUS_KEY[driver.status] ?? driver.status), tone: STATUS_TONE[driver.status] ?? ('neutral' as const) }
+    : null;
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}>
@@ -47,7 +57,7 @@ export function ProfileScreen() {
           </View>
           <View style={{ flex: 1 }}>
             <Text variant="subtitle" numberOfLines={1}>
-              {driver?.displayName || 'Livreur Ciyou Eats'}
+              {driver?.displayName || t('profile:defaultName')}
             </Text>
             <Text variant="caption" color="muted" numberOfLines={1}>
               {user?.email}
@@ -59,26 +69,43 @@ export function ProfileScreen() {
 
       {driver ? (
         <View style={styles.infoBlock}>
-          <InfoLine label="Véhicule" value={VEHICLE_LABELS[driver.vehicle.type]} />
-          <InfoLine label="Type" value={driver.type === 'restaurant' ? 'Livreur salarié d’un commerce' : 'Livreur indépendant'} />
-          <InfoLine label="Distance maximale" value={driver.maxDistanceMeters ? `${(driver.maxDistanceMeters / 1000).toFixed(1)} km` : 'Non définie'} />
-          <InfoLine label="Espèces" value={driver.acceptsCash ? 'Acceptées' : 'Non acceptées'} />
-          <InfoLine label="Note moyenne" value={driver.rating.count > 0 ? `${driver.rating.average.toFixed(1)} ★ (${driver.rating.count})` : 'Pas encore de note'} />
+          <InfoLine label={t('profile:info.vehicle')} value={VEHICLE_LABELS[driver.vehicle.type]} />
+          <InfoLine
+            label={t('profile:info.type')}
+            value={driver.type === 'restaurant' ? t('profile:info.typeRestaurant') : t('profile:info.typeIndependent')}
+          />
+          <InfoLine
+            label={t('profile:info.distance')}
+            value={
+              driver.maxDistanceMeters
+                ? t('profile:info.distanceValue', { km: (driver.maxDistanceMeters / 1000).toFixed(1) })
+                : t('profile:info.distanceUndefined')
+            }
+          />
+          <InfoLine label={t('profile:info.cash')} value={driver.acceptsCash ? t('profile:info.cashAccepted') : t('profile:info.cashNotAccepted')} />
+          <InfoLine
+            label={t('profile:info.rating')}
+            value={
+              driver.rating.count > 0
+                ? t('profile:info.ratingValue', { average: driver.rating.average.toFixed(1), count: driver.rating.count })
+                : t('profile:info.ratingNone')
+            }
+          />
         </View>
       ) : null}
 
       {sanction ? <SanctionCard sanction={sanction} uid={user?.uid ?? null} /> : null}
 
       <Button
-        label="Véhicule, distance et documents"
+        label={t('profile:actions.settings')}
         variant="outline"
         onPress={() => navigation.navigate('ProfileSettings')}
         style={{ marginTop: spacing.lg }}
       />
 
-      <Button label={t('language.label')} variant="outline" onPress={() => setLanguageOpen(true)} style={{ marginTop: spacing.md }} />
+      <Button label={tCommon('language.label')} variant="outline" onPress={() => setLanguageOpen(true)} style={{ marginTop: spacing.md }} />
 
-      <Button label="Se déconnecter" variant="outline" onPress={() => signOut()} style={{ marginTop: spacing.md }} />
+      <Button label={t('profile:actions.signOut')} variant="outline" onPress={() => signOut()} style={{ marginTop: spacing.md }} />
 
       <LanguagePicker visible={languageOpen} onClose={() => setLanguageOpen(false)} />
     </ScrollView>
@@ -91,6 +118,7 @@ export function ProfileScreen() {
  * `driverSanctions/{id}`, décision ensuite prise par l'équipe support).
  */
 function SanctionCard({ sanction, uid }: { sanction: NonNullable<ReturnType<typeof useActiveSanction>['data']>; uid: string | null }) {
+  const { t, locale } = useTranslation('profile');
   const { submit, pending, error } = useContestSanction(uid);
   const [message, setMessage] = useState('');
   const [sent, setSent] = useState(false);
@@ -104,31 +132,37 @@ function SanctionCard({ sanction, uid }: { sanction: NonNullable<ReturnType<type
       </Text>
       {sanction.endsAt ? (
         <Text variant="caption" color="subtle" style={{ marginTop: 4 }}>
-          Jusqu’au {new Date(sanction.endsAt.toDate()).toLocaleDateString('fr-FR')}
+          {t('profile:sanction.until', { date: new Date(sanction.endsAt.toDate()).toLocaleDateString(intlLocale(locale)) })}
         </Text>
       ) : null}
 
       {alreadyContested ? (
         <Badge
-          label={sanction.status === 'contested' ? 'Contestation envoyée, en cours d’examen' : sanction.status === 'overturned' ? 'Sanction annulée' : 'Contestation examinée'}
+          label={
+            sanction.status === 'contested'
+              ? t('profile:sanction.contestedBadge')
+              : sanction.status === 'overturned'
+                ? t('profile:sanction.overturnedBadge')
+                : t('profile:sanction.reviewedBadge')
+          }
           tone={sanction.status === 'overturned' ? 'success' : 'neutral'}
           style={{ marginTop: spacing.md }}
         />
       ) : sent ? (
-        <Badge label="Contestation envoyée, en cours d’examen" tone="neutral" style={{ marginTop: spacing.md }} />
+        <Badge label={t('profile:sanction.sentBadge')} tone="neutral" style={{ marginTop: spacing.md }} />
       ) : (
         <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
           <Text variant="caption" color="muted">
-            Vous pensez que cette sanction n’est pas justifiée ? Expliquez pourquoi, l’équipe Ciyou Eats l’examinera.
+            {t('profile:sanction.prompt')}
           </Text>
-          <Input placeholder="Votre explication…" value={message} onChangeText={setMessage} multiline numberOfLines={3} />
+          <Input placeholder={t('profile:sanction.placeholder')} value={message} onChangeText={setMessage} multiline numberOfLines={3} />
           {error ? (
             <Text variant="caption" color="danger">
               {error}
             </Text>
           ) : null}
           <Button
-            label="Contester cette sanction"
+            label={t('profile:sanction.contest')}
             variant="outline"
             loading={pending}
             disabled={message.trim().length < 10}

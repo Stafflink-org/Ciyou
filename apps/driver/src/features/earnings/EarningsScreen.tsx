@@ -7,27 +7,30 @@ import { colors, radius, spacing } from '../../theme/tokens';
 import { Badge } from '../../ui/Badge';
 import { Card } from '../../ui/Card';
 import { Text } from '../../ui/Text';
+import { useTranslation } from '../../i18n/I18nProvider';
+import { intlLocale } from '../../i18n/core';
 import { summarizeEarnings, useDriverEarnings } from './hooks';
 
 const money = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} €`;
 
-const KIND_LABEL: Record<string, string> = {
-  delivery: 'Course',
-  bonus: 'Prime',
-  hourly_guarantee: 'Garantie horaire',
-  referral: 'Parrainage',
-  adjustment: 'Ajustement',
+const KIND_KEYS: Record<string, string> = {
+  delivery: 'earnings:kind.delivery',
+  bonus: 'earnings:kind.bonus',
+  hourly_guarantee: 'earnings:kind.hourly_guarantee',
+  referral: 'earnings:kind.referral',
+  adjustment: 'earnings:kind.adjustment',
 };
 
 export function EarningsScreen() {
   const { user } = useAuth();
+  const { t, locale } = useTranslation('earnings');
   const { data, loading } = useDriverEarnings(user?.uid ?? null);
   const summary = summarizeEarnings(data);
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}>
       <Text variant="eyebrow" color="muted">
-        Cette semaine
+        {t('earnings:header.thisWeek')}
       </Text>
       <Text variant="display" style={{ marginTop: 4 }}>
         {money(summary.weekTotalCents)}
@@ -35,27 +38,27 @@ export function EarningsScreen() {
       <View style={styles.kpiRow}>
         <View style={styles.kpi}>
           <Text variant="caption" color="muted">
-            Courses
+            {t('earnings:kpi.deliveries')}
           </Text>
           <Text variant="subtitle">{summary.weekDeliveries}</Text>
         </View>
         <View style={styles.kpi}>
           <Text variant="caption" color="muted">
-            Pourboires
+            {t('earnings:kpi.tips')}
           </Text>
           <Text variant="subtitle">{money(summary.weekTipsCents)}</Text>
         </View>
       </View>
 
       <Text variant="subtitle" style={{ marginTop: spacing.xl, marginBottom: spacing.sm }}>
-        Relevé récent
+        {t('earnings:list.title')}
       </Text>
       {loading ? (
         <ActivityIndicator color={colors.primary} style={{ marginTop: spacing.lg }} />
       ) : data.length === 0 ? (
         <Card>
           <Text variant="body" color="muted" align="center">
-            Aucun gain enregistré pour le moment. Passez en ligne dans Dispatch pour recevoir des courses.
+            {t('earnings:list.empty')}
           </Text>
         </Card>
       ) : (
@@ -64,15 +67,15 @@ export function EarningsScreen() {
             <Card key={entry.id} padded>
               <View style={styles.entryRow}>
                 <View style={{ flex: 1 }}>
-                  <Text variant="bodyStrong">{KIND_LABEL[entry.kind] ?? entry.kind}</Text>
+                  <Text variant="bodyStrong">{t(KIND_KEYS[entry.kind] ?? entry.kind)}</Text>
                   <Text variant="caption" color="muted">
-                    {entry.earnedAt.toDate().toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    {entry.earnedAt.toDate().toLocaleDateString(intlLocale(locale), { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </Text>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
                   <Text variant="bodyStrong">{money(entry.amountCents + entry.tipCents)}</Text>
                   {entry.tipCents > 0 ? (
-                    <Badge label={`dont ${money(entry.tipCents)} pourboire`} tone="primary" style={{ marginTop: 4 }} />
+                    <Badge label={t('earnings:list.tipBadge', { amount: money(entry.tipCents) })} tone="primary" style={{ marginTop: 4 }} />
                   ) : null}
                 </View>
               </View>

@@ -13,11 +13,13 @@ import { Input } from '../../ui/Input';
 import { Skeleton } from '../../ui/Skeleton';
 import { useToast } from '../../ui/Toast';
 import { errorMessage } from '../../lib/firestore';
+import { useTranslation } from '../../i18n/I18nProvider';
 import { markTicketRead, replyToClientTicket, useTicket, useTicketMessages } from './hooks';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'TicketDetail'>;
 
 export function TicketDetailScreen({ route }: Props) {
+  const { t } = useTranslation('support');
   const { ticketId } = route.params;
   const ticket = useTicket(ticketId);
   const messages = useTicketMessages(ticketId);
@@ -56,7 +58,7 @@ export function TicketDetailScreen({ route }: Props) {
     return (
       <View style={{ padding: spacing.lg }}>
         <Text variant="body" color="muted">
-          Cette demande est introuvable.
+          {t('support:ticket.notFound')}
         </Text>
       </View>
     );
@@ -83,7 +85,7 @@ export function TicketDetailScreen({ route }: Props) {
             <View style={[styles.bubble, m.authorType === 'requester' ? styles.bubbleMine : styles.bubbleTheirs]}>
               {m.authorType !== 'requester' ? (
                 <Text variant="caption" color="muted" style={{ marginBottom: 2 }}>
-                  {m.authorType === 'system' ? 'Ciyou Eats' : 'Support Ciyou Eats'}
+                  {m.authorType === 'system' ? t('support:ticket.systemAuthor') : t('support:ticket.supportAuthor')}
                 </Text>
               ) : null}
               <Text variant="body" color={m.authorType === 'requester' ? 'inverted' : 'default'}>
@@ -95,14 +97,14 @@ export function TicketDetailScreen({ route }: Props) {
       </ScrollView>
       {closed ? (
         <View style={styles.composer}>
-          <Badge label="Demande fermée" tone="neutral" />
+          <Badge label={t('support:ticket.closedBadge')} tone="neutral" />
         </View>
       ) : (
         <View style={styles.composer}>
           <View style={{ flex: 1 }}>
-            <Input placeholder="Votre message…" value={body} onChangeText={setBody} multiline />
+            <Input placeholder={t('support:ticket.messagePlaceholder')} value={body} onChangeText={setBody} multiline />
           </View>
-          <Button label="Envoyer" onPress={send} loading={sending} disabled={!body.trim()} />
+          <Button label={t('support:ticket.send')} onPress={send} loading={sending} disabled={!body.trim()} />
         </View>
       )}
     </View>
