@@ -36,9 +36,12 @@ interface CartState {
   restaurantId: string | null;
   restaurantName: string | null;
   lines: CartLine[];
+  /** Code promo choisi (lot 3 Promotions → applique puis navigue vers le panier). Aperçu
+   * seulement : comme documenté dans CheckoutScreen, le code n'est vérifié qu'à `placeOrder`. */
+  promoCode: string | null;
 }
 
-const EMPTY_STATE: CartState = { restaurantId: null, restaurantName: null, lines: [] };
+const EMPTY_STATE: CartState = { restaurantId: null, restaurantName: null, lines: [], promoCode: null };
 const STORAGE_KEY = 'ciyoueats-client-cart';
 
 export interface AddLineInput {
@@ -64,6 +67,8 @@ export interface CartContextValue {
   itemsCount: number;
   subtotalCents: number;
   loaded: boolean;
+  promoCode: string | null;
+  setPromoCode: (code: string | null) => void;
   /** true si l'ajout demande de confirmer le remplacement du panier (autre restaurant). */
   belongsToOtherRestaurant: (restaurantId: string) => boolean;
   quantityInCart: (productId: string) => number;
@@ -142,7 +147,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           stock: input.stock,
         };
         result = { ok: true };
-        return { restaurantId: input.restaurantId, restaurantName: input.restaurantName, lines: [...others, line] };
+        return { restaurantId: input.restaurantId, restaurantName: input.restaurantName, lines: [...others, line], promoCode: base.promoCode };
       });
       return result;
     },
@@ -179,6 +184,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const clear = useCallback(() => setState(EMPTY_STATE), []);
 
+  const setPromoCode = useCallback((code: string | null) => {
+    setState((prev) => ({ ...prev, promoCode: code }));
+  }, []);
+
   const value = useMemo<CartContextValue>(() => {
     const itemsCount = state.lines.reduce((s, l) => s + l.quantity, 0);
     const subtotalCents = state.lines.reduce((s, l) => s + cartLineTotal(l), 0);
@@ -189,6 +198,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       itemsCount,
       subtotalCents,
       loaded,
+      promoCode: state.promoCode ?? null,
+      setPromoCode,
       belongsToOtherRestaurant,
       quantityInCart,
       addLine,
@@ -197,7 +208,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removeLine,
       clear,
     };
-  }, [state, loaded, belongsToOtherRestaurant, quantityInCart, addLine, increaseLine, decreaseLine, removeLine, clear]);
+  }, [state, loaded, setPromoCode, belongsToOtherRestaurant, quantityInCart, addLine, increaseLine, decreaseLine, removeLine, clear]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
