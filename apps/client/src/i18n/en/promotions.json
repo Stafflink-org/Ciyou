@@ -1,0 +1,12 @@
+{
+  "emptyTitle": "No offers right now",
+  "emptyNote": "Check back soon: merchant offers will appear here.",
+  "eyebrow": "GREAT DEALS",
+  "title": "All offers",
+  "minSubtotal": "From €{{amount}} spent",
+  "code": "Code {{code}}",
+  "autoApplied": "Applied automatically",
+  "apply": "Apply",
+  "appliedNoCode": "Offer applied automatically to your cart, no code needed.",
+  "appliedWithCode": "Code {{code}} added to your cart"
+}

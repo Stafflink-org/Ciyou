@@ -22,6 +22,7 @@ import { HelpScreen } from '../features/profile/HelpScreen';
 import { SupportScreen } from '../features/support/SupportScreen';
 import { TicketDetailScreen } from '../features/support/TicketDetailScreen';
 import { ReferralScreen } from '../features/referral/ReferralScreen';
+import { useTranslation } from '../i18n/I18nProvider';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -33,27 +34,28 @@ const HEADER_OPTIONS = {
 };
 
 export function MainStack() {
+  const { t } = useTranslation('common');
   return (
     <Stack.Navigator screenOptions={HEADER_OPTIONS}>
       <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
       <Stack.Screen name="Restaurant" component={RestaurantScreen} options={{ title: '' }} />
-      <Stack.Screen name="Product" component={ProductScreen} options={{ title: 'Produit', presentation: 'modal' }} />
-      <Stack.Screen name="Cart" component={CartScreen} options={{ title: 'Panier', presentation: 'modal' }} />
-      <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: 'Commande' }} />
-      <Stack.Screen name="Confirmation" component={OrderConfirmationScreen} options={{ title: 'Confirmation', headerBackVisible: false }} />
-      <Stack.Screen name="Tracking" component={OrderTrackingScreen} options={{ title: 'Suivi' }} />
-      <Stack.Screen name="OrderDetail" component={OrderDetailScreen} options={{ title: 'Détail de la commande' }} />
-      <Stack.Screen name="RateOrder" component={RateOrderScreen} options={{ title: 'Votre avis', presentation: 'modal' }} />
-      <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
-      <Stack.Screen name="Addresses" component={AddressesScreen} options={{ title: 'Vos adresses' }} />
-      <Stack.Screen name="AddressForm" component={AddressFormScreen} options={{ title: 'Adresse', presentation: 'modal' }} />
-      <Stack.Screen name="Promotions" component={PromotionsScreen} options={{ title: 'Offres' }} />
-      <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Modifier le profil' }} />
-      <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} options={{ title: 'Modes de paiement' }} />
-      <Stack.Screen name="Help" component={HelpScreen} options={{ title: 'Aide' }} />
-      <Stack.Screen name="Support" component={SupportScreen} options={{ title: 'Support' }} />
-      <Stack.Screen name="TicketDetail" component={TicketDetailScreen} options={{ title: 'Votre demande' }} />
-      <Stack.Screen name="Referral" component={ReferralScreen} options={{ title: 'Parrainage' }} />
+      <Stack.Screen name="Product" component={ProductScreen} options={{ title: t('screenTitles.product'), presentation: 'modal' }} />
+      <Stack.Screen name="Cart" component={CartScreen} options={{ title: t('screenTitles.cart'), presentation: 'modal' }} />
+      <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: t('screenTitles.checkout') }} />
+      <Stack.Screen name="Confirmation" component={OrderConfirmationScreen} options={{ title: t('screenTitles.confirmation'), headerBackVisible: false }} />
+      <Stack.Screen name="Tracking" component={OrderTrackingScreen} options={{ title: t('screenTitles.tracking') }} />
+      <Stack.Screen name="OrderDetail" component={OrderDetailScreen} options={{ title: t('screenTitles.orderDetail') }} />
+      <Stack.Screen name="RateOrder" component={RateOrderScreen} options={{ title: t('screenTitles.rateOrder'), presentation: 'modal' }} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: t('screenTitles.notifications') }} />
+      <Stack.Screen name="Addresses" component={AddressesScreen} options={{ title: t('screenTitles.addresses') }} />
+      <Stack.Screen name="AddressForm" component={AddressFormScreen} options={{ title: t('screenTitles.addressForm'), presentation: 'modal' }} />
+      <Stack.Screen name="Promotions" component={PromotionsScreen} options={{ title: t('screenTitles.promotions') }} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: t('screenTitles.editProfile') }} />
+      <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} options={{ title: t('screenTitles.paymentMethods') }} />
+      <Stack.Screen name="Help" component={HelpScreen} options={{ title: t('screenTitles.help') }} />
+      <Stack.Screen name="Support" component={SupportScreen} options={{ title: t('screenTitles.support') }} />
+      <Stack.Screen name="TicketDetail" component={TicketDetailScreen} options={{ title: t('screenTitles.ticketDetail') }} />
+      <Stack.Screen name="Referral" component={ReferralScreen} options={{ title: t('screenTitles.referral') }} />
     </Stack.Navigator>
   );
 }

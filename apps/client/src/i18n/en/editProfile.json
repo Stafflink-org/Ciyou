@@ -1,0 +1,16 @@
+{
+  "title": "Edit profile",
+  "fields": {
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phone": "Phone",
+    "phonePlaceholder": "06 12 34 56 78",
+    "email": "Email"
+  },
+  "emailHint": "The email can't be changed here: contact support to change it.",
+  "save": "Save",
+  "errors": {
+    "nameRequired": "First and last name are required."
+  },
+  "success": "Profile updated"
+}

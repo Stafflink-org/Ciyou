@@ -1,0 +1,11 @@
+{
+  "empty": {
+    "title": "No notifications",
+    "note": "Your order and promotion notifications will appear here."
+  },
+  "time": {
+    "now": "just now",
+    "minutesAgo": "{{count}} min ago",
+    "hoursAgo": "{{count}} h ago"
+  }
+}

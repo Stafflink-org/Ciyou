@@ -1,0 +1,38 @@
+{
+  "status": {
+    "active": "Compte actif",
+    "onboarding": "Dossier en cours de validation",
+    "suspended": "Compte suspendu",
+    "deactivated": "Compte désactivé"
+  },
+  "defaultName": "Livreur Ciyou Eats",
+  "info": {
+    "vehicle": "Véhicule",
+    "type": "Type",
+    "typeRestaurant": "Livreur salarié d’un commerce",
+    "typeIndependent": "Livreur indépendant",
+    "distance": "Distance maximale",
+    "distanceValue": "{{km}} km",
+    "distanceUndefined": "Non définie",
+    "cash": "Espèces",
+    "cashAccepted": "Acceptées",
+    "cashNotAccepted": "Non acceptées",
+    "rating": "Note moyenne",
+    "ratingValue": "{{average}} ★ ({{count}})",
+    "ratingNone": "Pas encore de note"
+  },
+  "actions": {
+    "settings": "Véhicule, distance et documents",
+    "signOut": "Se déconnecter"
+  },
+  "sanction": {
+    "until": "Jusqu’au {{date}}",
+    "contestedBadge": "Contestation envoyée, en cours d’examen",
+    "overturnedBadge": "Sanction annulée",
+    "reviewedBadge": "Contestation examinée",
+    "sentBadge": "Contestation envoyée, en cours d’examen",
+    "prompt": "Vous pensez que cette sanction n’est pas justifiée ? Expliquez pourquoi, l’équipe Ciyou Eats l’examinera.",
+    "placeholder": "Votre explication…",
+    "contest": "Contester cette sanction"
+  }
+}

@@ -15,10 +15,12 @@ import { PlaceholderScreen } from '../shared/PlaceholderScreen';
 import { RestaurantCard, FeaturedProductRow } from '../home/components';
 import type { FeaturedProduct } from '../home/hooks';
 import { useFavorites } from './hooks';
+import { useTranslation } from '../../i18n/I18nProvider';
 
 type Props = CompositeScreenProps<BottomTabScreenProps<MainTabsParamList, 'Favorites'>, NativeStackScreenProps<MainStackParamList>>;
 
 export function FavoritesScreen({ navigation }: Props) {
+  const { t } = useTranslation('favorites');
   const favorites = useFavorites();
   const restaurantFavorites = favorites.data.filter((f) => f.type === 'restaurant');
   const productFavorites = favorites.data.filter((f) => f.type === 'product' && f.productId);
@@ -27,8 +29,8 @@ export function FavoritesScreen({ navigation }: Props) {
     return (
       <PlaceholderScreen
         icon="🤍"
-        title="Vos favoris commencent ici"
-        note="Touchez le cœur d'un restaurant ou d'un plat pour le retrouver facilement."
+        title={t('favorites:empty.title')}
+        note={t('favorites:empty.note')}
       />
     );
   }
@@ -36,10 +38,10 @@ export function FavoritesScreen({ navigation }: Props) {
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}>
       <Text variant="eyebrow" color="muted">
-        TOUT PRÈS DU CŒUR
+        {t('favorites:eyebrow')}
       </Text>
       <Text variant="title" style={{ marginTop: 4, marginBottom: spacing.md }}>
-        Vos favoris
+        {t('favorites:title')}
       </Text>
 
       {favorites.loading ? (
@@ -52,7 +54,7 @@ export function FavoritesScreen({ navigation }: Props) {
           {restaurantFavorites.length > 0 ? (
             <View style={{ marginBottom: spacing.lg }}>
               <Text variant="bodyStrong" style={{ marginBottom: spacing.sm }}>
-                Restaurants
+                {t('favorites:restaurants')}
               </Text>
               <View style={styles.restaurantGrid}>
                 {restaurantFavorites.map((f) => (
@@ -65,7 +67,7 @@ export function FavoritesScreen({ navigation }: Props) {
           {productFavorites.length > 0 ? (
             <View>
               <Text variant="bodyStrong" style={{ marginBottom: spacing.sm }}>
-                Plats
+                {t('favorites:dishes')}
               </Text>
               {productFavorites.map((f) => (
                 <FavoriteProductRow

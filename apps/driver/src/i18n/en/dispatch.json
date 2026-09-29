@@ -1,0 +1,103 @@
+{
+  "availability": {
+    "online": "Online",
+    "offline": "Offline",
+    "paused": "Paused",
+    "on_delivery": "On delivery"
+  },
+  "header": {
+    "eyebrow": "Dispatch",
+    "titleOnDelivery": "Delivery in progress.",
+    "titleOnline": "Ready to receive an order.",
+    "titleOffline": "You are offline.",
+    "subtitleOnDelivery": "Finish this delivery to become available again.",
+    "subtitleOnline": "You are visible to nearby merchants.",
+    "subtitleOffline": "Go online to receive deliveries.",
+    "goOffline": "Go offline",
+    "goOnline": "Go online",
+    "locationDenied": "Location denied by the browser: allow geolocation to be visible to dispatch.",
+    "locationUnsupported": "This browser does not provide a location. In real conditions (native app), your position will be tracked in the background."
+  },
+  "accountInactive": {
+    "title": "Account not active",
+    "message": "Your driver account must be validated before you can go online."
+  },
+  "offer": {
+    "eyebrow": "New delivery",
+    "toRestaurant": "To the merchant",
+    "thenDelivery": "Then delivery",
+    "estimatedDuration": "Estimated duration",
+    "estimatedDurationValue": "{{minutes}} min",
+    "estimatedPay": "Estimated earnings",
+    "decline": "Decline",
+    "accept": "Accept",
+    "accepted": "Delivery accepted.",
+    "acceptError": "This delivery is no longer available.",
+    "declineError": "Unable to decline this delivery."
+  },
+  "activeOrder": {
+    "eyebrow": "Delivery in progress",
+    "client": "Customer",
+    "address": "Address",
+    "items": "Items",
+    "step": "Step",
+    "stepAssigned": "To pick up at the merchant",
+    "collectionCodeLabel": "Merchant pickup code",
+    "markPickedUp": "Order picked up",
+    "stepPickedUp": "On the way to the customer",
+    "handoverCodeLabel": "Customer handover code",
+    "completeDelivery": "Complete the delivery",
+    "pickupMissingCode": "Ask the merchant for the pickup code shown on their screen.",
+    "pickupSuccess": "Order picked up: on your way to the customer.",
+    "pickupError": "Unable to mark the order as picked up.",
+    "completeMissingCode": "Ask the customer for the code shown in their app.",
+    "completeSuccess": "Order delivered. Safe travels!",
+    "completeError": "Unable to complete the delivery."
+  },
+  "empty": {
+    "noOrderTitle": "No delivery right now",
+    "offlineTitle": "You are offline",
+    "noOrderNote": "You will be notified as soon as a delivery matches your area.",
+    "offlineNote": "Go online to receive deliveries."
+  },
+  "countdown": {
+    "expired": "Expired",
+    "seconds": "{{seconds}}s"
+  },
+  "customerAbsent": {
+    "button": "Customer absent",
+    "title": "Customer absent",
+    "arrivedAt": "Arrived at {{time}}",
+    "callsCount_one": "{{count}} call",
+    "callsCount_other": "{{count}} calls",
+    "waitMessage": "Please wait {{seconds}}s more before you can close this order.",
+    "callButton": "Call the customer",
+    "closeButton": "Close",
+    "arrivedToast": "Arrival reported: the customer has been notified.",
+    "arriveError": "Unable to report your arrival.",
+    "callToast": "Call logged. Contact the customer at the number provided with the order if needed.",
+    "callError": "Unable to log the call.",
+    "closeToast": "Order closed: customer absent.",
+    "closeError": "Unable to close the order."
+  },
+  "messaging": {
+    "eyebrow": "Messages with the merchant",
+    "noConversation": "No conversation yet. The merchant can message you from their portal once you are assigned to the delivery.",
+    "noMessages": "No messages yet.",
+    "senderCommerce": "Merchant",
+    "senderYou": "You",
+    "placeholder": "Message the merchant…",
+    "send": "Send",
+    "sendError": "Message not sent."
+  },
+  "cash": {
+    "eyebrow": "Cash held",
+    "overLimit": "Limit exceeded",
+    "toRemit": "To remit",
+    "limitLine": "Limit {{amount}} · to hand over to your merchant"
+  },
+  "routeMap": {
+    "notConfigured": "Mapping not configured, contact your administrator.",
+    "embedDisabled": "Route temporarily unavailable (mapping not enabled server-side), contact your administrator."
+  }
+}

@@ -9,27 +9,30 @@ import { colors, radius, spacing } from '../../theme/tokens';
 import { Text } from '../../ui/Text';
 import { Card } from '../../ui/Card';
 import { Button } from '../../ui/Button';
+import { useTranslation } from '../../i18n/I18nProvider';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Help'>;
 
-const FAQ: { q: string; a: string }[] = [
-  { q: 'Ma commande est en retard, que faire ?', a: 'Consultez le suivi de commande : le statut et la position du livreur (si assigné) s’y actualisent en temps réel.' },
-  { q: 'Comment modifier ou annuler une commande ?', a: 'Une commande déjà envoyée ne peut plus être modifiée depuis l’application ; contactez le restaurant ou l’assistance rapidement après l’envoi.' },
-  { q: 'Un article est manquant ou différent', a: 'Depuis le détail de la commande concernée, vous pouvez signaler le problème à l’assistance.' },
-  { q: 'Comment supprimer mon compte ?', a: 'Contactez l’assistance par e-mail : votre demande sera traitée conformément à notre politique de confidentialité.' },
-];
+const FAQ_KEYS = ['late', 'editCancel', 'missingItem', 'deleteAccount'] as const;
 
 export function HelpScreen({ navigation }: Props) {
+  const { t } = useTranslation('help');
+  const faq = FAQ_KEYS.map((key) => ({
+    key,
+    q: t(`help:faq.${key}.question`),
+    a: t(`help:faq.${key}.answer`),
+  }));
+
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}>
-      <Text variant="title">Aide</Text>
+      <Text variant="title">{t('help:title')}</Text>
       <Text variant="body" color="muted" style={{ marginTop: spacing.sm, marginBottom: spacing.lg }}>
-        Questions fréquentes et contact de l'assistance Ciyou Eats.
+        {t('help:subtitle')}
       </Text>
 
       <View style={{ gap: spacing.sm }}>
-        {FAQ.map((item) => (
-          <Card key={item.q}>
+        {faq.map((item) => (
+          <Card key={item.key}>
             <Text variant="bodyStrong">{item.q}</Text>
             <Text variant="body" color="muted" style={{ marginTop: 4 }}>
               {item.a}
@@ -39,12 +42,17 @@ export function HelpScreen({ navigation }: Props) {
       </View>
 
       <Card style={{ marginTop: spacing.lg }}>
-        <Text variant="bodyStrong">Nous contacter</Text>
+        <Text variant="bodyStrong">{t('help:contact.title')}</Text>
         <Text variant="body" color="muted" style={{ marginTop: 4 }}>
-          Ouvrez une demande : notre équipe vous répond directement dans l'application.
+          {t('help:contact.description')}
         </Text>
-        <Button label="Contacter le support" onPress={() => navigation.navigate('Support', undefined)} style={{ marginTop: spacing.md }} />
-        <Button label="Envoyer un e-mail" variant="outline" onPress={() => Linking.openURL('mailto:support@ciyou-eats.com')} style={{ marginTop: spacing.sm }} />
+        <Button label={t('help:contact.support')} onPress={() => navigation.navigate('Support', undefined)} style={{ marginTop: spacing.md }} />
+        <Button
+          label={t('help:contact.email')}
+          variant="outline"
+          onPress={() => Linking.openURL('mailto:support@ciyou-eats.com')}
+          style={{ marginTop: spacing.sm }}
+        />
       </Card>
     </ScrollView>
   );

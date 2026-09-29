@@ -1,0 +1,16 @@
+{
+  "title": "Modifier le profil",
+  "fields": {
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "phone": "Téléphone",
+    "phonePlaceholder": "06 12 34 56 78",
+    "email": "E-mail"
+  },
+  "emailHint": "L'e-mail n'est pas modifiable ici : contactez l'assistance pour en changer.",
+  "save": "Enregistrer",
+  "errors": {
+    "nameRequired": "Prénom et nom sont obligatoires."
+  },
+  "success": "Profil mis à jour"
+}

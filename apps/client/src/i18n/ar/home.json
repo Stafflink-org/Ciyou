@@ -23,5 +23,47 @@
     "eyebrow": "لا يفوتك",
     "title": "أطباق تستحق التجربة",
     "empty": "لا يوجد طبق مميز حاليًا."
+  },
+  "header": {
+    "menu": "القائمة",
+    "notifications": "الإشعارات",
+    "cart": "السلة",
+    "greeting": "مرحبًا {{firstName}}."
+  },
+  "delivery": {
+    "prefix": "التوصيل إلى",
+    "modeDelivery": "توصيل",
+    "modePickup": "استلام"
+  },
+  "hero": {
+    "eyebrow": "أفضل العناوين القريبة منك",
+    "title": "ماذا نأكل اليوم؟",
+    "placeholder": "طبق، مطعم، أو رغبة…",
+    "search": "بحث"
+  },
+  "foodTypes": {
+    "eyebrow": "طبق لكل رغبة",
+    "title": "بماذا ترغب اليوم؟",
+    "subtitle": "أطباق متوفرة فعليًا في قوائم مطاعم الحي.",
+    "items": {
+      "burgers": "برغر",
+      "pates": "معكرونة",
+      "ramen": "رامن",
+      "sushis": "سوشي",
+      "bowls": "بولز",
+      "brunch": "برنش",
+      "street-food": "أكل الشارع",
+      "cafe": "قهوة"
+    }
+  },
+  "restaurantCard": {
+    "closed": "مغلق مؤقتًا",
+    "sponsored": "مُموَّل",
+    "freeDelivery": "توصيل مجاني",
+    "deliveryFee": "التوصيل {{amount}} €"
+  },
+  "product": {
+    "suggestion": "اقتراح",
+    "add": "إضافة"
   }
 }

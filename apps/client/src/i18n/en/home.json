@@ -23,5 +23,47 @@
     "eyebrow": "Must try",
     "title": "Dishes worth craving",
     "empty": "No featured dish for now."
+  },
+  "header": {
+    "menu": "Menu",
+    "notifications": "Notifications",
+    "cart": "Cart",
+    "greeting": "Hello {{firstName}}."
+  },
+  "delivery": {
+    "prefix": "Deliver to",
+    "modeDelivery": "Delivery",
+    "modePickup": "Pickup"
+  },
+  "hero": {
+    "eyebrow": "The best spots near you",
+    "title": "What are we eating today?",
+    "placeholder": "A dish, a restaurant, a craving…",
+    "search": "Search"
+  },
+  "foodTypes": {
+    "eyebrow": "A dish for every craving",
+    "title": "What are you in the mood for?",
+    "subtitle": "Dishes actually available on menus around you.",
+    "items": {
+      "burgers": "Burgers",
+      "pates": "Pasta",
+      "ramen": "Ramen",
+      "sushis": "Sushi",
+      "bowls": "Bowls",
+      "brunch": "Brunch",
+      "street-food": "Street food",
+      "cafe": "Coffee"
+    }
+  },
+  "restaurantCard": {
+    "closed": "Temporarily closed",
+    "sponsored": "Sponsored",
+    "freeDelivery": "Free delivery",
+    "deliveryFee": "Delivery €{{amount}}"
+  },
+  "product": {
+    "suggestion": "Suggestion",
+    "add": "Add"
   }
 }

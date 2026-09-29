@@ -1,0 +1,38 @@
+{
+  "eyebrow": "ASSISTANCE",
+  "title": "Support Ciyou Eats",
+  "intro": "Une question sur une commande, un paiement ou votre compte ? Écrivez-nous, nous répondons directement ici.",
+  "newRequest": "Nouvelle demande",
+  "subject": "Objet",
+  "subjectPlaceholder": "Ex. Ma commande n'est jamais arrivée",
+  "message": "Votre message",
+  "messagePlaceholder": "Décrivez votre demande…",
+  "cancel": "Annuler",
+  "send": "Envoyer",
+  "yourRequests": "Vos demandes",
+  "noRequests": "Aucune demande pour le moment.",
+  "newReplies": "{{count}} nouvelle(s) réponse(s)",
+  "validation": "Précisez l’objet et décrivez votre demande (10 caractères au moins).",
+  "sent": "Demande {{number}} envoyée au support.",
+  "category": {
+    "order": "Une commande",
+    "account": "Mon compte",
+    "payment": "Un paiement",
+    "other": "Autre"
+  },
+  "status": {
+    "open": "Ouverte",
+    "in_progress": "En cours",
+    "waiting_customer": "En attente de vous",
+    "resolved": "Résolue",
+    "closed": "Fermée"
+  },
+  "ticket": {
+    "notFound": "Cette demande est introuvable.",
+    "systemAuthor": "Ciyou Eats",
+    "supportAuthor": "Support Ciyou Eats",
+    "closedBadge": "Demande fermée",
+    "messagePlaceholder": "Votre message…",
+    "send": "Envoyer"
+  }
+}

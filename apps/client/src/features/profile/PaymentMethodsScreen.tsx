@@ -17,6 +17,7 @@ import { docAt, useCollection } from '../../lib/firestore';
 import { collection } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import type { SavedPaymentMethod } from '@golink/shared';
+import { useTranslation } from '../../i18n/I18nProvider';
 
 const BRAND_ICON: Record<string, string> = { visa: '💳', mastercard: '💳', amex: '💳' };
 
@@ -24,13 +25,13 @@ export function PaymentMethodsScreen() {
   const { user } = useAuth();
   const q = user ? collection(db, `users/${user.uid}/paymentMethods`) : null;
   const { data, loading } = useCollection<SavedPaymentMethod>(q);
+  const { t } = useTranslation('paymentMethods');
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}>
-      <Text variant="title">Modes de paiement</Text>
+      <Text variant="title">{t('paymentMethods:title')}</Text>
       <Text variant="body" color="muted" style={{ marginTop: spacing.sm }}>
-        Espèces toujours possibles à la livraison ou au retrait selon le commerce. Le paiement par carte à la commande n'est pas encore branché
-        dans cette version (aucun formulaire de saisie bancaire) : vos cartes enregistrées, s'il y en a, sont listées ici en lecture seule.
+        {t('paymentMethods:description')}
       </Text>
 
       {loading ? (
@@ -38,7 +39,7 @@ export function PaymentMethodsScreen() {
       ) : data.length === 0 ? (
         <Card style={{ marginTop: spacing.lg }}>
           <Text variant="body" color="muted" align="center">
-            Aucune carte enregistrée.
+            {t('paymentMethods:empty')}
           </Text>
         </Card>
       ) : (
@@ -52,10 +53,10 @@ export function PaymentMethodsScreen() {
                     {m.brand} ···· {m.last4}
                   </Text>
                   <Text variant="caption" color="muted">
-                    Expire {String(m.expMonth).padStart(2, '0')}/{m.expYear}
+                    {t('paymentMethods:expires', { month: String(m.expMonth).padStart(2, '0'), year: m.expYear })}
                   </Text>
                 </View>
-                {m.isDefault ? <Badge label="Par défaut" tone="primary" /> : null}
+                {m.isDefault ? <Badge label={t('paymentMethods:default')} tone="primary" /> : null}
               </View>
             </Card>
           ))}

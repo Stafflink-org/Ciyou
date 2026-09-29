@@ -9,6 +9,10 @@ import { Text } from '../../ui/Text';
 import { Skeleton } from '../../ui/Skeleton';
 import { PlaceholderScreen } from '../shared/PlaceholderScreen';
 import { useNotifications } from './hooks';
+import { useTranslation } from '../../i18n/I18nProvider';
+import type { Translation } from '../../i18n/I18nProvider';
+import { intlLocale } from '../../i18n/core';
+import type { Locale } from '@golink/shared';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Notifications'>;
 
@@ -22,18 +26,19 @@ const CATEGORY_ICON: Record<string, string> = {
   document: '📄',
 };
 
-function timeAgo(at: unknown): string {
+function timeAgo(at: unknown, t: Translation['t'], locale: Locale): string {
   const date = at && typeof at === 'object' && 'toDate' in (at as object) ? (at as { toDate(): Date }).toDate() : null;
   if (!date) return '';
   const diffMin = Math.round((Date.now() - date.getTime()) / 60000);
-  if (diffMin < 1) return "à l'instant";
-  if (diffMin < 60) return `il y a ${diffMin} min`;
+  if (diffMin < 1) return t('notifications:time.now');
+  if (diffMin < 60) return t('notifications:time.minutesAgo', { count: diffMin });
   const diffH = Math.round(diffMin / 60);
-  if (diffH < 24) return `il y a ${diffH} h`;
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  if (diffH < 24) return t('notifications:time.hoursAgo', { count: diffH });
+  return date.toLocaleDateString(intlLocale(locale), { day: 'numeric', month: 'short' });
 }
 
 export function NotificationsScreen({ navigation }: Props) {
+  const { t, locale } = useTranslation('notifications');
   const { data, loading, markRead } = useNotifications();
 
   const onPress = (n: WithId<UserNotification>) => {
@@ -52,7 +57,7 @@ export function NotificationsScreen({ navigation }: Props) {
   }
 
   if (data.length === 0) {
-    return <PlaceholderScreen icon="🔔" title="Aucune notification" note="Vos notifications de commande et de promotions apparaîtront ici." />;
+    return <PlaceholderScreen icon="🔔" title={t('notifications:empty.title')} note={t('notifications:empty.note')} />;
   }
 
   return (
@@ -71,7 +76,7 @@ export function NotificationsScreen({ navigation }: Props) {
               {item.body}
             </Text>
             <Text variant="caption" color="subtle" style={{ marginTop: 4 }}>
-              {timeAgo(item.createdAt)}
+              {timeAgo(item.createdAt, t, locale)}
             </Text>
           </View>
           {!item.read ? <View style={styles.dot} /> : null}

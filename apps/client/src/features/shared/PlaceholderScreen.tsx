@@ -6,8 +6,10 @@ import { View, StyleSheet } from 'react-native';
 import { colors, spacing } from '../../theme/tokens';
 import { Text } from '../../ui/Text';
 import { Badge } from '../../ui/Badge';
+import { useTranslation } from '../../i18n/I18nProvider';
 
-export function PlaceholderScreen({ title, note, icon }: { title: string; note?: string; icon?: string }) {
+export function PlaceholderScreen({ title, note, icon, badgeLabel }: { title: string; note?: string; icon?: string; badgeLabel?: string }) {
+  const { t } = useTranslation('common');
   return (
     <View style={styles.root}>
       <View style={styles.iconWrap}>
@@ -16,7 +18,7 @@ export function PlaceholderScreen({ title, note, icon }: { title: string; note?:
       <Text variant="title" align="center">
         {title}
       </Text>
-      <Badge label="Bientôt disponible" tone="primary" style={{ alignSelf: 'center' }} />
+      <Badge label={badgeLabel ?? t('placeholder.comingSoon')} tone="primary" style={{ alignSelf: 'center' }} />
       {note ? (
         <Text variant="body" color="muted" align="center" style={styles.note}>
           {note}

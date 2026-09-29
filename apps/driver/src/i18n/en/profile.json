@@ -1,0 +1,38 @@
+{
+  "status": {
+    "active": "Active account",
+    "onboarding": "Application under review",
+    "suspended": "Account suspended",
+    "deactivated": "Account deactivated"
+  },
+  "defaultName": "Ciyou Eats driver",
+  "info": {
+    "vehicle": "Vehicle",
+    "type": "Type",
+    "typeRestaurant": "Restaurant-employed driver",
+    "typeIndependent": "Independent driver",
+    "distance": "Maximum distance",
+    "distanceValue": "{{km}} km",
+    "distanceUndefined": "Not set",
+    "cash": "Cash",
+    "cashAccepted": "Accepted",
+    "cashNotAccepted": "Not accepted",
+    "rating": "Average rating",
+    "ratingValue": "{{average}} ★ ({{count}})",
+    "ratingNone": "No rating yet"
+  },
+  "actions": {
+    "settings": "Vehicle, distance and documents",
+    "signOut": "Sign out"
+  },
+  "sanction": {
+    "until": "Until {{date}}",
+    "contestedBadge": "Appeal sent, under review",
+    "overturnedBadge": "Sanction overturned",
+    "reviewedBadge": "Appeal reviewed",
+    "sentBadge": "Appeal sent, under review",
+    "prompt": "You think this sanction is unfair? Explain why, the Ciyou Eats team will review it.",
+    "placeholder": "Your explanation…",
+    "contest": "Appeal this sanction"
+  }
+}

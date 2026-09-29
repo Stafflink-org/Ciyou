@@ -18,6 +18,7 @@ import { Input } from '../../ui/Input';
 import { Text } from '../../ui/Text';
 import { useToast } from '../../ui/Toast';
 import { errorMessage } from '../../lib/firestore';
+import { useTranslation } from '../../i18n/I18nProvider';
 import { CashBalanceCard, CustomerAbsentPanel, MessagingPanel } from './ActiveOrderPanels';
 import { Countdown, InfoRow } from './components';
 import { RouteMap } from './RouteMap';
@@ -41,17 +42,11 @@ import {
 const money = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} €`;
 const km = (meters: number) => `${(meters / 1000).toFixed(1).replace('.', ',')} km`;
 
-const AVAILABILITY_LABEL: Record<Availability, string> = {
-  online: 'En ligne',
-  offline: 'Hors ligne',
-  paused: 'En pause',
-  on_delivery: 'En course',
-};
-
 export function DispatchScreen() {
   const { user } = useAuth();
   const uid = user?.uid ?? null;
   const toast = useToast();
+  const { t } = useTranslation('dispatch');
 
   const { data: driver, loading: driverLoading } = useDriver(uid);
   const { data: location } = useDriverLocation(uid);
@@ -83,7 +78,7 @@ export function DispatchScreen() {
   const toggleAvailability = async () => {
     if (isOnDelivery) return;
     if (!isOnline && !canGoOnline) {
-      Alert.alert('Compte non actif', 'Votre compte livreur doit être validé pour passer en ligne.');
+      Alert.alert(t('accountInactive.title'), t('accountInactive.message'));
       return;
     }
     await setAvailability(isOnline ? 'offline' : 'online');
@@ -94,9 +89,9 @@ export function DispatchScreen() {
     setOfferBusy(true);
     try {
       await respondToOffer({ offerId: offer.id, accept: true });
-      toast.show('Course acceptée.');
+      toast.show(t('offer.accepted'));
     } catch (err) {
-      toast.show(errorMessage(err, 'Cette course n’est plus disponible.'), 'danger');
+      toast.show(errorMessage(err, t('offer.acceptError')), 'danger');
     } finally {
       setOfferBusy(false);
     }
@@ -108,7 +103,7 @@ export function DispatchScreen() {
     try {
       await respondToOffer({ offerId: offer.id, accept: false });
     } catch (err) {
-      toast.show(errorMessage(err, 'Impossible de refuser cette course.'), 'danger');
+      toast.show(errorMessage(err, t('offer.declineError')), 'danger');
     } finally {
       setOfferBusy(false);
     }
@@ -117,16 +112,16 @@ export function DispatchScreen() {
   const markPickedUp = async () => {
     if (!activeOrderId) return;
     if (activeOrder?.delivery?.collectionCode && !collectionCode.trim()) {
-      toast.show('Demandez au commerce le code de collecte affiché sur son écran.', 'danger');
+      toast.show(t('activeOrder.pickupMissingCode'), 'danger');
       return;
     }
     setOrderBusy(true);
     try {
       await markOrderPickedUp({ orderId: activeOrderId, code: collectionCode.trim() || null });
       setCollectionCode('');
-      toast.show('Commande récupérée : direction le client.');
+      toast.show(t('activeOrder.pickupSuccess'));
     } catch (err) {
-      toast.show(errorMessage(err, 'Impossible de marquer la commande récupérée.'), 'danger');
+      toast.show(errorMessage(err, t('activeOrder.pickupError')), 'danger');
     } finally {
       setOrderBusy(false);
     }
@@ -148,16 +143,16 @@ export function DispatchScreen() {
   const complete = async () => {
     if (!activeOrderId) return;
     if (activeOrder?.delivery?.handoverCodeRequired && !handoverCode.trim()) {
-      toast.show('Demandez au client le code affiché dans son application.', 'danger');
+      toast.show(t('activeOrder.completeMissingCode'), 'danger');
       return;
     }
     setOrderBusy(true);
     try {
       await completeOrder({ orderId: activeOrderId, code: handoverCode.trim() || null, geo });
       setHandoverCode('');
-      toast.show('Commande livrée. Bonne route !');
+      toast.show(t('activeOrder.completeSuccess'));
     } catch (err) {
-      toast.show(errorMessage(err, 'Impossible de terminer la livraison.'), 'danger');
+      toast.show(errorMessage(err, t('activeOrder.completeError')), 'danger');
     } finally {
       setOrderBusy(false);
     }
@@ -175,22 +170,22 @@ export function DispatchScreen() {
     <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}>
       <View style={styles.headerCard}>
         <Text variant="eyebrow" color="inverted" style={{ opacity: 0.7 }}>
-          Dispatch
+          {t('header.eyebrow')}
         </Text>
         <Text variant="title" color="inverted" style={{ marginTop: 6 }}>
-          {isOnDelivery ? 'Course en cours.' : isOnline ? 'Prêt à recevoir une course.' : 'Vous êtes hors ligne.'}
+          {isOnDelivery ? t('header.titleOnDelivery') : isOnline ? t('header.titleOnline') : t('header.titleOffline')}
         </Text>
         <Text variant="body" color="inverted" style={{ opacity: 0.75, marginTop: 4 }}>
           {isOnDelivery
-            ? 'Terminez cette course pour redevenir disponible.'
+            ? t('header.subtitleOnDelivery')
             : isOnline
-              ? 'Vous êtes visible des commerces à proximité.'
-              : 'Passez en ligne pour recevoir des courses.'}
+              ? t('header.subtitleOnline')
+              : t('header.subtitleOffline')}
         </Text>
         <View style={styles.headerRow}>
-          <Badge label={AVAILABILITY_LABEL[driver.availability]} tone={isOnline || isOnDelivery ? 'success' : 'neutral'} />
+          <Badge label={t(`availability.${driver.availability}`)} tone={isOnline || isOnDelivery ? 'success' : 'neutral'} />
           <Button
-            label={isOnline ? 'Passer hors ligne' : 'Passer en ligne'}
+            label={isOnline ? t('header.goOffline') : t('header.goOnline')}
             variant={isOnline ? 'outlineInverted' : 'primary'}
             size="md"
             fullWidth={false}
@@ -201,12 +196,12 @@ export function DispatchScreen() {
         </View>
         {Platform.OS === 'web' && geoStatus === 'denied' ? (
           <Text variant="caption" color="danger" style={{ marginTop: spacing.sm }}>
-            Position refusée par le navigateur : autorisez la géolocalisation pour être visible du dispatch.
+            {t('header.locationDenied')}
           </Text>
         ) : null}
         {Platform.OS === 'web' && geoStatus === 'unsupported' ? (
           <Text variant="caption" color="inverted" style={{ marginTop: spacing.sm, opacity: 0.6 }}>
-            Ce navigateur ne fournit pas de position. En conditions réelles (app native), la position sera suivie en arrière-plan.
+            {t('header.locationUnsupported')}
           </Text>
         ) : null}
       </View>
@@ -215,17 +210,20 @@ export function DispatchScreen() {
         <>
           <Card style={{ marginTop: spacing.lg }}>
             <Text variant="eyebrow" color="primary">
-              Course en cours
+              {t('activeOrder.eyebrow')}
             </Text>
             <Text variant="subtitle" style={{ marginTop: 4 }}>
               {activeOrder.restaurantName} · {activeOrder.number}
             </Text>
-            <InfoRow label="Client" value={activeOrder.customerName} />
+            <InfoRow label={t('activeOrder.client')} value={activeOrder.customerName} />
             {activeOrder.delivery ? (
-              <InfoRow label="Adresse" value={`${activeOrder.delivery.address.line1}, ${activeOrder.delivery.address.city}`} />
+              <InfoRow label={t('activeOrder.address')} value={`${activeOrder.delivery.address.line1}, ${activeOrder.delivery.address.city}`} />
             ) : null}
-            <InfoRow label="Articles" value={String(activeOrder.itemsCount)} />
-            <InfoRow label="Étape" value={activeOrder.status === 'assigned' ? 'À récupérer au commerce' : activeOrder.status === 'picked_up' ? 'En route vers le client' : activeOrder.status} />
+            <InfoRow label={t('activeOrder.items')} value={String(activeOrder.itemsCount)} />
+            <InfoRow
+              label={t('activeOrder.step')}
+              value={activeOrder.status === 'assigned' ? t('activeOrder.stepAssigned') : activeOrder.status === 'picked_up' ? t('activeOrder.stepPickedUp') : activeOrder.status}
+            />
 
             {routeOrigin && routeDestination ? (
               <View style={{ marginTop: spacing.md }}>
@@ -236,17 +234,17 @@ export function DispatchScreen() {
             {activeOrder.status === 'assigned' ? (
               <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
                 {activeOrder.delivery?.collectionCode ? (
-                  <Input label="Code de collecte du commerce" value={collectionCode} onChangeText={setCollectionCode} keyboardType="number-pad" placeholder="1234" maxLength={12} />
+                  <Input label={t('activeOrder.collectionCodeLabel')} value={collectionCode} onChangeText={setCollectionCode} keyboardType="number-pad" placeholder="1234" maxLength={12} />
                 ) : null}
-                <Button label="Commande récupérée" onPress={markPickedUp} loading={orderBusy} />
+                <Button label={t('activeOrder.markPickedUp')} onPress={markPickedUp} loading={orderBusy} />
               </View>
             ) : null}
             {activeOrder.status === 'picked_up' ? (
               <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
                 {activeOrder.delivery?.handoverCodeRequired ? (
-                  <Input label="Code de remise du client" value={handoverCode} onChangeText={setHandoverCode} keyboardType="number-pad" placeholder="1234" maxLength={12} />
+                  <Input label={t('activeOrder.handoverCodeLabel')} value={handoverCode} onChangeText={setHandoverCode} keyboardType="number-pad" placeholder="1234" maxLength={12} />
                 ) : null}
-                <Button label="Terminer la livraison" onPress={complete} loading={orderBusy} />
+                <Button label={t('activeOrder.completeDelivery')} onPress={complete} loading={orderBusy} />
                 <CustomerAbsentPanel orderId={activeOrder.id} order={activeOrder} />
               </View>
             ) : null}
@@ -259,27 +257,27 @@ export function DispatchScreen() {
         <Card style={{ marginTop: spacing.lg }}>
           <View style={styles.offerHeader}>
             <Text variant="eyebrow" color="primary">
-              Nouvelle course
+              {t('offer.eyebrow')}
             </Text>
             <Countdown untilMillis={offer.expiresAt.toMillis()} />
           </View>
-          <InfoRow label="Jusqu’au commerce" value={km(offer.distanceToRestaurantMeters)} />
-          <InfoRow label="Puis livraison" value={km(offer.deliveryDistanceMeters)} />
-          <InfoRow label="Durée estimée" value={`${offer.estimatedMinutes} min`} />
-          <InfoRow label="Gain estimé" value={money(offer.estimatedPayCents)} />
+          <InfoRow label={t('offer.toRestaurant')} value={km(offer.distanceToRestaurantMeters)} />
+          <InfoRow label={t('offer.thenDelivery')} value={km(offer.deliveryDistanceMeters)} />
+          <InfoRow label={t('offer.estimatedDuration')} value={t('offer.estimatedDurationValue', { minutes: offer.estimatedMinutes })} />
+          <InfoRow label={t('offer.estimatedPay')} value={money(offer.estimatedPayCents)} />
           <View style={styles.offerActions}>
-            <Button label="Refuser" variant="outline" onPress={declineOffer} loading={offerBusy} style={{ flex: 1 }} />
-            <Button label="Accepter" onPress={acceptOffer} loading={offerBusy} style={{ flex: 1 }} />
+            <Button label={t('offer.decline')} variant="outline" onPress={declineOffer} loading={offerBusy} style={{ flex: 1 }} />
+            <Button label={t('offer.accept')} onPress={acceptOffer} loading={offerBusy} style={{ flex: 1 }} />
           </View>
         </Card>
       ) : (
         <View style={styles.empty}>
           <Text style={{ fontSize: 36 }}>{isOnline ? '📡' : '💤'}</Text>
           <Text variant="subtitle" align="center" style={{ marginTop: spacing.sm }}>
-            {isOnline ? 'Aucune course pour le moment' : 'Vous êtes hors ligne'}
+            {isOnline ? t('empty.noOrderTitle') : t('empty.offlineTitle')}
           </Text>
           <Text variant="body" color="muted" align="center" style={{ marginTop: 4 }}>
-            {isOnline ? 'Vous serez averti dès qu’une course correspond à votre zone.' : 'Passez en ligne pour recevoir des courses.'}
+            {isOnline ? t('empty.noOrderNote') : t('empty.offlineNote')}
           </Text>
         </View>
       )}

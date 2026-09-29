@@ -1,0 +1,15 @@
+{
+  "eyebrow": "PARRAINAGE",
+  "title": "Invitez vos proches",
+  "intro": "Partagez votre code : vos proches en profitent à leur inscription, et vous êtes récompensé(e) à leur première commande.",
+  "yourCode": "Votre code personnel",
+  "shareButton": "Partager mon code",
+  "shareMessage": "Rejoins-moi sur Ciyou Eats et profite d'une remise avec mon code {{code}} !",
+  "enterCodeTitle": "Un code à saisir ?",
+  "alreadyReferred": "Un code de parrainage est déjà enregistré sur votre compte.",
+  "alreadyOrdered": "Le code de parrainage se saisit avant votre première commande : ce n'est plus possible sur ce compte.",
+  "inputPlaceholder": "Code de votre parrain",
+  "validateButton": "Valider le code",
+  "invalidCode": "Saisissez un code valide.",
+  "codeAccepted": "Code accepté : {{amount}} € offerts à votre première commande."
+}

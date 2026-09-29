@@ -1,0 +1,7 @@
+{
+  "title": "Modes de paiement",
+  "description": "Espèces toujours possibles à la livraison ou au retrait selon le commerce. Le paiement par carte à la commande n'est pas encore branché dans cette version (aucun formulaire de saisie bancaire) : vos cartes enregistrées, s'il y en a, sont listées ici en lecture seule.",
+  "empty": "Aucune carte enregistrée.",
+  "expires": "Expire {{month}}/{{year}}",
+  "default": "Par défaut"
+}

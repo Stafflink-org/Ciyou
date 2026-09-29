@@ -21,6 +21,7 @@ import { Card } from '../../ui/Card';
 import { Input } from '../../ui/Input';
 import { Text } from '../../ui/Text';
 import { useToast } from '../../ui/Toast';
+import { useTranslation } from '../../i18n/I18nProvider';
 import { errorMessage } from '../../lib/firestore';
 import { uploadPrivateDriverDocument } from '../../lib/storage';
 import { useDriverDocuments, useDriverProfile, uploadDriverDocument, useUpdateDriverSettings } from './hooks';
@@ -50,6 +51,7 @@ const STATUS_TONE: Record<string, BadgeTone> = {
 
 export function ProfileSettingsScreen() {
   const { user } = useAuth();
+  const { t } = useTranslation('profileSettings');
   const uid = user?.uid ?? null;
   const { data: driver } = useDriverProfile(uid);
   const { save, pending: savingSettings, error: settingsError } = useUpdateDriverSettings(uid);
@@ -78,7 +80,7 @@ export function ProfileSettingsScreen() {
     if (!Number.isFinite(km)) return null;
     return Math.round(km * 1000);
   }, [distanceKm]);
-  const distanceError = distanceMeters === null || distanceMeters < 500 || distanceMeters > 50000 ? 'Entre 0,5 et 50 km.' : null;
+  const distanceError = distanceMeters === null || distanceMeters < 500 || distanceMeters > 50000 ? t('profileSettings:distance.error') : null;
 
   const saveSettings = async () => {
     if (distanceError || distanceMeters === null) return;
@@ -86,8 +88,8 @@ export function ProfileSettingsScreen() {
       vehicle: { type: vehicleType, plate: plate.trim() || null, model: model.trim() || null, color: color.trim() || null },
       maxDistanceMeters: distanceMeters,
     });
-    if (ok) toast.show('Réglages enregistrés.');
-    else toast.show(settingsError ?? 'Impossible d’enregistrer.', 'danger');
+    if (ok) toast.show(t('profileSettings:toast.saved'));
+    else toast.show(settingsError ?? t('profileSettings:toast.saveError'), 'danger');
   };
 
   const pickAndUpload = async (type: PartnerDocumentType) => {
@@ -113,9 +115,9 @@ export function ProfileSettingsScreen() {
         issuedAt: null,
         expiresAt: null,
       });
-      toast.show(`${PARTNER_DOCUMENT_LABELS[type]} envoyé, en attente de vérification.`);
+      toast.show(t('profileSettings:toast.uploaded', { label: PARTNER_DOCUMENT_LABELS[type] }));
     } catch (error) {
-      toast.show(errorMessage(error, 'Le dépôt a échoué. Réessayez.'), 'danger');
+      toast.show(errorMessage(error, t('profileSettings:toast.uploadError')), 'danger');
     } finally {
       setUploadingType(null);
     }
@@ -127,7 +129,7 @@ export function ProfileSettingsScreen() {
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.lg }}>
       <Card>
-        <Text variant="subtitle">Véhicule</Text>
+        <Text variant="subtitle">{t('profileSettings:vehicle.title')}</Text>
         <View style={styles.chipRow}>
           {relevantVehicleTypes.map((type) => (
             <Pressable
@@ -145,21 +147,21 @@ export function ProfileSettingsScreen() {
         </View>
         {isMotorized ? (
           <View style={{ gap: spacing.sm, marginTop: spacing.md }}>
-            <Input label="Plaque d’immatriculation" value={plate} onChangeText={setPlate} autoCapitalize="characters" />
-            <Input label="Modèle" value={model} onChangeText={setModel} />
-            <Input label="Couleur" value={color} onChangeText={setColor} />
+            <Input label={t('profileSettings:vehicle.plate')} value={plate} onChangeText={setPlate} autoCapitalize="characters" />
+            <Input label={t('profileSettings:vehicle.model')} value={model} onChangeText={setModel} />
+            <Input label={t('profileSettings:vehicle.color')} value={color} onChangeText={setColor} />
           </View>
         ) : null}
       </Card>
 
       <Card>
-        <Text variant="subtitle">Distance maximale</Text>
+        <Text variant="subtitle">{t('profileSettings:distance.title')}</Text>
         <Text variant="caption" color="muted" style={{ marginTop: 2 }}>
-          Distance la plus longue que vous acceptez de parcourir pour une course, en kilomètres.
+          {t('profileSettings:distance.description')}
         </Text>
         <View style={{ marginTop: spacing.sm }}>
           <Input
-            label="Distance (km)"
+            label={t('profileSettings:distance.label')}
             value={distanceKm}
             onChangeText={setDistanceKm}
             keyboardType="decimal-pad"
@@ -168,12 +170,12 @@ export function ProfileSettingsScreen() {
         </View>
       </Card>
 
-      <Button label="Enregistrer" onPress={() => void saveSettings()} loading={savingSettings} disabled={!!distanceError} />
+      <Button label={t('profileSettings:save')} onPress={() => void saveSettings()} loading={savingSettings} disabled={!!distanceError} />
 
       <Card>
-        <Text variant="subtitle">Documents</Text>
+        <Text variant="subtitle">{t('profileSettings:documents.title')}</Text>
         <Text variant="caption" color="muted" style={{ marginTop: 2, marginBottom: spacing.md }}>
-          Déposez vos justificatifs (identité, assurance, permis…) pour vérification par Ciyou Eats.
+          {t('profileSettings:documents.description')}
         </Text>
         {DRIVER_DOCUMENT_TYPES.map((type) => {
           const existing = documents.filter((d) => d.type === type).sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis())[0];
@@ -190,12 +192,12 @@ export function ProfileSettingsScreen() {
                   />
                 ) : (
                   <Text variant="caption" color="muted">
-                    Aucun document déposé
+                    {t('profileSettings:documents.none')}
                   </Text>
                 )}
               </View>
               <Button
-                label={busy ? `${Math.round(uploadProgress * 100)} %` : existing ? 'Remplacer' : 'Déposer'}
+                label={busy ? t('profileSettings:documents.progress', { percent: Math.round(uploadProgress * 100) }) : existing ? t('profileSettings:documents.replace') : t('profileSettings:documents.upload')}
                 variant="outline"
                 size="md"
                 fullWidth={false}

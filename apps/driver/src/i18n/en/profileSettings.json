@@ -1,0 +1,29 @@
+{
+  "vehicle": {
+    "title": "Vehicle",
+    "plate": "License plate",
+    "model": "Model",
+    "color": "Colour"
+  },
+  "distance": {
+    "title": "Maximum distance",
+    "description": "The longest distance you're willing to travel for a delivery, in kilometres.",
+    "label": "Distance (km)",
+    "error": "Between 0.5 and 50 km."
+  },
+  "save": "Save",
+  "toast": {
+    "saved": "Settings saved.",
+    "saveError": "Could not save.",
+    "uploaded": "{{label}} submitted, pending review.",
+    "uploadError": "Upload failed. Please try again."
+  },
+  "documents": {
+    "title": "Documents",
+    "description": "Upload your documents (ID, insurance, licence…) for review by Ciyou Eats.",
+    "none": "No document uploaded",
+    "progress": "{{percent}} %",
+    "replace": "Replace",
+    "upload": "Upload"
+  }
+}

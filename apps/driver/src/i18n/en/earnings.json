@@ -1,0 +1,21 @@
+{
+  "header": {
+    "thisWeek": "This week"
+  },
+  "kpi": {
+    "deliveries": "Deliveries",
+    "tips": "Tips"
+  },
+  "list": {
+    "title": "Recent statement",
+    "empty": "No earnings recorded yet. Go online in Dispatch to receive deliveries.",
+    "tipBadge": "incl. {{amount}} tip"
+  },
+  "kind": {
+    "delivery": "Delivery",
+    "bonus": "Bonus",
+    "hourly_guarantee": "Hourly guarantee",
+    "referral": "Referral",
+    "adjustment": "Adjustment"
+  }
+}

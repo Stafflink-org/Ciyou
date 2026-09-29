@@ -10,6 +10,7 @@ import { Text } from '../../ui/Text';
 import { Button } from '../../ui/Button';
 import { useToast } from '../../ui/Toast';
 import { errorMessage } from '../../lib/firestore';
+import { useTranslation } from '../../i18n/I18nProvider';
 import { acceptLegalDocument, setConsent, useMyProfile, usePublishedTerms } from './hooks';
 
 export function LegalGate({ children }: { children: React.ReactNode }) {
@@ -33,6 +34,7 @@ export function LegalGate({ children }: { children: React.ReactNode }) {
 }
 
 function ReacceptanceScreen({ version, title, content, countryId, changeSummary }: { version: string; title: string; content: string; countryId: string; changeSummary: string | null }) {
+  const { t } = useTranslation('legal');
   const toast = useToast();
   const [pending, setPending] = useState(false);
 
@@ -50,14 +52,14 @@ function ReacceptanceScreen({ version, title, content, countryId, changeSummary 
   return (
     <View style={styles.gateRoot}>
       <View style={styles.gateHeader}>
-        <Text variant="title">Nos conditions ont changé</Text>
+        <Text variant="title">{t('legal:reacceptance.title')}</Text>
         <Text variant="body" color="muted" style={{ marginTop: 4 }}>
-          Merci d'accepter la nouvelle version ({version}) pour continuer à utiliser Ciyou Eats.
+          {t('legal:reacceptance.description', { version })}
         </Text>
       </View>
       {changeSummary ? (
         <View style={styles.summaryBox}>
-          <Text variant="bodyStrong">Ce qui change</Text>
+          <Text variant="bodyStrong">{t('legal:reacceptance.whatChanges')}</Text>
           <Text variant="body" color="muted" style={{ marginTop: 4 }}>
             {changeSummary}
           </Text>
@@ -71,12 +73,13 @@ function ReacceptanceScreen({ version, title, content, countryId, changeSummary 
           {content}
         </Text>
       </ScrollView>
-      <Button label="J'accepte les conditions" onPress={accept} loading={pending} style={{ margin: spacing.lg }} />
+      <Button label={t('legal:reacceptance.accept')} onPress={accept} loading={pending} style={{ margin: spacing.lg }} />
     </View>
   );
 }
 
 function CookieConsentBanner() {
+  const { t } = useTranslation('legal');
   const [visible, setVisible] = useState(true);
   const [pending, setPending] = useState(false);
   if (!visible) return null;
@@ -94,11 +97,11 @@ function CookieConsentBanner() {
   return (
     <View style={styles.banner}>
       <Text variant="caption" color="inverted">
-        Ciyou Eats utilise des cookies et données de mesure d'audience, et peut vous envoyer des offres par e-mail. Vous pouvez tout refuser sauf le strict nécessaire.
+        {t('legal:cookieBanner.text')}
       </Text>
       <View style={styles.bannerRow}>
-        <Button label="Tout refuser" variant="outline" onPress={() => respond(false, false)} loading={pending} style={{ flex: 1 }} />
-        <Button label="Tout accepter" onPress={() => respond(true, true)} loading={pending} style={{ flex: 1 }} />
+        <Button label={t('legal:cookieBanner.refuseAll')} variant="outline" onPress={() => respond(false, false)} loading={pending} style={{ flex: 1 }} />
+        <Button label={t('legal:cookieBanner.acceptAll')} onPress={() => respond(true, true)} loading={pending} style={{ flex: 1 }} />
       </View>
     </View>
   );

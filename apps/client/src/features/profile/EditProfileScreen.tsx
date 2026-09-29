@@ -17,6 +17,7 @@ import { Text } from '../../ui/Text';
 import { Input } from '../../ui/Input';
 import { Button } from '../../ui/Button';
 import { useToast } from '../../ui/Toast';
+import { useTranslation } from '../../i18n/I18nProvider';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'EditProfile'>;
 
@@ -24,6 +25,7 @@ export function EditProfileScreen({ navigation }: Props) {
   const { user } = useAuth();
   const { data: profile, loading } = useDoc<UserProfile>(user ? docAt(`users/${user.uid}`) : null);
   const toast = useToast();
+  const { t } = useTranslation('editProfile');
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -41,7 +43,7 @@ export function EditProfileScreen({ navigation }: Props) {
   const save = async () => {
     if (!user) return;
     if (!firstName.trim() || !lastName.trim()) {
-      toast.show('Prénom et nom sont obligatoires.', 'danger');
+      toast.show(t('editProfile:errors.nameRequired'), 'danger');
       return;
     }
     setSaving(true);
@@ -55,7 +57,7 @@ export function EditProfileScreen({ navigation }: Props) {
         ...updatedFields(user.uid),
       });
       if (auth.currentUser) await updateAuthProfile(auth.currentUser, { displayName }).catch(() => undefined);
-      toast.show('Profil mis à jour');
+      toast.show(t('editProfile:success'));
       navigation.goBack();
     } catch (error) {
       toast.show(errorMessage(error), 'danger');
@@ -68,15 +70,21 @@ export function EditProfileScreen({ navigation }: Props) {
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing.lg, gap: spacing.md }}>
-      <Text variant="title">Modifier le profil</Text>
-      <Input label="Prénom" value={firstName} onChangeText={setFirstName} />
-      <Input label="Nom" value={lastName} onChangeText={setLastName} />
-      <Input label="Téléphone" placeholder="06 12 34 56 78" keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
-      <Input label="E-mail" value={user?.email ?? ''} editable={false} />
+      <Text variant="title">{t('editProfile:title')}</Text>
+      <Input label={t('editProfile:fields.firstName')} value={firstName} onChangeText={setFirstName} />
+      <Input label={t('editProfile:fields.lastName')} value={lastName} onChangeText={setLastName} />
+      <Input
+        label={t('editProfile:fields.phone')}
+        placeholder={t('editProfile:fields.phonePlaceholder')}
+        keyboardType="phone-pad"
+        value={phone}
+        onChangeText={setPhone}
+      />
+      <Input label={t('editProfile:fields.email')} value={user?.email ?? ''} editable={false} />
       <Text variant="caption" color="muted">
-        L'e-mail n'est pas modifiable ici : contactez l'assistance pour en changer.
+        {t('editProfile:emailHint')}
       </Text>
-      <Button label="Enregistrer" onPress={save} loading={saving} style={{ marginTop: spacing.md }} />
+      <Button label={t('editProfile:save')} onPress={save} loading={saving} style={{ marginTop: spacing.md }} />
     </ScrollView>
   );
 }

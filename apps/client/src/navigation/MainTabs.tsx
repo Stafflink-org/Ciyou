@@ -9,6 +9,7 @@ import { SearchScreen } from '../features/search/SearchScreen';
 import { OrdersScreen } from '../features/orders/OrdersScreen';
 import { FavoritesScreen } from '../features/favorites/FavoritesScreen';
 import { ProfileScreen } from '../features/profile/ProfileScreen';
+import { useTranslation } from '../i18n/I18nProvider';
 
 const Tab = createBottomTabNavigator<MainTabsParamList>();
 
@@ -20,15 +21,15 @@ const TAB_ICON: Record<keyof MainTabsParamList, string> = {
   Profile: '👤',
 };
 
-const TAB_LABEL: Record<keyof MainTabsParamList, string> = {
-  Home: 'Accueil',
-  Search: 'Recherche',
-  Orders: 'Commandes',
-  Favorites: 'Favoris',
-  Profile: 'Profil',
-};
-
 export function MainTabs() {
+  const { t } = useTranslation('common');
+  const TAB_LABEL: Record<keyof MainTabsParamList, string> = {
+    Home: t('nav.tabs.home'),
+    Search: t('nav.tabs.search'),
+    Orders: t('nav.tabs.orders'),
+    Favorites: t('nav.tabs.favorites'),
+    Profile: t('nav.tabs.profile'),
+  };
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({

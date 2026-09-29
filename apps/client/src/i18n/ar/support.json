@@ -1,0 +1,38 @@
+{
+  "eyebrow": "المساعدة",
+  "title": "دعم Ciyou Eats",
+  "intro": "لديك سؤال حول طلب أو دفعة أو حسابك؟ اكتب لنا، ونرد مباشرة هنا.",
+  "newRequest": "طلب جديد",
+  "subject": "الموضوع",
+  "subjectPlaceholder": "مثال: لم يصل طلبي أبدًا",
+  "message": "رسالتك",
+  "messagePlaceholder": "صف طلبك…",
+  "cancel": "إلغاء",
+  "send": "إرسال",
+  "yourRequests": "طلباتك",
+  "noRequests": "لا يوجد أي طلب حتى الآن.",
+  "newReplies": "{{count}} رد (ردود) جديد",
+  "validation": "يرجى تحديد الموضوع ووصف طلبك (10 أحرف على الأقل).",
+  "sent": "تم إرسال الطلب {{number}} إلى الدعم.",
+  "category": {
+    "order": "طلب",
+    "account": "حسابي",
+    "payment": "دفعة",
+    "other": "أخرى"
+  },
+  "status": {
+    "open": "مفتوحة",
+    "in_progress": "قيد المعالجة",
+    "waiting_customer": "في انتظار ردك",
+    "resolved": "تم الحل",
+    "closed": "مغلقة"
+  },
+  "ticket": {
+    "notFound": "هذا الطلب غير موجود.",
+    "systemAuthor": "Ciyou Eats",
+    "supportAuthor": "دعم Ciyou Eats",
+    "closedBadge": "الطلب مغلق",
+    "messagePlaceholder": "رسالتك…",
+    "send": "إرسال"
+  }
+}

@@ -23,5 +23,47 @@
     "eyebrow": "À goûter absolument",
     "title": "Les plats qui font envie",
     "empty": "Aucun plat mis en avant pour l'instant."
+  },
+  "header": {
+    "menu": "Menu",
+    "notifications": "Notifications",
+    "cart": "Panier",
+    "greeting": "Bonjour {{firstName}}."
+  },
+  "delivery": {
+    "prefix": "Livrer à",
+    "modeDelivery": "En livraison",
+    "modePickup": "À emporter"
+  },
+  "hero": {
+    "eyebrow": "Les bonnes adresses près de chez vous",
+    "title": "Qu’est-ce qu’on mange aujourd’hui ?",
+    "placeholder": "Un plat, un restaurant, une envie…",
+    "search": "Rechercher"
+  },
+  "foodTypes": {
+    "eyebrow": "À chaque envie son assiette",
+    "title": "Qu’est-ce qui vous tente ?",
+    "subtitle": "Des plats vraiment disponibles dans les menus du quartier.",
+    "items": {
+      "burgers": "Burgers",
+      "pates": "Pâtes",
+      "ramen": "Ramen",
+      "sushis": "Sushis",
+      "bowls": "Bowls",
+      "brunch": "Brunch",
+      "street-food": "Street food",
+      "cafe": "Café"
+    }
+  },
+  "restaurantCard": {
+    "closed": "Fermé temporairement",
+    "sponsored": "Sponsorisé",
+    "freeDelivery": "Livraison offerte",
+    "deliveryFee": "Livraison {{amount}} €"
+  },
+  "product": {
+    "suggestion": "Suggestion",
+    "add": "Ajouter"
   }
 }

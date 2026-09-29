@@ -1,8 +1,39 @@
 {
+  "nav": {
+    "tabs": {
+      "home": "Accueil",
+      "search": "Recherche",
+      "orders": "Commandes",
+      "favorites": "Favoris",
+      "profile": "Profil"
+    }
+  },
   "language": {
     "label": "Langue",
     "names": { "fr": "Français", "en": "English", "ar": "العربية" },
     "restartRecommended": "Redémarrez l'application pour un affichage de droite à gauche complet."
+  },
+  "placeholder": {
+    "comingSoon": "Bientôt disponible"
+  },
+  "screenTitles": {
+    "product": "Produit",
+    "cart": "Panier",
+    "checkout": "Commande",
+    "confirmation": "Confirmation",
+    "tracking": "Suivi",
+    "orderDetail": "Détail de la commande",
+    "rateOrder": "Votre avis",
+    "notifications": "Notifications",
+    "addresses": "Vos adresses",
+    "addressForm": "Adresse",
+    "promotions": "Offres",
+    "editProfile": "Modifier le profil",
+    "paymentMethods": "Modes de paiement",
+    "help": "Aide",
+    "support": "Support",
+    "ticketDetail": "Votre demande",
+    "referral": "Parrainage"
   },
   "actions": {
     "save": "Enregistrer",
