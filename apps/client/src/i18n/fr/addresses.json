@@ -1,0 +1,32 @@
+{
+  "empty": {
+    "title": "Aucune adresse enregistrée",
+    "note": "Ajoutez une adresse pour aller plus vite au moment de commander."
+  },
+  "default": "Par défaut",
+  "edit": "Modifier",
+  "setDefault": "Définir par défaut",
+  "remove": "Supprimer",
+  "removed": "Adresse supprimée",
+  "add": "Ajouter une adresse",
+  "form": {
+    "editTitle": "Modifier l'adresse",
+    "newTitle": "Nouvelle adresse",
+    "labelField": "Étiquette",
+    "labelPlaceholder": "Domicile, Bureau…",
+    "line1Field": "Adresse",
+    "line1Placeholder": "12 rue de la Paix, 54400 Longwy",
+    "detailsField": "Complément",
+    "detailsPlaceholder": "2e étage, digicode…",
+    "floorField": "Étage",
+    "floorPlaceholder": "2",
+    "doorCodeField": "Code d'accès",
+    "doorCodePlaceholder": "A1234",
+    "instructionsField": "Instructions pour le livreur",
+    "instructionsPlaceholder": "Sonner à l'interphone Dupont",
+    "save": "Enregistrer",
+    "missingLine1": "Indiquez une adresse.",
+    "updated": "Adresse modifiée",
+    "created": "Adresse ajoutée"
+  }
+}

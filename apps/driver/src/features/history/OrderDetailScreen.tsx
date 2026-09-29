@@ -7,12 +7,14 @@ import { colors, spacing } from '../../theme/tokens';
 import { Card } from '../../ui/Card';
 import { Text } from '../../ui/Text';
 import { useOrderDetail, useOrderEarning } from './hooks';
+import { useTranslation } from '../../i18n/I18nProvider';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'OrderDetail'>;
 
 const money = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} €`;
 
 export function OrderDetailScreen({ route }: Props) {
+  const { t } = useTranslation('history');
   const { data: order, loading } = useOrderDetail(route.params.orderId);
   const { data: earning } = useOrderEarning(route.params.orderId);
 
@@ -34,7 +36,7 @@ export function OrderDetailScreen({ route }: Props) {
       </Card>
       <Card>
         <Text variant="eyebrow" color="muted">
-          Client
+          {t('detail.client')}
         </Text>
         <Text variant="bodyStrong" style={{ marginTop: 4 }}>
           {order.customerName}
@@ -47,7 +49,7 @@ export function OrderDetailScreen({ route }: Props) {
       </Card>
       <Card>
         <Text variant="eyebrow" color="muted">
-          Articles
+          {t('detail.items')}
         </Text>
         {order.items.map((item, index) => (
           <View key={index} style={styles.itemRow}>
@@ -60,14 +62,14 @@ export function OrderDetailScreen({ route }: Props) {
       {earning ? (
         <Card>
           <Text variant="eyebrow" color="muted">
-            Gain de la course
+            {t('detail.earning')}
           </Text>
           <Text variant="title" style={{ marginTop: 4 }}>
             {money(earning.amountCents + earning.tipCents)}
           </Text>
           {earning.tipCents > 0 ? (
             <Text variant="caption" color="muted">
-              dont {money(earning.tipCents)} de pourboire
+              {t('detail.includingTip', { amount: money(earning.tipCents) })}
             </Text>
           ) : null}
         </Card>

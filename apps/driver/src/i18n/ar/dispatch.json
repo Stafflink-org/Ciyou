@@ -1,0 +1,103 @@
+{
+  "availability": {
+    "online": "متصل",
+    "offline": "غير متصل",
+    "paused": "متوقف مؤقتًا",
+    "on_delivery": "في توصيل"
+  },
+  "header": {
+    "eyebrow": "التوزيع",
+    "titleOnDelivery": "توصيل جارٍ.",
+    "titleOnline": "جاهز لاستلام طلب.",
+    "titleOffline": "أنت غير متصل.",
+    "subtitleOnDelivery": "أنهِ هذا التوصيل لتصبح متاحًا من جديد.",
+    "subtitleOnline": "أنت مرئي للمتاجر القريبة.",
+    "subtitleOffline": "اتصل لاستلام طلبات التوصيل.",
+    "goOffline": "الانتقال إلى غير متصل",
+    "goOnline": "الاتصال",
+    "locationDenied": "تم رفض الموقع من طرف المتصفح: فعّل تحديد الموقع لتكون مرئيًا للتوزيع.",
+    "locationUnsupported": "هذا المتصفح لا يوفر تحديد الموقع. في الظروف الحقيقية (تطبيق أصلي)، سيتم تتبع موقعك في الخلفية."
+  },
+  "accountInactive": {
+    "title": "الحساب غير نشط",
+    "message": "يجب التحقق من حساب السائق قبل أن تتمكن من الاتصال."
+  },
+  "offer": {
+    "eyebrow": "طلب توصيل جديد",
+    "toRestaurant": "حتى المتجر",
+    "thenDelivery": "ثم التوصيل",
+    "estimatedDuration": "المدة المقدّرة",
+    "estimatedDurationValue": "{{minutes}} دقيقة",
+    "estimatedPay": "الأرباح المقدّرة",
+    "decline": "رفض",
+    "accept": "قبول",
+    "accepted": "تم قبول الطلب.",
+    "acceptError": "هذا الطلب لم يعد متاحًا.",
+    "declineError": "تعذّر رفض هذا الطلب."
+  },
+  "activeOrder": {
+    "eyebrow": "توصيل جارٍ",
+    "client": "العميل",
+    "address": "العنوان",
+    "items": "العناصر",
+    "step": "المرحلة",
+    "stepAssigned": "بانتظار الاستلام من المتجر",
+    "collectionCodeLabel": "رمز الاستلام من المتجر",
+    "markPickedUp": "تم استلام الطلب",
+    "stepPickedUp": "في الطريق إلى العميل",
+    "handoverCodeLabel": "رمز التسليم للعميل",
+    "completeDelivery": "إنهاء التوصيل",
+    "pickupMissingCode": "اطلب من المتجر رمز الاستلام المعروض على شاشته.",
+    "pickupSuccess": "تم استلام الطلب: في الطريق إلى العميل.",
+    "pickupError": "تعذّر تسجيل استلام الطلب.",
+    "completeMissingCode": "اطلب من العميل الرمز المعروض في تطبيقه.",
+    "completeSuccess": "تم تسليم الطلب. رحلة موفقة!",
+    "completeError": "تعذّر إنهاء التوصيل."
+  },
+  "empty": {
+    "noOrderTitle": "لا يوجد طلب توصيل حاليًا",
+    "offlineTitle": "أنت غير متصل",
+    "noOrderNote": "سيتم إعلامك بمجرد توفر طلب توصيل في منطقتك.",
+    "offlineNote": "اتصل لاستلام طلبات التوصيل."
+  },
+  "countdown": {
+    "expired": "انتهت المهلة",
+    "seconds": "{{seconds}} ثانية"
+  },
+  "customerAbsent": {
+    "button": "العميل غائب",
+    "title": "العميل غائب",
+    "arrivedAt": "وصلت الساعة {{time}}",
+    "callsCount_one": "مكالمة واحدة",
+    "callsCount_other": "{{count}} مكالمات",
+    "waitMessage": "يرجى الانتظار {{seconds}} ثانية إضافية قبل إمكانية إغلاق الطلب.",
+    "callButton": "اتصال بالعميل",
+    "closeButton": "إغلاق",
+    "arrivedToast": "تم الإبلاغ عن الوصول: تم إعلام العميل.",
+    "arriveError": "تعذّر الإبلاغ عن وصولك.",
+    "callToast": "تم تسجيل المكالمة. اتصل بالعميل على الرقم المرسل مع الطلب إذا لزم الأمر.",
+    "callError": "تعذّر تسجيل المكالمة.",
+    "closeToast": "تم إغلاق الطلب: العميل غائب.",
+    "closeError": "تعذّر إغلاق الطلب."
+  },
+  "messaging": {
+    "eyebrow": "المراسلة مع المتجر",
+    "noConversation": "لا توجد محادثة بعد. يمكن للمتجر مراسلتك من مساحته بمجرد إسناد الطلب إليك.",
+    "noMessages": "لا توجد رسائل بعد.",
+    "senderCommerce": "المتجر",
+    "senderYou": "أنت",
+    "placeholder": "اكتب رسالة إلى المتجر…",
+    "send": "إرسال",
+    "sendError": "تعذّر إرسال الرسالة."
+  },
+  "cash": {
+    "eyebrow": "النقد بحوزتك",
+    "overLimit": "الحد الأقصى متجاوَز",
+    "toRemit": "بانتظار التسليم",
+    "limitLine": "الحد الأقصى {{amount}} · للتسليم إلى المتجر"
+  },
+  "routeMap": {
+    "notConfigured": "الخريطة غير مهيأة، اتصل بمسؤول النظام.",
+    "embedDisabled": "المسار غير متاح مؤقتًا (الخريطة غير مفعّلة من جهة الخادم)، اتصل بمسؤول النظام."
+  }
+}

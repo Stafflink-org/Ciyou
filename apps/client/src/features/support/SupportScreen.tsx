@@ -15,16 +15,23 @@ import { Input } from '../../ui/Input';
 import { Skeleton } from '../../ui/Skeleton';
 import { useToast } from '../../ui/Toast';
 import { errorMessage } from '../../lib/firestore';
-import { CATEGORY_LABELS, createClientTicket, useMyTickets, type TicketCategory } from './hooks';
+import { useTranslation } from '../../i18n/I18nProvider';
+import { createClientTicket, useMyTickets, type TicketCategory } from './hooks';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Support'>;
 
-const STATUS_LABELS: Record<string, string> = {
-  open: 'Ouverte',
-  in_progress: 'En cours',
-  waiting_customer: 'En attente de vous',
-  resolved: 'Résolue',
-  closed: 'Fermée',
+const STATUS_KEYS: Record<string, string> = {
+  open: 'status.open',
+  in_progress: 'status.in_progress',
+  waiting_customer: 'status.waiting_customer',
+  resolved: 'status.resolved',
+  closed: 'status.closed',
+};
+const CATEGORY_KEYS: Record<TicketCategory, string> = {
+  order: 'category.order',
+  account: 'category.account',
+  payment: 'category.payment',
+  other: 'category.other',
 };
 const STATUS_TONE: Record<string, BadgeTone> = {
   open: 'primary',
@@ -37,6 +44,7 @@ const STATUS_TONE: Record<string, BadgeTone> = {
 const CATEGORIES: TicketCategory[] = ['order', 'account', 'payment', 'other'];
 
 export function SupportScreen({ navigation, route }: Props) {
+  const { t } = useTranslation('support');
   const tickets = useMyTickets();
   const toast = useToast();
   const [creating, setCreating] = useState(false);
@@ -47,13 +55,13 @@ export function SupportScreen({ navigation, route }: Props) {
 
   const submit = async () => {
     if (subject.trim().length < 5 || body.trim().length < 10) {
-      toast.show('Précisez l’objet et décrivez votre demande (10 caractères au moins).', 'danger');
+      toast.show(t('support:validation'), 'danger');
       return;
     }
     setSending(true);
     try {
       const result = await createClientTicket({ category, subject: subject.trim(), body: body.trim(), orderId: route.params?.orderId ?? null });
-      toast.show(`Demande ${result.number} envoyée au support.`);
+      toast.show(t('support:sent', { number: result.number }));
       setCreating(false);
       setSubject('');
       setBody('');
@@ -68,60 +76,60 @@ export function SupportScreen({ navigation, route }: Props) {
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.md }}>
       <Text variant="eyebrow" color="muted">
-        ASSISTANCE
+        {t('support:eyebrow')}
       </Text>
       <Text variant="title" style={{ marginBottom: 4 }}>
-        Support Ciyou Eats
+        {t('support:title')}
       </Text>
       <Text variant="body" color="muted">
-        Une question sur une commande, un paiement ou votre compte ? Écrivez-nous, nous répondons directement ici.
+        {t('support:intro')}
       </Text>
 
       {!creating ? (
-        <Button label="Nouvelle demande" onPress={() => setCreating(true)} style={{ marginTop: spacing.sm }} />
+        <Button label={t('support:newRequest')} onPress={() => setCreating(true)} style={{ marginTop: spacing.sm }} />
       ) : (
         <Card style={{ marginTop: spacing.sm, gap: spacing.sm }}>
-          <Text variant="bodyStrong">Nouvelle demande</Text>
+          <Text variant="bodyStrong">{t('support:newRequest')}</Text>
           <View style={styles.chipsRow}>
             {CATEGORIES.map((c) => (
               <Pressable key={c} onPress={() => setCategory(c)} style={[styles.chip, category === c && styles.chipActive]}>
                 <Text variant="caption" color={category === c ? 'inverted' : 'muted'}>
-                  {CATEGORY_LABELS[c]}
+                  {t(`support:${CATEGORY_KEYS[c]}`)}
                 </Text>
               </Pressable>
             ))}
           </View>
-          <Input label="Objet" placeholder="Ex. Ma commande n'est jamais arrivée" value={subject} onChangeText={setSubject} maxLength={120} />
-          <Input label="Votre message" placeholder="Décrivez votre demande…" value={body} onChangeText={setBody} multiline numberOfLines={4} maxLength={1500} />
+          <Input label={t('support:subject')} placeholder={t('support:subjectPlaceholder')} value={subject} onChangeText={setSubject} maxLength={120} />
+          <Input label={t('support:message')} placeholder={t('support:messagePlaceholder')} value={body} onChangeText={setBody} multiline numberOfLines={4} maxLength={1500} />
           <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-            <Button label="Annuler" variant="outline" onPress={() => setCreating(false)} style={{ flex: 1 }} />
-            <Button label="Envoyer" onPress={submit} loading={sending} style={{ flex: 1 }} />
+            <Button label={t('support:cancel')} variant="outline" onPress={() => setCreating(false)} style={{ flex: 1 }} />
+            <Button label={t('support:send')} onPress={submit} loading={sending} style={{ flex: 1 }} />
           </View>
         </Card>
       )}
 
       <Text variant="bodyStrong" style={{ marginTop: spacing.md }}>
-        Vos demandes
+        {t('support:yourRequests')}
       </Text>
       {tickets.loading ? (
         <Skeleton style={{ height: 72, borderRadius: 16 }} />
       ) : tickets.data.length === 0 ? (
         <Text variant="body" color="muted">
-          Aucune demande pour le moment.
+          {t('support:noRequests')}
         </Text>
       ) : (
-        tickets.data.map((t) => (
-          <Card key={t.id} onPress={() => navigation.navigate('TicketDetail', { ticketId: t.id })} style={{ marginBottom: 0 }}>
+        tickets.data.map((ticket) => (
+          <Card key={ticket.id} onPress={() => navigation.navigate('TicketDetail', { ticketId: ticket.id })} style={{ marginBottom: 0 }}>
             <View style={styles.row}>
               <Text variant="bodyStrong" style={{ flex: 1 }} numberOfLines={1}>
-                {t.subject}
+                {ticket.subject}
               </Text>
-              <Badge label={STATUS_LABELS[t.status] ?? t.status} tone={STATUS_TONE[t.status] ?? 'neutral'} />
+              <Badge label={STATUS_KEYS[ticket.status] ? t(`support:${STATUS_KEYS[ticket.status]}`) : ticket.status} tone={STATUS_TONE[ticket.status] ?? 'neutral'} />
             </View>
             <Text variant="caption" color="muted" style={{ marginTop: 4 }} numberOfLines={1}>
-              {t.number} · {t.lastMessagePreview}
+              {ticket.number} · {ticket.lastMessagePreview}
             </Text>
-            {t.unreadByRequester > 0 ? <Badge label={`${t.unreadByRequester} nouvelle(s) réponse(s)`} tone="primary" style={{ marginTop: spacing.xs }} /> : null}
+            {ticket.unreadByRequester > 0 ? <Badge label={t('support:newReplies', { count: ticket.unreadByRequester })} tone="primary" style={{ marginTop: spacing.xs }} /> : null}
           </Card>
         ))
       )}

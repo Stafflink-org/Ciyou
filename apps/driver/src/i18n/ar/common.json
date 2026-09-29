@@ -1,4 +1,16 @@
 {
+  "nav": {
+    "tabs": {
+      "dispatch": "توزيع الطلبات",
+      "earnings": "الأرباح",
+      "history": "السجل",
+      "profile": "الملف الشخصي"
+    }
+  },
+  "screenTitles": {
+    "orderDetail": "تفاصيل التوصيلة",
+    "profileSettings": "إعدادات الملف الشخصي"
+  },
   "language": {
     "label": "اللغة",
     "names": { "fr": "Français", "en": "English", "ar": "العربية" },

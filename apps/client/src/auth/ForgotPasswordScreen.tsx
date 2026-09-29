@@ -8,11 +8,13 @@ import { AuthLayout } from './AuthLayout';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Text } from '../ui/Text';
+import { useTranslation } from '../i18n/I18nProvider';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'ForgotPassword'>;
 
 export function ForgotPasswordScreen({ navigation }: Props) {
   const { sendPasswordReset } = useAuth();
+  const { t } = useTranslation('auth');
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -20,7 +22,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
 
   const submit = async () => {
     if (!email.trim()) {
-      setError('Renseignez votre e-mail.');
+      setError(t('forgotPassword.missingEmail'));
       return;
     }
     setError(null);
@@ -29,7 +31,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
       await sendPasswordReset(email);
       setSent(true);
     } catch (err) {
-      setError(errorMessage(err, 'Envoi impossible. Vérifiez l’adresse saisie.'));
+      setError(errorMessage(err, t('forgotPassword.sendFailed')));
     } finally {
       setLoading(false);
     }
@@ -37,21 +39,21 @@ export function ForgotPasswordScreen({ navigation }: Props) {
 
   if (sent) {
     return (
-      <AuthLayout title="E-mail envoyé" subtitle={`Un lien de réinitialisation a été envoyé à ${email.trim()} s’il correspond à un compte.`}>
-        <Button label="Retour à la connexion" onPress={() => navigation.navigate('SignIn')} />
+      <AuthLayout title={t('forgotPassword.sentTitle')} subtitle={t('forgotPassword.sentSubtitle', { email: email.trim() })}>
+        <Button label={t('forgotPassword.backToSignIn')} onPress={() => navigation.navigate('SignIn')} />
       </AuthLayout>
     );
   }
 
   return (
-    <AuthLayout title="Mot de passe oublié" subtitle="Indiquez votre e-mail : nous vous enverrons un lien de réinitialisation.">
-      <Input label="E-mail" autoCapitalize="none" keyboardType="email-address" autoComplete="email" value={email} onChangeText={setEmail} placeholder="vous@exemple.com" />
+    <AuthLayout title={t('forgotPassword.title')} subtitle={t('forgotPassword.subtitle')}>
+      <Input label={t('login.email')} autoCapitalize="none" keyboardType="email-address" autoComplete="email" value={email} onChangeText={setEmail} placeholder={t('login.emailPlaceholder')} />
       {error ? (
         <Text variant="caption" color="danger">
           {error}
         </Text>
       ) : null}
-      <Button label="Envoyer le lien" onPress={submit} loading={loading} />
+      <Button label={t('forgotPassword.submit')} onPress={submit} loading={loading} />
     </AuthLayout>
   );
 }

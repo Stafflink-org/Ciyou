@@ -1,0 +1,38 @@
+{
+  "eyebrow": "SUPPORT",
+  "title": "Ciyou Eats support",
+  "intro": "A question about an order, a payment or your account? Write to us, we reply right here.",
+  "newRequest": "New request",
+  "subject": "Subject",
+  "subjectPlaceholder": "E.g. My order never arrived",
+  "message": "Your message",
+  "messagePlaceholder": "Describe your request…",
+  "cancel": "Cancel",
+  "send": "Send",
+  "yourRequests": "Your requests",
+  "noRequests": "No request yet.",
+  "newReplies": "{{count}} new reply(ies)",
+  "validation": "Please fill in the subject and describe your request (at least 10 characters).",
+  "sent": "Request {{number}} sent to support.",
+  "category": {
+    "order": "An order",
+    "account": "My account",
+    "payment": "A payment",
+    "other": "Other"
+  },
+  "status": {
+    "open": "Open",
+    "in_progress": "In progress",
+    "waiting_customer": "Waiting on you",
+    "resolved": "Resolved",
+    "closed": "Closed"
+  },
+  "ticket": {
+    "notFound": "This request could not be found.",
+    "systemAuthor": "Ciyou Eats",
+    "supportAuthor": "Ciyou Eats support",
+    "closedBadge": "Request closed",
+    "messagePlaceholder": "Your message…",
+    "send": "Send"
+  }
+}

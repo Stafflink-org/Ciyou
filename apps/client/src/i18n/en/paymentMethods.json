@@ -1,0 +1,7 @@
+{
+  "title": "Payment methods",
+  "description": "Cash is always accepted on delivery or pickup depending on the merchant. Card payment at checkout isn't wired up yet in this version (no card entry form): your saved cards, if any, are listed here read-only.",
+  "empty": "No card saved.",
+  "expires": "Expires {{month}}/{{year}}",
+  "default": "Default"
+}

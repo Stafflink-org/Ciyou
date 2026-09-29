@@ -1,0 +1,103 @@
+{
+  "availability": {
+    "online": "En ligne",
+    "offline": "Hors ligne",
+    "paused": "En pause",
+    "on_delivery": "En course"
+  },
+  "header": {
+    "eyebrow": "Dispatch",
+    "titleOnDelivery": "Course en cours.",
+    "titleOnline": "Prêt à recevoir une course.",
+    "titleOffline": "Vous êtes hors ligne.",
+    "subtitleOnDelivery": "Terminez cette course pour redevenir disponible.",
+    "subtitleOnline": "Vous êtes visible des commerces à proximité.",
+    "subtitleOffline": "Passez en ligne pour recevoir des courses.",
+    "goOffline": "Passer hors ligne",
+    "goOnline": "Passer en ligne",
+    "locationDenied": "Position refusée par le navigateur : autorisez la géolocalisation pour être visible du dispatch.",
+    "locationUnsupported": "Ce navigateur ne fournit pas de position. En conditions réelles (app native), la position sera suivie en arrière-plan."
+  },
+  "accountInactive": {
+    "title": "Compte non actif",
+    "message": "Votre compte livreur doit être validé pour passer en ligne."
+  },
+  "offer": {
+    "eyebrow": "Nouvelle course",
+    "toRestaurant": "Jusqu’au commerce",
+    "thenDelivery": "Puis livraison",
+    "estimatedDuration": "Durée estimée",
+    "estimatedDurationValue": "{{minutes}} min",
+    "estimatedPay": "Gain estimé",
+    "decline": "Refuser",
+    "accept": "Accepter",
+    "accepted": "Course acceptée.",
+    "acceptError": "Cette course n’est plus disponible.",
+    "declineError": "Impossible de refuser cette course."
+  },
+  "activeOrder": {
+    "eyebrow": "Course en cours",
+    "client": "Client",
+    "address": "Adresse",
+    "items": "Articles",
+    "step": "Étape",
+    "stepAssigned": "À récupérer au commerce",
+    "collectionCodeLabel": "Code de collecte du commerce",
+    "markPickedUp": "Commande récupérée",
+    "stepPickedUp": "En route vers le client",
+    "handoverCodeLabel": "Code de remise du client",
+    "completeDelivery": "Terminer la livraison",
+    "pickupMissingCode": "Demandez au commerce le code de collecte affiché sur son écran.",
+    "pickupSuccess": "Commande récupérée : direction le client.",
+    "pickupError": "Impossible de marquer la commande récupérée.",
+    "completeMissingCode": "Demandez au client le code affiché dans son application.",
+    "completeSuccess": "Commande livrée. Bonne route !",
+    "completeError": "Impossible de terminer la livraison."
+  },
+  "empty": {
+    "noOrderTitle": "Aucune course pour le moment",
+    "offlineTitle": "Vous êtes hors ligne",
+    "noOrderNote": "Vous serez averti dès qu’une course correspond à votre zone.",
+    "offlineNote": "Passez en ligne pour recevoir des courses."
+  },
+  "countdown": {
+    "expired": "Expiré",
+    "seconds": "{{seconds}}s"
+  },
+  "customerAbsent": {
+    "button": "Client absent",
+    "title": "Client absent",
+    "arrivedAt": "Arrivé à {{time}}",
+    "callsCount_one": "{{count}} appel",
+    "callsCount_other": "{{count}} appels",
+    "waitMessage": "Patientez encore {{seconds}}s avant de pouvoir clôturer.",
+    "callButton": "Appeler le client",
+    "closeButton": "Clôturer",
+    "arrivedToast": "Arrivée signalée : le client en est informé.",
+    "arriveError": "Impossible de signaler votre arrivée.",
+    "callToast": "Appel enregistré. Contactez le client au numéro communiqué à la commande si besoin.",
+    "callError": "Impossible d’enregistrer l’appel.",
+    "closeToast": "Commande clôturée : client absent.",
+    "closeError": "Impossible de clôturer la commande."
+  },
+  "messaging": {
+    "eyebrow": "Messagerie avec le commerce",
+    "noConversation": "Aucune conversation pour l’instant. Le commerce peut vous écrire depuis son espace dès que vous êtes attribué à la course.",
+    "noMessages": "Aucun message pour l’instant.",
+    "senderCommerce": "Commerce",
+    "senderYou": "Vous",
+    "placeholder": "Écrire au commerce…",
+    "send": "Envoyer",
+    "sendError": "Message non envoyé."
+  },
+  "cash": {
+    "eyebrow": "Espèces détenues",
+    "overLimit": "Plafond dépassé",
+    "toRemit": "À reverser",
+    "limitLine": "Plafond {{amount}} · à remettre à votre commerce"
+  },
+  "routeMap": {
+    "notConfigured": "Cartographie non configurée, contactez votre administrateur.",
+    "embedDisabled": "Itinéraire momentanément indisponible (cartographie non activée côté serveur), contactez votre administrateur."
+  }
+}

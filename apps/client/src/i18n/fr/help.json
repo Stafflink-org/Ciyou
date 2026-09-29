@@ -1,0 +1,28 @@
+{
+  "title": "Aide",
+  "subtitle": "Questions fréquentes et contact de l'assistance Ciyou Eats.",
+  "faq": {
+    "late": {
+      "question": "Ma commande est en retard, que faire ?",
+      "answer": "Consultez le suivi de commande : le statut et la position du livreur (si assigné) s’y actualisent en temps réel."
+    },
+    "editCancel": {
+      "question": "Comment modifier ou annuler une commande ?",
+      "answer": "Une commande déjà envoyée ne peut plus être modifiée depuis l’application ; contactez le restaurant ou l’assistance rapidement après l’envoi."
+    },
+    "missingItem": {
+      "question": "Un article est manquant ou différent",
+      "answer": "Depuis le détail de la commande concernée, vous pouvez signaler le problème à l’assistance."
+    },
+    "deleteAccount": {
+      "question": "Comment supprimer mon compte ?",
+      "answer": "Contactez l’assistance par e-mail : votre demande sera traitée conformément à notre politique de confidentialité."
+    }
+  },
+  "contact": {
+    "title": "Nous contacter",
+    "description": "Ouvrez une demande : notre équipe vous répond directement dans l'application.",
+    "support": "Contacter le support",
+    "email": "Envoyer un e-mail"
+  }
+}

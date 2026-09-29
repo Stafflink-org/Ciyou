@@ -13,10 +13,12 @@ import { useToast } from '../../ui/Toast';
 import { PlaceholderScreen } from '../shared/PlaceholderScreen';
 import { useAddresses, useAddressActions, useDefaultAddressId } from './hooks';
 import { errorMessage } from '../../lib/firestore';
+import { useTranslation } from '../../i18n/I18nProvider';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Addresses'>;
 
 export function AddressesScreen({ navigation }: Props) {
+  const { t } = useTranslation('addresses');
   const { data: addresses, loading } = useAddresses();
   const defaultAddressId = useDefaultAddressId();
   const { remove, setDefault } = useAddressActions();
@@ -34,7 +36,7 @@ export function AddressesScreen({ navigation }: Props) {
   return (
     <View style={styles.root}>
       {addresses.length === 0 ? (
-        <PlaceholderScreen icon="📍" title="Aucune adresse enregistrée" note="Ajoutez une adresse pour aller plus vite au moment de commander." />
+        <PlaceholderScreen icon="📍" title={t('addresses:empty.title')} note={t('addresses:empty.note')} />
       ) : (
         <View style={{ padding: spacing.lg, gap: spacing.sm }}>
           {addresses.map((a) => (
@@ -43,7 +45,7 @@ export function AddressesScreen({ navigation }: Props) {
                 <View style={{ flex: 1 }}>
                   <View style={styles.labelRow}>
                     <Text variant="bodyStrong">{a.label}</Text>
-                    {a.id === defaultAddressId ? <Badge label="Par défaut" tone="primary" /> : null}
+                    {a.id === defaultAddressId ? <Badge label={t('addresses:default')} tone="primary" /> : null}
                   </View>
                   <Text variant="caption" color="muted" style={{ marginTop: 2 }}>
                     {a.line1}
@@ -54,25 +56,25 @@ export function AddressesScreen({ navigation }: Props) {
               <View style={styles.actions}>
                 <Pressable onPress={() => navigation.navigate('AddressForm', { addressId: a.id })}>
                   <Text variant="bodyStrong" color="primary">
-                    Modifier
+                    {t('addresses:edit')}
                   </Text>
                 </Pressable>
                 {a.id !== defaultAddressId ? (
                   <Pressable onPress={() => setDefault(a.id).catch((e) => toast.show(errorMessage(e), 'danger'))}>
                     <Text variant="bodyStrong" color="primary">
-                      Définir par défaut
+                      {t('addresses:setDefault')}
                     </Text>
                   </Pressable>
                 ) : null}
                 <Pressable
                   onPress={() =>
                     remove(a.id)
-                      .then(() => toast.show('Adresse supprimée'))
+                      .then(() => toast.show(t('addresses:removed')))
                       .catch((e) => toast.show(errorMessage(e), 'danger'))
                   }
                 >
                   <Text variant="bodyStrong" color="danger">
-                    Supprimer
+                    {t('addresses:remove')}
                   </Text>
                 </Pressable>
               </View>
@@ -81,7 +83,7 @@ export function AddressesScreen({ navigation }: Props) {
         </View>
       )}
       <View style={styles.footer}>
-        <Button label="Ajouter une adresse" onPress={() => navigation.navigate('AddressForm')} />
+        <Button label={t('addresses:add')} onPress={() => navigation.navigate('AddressForm')} />
       </View>
     </View>
   );

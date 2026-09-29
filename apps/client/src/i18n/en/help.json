@@ -1,0 +1,28 @@
+{
+  "title": "Help",
+  "subtitle": "Frequently asked questions and Ciyou Eats support contact.",
+  "faq": {
+    "late": {
+      "question": "My order is late, what should I do?",
+      "answer": "Check the order tracking: the status and courier position (if assigned) update there in real time."
+    },
+    "editCancel": {
+      "question": "How do I change or cancel an order?",
+      "answer": "An order that has already been sent can no longer be changed from the app; contact the restaurant or support shortly after it's sent."
+    },
+    "missingItem": {
+      "question": "An item is missing or different",
+      "answer": "From the relevant order's details, you can report the issue to support."
+    },
+    "deleteAccount": {
+      "question": "How do I delete my account?",
+      "answer": "Contact support by email: your request will be handled per our privacy policy."
+    }
+  },
+  "contact": {
+    "title": "Contact us",
+    "description": "Open a request: our team replies to you directly in the app.",
+    "support": "Contact support",
+    "email": "Send an email"
+  }
+}

@@ -1,8 +1,39 @@
 {
+  "nav": {
+    "tabs": {
+      "home": "Home",
+      "search": "Search",
+      "orders": "Orders",
+      "favorites": "Favorites",
+      "profile": "Profile"
+    }
+  },
   "language": {
     "label": "Language",
     "names": { "fr": "Français", "en": "English", "ar": "العربية" },
     "restartRecommended": "Restart the app for full right-to-left display."
+  },
+  "placeholder": {
+    "comingSoon": "Coming soon"
+  },
+  "screenTitles": {
+    "product": "Product",
+    "cart": "Cart",
+    "checkout": "Checkout",
+    "confirmation": "Confirmation",
+    "tracking": "Tracking",
+    "orderDetail": "Order detail",
+    "rateOrder": "Your review",
+    "notifications": "Notifications",
+    "addresses": "Your addresses",
+    "addressForm": "Address",
+    "promotions": "Offers",
+    "editProfile": "Edit profile",
+    "paymentMethods": "Payment methods",
+    "help": "Help",
+    "support": "Support",
+    "ticketDetail": "Your request",
+    "referral": "Referral"
   },
   "actions": {
     "save": "Save",

@@ -1,0 +1,38 @@
+{
+  "status": {
+    "active": "الحساب نشط",
+    "onboarding": "الملف قيد المراجعة",
+    "suspended": "الحساب موقوف",
+    "deactivated": "الحساب معطّل"
+  },
+  "defaultName": "سائق Ciyou Eats",
+  "info": {
+    "vehicle": "المركبة",
+    "type": "النوع",
+    "typeRestaurant": "سائق موظف لدى متجر",
+    "typeIndependent": "سائق مستقل",
+    "distance": "المسافة القصوى",
+    "distanceValue": "{{km}} كم",
+    "distanceUndefined": "غير محددة",
+    "cash": "الدفع نقدًا",
+    "cashAccepted": "مقبول",
+    "cashNotAccepted": "غير مقبول",
+    "rating": "متوسط التقييم",
+    "ratingValue": "{{average}} ★ ({{count}})",
+    "ratingNone": "لا يوجد تقييم بعد"
+  },
+  "actions": {
+    "settings": "المركبة والمسافة والمستندات",
+    "signOut": "تسجيل الخروج"
+  },
+  "sanction": {
+    "until": "حتى {{date}}",
+    "contestedBadge": "تم إرسال الاعتراض، قيد المراجعة",
+    "overturnedBadge": "تم إلغاء العقوبة",
+    "reviewedBadge": "تمت مراجعة الاعتراض",
+    "sentBadge": "تم إرسال الاعتراض، قيد المراجعة",
+    "prompt": "هل تعتقد أن هذه العقوبة غير مبررة؟ اشرح السبب، وسيقوم فريق Ciyou Eats بمراجعته.",
+    "placeholder": "توضيحك...",
+    "contest": "الاعتراض على هذه العقوبة"
+  }
+}

@@ -16,6 +16,7 @@ import { useToast } from '../../ui/Toast';
 import { PlaceholderScreen } from '../shared/PlaceholderScreen';
 import { useCart } from '../cart/CartContext';
 import { useShowcasePromotions, promotionValueLabel } from './hooks';
+import { useTranslation } from '../../i18n/I18nProvider';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Promotions'>;
 
@@ -23,6 +24,7 @@ export function PromotionsScreen({ navigation }: Props) {
   const { data: promotions, loading } = useShowcasePromotions();
   const cart = useCart();
   const toast = useToast();
+  const { t } = useTranslation('promotions');
 
   if (loading) {
     return (
@@ -34,26 +36,26 @@ export function PromotionsScreen({ navigation }: Props) {
   }
 
   if (promotions.length === 0) {
-    return <PlaceholderScreen icon="🏷️" title="Aucune offre pour le moment" note="Revenez bientôt : les offres des commerces apparaîtront ici." />;
+    return <PlaceholderScreen icon="🏷️" title={t('promotions:emptyTitle')} note={t('promotions:emptyNote')} />;
   }
 
   const apply = (code: string | null | undefined) => {
     if (!code) {
-      toast.show('Offre appliquée automatiquement au panier, sans code.');
+      toast.show(t('promotions:appliedNoCode'));
       return;
     }
     cart.setPromoCode(code);
-    toast.show(`Code ${code} ajouté à votre panier`);
+    toast.show(t('promotions:appliedWithCode', { code }));
     if (cart.lines.length > 0) navigation.navigate('Cart');
   };
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.md }}>
       <Text variant="eyebrow" color="muted">
-        BONS PLANS
+        {t('promotions:eyebrow')}
       </Text>
       <Text variant="title" style={{ marginBottom: spacing.sm }}>
-        Toutes les offres
+        {t('promotions:title')}
       </Text>
 
       {promotions.map((promo) => (
@@ -71,20 +73,20 @@ export function PromotionsScreen({ navigation }: Props) {
           ) : null}
           {promo.minSubtotalCents > 0 ? (
             <Text variant="caption" color="subtle" style={{ marginTop: 4 }}>
-              Dès {(promo.minSubtotalCents / 100).toFixed(2).replace('.', ',')} € d'achat
+              {t('promotions:minSubtotal', { amount: (promo.minSubtotalCents / 100).toFixed(2).replace('.', ',') })}
             </Text>
           ) : null}
           <View style={styles.footerRow}>
             {promo.code ? (
               <Text variant="bodyStrong" color="primary">
-                Code {promo.code}
+                {t('promotions:code', { code: promo.code })}
               </Text>
             ) : (
               <Text variant="caption" color="muted">
-                Appliquée automatiquement
+                {t('promotions:autoApplied')}
               </Text>
             )}
-            <Button label="Appliquer" size="md" fullWidth={false} onPress={() => apply(promo.code)} />
+            <Button label={t('promotions:apply')} size="md" fullWidth={false} onPress={() => apply(promo.code)} />
           </View>
         </Card>
       ))}

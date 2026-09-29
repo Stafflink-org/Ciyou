@@ -9,12 +9,15 @@ import { useAuth } from '../../auth/AuthContext';
 import { colors, spacing } from '../../theme/tokens';
 import { Card } from '../../ui/Card';
 import { Text } from '../../ui/Text';
+import { useTranslation } from '../../i18n/I18nProvider';
+import { intlLocale } from '../../i18n/core';
 import { useDeliveredOrders } from './hooks';
 
 type Props = CompositeScreenProps<BottomTabScreenProps<MainTabsParamList, 'History'>, NativeStackScreenProps<MainStackParamList>>;
 
 export function HistoryScreen({ navigation }: Props) {
   const { user } = useAuth();
+  const { t, locale } = useTranslation('history');
   const { data, loading } = useDeliveredOrders(user?.uid ?? null);
 
   if (loading) {
@@ -34,7 +37,7 @@ export function HistoryScreen({ navigation }: Props) {
       ListEmptyComponent={
         <Card>
           <Text variant="body" color="muted" align="center">
-            Aucune course livrée pour le moment.
+            {t('history:empty')}
           </Text>
         </Card>
       }
@@ -46,7 +49,7 @@ export function HistoryScreen({ navigation }: Props) {
                 {item.number} · {item.restaurantName}
               </Text>
               <Text variant="caption" color="muted">
-                {item.customerName} · {item.timeline.delivered?.toDate().toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) ?? ''}
+                {item.customerName} · {item.timeline.delivered?.toDate().toLocaleDateString(intlLocale(locale), { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) ?? ''}
               </Text>
             </View>
             <Text variant="body" color="subtle">
