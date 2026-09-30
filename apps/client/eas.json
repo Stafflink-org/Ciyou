@@ -19,10 +19,20 @@
   },
   "submit": {
     "testflight": {
-      "ios": {}
+      "ios": {
+        "ascAppId": "6817783889",
+        "ascApiKeyPath": "/Users/mac/Downloads/AuthKey_BSSB9VA476.p8",
+        "ascApiKeyId": "BSSB9VA476",
+        "ascApiKeyIssuerId": "759b69b2-a8b7-4d55-9ebe-7cd70039d144"
+      }
     },
     "production": {
-      "ios": {}
+      "ios": {
+        "ascAppId": "6817783889",
+        "ascApiKeyPath": "/Users/mac/Downloads/AuthKey_BSSB9VA476.p8",
+        "ascApiKeyId": "BSSB9VA476",
+        "ascApiKeyIssuerId": "759b69b2-a8b7-4d55-9ebe-7cd70039d144"
+      }
     }
   }
 }
