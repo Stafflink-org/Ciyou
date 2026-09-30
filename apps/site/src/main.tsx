@@ -2,10 +2,18 @@ import { StrictMode, useState, type FormEvent } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ArrowRight, Building2, CheckCircle2, Clock3, Mail, MapPin, ShieldCheck, Store, Wrench } from 'lucide-react';
 import { Logo } from '@golink/ui';
-import { createPublicLead, type LeadPayload } from './firebase';
 import './styles.css';
 
 type SubmitState = 'idle' | 'submitting' | 'success' | 'error';
+
+interface LeadPayload {
+  fullName: string;
+  businessName: string;
+  email: string;
+  phone: string;
+  city: string;
+  message: string;
+}
 
 const initialForm: LeadPayload = {
   fullName: '',
@@ -29,14 +37,19 @@ function App() {
     event.preventDefault();
     setState('submitting');
     try {
-      await createPublicLead({
-        fullName: form.fullName.trim(),
-        businessName: form.businessName.trim(),
-        email: form.email.trim().toLowerCase(),
-        phone: form.phone.trim(),
-        city: form.city.trim(),
-        message: form.message.trim(),
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: form.fullName.trim(),
+          businessName: form.businessName.trim(),
+          email: form.email.trim().toLowerCase(),
+          phone: form.phone.trim(),
+          city: form.city.trim(),
+          message: form.message.trim(),
+        }),
       });
+      if (!response.ok) throw new Error('contact_failed');
       setForm(initialForm);
       setState('success');
     } catch (error) {
@@ -58,7 +71,7 @@ function App() {
           <a href="https://restaurant.ciyou.io" className="link-button muted">
             Accès restaurant
           </a>
-          <a href="mailto:contact@ciyou.io" className="link-button primary">
+          <a href="#contact" className="link-button primary">
             Nous contacter
           </a>
         </nav>
@@ -75,9 +88,6 @@ function App() {
           <div className="hero-actions">
             <a href="https://restaurant.ciyou.io" className="cta">
               Accéder au backoffice restaurant <ArrowRight size={18} />
-            </a>
-            <a href="https://admin.ciyou.io" className="secondary-cta">
-              Accès équipe Ciyou
             </a>
           </div>
           <div className="status-row" aria-label="État des services">
@@ -110,7 +120,7 @@ function App() {
             répondrons dès que la validation de votre demande sera effectuée.
           </p>
           <div className="info-list">
-            <span><Building2 size={18} /> Restaurants, franchises et commerces alimentaires</span>
+            <span><Building2 size={18} /> Restaurants</span>
             <span><MapPin size={18} /> Déploiement progressif par ville</span>
           </div>
         </div>
@@ -148,7 +158,7 @@ function App() {
             {state === 'submitting' ? 'Envoi en cours…' : 'Envoyer ma demande'}
           </button>
           {state === 'success' && <p className="form-message success">Votre demande a bien été envoyée. Nous vous contacterons prochainement.</p>}
-          {state === 'error' && <p className="form-message error">L’envoi n’a pas abouti. Réessayez ou contactez-nous par e-mail.</p>}
+          {state === 'error' && <p className="form-message error">L’envoi n’a pas abouti. Réessayez dans quelques instants.</p>}
         </form>
       </section>
     </main>

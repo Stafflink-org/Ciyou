@@ -6,6 +6,7 @@ WORKDIR /repo
 COPY package.json package-lock.json ./
 COPY packages/ui/package.json packages/ui/
 COPY apps/site/package.json apps/site/
+COPY apps/site-api/package.json apps/site-api/
 COPY apps/admin/package.json apps/admin/
 COPY apps/restaurant/package.json apps/restaurant/
 COPY apps/client/package.json apps/client/
