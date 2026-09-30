@@ -9,11 +9,13 @@ import { AuthLayout } from './AuthLayout';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Text } from '../ui/Text';
+import { useTranslation } from '../i18n/I18nProvider';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'ForgotPassword'>;
 
 export function ForgotPasswordScreen({ navigation }: Props) {
   const { sendPasswordReset } = useAuth();
+  const { t } = useTranslation('common');
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -30,7 +32,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
       await sendPasswordReset(email);
       setSent(true);
     } catch (err) {
-      setError(errorMessage(err, 'Envoi impossible. Vérifiez l’adresse saisie.'));
+      setError(errorMessage(err, t, 'Envoi impossible. Vérifiez l’adresse saisie.'));
     } finally {
       setLoading(false);
     }

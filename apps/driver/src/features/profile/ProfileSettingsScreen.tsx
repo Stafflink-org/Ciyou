@@ -6,10 +6,8 @@ import { useEffect, useMemo, useState } from 'react';
 import * as DocumentPicker from 'expo-document-picker';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import {
-  DOCUMENT_STATUS_LABELS,
-  PARTNER_DOCUMENT_LABELS,
-  VEHICLE_LABELS,
   VEHICLE_TYPES,
+  labelOf,
   type PartnerDocumentType,
   type VehicleType,
 } from '@golink/shared';
@@ -51,7 +49,7 @@ const STATUS_TONE: Record<string, BadgeTone> = {
 
 export function ProfileSettingsScreen() {
   const { user } = useAuth();
-  const { t } = useTranslation('profileSettings');
+  const { t, locale } = useTranslation('profileSettings');
   const uid = user?.uid ?? null;
   const { data: driver } = useDriverProfile(uid);
   const { save, pending: savingSettings, error: settingsError } = useUpdateDriverSettings(uid);
@@ -115,9 +113,9 @@ export function ProfileSettingsScreen() {
         issuedAt: null,
         expiresAt: null,
       });
-      toast.show(t('profileSettings:toast.uploaded', { label: PARTNER_DOCUMENT_LABELS[type] }));
+      toast.show(t('profileSettings:toast.uploaded', { label: labelOf('PARTNER_DOCUMENT_LABELS', type, locale) }));
     } catch (error) {
-      toast.show(errorMessage(error, t('profileSettings:toast.uploadError')), 'danger');
+      toast.show(errorMessage(error, t, t('profileSettings:toast.uploadError')), 'danger');
     } finally {
       setUploadingType(null);
     }
@@ -140,7 +138,7 @@ export function ProfileSettingsScreen() {
               accessibilityState={{ selected: vehicleType === type }}
             >
               <Text variant="caption" style={{ color: vehicleType === type ? colors.primaryFg : colors.fg }}>
-                {VEHICLE_LABELS[type]}
+                {labelOf('VEHICLE_LABELS', type, locale)}
               </Text>
             </Pressable>
           ))}
@@ -183,10 +181,10 @@ export function ProfileSettingsScreen() {
           return (
             <View key={type} style={styles.docRow}>
               <View style={{ flex: 1 }}>
-                <Text variant="body">{PARTNER_DOCUMENT_LABELS[type]}</Text>
+                <Text variant="body">{labelOf('PARTNER_DOCUMENT_LABELS', type, locale)}</Text>
                 {existing ? (
                   <Badge
-                    label={DOCUMENT_STATUS_LABELS[existing.status]}
+                    label={labelOf('DOCUMENT_STATUS_LABELS', existing.status, locale)}
                     tone={STATUS_TONE[existing.status] ?? 'neutral'}
                     style={{ marginTop: 4 }}
                   />

@@ -65,7 +65,7 @@ export function RateOrderScreen({ route, navigation }: Props) {
       toast.show(t('thankYouToast'));
       navigation.goBack();
     } catch (error) {
-      toast.show(errorMessage(error), 'danger');
+      toast.show(errorMessage(error, t), 'danger');
     } finally {
       setSubmitting(false);
     }

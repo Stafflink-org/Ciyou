@@ -45,7 +45,7 @@ export function ReferralScreen() {
       toast.show(t('referral:codeAccepted', { amount: (result.rewardCents / 100).toFixed(2).replace('.', ',') }));
       setCode('');
     } catch (error) {
-      toast.show(errorMessage(error), 'danger');
+      toast.show(errorMessage(error, t), 'danger');
     } finally {
       setSending(false);
     }
