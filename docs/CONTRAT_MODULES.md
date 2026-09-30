@@ -233,6 +233,7 @@ Règles d'interface :
 - Montants toujours stockés en centimes et affichés par `formatEUR`. Statuts affichés par `StatusBadge` / libellés de `@golink/shared`, jamais la valeur brute.
 - Responsive obligatoire : aucun défilement horizontal de la page à 390 px (les tableaux défilent dans leur conteneur). Vérifier les trois thèmes : admin, restaurant clair, restaurant sombre.
 - Vitrine des composants : `npm run dev:admin` puis http://localhost:5174/_ui (`?theme=admin`, `restaurant`, `restaurant-dark`).
+- **Parité visuelle restaurant / admin (2026-09-30, correctif rejet client)** : le restaurant démarre désormais en mode **sombre par défaut** (comme l'admin, qui n'a pas de sélecteur), et la palette `[data-theme="restaurant"][data-mode="dark"]` (`packages/ui/src/styles/tokens.css`) est **strictement identique**, valeur par valeur, à `[data-theme="admin"]`. Le sélecteur clair/sombre du restaurant est **conservé** (le retour client portait sur l'identité de base, pas sur l'existence du sélecteur) ; un script inline dans `apps/restaurant/index.html` pose `data-mode="dark"` avant le premier rendu pour éviter un flash clair au chargement. Structure des pages (colonnes Commandes, listes Produits/Options) non modifiée — seul le skin a été harmonisé. Point non tranché : si le client souhaite à terme retirer complètement le sélecteur clair pour le restaurant (fixer comme l'admin), c'est un choix produit restant à confirmer explicitement.
 
 ---
 
