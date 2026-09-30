@@ -1,8 +1,10 @@
 // Données personnelles (RGPD, §29 cahier super admin) : dépôt d'une demande d'exercice
 // de droits (accès, portabilité, rectification, effacement, opposition) et
-// téléchargement de l'export une fois traité. Adaptation livreur, fidèle à
-// apps/restaurant/src/features/documents/GdprSection.tsx (mêmes Cloud Functions,
-// jamais dupliquées), atteignable depuis ProfileScreen.
+// téléchargement de l'export une fois traité. Adaptation client, fidèle à
+// apps/driver/src/features/gdpr/GdprScreen.tsx (mêmes Cloud Functions,
+// jamais dupliquées), atteignable depuis ProfileScreen. Contrairement à la copie
+// livreur (i18n non exploité), cet écran neuf passe par le namespace `gdpr` et
+// `labelOf` (packages/shared/src/constants/labels-i18n.ts) pour les libellés.
 import { useState } from 'react';
 import { Linking, ScrollView, StyleSheet, View } from 'react-native';
 import { labelOf, type GdprRequest, type GdprRequestType, type WithId } from '@golink/shared';
@@ -14,8 +16,8 @@ import { Card } from '../../ui/Card';
 import { Text } from '../../ui/Text';
 import { useToast } from '../../ui/Toast';
 import { errorMessage } from '../../lib/firestore';
-import { getGdprExportLink, submitGdprRequest, useMyGdprRequests } from './hooks';
 import { useTranslation } from '../../i18n/I18nProvider';
+import { getGdprExportLink, submitGdprRequest, useMyGdprRequests } from './hooks';
 
 const TYPES: GdprRequestType[] = ['access', 'portability', 'rectification', 'erasure', 'objection'];
 
@@ -29,7 +31,7 @@ const STATUS_TONE: Record<string, BadgeTone> = {
 
 export function GdprScreen() {
   const { user } = useAuth();
-  const { t, locale } = useTranslation('common');
+  const { t, locale } = useTranslation('gdpr');
   const toast = useToast();
   const requests = useMyGdprRequests(user?.uid ?? null);
   const [pendingType, setPendingType] = useState<GdprRequestType | null>(null);
@@ -41,7 +43,7 @@ export function GdprScreen() {
     setPendingType(type);
     try {
       await submitGdprRequest({ type, restaurantId: null, notes: null });
-      toast.show('Votre demande a été enregistrée. Réponse sous 30 jours.');
+      toast.show(t('gdpr:submitted'));
     } catch (error) {
       toast.show(errorMessage(error, t), 'danger');
     } finally {
@@ -51,9 +53,9 @@ export function GdprScreen() {
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}>
-      <Text variant="title">Données personnelles</Text>
+      <Text variant="title">{t('gdpr:title')}</Text>
       <Text variant="body" color="muted" style={{ marginTop: 4 }}>
-        Demandez l'accès, la portabilité, la rectification ou l'effacement de vos données détenues par Ciyou Eats, ou opposez-vous à un traitement. Réponse sous 30 jours.
+        {t('gdpr:intro')}
       </Text>
 
       {requests.data.length > 0 ? (
@@ -67,7 +69,7 @@ export function GdprScreen() {
       {hasOpen ? (
         <Card style={{ marginTop: spacing.lg }}>
           <Text variant="body" color="muted">
-            Une demande est déjà en cours de traitement pour votre compte. Vous pourrez en déposer une nouvelle une fois celle-ci close.
+            {t('gdpr:pendingNotice')}
           </Text>
         </Card>
       ) : (
@@ -75,7 +77,7 @@ export function GdprScreen() {
           {TYPES.map((type) => (
             <Button
               key={type}
-              label={`Demander : ${labelOf('GDPR_REQUEST_TYPE_LABELS', type, locale)}`}
+              label={t('gdpr:requestLabel', { type: labelOf('GDPR_REQUEST_TYPE_LABELS', type, locale) })}
               variant="outline"
               loading={pendingType === type}
               disabled={pendingType !== null}
@@ -90,7 +92,7 @@ export function GdprScreen() {
 
 function RequestRow({ request }: { request: WithId<GdprRequest> }) {
   const toast = useToast();
-  const { t, locale } = useTranslation('common');
+  const { t, locale } = useTranslation('gdpr');
   const [loading, setLoading] = useState(false);
 
   const download = async () => {
@@ -114,7 +116,7 @@ function RequestRow({ request }: { request: WithId<GdprRequest> }) {
         </View>
       </View>
       {request.status === 'completed' && request.export ? (
-        <Button label="Télécharger" variant="outline" loading={loading} onPress={() => void download()} />
+        <Button label={t('gdpr:download')} variant="outline" loading={loading} onPress={() => void download()} />
       ) : null}
     </Card>
   );

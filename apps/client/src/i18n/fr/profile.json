@@ -17,7 +17,8 @@
     "paymentMethods": "Modes de paiement",
     "help": "Aide",
     "support": "Support (mes demandes)",
-    "language": "Langue"
+    "language": "Langue",
+    "gdpr": "Données personnelles"
   },
   "signOut": "Se déconnecter"
 }

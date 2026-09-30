@@ -151,7 +151,7 @@ function CheckoutScreenInner({ navigation }: Props) {
       setAddrDetails('');
       toast.show(t('addressSavedToast'));
     } catch (error) {
-      toast.show(errorMessage(error), 'danger');
+      toast.show(errorMessage(error, t), 'danger');
     } finally {
       setSavingAddress(false);
     }
@@ -232,7 +232,7 @@ function CheckoutScreenInner({ navigation }: Props) {
       toast.show(t('orderConfirmedToast'));
       navigation.replace('Confirmation', { orderId: result.orderId });
     } catch (error) {
-      setErrorText(errorMessage(error) || t('cardGenericError'));
+      setErrorText(errorMessage(error, t) || t('cardGenericError'));
     } finally {
       setSubmitting(false);
       setSubmittingLabel(null);

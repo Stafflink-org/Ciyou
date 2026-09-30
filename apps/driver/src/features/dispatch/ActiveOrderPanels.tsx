@@ -45,7 +45,7 @@ export function CustomerAbsentPanel({ orderId, order }: { orderId: string; order
       await markDriverArrived({ orderId });
       toast.show(t('customerAbsent.arrivedToast'));
     } catch (err) {
-      toast.show(errorMessage(err, t('customerAbsent.arriveError')), 'danger');
+      toast.show(errorMessage(err, t, t('customerAbsent.arriveError')), 'danger');
     } finally {
       setBusy(false);
     }
@@ -60,7 +60,7 @@ export function CustomerAbsentPanel({ orderId, order }: { orderId: string; order
       // docs/CONTRAT_MODULES.md §11. On trace l'appel comme l'exige la fonction serveur.
       toast.show(t('customerAbsent.callToast'));
     } catch (err) {
-      toast.show(errorMessage(err, t('customerAbsent.callError')), 'danger');
+      toast.show(errorMessage(err, t, t('customerAbsent.callError')), 'danger');
     } finally {
       setBusy(false);
     }
@@ -72,7 +72,7 @@ export function CustomerAbsentPanel({ orderId, order }: { orderId: string; order
       await closeCustomerAbsent({ orderId });
       toast.show(t('customerAbsent.closeToast'));
     } catch (err) {
-      toast.show(errorMessage(err, t('customerAbsent.closeError')), 'danger');
+      toast.show(errorMessage(err, t, t('customerAbsent.closeError')), 'danger');
     } finally {
       setBusy(false);
     }
@@ -130,7 +130,7 @@ export function MessagingPanel({
       await sendConversationMessage(conversation.id, uid, displayName, text.trim());
       setText('');
     } catch (err) {
-      toast.show(errorMessage(err, t('messaging.sendError')), 'danger');
+      toast.show(errorMessage(err, t, t('messaging.sendError')), 'danger');
     } finally {
       setSending(false);
     }

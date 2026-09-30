@@ -60,7 +60,7 @@ export function AddressesScreen({ navigation }: Props) {
                   </Text>
                 </Pressable>
                 {a.id !== defaultAddressId ? (
-                  <Pressable onPress={() => setDefault(a.id).catch((e) => toast.show(errorMessage(e), 'danger'))}>
+                  <Pressable onPress={() => setDefault(a.id).catch((e) => toast.show(errorMessage(e, t), 'danger'))}>
                     <Text variant="bodyStrong" color="primary">
                       {t('addresses:setDefault')}
                     </Text>
@@ -70,7 +70,7 @@ export function AddressesScreen({ navigation }: Props) {
                   onPress={() =>
                     remove(a.id)
                       .then(() => toast.show(t('addresses:removed')))
-                      .catch((e) => toast.show(errorMessage(e), 'danger'))
+                      .catch((e) => toast.show(errorMessage(e, t), 'danger'))
                   }
                 >
                   <Text variant="bodyStrong" color="danger">

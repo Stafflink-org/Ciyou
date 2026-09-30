@@ -27,6 +27,14 @@
     "loading": "Loading…"
   },
   "errors": {
-    "default": "Something went wrong. Please try again."
+    "default": "Something went wrong. Please try again.",
+    "wrongPassword": "Incorrect email or password.",
+    "userNotFound": "No account matches this email.",
+    "emailAlreadyInUse": "An account already exists with this email.",
+    "weakPassword": "Choose a password with at least 6 characters.",
+    "invalidEmail": "Invalid email address.",
+    "tooManyRequests": "Too many attempts. Try again in a few minutes.",
+    "networkRequestFailed": "Connection failed. Check your network.",
+    "permissionDenied": "Action not allowed."
   }
 }

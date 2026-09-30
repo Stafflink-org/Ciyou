@@ -38,6 +38,9 @@ import arProfileSettings from './ar/profileSettings.json';
 import frProfile from './fr/profile.json';
 import enProfile from './en/profile.json';
 import arProfile from './ar/profile.json';
+import frLegal from './fr/legal.json';
+import enLegal from './en/legal.json';
+import arLegal from './ar/legal.json';
 
 addResources('fr', 'common', frCommon);
 addResources('en', 'common', enCommon);
@@ -57,6 +60,9 @@ addResources('ar', 'profileSettings', arProfileSettings);
 addResources('fr', 'profile', frProfile);
 addResources('en', 'profile', enProfile);
 addResources('ar', 'profile', arProfile);
+addResources('fr', 'legal', frLegal);
+addResources('en', 'legal', enLegal);
+addResources('ar', 'legal', arLegal);
 
 const STORAGE_KEY = 'golink-driver:locale';
 

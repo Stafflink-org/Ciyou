@@ -27,6 +27,14 @@
     "loading": "Chargement…"
   },
   "errors": {
-    "default": "Une erreur est survenue. Réessayez dans un instant."
+    "default": "Une erreur est survenue. Réessayez dans un instant.",
+    "wrongPassword": "E-mail ou mot de passe incorrect.",
+    "userNotFound": "Aucun compte ne correspond à cet e-mail.",
+    "emailAlreadyInUse": "Un compte existe déjà avec cet e-mail.",
+    "weakPassword": "Choisissez un mot de passe d’au moins 6 caractères.",
+    "invalidEmail": "Adresse e-mail invalide.",
+    "tooManyRequests": "Trop de tentatives. Réessayez dans quelques minutes.",
+    "networkRequestFailed": "Connexion impossible. Vérifiez votre réseau.",
+    "permissionDenied": "Action non autorisée."
   }
 }

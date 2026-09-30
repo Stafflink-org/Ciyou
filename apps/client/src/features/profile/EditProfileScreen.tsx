@@ -60,7 +60,7 @@ export function EditProfileScreen({ navigation }: Props) {
       toast.show(t('editProfile:success'));
       navigation.goBack();
     } catch (error) {
-      toast.show(errorMessage(error), 'danger');
+      toast.show(errorMessage(error, t), 'danger');
     } finally {
       setSaving(false);
     }

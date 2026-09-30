@@ -6,7 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { SANCTION_TYPE_LABELS, VEHICLE_LABELS } from '@golink/shared';
+import { labelOf } from '@golink/shared';
 import { useAuth } from '../../auth/AuthContext';
 import type { MainStackParamList } from '../../navigation/types';
 import { colors, radius, spacing } from '../../theme/tokens';
@@ -36,7 +36,7 @@ const STATUS_TONE: Record<string, 'success' | 'warning' | 'danger' | 'neutral'> 
 export function ProfileScreen() {
   const { user, signOut } = useAuth();
   const { t: tCommon } = useTranslation('common');
-  const { t } = useTranslation('profile');
+  const { t, locale } = useTranslation('profile');
   const [languageOpen, setLanguageOpen] = useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { data: driver } = useDriverProfile(user?.uid ?? null);
@@ -69,7 +69,7 @@ export function ProfileScreen() {
 
       {driver ? (
         <View style={styles.infoBlock}>
-          <InfoLine label={t('profile:info.vehicle')} value={VEHICLE_LABELS[driver.vehicle.type]} />
+          <InfoLine label={t('profile:info.vehicle')} value={labelOf('VEHICLE_LABELS', driver.vehicle.type, locale)} />
           <InfoLine
             label={t('profile:info.type')}
             value={driver.type === 'restaurant' ? t('profile:info.typeRestaurant') : t('profile:info.typeIndependent')}
@@ -128,7 +128,7 @@ function SanctionCard({ sanction, uid }: { sanction: NonNullable<ReturnType<type
 
   return (
     <Card style={{ marginTop: spacing.lg, borderColor: colors.danger, borderWidth: 1 }}>
-      <Text variant="bodyStrong">{SANCTION_TYPE_LABELS[sanction.type]}</Text>
+      <Text variant="bodyStrong">{labelOf('SANCTION_TYPE_LABELS', sanction.type, locale)}</Text>
       <Text variant="body" color="muted" style={{ marginTop: 4 }}>
         {sanction.reason}
       </Text>

@@ -69,8 +69,15 @@ export function updatedFields(uid: string): { updatedAt: FieldValue; updatedBy: 
 // Codes Functions dont le message vient déjà rédigé (en français) par le serveur.
 const SERVER_WORDED = new Set(['invalid-argument', 'failed-precondition', 'already-exists', 'not-found', 'permission-denied', 'out-of-range']);
 
-/** Message lisible pour une erreur Firebase quelconque. */
-export function errorMessage(error: unknown, fallback = 'Une erreur est survenue. Réessayez dans un instant.'): string {
+/** Fonction de traduction minimale (compatible `t` de n'importe quel namespace via `common:...`). */
+export type TranslateFn = (key: string, vars?: Record<string, string | number | undefined>) => string;
+
+/**
+ * Message lisible pour une erreur Firebase quelconque, dans la langue courante.
+ * `t` peut être le `t` de n'importe quel namespace (les clés `common:errors.*` sont préfixées).
+ */
+export function errorMessage(error: unknown, t: TranslateFn, fallback?: string): string {
+  const fb = fallback ?? t('common:errors.default');
   if (error instanceof FirebaseError) {
     const isFunctions = error.code.startsWith('functions/');
     const code = isFunctions ? error.code.slice('functions/'.length) : error.code;
@@ -80,26 +87,26 @@ export function errorMessage(error: unknown, fallback = 'Une erreur est survenue
     switch (code) {
       case 'wrong-password':
       case 'invalid-credential':
-        return 'E-mail ou mot de passe incorrect.';
+        return t('common:errors.wrongPassword');
       case 'user-not-found':
-        return 'Aucun compte ne correspond à cet e-mail.';
+        return t('common:errors.userNotFound');
       case 'email-already-in-use':
-        return 'Un compte existe déjà avec cet e-mail.';
+        return t('common:errors.emailAlreadyInUse');
       case 'weak-password':
-        return 'Choisissez un mot de passe d’au moins 6 caractères.';
+        return t('common:errors.weakPassword');
       case 'invalid-email':
-        return 'Adresse e-mail invalide.';
+        return t('common:errors.invalidEmail');
       case 'too-many-requests':
-        return 'Trop de tentatives. Réessayez dans quelques minutes.';
+        return t('common:errors.tooManyRequests');
       case 'network-request-failed':
-        return 'Connexion impossible. Vérifiez votre réseau.';
+        return t('common:errors.networkRequestFailed');
       case 'permission-denied':
-        return 'Action non autorisée.';
+        return t('common:errors.permissionDenied');
       default:
-        return fallback;
+        return fb;
     }
   }
-  return fallback;
+  return fb;
 }
 
 export function errorCode(error: unknown): string | null {

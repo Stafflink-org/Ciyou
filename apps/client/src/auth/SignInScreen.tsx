@@ -33,7 +33,7 @@ export function SignInScreen({ navigation }: Props) {
       // Pas de navigation manuelle : RootNavigator bascule automatiquement
       // vers `Main` dès que la session Firebase est active.
     } catch (err) {
-      setError(errorMessage(err, 'Connexion impossible. Vérifiez vos identifiants.'));
+      setError(errorMessage(err, t, t('login.invalidCredentials')));
     } finally {
       setLoading(false);
     }

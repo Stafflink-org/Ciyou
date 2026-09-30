@@ -39,7 +39,7 @@ export function TicketDetailScreen({ route }: Props) {
       await replyToClientTicket({ ticketId, body: body.trim() });
       setBody('');
     } catch (error) {
-      toast.show(errorMessage(error), 'danger');
+      toast.show(errorMessage(error, t), 'danger');
     } finally {
       setSending(false);
     }
@@ -77,7 +77,7 @@ export function TicketDetailScreen({ route }: Props) {
         </Card>
         {messages.error ? (
           <Text variant="caption" color="danger">
-            {errorMessage(messages.error)}
+            {errorMessage(messages.error, t)}
           </Text>
         ) : null}
         {messages.data.map((m) => (

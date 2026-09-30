@@ -1,8 +1,10 @@
-// Porte légale (§29 cahier super admin, point cité comme dépendant de l'app
-// client) : bloque l'accès tant que la dernière version des CGU n'est pas
-// acceptée (`acceptedLegal.terms_client` != version publiée), et propose la
-// capture des consentements cookies/marketing sous forme de bandeau, une
-// seule fois par compte (`consents.analytics_cookies` non renseigné).
+// Porte légale (§29 cahier super admin) côté livreur : bloque l'accès tant que
+// la dernière version des CGU livreur n'est pas acceptée (`acceptedLegal.terms_driver`
+// != version publiée), et propose la capture des consentements cookies/marketing
+// sous forme de bandeau, une seule fois par compte (`consents.analytics_cookies`
+// non renseigné). Copie fidèle de apps/client/src/features/legal/LegalGate.tsx
+// (même logique, mêmes Cloud Functions, jamais dupliquées) — seul `documentType`
+// change (`terms_driver`).
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { colors, radius, spacing } from '../../theme/tokens';
@@ -18,7 +20,7 @@ export function LegalGate({ children }: { children: React.ReactNode }) {
   const countryId = profile?.countryId ?? 'FR';
   const { data: terms, loading: termsLoading } = usePublishedTerms(profileLoading ? null : countryId);
 
-  const acceptedVersion = profile?.acceptedLegal?.terms_client;
+  const acceptedVersion = profile?.acceptedLegal?.terms_driver;
   const mustReaccept = Boolean(terms) && acceptedVersion !== terms!.version;
 
   if (mustReaccept) {
@@ -41,7 +43,7 @@ function ReacceptanceScreen({ version, title, content, countryId, changeSummary 
   const accept = async () => {
     setPending(true);
     try {
-      await acceptLegalDocument({ documentType: 'terms_client', countryId });
+      await acceptLegalDocument({ documentType: 'terms_driver', countryId });
     } catch (error) {
       toast.show(errorMessage(error, t), 'danger');
     } finally {

@@ -67,7 +67,7 @@ export function SupportScreen({ navigation, route }: Props) {
       setBody('');
       navigation.navigate('TicketDetail', { ticketId: result.ticketId });
     } catch (error) {
-      toast.show(errorMessage(error), 'danger');
+      toast.show(errorMessage(error, t), 'danger');
     } finally {
       setSending(false);
     }

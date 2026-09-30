@@ -42,6 +42,7 @@ export type MainStackParamList = {
   Support: { orderId?: string } | undefined;
   TicketDetail: { ticketId: string };
   Referral: undefined;
+  Gdpr: undefined;
 };
 
 /** Pile racine : bascule Auth ⇄ Main selon la session (`RootNavigator`). */
