@@ -26,6 +26,7 @@ export type MainStackParamList = {
   Gdpr: undefined;
   Support: { orderId?: string } | undefined;
   TicketDetail: { ticketId: string };
+  PaymentAccount: undefined;
 };
 
 /** Pile racine : bascule Auth ⇄ Main selon la session (`RootNavigator`). */

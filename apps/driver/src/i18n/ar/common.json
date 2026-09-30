@@ -11,7 +11,8 @@
     "orderDetail": "تفاصيل التوصيلة",
     "profileSettings": "إعدادات الملف الشخصي",
     "support": "الدعم",
-    "ticketDetail": "طلبي"
+    "ticketDetail": "طلبي",
+    "paymentAccount": "حساب الدفع"
   },
   "language": {
     "label": "اللغة",

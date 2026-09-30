@@ -44,6 +44,9 @@ import arLegal from './ar/legal.json';
 import frSupport from './fr/support.json';
 import enSupport from './en/support.json';
 import arSupport from './ar/support.json';
+import frPayments from './fr/payments.json';
+import enPayments from './en/payments.json';
+import arPayments from './ar/payments.json';
 
 addResources('fr', 'common', frCommon);
 addResources('en', 'common', enCommon);
@@ -69,6 +72,9 @@ addResources('ar', 'legal', arLegal);
 addResources('fr', 'support', frSupport);
 addResources('en', 'support', enSupport);
 addResources('ar', 'support', arSupport);
+addResources('fr', 'payments', frPayments);
+addResources('en', 'payments', enPayments);
+addResources('ar', 'payments', arPayments);
 
 const STORAGE_KEY = 'golink-driver:locale';
 

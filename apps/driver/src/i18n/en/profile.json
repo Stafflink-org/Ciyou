@@ -23,6 +23,7 @@
   },
   "actions": {
     "settings": "Vehicle, distance and documents",
+    "payments": "Payment account",
     "support": "Contact support",
     "signOut": "Sign out"
   },

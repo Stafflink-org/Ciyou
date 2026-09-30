@@ -11,7 +11,8 @@
     "orderDetail": "Delivery detail",
     "profileSettings": "Profile settings",
     "support": "Support",
-    "ticketDetail": "My request"
+    "ticketDetail": "My request",
+    "paymentAccount": "Payment account"
   },
   "language": {
     "label": "Language",
