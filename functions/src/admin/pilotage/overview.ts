@@ -94,15 +94,30 @@ const AUDIT_ACTIVITY: Record<string, { title: string; tone: PilotageActivity['to
   'restaurant.approved': { title: 'Commerce validé', tone: 'success', kind: 'restaurant_status' },
   'restaurant.rejected': { title: 'Inscription refusée', tone: 'danger', kind: 'restaurant_status' },
   'restaurant.suspended': { title: 'Commerce suspendu', tone: 'danger', kind: 'restaurant_status' },
+  // Retrait définitif (`applySuspension` avec kind 'permanent', functions/src/admin/acteurs/status.ts:55) : jamais mappé avant ce correctif,
+  // l'événement disparaissait silencieusement de l'Activité récente (cahier §1).
+  'restaurant.closed': { title: 'Commerce retiré définitivement', tone: 'danger', kind: 'restaurant_status' },
   'restaurant.reactivated': { title: 'Commerce réactivé', tone: 'success', kind: 'restaurant_status' },
   'restaurant.paused': { title: 'Commerce mis en pause', tone: 'warning', kind: 'restaurant_status' },
+  'restaurant.auto_paused': { title: 'Commerce mis en pause (automatique)', tone: 'warning', kind: 'restaurant_status' },
   'restaurant.plan_changed': { title: 'Changement de formule', tone: 'info', kind: 'plan_change' },
   'subscription.plan_changed': { title: 'Changement de formule', tone: 'info', kind: 'plan_change' },
   'subscription.cancelled': { title: 'Résiliation d’abonnement', tone: 'danger', kind: 'subscription_cancelled' },
+  // Les 4 clés ci-dessous ('driver.approved'/'rejected'/'suspended'/'reactivated') ne sont émises par AUCUNE fonction
+  // (vérifié : functions/src/admin/operations/drivers.ts n'écrit que driver.application_*, driver.sanction_*, driver.bulk_*,
+  // driver.document_*, driver.identity_check_*). Conservées par prudence (compat descendante si un ancien journal les contient),
+  // mais les vraies clés émises par le code sont ajoutées ci-dessous pour que l'Activité récente affiche réellement ces événements.
   'driver.approved': { title: 'Livreur validé', tone: 'success', kind: 'driver_status' },
   'driver.rejected': { title: 'Candidature livreur refusée', tone: 'danger', kind: 'driver_status' },
   'driver.suspended': { title: 'Livreur suspendu', tone: 'danger', kind: 'driver_status' },
   'driver.reactivated': { title: 'Livreur réactivé', tone: 'success', kind: 'driver_status' },
+  // Vraies clés émises (functions/src/admin/operations/drivers.ts:120,388,404,509/513→534) :
+  'driver.application_approved': { title: 'Livreur validé', tone: 'success', kind: 'driver_status' },
+  'driver.application_rejected': { title: 'Candidature livreur refusée', tone: 'danger', kind: 'driver_status' },
+  'driver.sanction_temporary_suspension': { title: 'Livreur suspendu', tone: 'danger', kind: 'driver_status' },
+  'driver.sanction_deactivation': { title: 'Livreur désactivé', tone: 'danger', kind: 'driver_status' },
+  'driver.bulk_activate': { title: 'Livreur réactivé', tone: 'success', kind: 'driver_status' },
+  'driver.bulk_deactivate': { title: 'Livreur désactivé', tone: 'danger', kind: 'driver_status' },
   'city.launched': { title: 'Ville ouverte', tone: 'brand', kind: 'audit' },
 };
 

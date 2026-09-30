@@ -7,7 +7,12 @@ import { useAdminAccess } from '@/auth/AdminAccess';
 import { db } from '@/lib/firebase';
 import { useCollection } from '@/lib/firestore';
 
-/** Pastille : alertes critiques ouvertes sur toute la plateforme. */
+/**
+ * Pastille : éléments critiques ouverts sur toute la plateforme, alertes ('alert') ET file
+ * « à traiter » ('todo') confondues — un abonnement impayé (queue 'todo', sévérité 'critical'
+ * quand l'accès est restreint) est tout aussi urgent qu'une alerte classique et doit compter
+ * dans la pastille du menu (cahier §1 « Alertes », trou documenté dans AUDIT_COUVERTURE_CDC.md).
+ */
 function useCriticalAlertsCount(): number | null {
   const { admin, can } = useAdminAccess();
   // Périmètre complet uniquement : les règles exigent un filtre de ville pour les responsables locaux.
@@ -15,7 +20,12 @@ function useCriticalAlertsCount(): number | null {
   const q = useMemo(
     () =>
       allowed
-        ? query(collection(db, COLLECTIONS.platformAlerts), where('queue', '==', 'alert'), where('status', '==', 'open'), where('severity', '==', 'critical'))
+        ? query(
+            collection(db, COLLECTIONS.platformAlerts),
+            where('queue', 'in', ['alert', 'todo']),
+            where('status', '==', 'open'),
+            where('severity', '==', 'critical'),
+          )
         : null,
     [allowed],
   );
