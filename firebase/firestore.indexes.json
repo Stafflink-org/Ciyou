@@ -3749,7 +3749,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "userId",
+          "fieldPath": "accountId",
           "order": "ASCENDING"
         },
         {
