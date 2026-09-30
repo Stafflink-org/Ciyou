@@ -325,7 +325,9 @@ export const adminUpdateRestaurant = acteursCallable(profileSchema, async (data,
     updatedBy: caller.uid,
   };
   if (changed.address) update.address = { ...r.address, ...data.address };
-  if (changed.name || changed.address) update.searchKeywords = buildSearchKeywords(data.name, data.address.city, data.address.postalCode, r.email, r.phone);
+  if (changed.name || changed.address || changed.email || changed.phone) {
+    update.searchKeywords = buildSearchKeywords(data.name, data.address.city, data.address.postalCode, data.email, data.phone);
+  }
   // Espèces retirées si le commerce ne livre plus lui-même.
   if (changed.deliveredBy && data.deliveredBy === 'platform') update.acceptedPaymentMethods = r.acceptedPaymentMethods.filter((m) => m !== 'cash');
   await restaurant.ref.update(update);
