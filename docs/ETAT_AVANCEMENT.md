@@ -1,5 +1,23 @@
 # État d'avancement — Ciyou Eats
 
+## §31 Données : la durée de rétention de la corbeille n'avait aucun effet — 01/10/2026 (tâche `cdc-fix-residuals-10`)
+
+Suite immédiate de `cdc-fix-residuals-9` (§29), même soirée de travail continu : le réglage `settings/retention.trashRetentionDays` (créé pour §29, affiché dans l'écran « Conservation ») était réglable mais **sans aucun effet réel** sur le délai de purge des éléments mis à la corbeille — défaut déjà noté dans le détail §31 mais jamais corrigé.
+
+**Cause réelle, trouvée par exploration du code (4 points d'écriture non alignés)** :
+1. `functions/src/platform/backups.ts::moveToTrash` — acceptait un paramètre `retentionDays` optionnel, mais retombait sur `?? 30` codé en dur si l'appelant ne le fournissait pas (2 appelants sur 3 ne le fournissaient pas).
+2. `functions/src/menu/trash.ts::trashMenuItems` (suppression de produit/section/option depuis le back-office restaurant) — n'appelait même pas `moveToTrash` : écrivait directement dans Firestore avec `MENU_LIMITS.trashDays`, une constante figée (`@golink/shared`) totalement indépendante du réglage plateforme.
+3. `functions/src/restaurant/zones.ts::deleteDeliveryZone` — constante locale `TRASH_RETENTION_DAYS = 30`, même défaut.
+4. `functions/src/restaurant/lifecycle.ts` (retrait automatique des commerces inactifs) — avait déjà un helper correct lisant le réglage, mais dupliqué et isolé, non partagé avec les 3 autres points.
+
+**Corrigé** : nouvelle fonction partagée `resolveTrashRetentionDays()` (`platform/backups.ts`), calquée sur `resolveInvoiceRetentionYears` (le même modèle déjà utilisé pour `keepInvoicesYears`, §29, cache 5 minutes) — utilisée désormais par les 4 points d'écriture. Le helper dupliqué de `lifecycle.ts` a été supprimé au profit de cette fonction partagée. Six textes d'interface qui annonçaient « 30 jours » en dur (`ProductsPage.tsx`, `ProductEditorPage.tsx`, `OptionsPage.tsx`, `MenuDialogs.tsx`, `TrashSheet.tsx` côté restaurant, `ZonesPage.tsx`) ont été corrigés pour ne plus citer un nombre qui pouvait être faux.
+
+**Test réel de bout en bout sur `golink-9f16d`** : réglage de corbeille porté à 45 jours via l'écran Conservation (superadmin, motif audité) → produit de test créé puis supprimé via l'écran réel Produits & menu du back-office restaurant (compte Lune Coffee) → vérification Firestore : `purgeAt` = `deletedAt` + 45 jours **exactement** (pas 30, l'ancien défaut aurait donné 30 malgré le réglage à 45) → réglage restauré à 30 (valeur d'origine) → produit de test purgé définitivement via l'écran Corbeille de l'admin (action irréversible, motif audité) : vérifié absent de `trash` et de la collection `products`, aucune donnée de test résiduelle.
+
+`npx tsc --noEmit` (`functions`, `apps/restaurant`) vert. Fonctions redéployées : `trashMenuItems`, `runMerchantAutomations`, `runMerchantLifecycleNow`, `deleteProductOffer`, `updatePromotion`, `deleteDeliveryZone`.
+
+**Cahier §31 : la ligne « Corbeille » ne change pas de statut** (reste PARTIEL) — trois autres manques distincts subsistent, non traités par cette tâche : `moveToTrash` (plateforme) n'est toujours pas branchée sur les suppressions de restaurants/comptes/livreurs/clients ; la restauration ne recalcule pas les compteurs/stocks/index ; une anomalie d'UI fait échouer le chargement de l'onglet Corbeille pour le compte support (cause non déterminée). Total cahier super admin inchangé : **110 COMPLET / 56 PARTIEL / 0 ABSENT / 0 FAUX** (166 lignes), recompté honnêtement par somme des 31 rubriques (`awk`). Détail : `docs/AUDIT_COUVERTURE_CDC.md` §31.
+
 ## §29 Légal/RGPD : 2 défauts réels corrigés et testés réels — 30/09/2026 (tâche `cdc-fix-residuals-9`)
 
 Suite immédiate du basculement « Durées de conservation » (`cdc-fix-residuals-8`) : poursuite des 5 lignes PARTIEL restantes de la rubrique la plus faible du cahier (§29), par demande explicite du client de traiter en continu tous les points PARTIEL du back-office.

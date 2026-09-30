@@ -143,7 +143,7 @@ export function ZonesPage() {
     if (!removing) return;
     try {
       await deleteDeliveryZone({ restaurantId, zoneId: removing.id });
-      toast.success('Zone supprimée. Elle reste récupérable 30 jours auprès du support.');
+      toast.success('Zone supprimée. Elle reste récupérable quelque temps auprès du support.');
     } catch (error) {
       toast.error(errorMessage(error));
       throw error;

@@ -626,7 +626,7 @@ export function ProductsPage() {
         onOpenChange={(open) => !open && setDeleteIds(null)}
         destructive
         title={deleteIds && deleteIds.length > 1 ? `Supprimer ${deleteIds.length} produits ?` : 'Supprimer ce produit ?'}
-        description={`Retiré immédiatement de la carte, il reste restaurable depuis la corbeille pendant ${MENU_LIMITS.trashDays} jours.`}
+        description="Retiré immédiatement de la carte, il reste restaurable depuis la corbeille pendant le délai réglé par la plateforme."
         confirmLabel="Supprimer"
         onConfirm={confirmDeleteProducts}
       />

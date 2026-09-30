@@ -1,7 +1,7 @@
 // Données et sauvegardes (cahier §31) : export Firestore planifié vers un bucket de
 // sauvegarde (API d'export gérée), historique des opérations, et corbeille avec
 // restauration documentée (déplacement puis restauration d'un document supprimé).
-import { COLLECTIONS, type Backup, type BackupRestore, type TrashItem } from '@golink/shared';
+import { COLLECTIONS, SETTINGS_DOCS, type Backup, type BackupRestore, type TrashItem } from '@golink/shared';
 import { v1 } from '@google-cloud/firestore';
 import { logger } from 'firebase-functions/v2';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
@@ -343,10 +343,40 @@ export const checkBackupRestoreStatus = platformCallable(
 
 // ------------------------------------------------------------------ Corbeille
 
+const DEFAULT_TRASH_RETENTION_DAYS = 30;
+let trashRetentionCache: { at: number; days: number } | null = null;
+
+/**
+ * Durée de conservation en corbeille (jours) : le réglage plateforme
+ * `settings/retention.trashRetentionDays` (§29/§31) s'il est renseigné, sinon 30 jours
+ * par défaut. Mis en cache 5 min (même modèle que `resolveInvoiceRetentionYears`,
+ * `finance/argent/common.ts`) : `moveToTrash`/`trashMenuItems` sont appelées sur des
+ * chemins fréquents (suppression de produit, section, option, offre, promotion),
+ * une lecture Firestore par suppression serait un coût inutile pour un réglage qui
+ * change rarement.
+ */
+export async function resolveTrashRetentionDays(): Promise<number> {
+  if (trashRetentionCache && Date.now() - trashRetentionCache.at < 300_000) return trashRetentionCache.days;
+  let days = DEFAULT_TRASH_RETENTION_DAYS;
+  try {
+    const snap = await db.collection(COLLECTIONS.settings).doc(SETTINGS_DOCS.retention).get();
+    const configured = Number((snap.data() as Record<string, unknown> | undefined)?.trashRetentionDays);
+    if (Number.isFinite(configured) && configured > 0) days = configured;
+  } catch {
+    // Défaut conservé en cas d'erreur de lecture du réglage.
+  }
+  trashRetentionCache = { at: Date.now(), days };
+  return days;
+}
+
 /**
  * Déplace un document (et ses éventuels sous-documents) vers la corbeille avant
  * suppression réelle. Appelée par les fonctions métier de suppression (restaurants,
- * produits, comptes…), jamais directement par un client.
+ * produits, comptes…), jamais directement par un client. Si `retentionDays` n'est
+ * pas fourni par l'appelant, le réglage plateforme (`resolveTrashRetentionDays`) est
+ * lu — ce n'était pas le cas avant `cdc-fix-residuals-10` : la constante 30 était
+ * codée en dur, le réglage `trashRetentionDays` de l'écran Données n'avait alors
+ * aucun effet (cahier §31).
  */
 export async function moveToTrash(input: {
   entity: TrashItem['entity'];
@@ -362,6 +392,7 @@ export async function moveToTrash(input: {
 }): Promise<string> {
   const now = Timestamp.now();
   const ref = db.collection(COLLECTIONS.trash).doc();
+  const retentionDays = input.retentionDays ?? (await resolveTrashRetentionDays());
   const record: TrashItem = {
     entity: input.entity,
     path: input.path,
@@ -371,7 +402,7 @@ export async function moveToTrash(input: {
     deletedBy: input.deletedBy,
     deletedAt: now,
     reason: input.reason ?? null,
-    purgeAt: Timestamp.fromMillis(now.toMillis() + (input.retentionDays ?? 30) * 86_400_000),
+    purgeAt: Timestamp.fromMillis(now.toMillis() + retentionDays * 86_400_000),
     restoredAt: null,
     restoredBy: null,
     menuKind: input.menuKind ?? null,

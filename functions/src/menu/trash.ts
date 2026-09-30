@@ -1,5 +1,6 @@
-// Suppression d'éléments de la carte vers la corbeille (restaurables pendant
-// MENU_LIMITS.trashDays jours) et restauration. Les liens retirés d'autres documents
+// Suppression d'éléments de la carte vers la corbeille (restaurables pendant le
+// délai réglé, `settings/retention.trashRetentionDays`, cf. `resolveTrashRetentionDays`)
+// et restauration. Les liens retirés d'autres documents
 // (option retirée de ses listes, liste retirée de ses produits, produits détachés
 // d'une section) sont notés pour être rétablis à la restauration.
 import {
@@ -14,6 +15,7 @@ import type { DocumentReference, DocumentSnapshot, WriteBatch } from 'firebase-a
 import { db, FieldValue, Timestamp } from '../lib/admin';
 import { callable } from '../lib/callable';
 import { fail } from '../lib/errors';
+import { resolveTrashRetentionDays } from '../platform/backups';
 import { z, zId } from '../lib/validation';
 import { auditMenu, menuCollection, nameKey, requireMenuAccess, restaurantRef, trackedUpdate, uniqueCopyName, type MenuContext, MENU_RUNTIME } from './common';
 
@@ -79,7 +81,7 @@ export const trashMenuItems = callable(trashSchema, async (data, request) => {
   const products = menuCollection(data.restaurantId, 'products');
   const groups = menuCollection(data.restaurantId, 'optionGroups');
   const writer = new Writer();
-  const purgeAt = Timestamp.fromMillis(Date.now() + MENU_LIMITS.trashDays * 86_400_000);
+  const purgeAt = Timestamp.fromMillis(Date.now() + (await resolveTrashRetentionDays()) * 86_400_000);
   const trashed: string[] = [];
 
   for (const snap of existing) {
