@@ -4,6 +4,7 @@
 // remplacer `dispatchOrder` en conservant la même signature.
 import { assertDriverCanTakeOrder } from '../finance/argent/cash';
 import {
+  buildSearchKeywords,
   COLLECTIONS,
   SUBCOLLECTIONS,
   VEHICLE_LABELS,
@@ -54,7 +55,7 @@ function locationRef(driverId: string) {
  * Attribue le livreur dans la transaction : commande, profil et position du
  * livreur (lecteurs autorisés : client et personnel du restaurant), événement.
  */
-async function assignInTransaction(
+export async function assignInTransaction(
   tx: Transaction,
   input: { orderId: string; driverId: string; actor: EventActor; viewers: string[]; distanceMeters: number | null; offer?: Omit<DispatchOffer, 'status' | 'respondedAt'> },
 ): Promise<{ assigned: boolean; driverName: string }> {
@@ -68,6 +69,10 @@ async function assignInTransaction(
   const at = Timestamp.now();
   const driverName = publicDisplayName(driver.firstName, driver.lastName);
   const toAssigned = order.status === 'ready';
+  // §8 cahier : la recherche « Toutes les commandes » doit aussi trouver une commande
+  // par nom de livreur — le livreur n'est connu qu'à l'attribution, donc ses mots-clés
+  // sont ajoutés ici (fusionnés, pas remplacés, pour garder numéro/client/commerce/adresse).
+  const searchKeywords = [...new Set([...(order.searchKeywords ?? []), ...buildSearchKeywords(driverName)])];
 
   tx.update(orderSnap.ref, {
     driverId: input.driverId,
@@ -77,6 +82,7 @@ async function assignInTransaction(
     'delivery.driverVehicle': VEHICLE_LABELS[driver.vehicle.type] ?? null,
     'delivery.dispatchStatus': 'assigned',
     'timeline.assigned': at,
+    searchKeywords,
     ...(toAssigned ? { status: 'assigned' } : {}),
     updatedAt: at,
   });

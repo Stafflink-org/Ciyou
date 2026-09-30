@@ -56,6 +56,16 @@ const GROUPS: Array<{
         step: 0.5,
       },
       {
+        key: 'restaurantLateRate',
+        label: 'Taux de retard maximal',
+        hint: 'Livraisons en retard (au-delà de la tolérance réglée dans « Commandes »).',
+        percent: true,
+        unit: '%',
+        min: 0,
+        max: 100,
+        step: 0.5,
+      },
+      {
         key: 'restaurantMinOrders',
         label: 'Commandes minimales pour évaluer',
         hint: 'En dessous, le commerce n’est pas évalué (échantillon trop faible).',

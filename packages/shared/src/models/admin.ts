@@ -98,6 +98,7 @@ export interface PlatformAlert {
   kind:
     | 'restaurant_cancellation_rate'
     | 'restaurant_rejection_rate'
+    | 'restaurant_late_rate'
     | 'zone_driver_shortage'
     | 'refund_spike'
     | 'city_order_drop'

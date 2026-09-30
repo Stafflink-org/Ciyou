@@ -397,17 +397,25 @@ export function ClientPage() {
           ) : orders.error ? (
             <ErrorPanel error={orders.error} />
           ) : (
-            <DataTable
-              data={orders.data}
-              columns={orderColumns}
-              getRowId={(o) => o.id}
-              loading={orders.loading}
-              itemLabel="commandes"
-              searchPlaceholder="Rechercher un numéro, un commerce…"
-              initialSorting={[{ id: 'date', desc: true }]}
-              onRowClick={(o) => navigate(`/commandes/${o.id}`)}
-              emptyState={<EmptyState compact icon={<ShoppingBag />} title="Aucune commande" description="Ce client n’a encore rien commandé." />}
-            />
+            <>
+              <div className="mb-2 flex justify-end">
+                {/* §8 cahier « Toutes les commandes » : seul point d'entrée réel vers le filtre ?client= (sinon jamais accessible depuis l'interface). */}
+                <Link to={`/commandes?client=${userId}`} className="text-sm text-primary hover:underline">
+                  Voir toutes les commandes dans « Toutes les commandes » →
+                </Link>
+              </div>
+              <DataTable
+                data={orders.data}
+                columns={orderColumns}
+                getRowId={(o) => o.id}
+                loading={orders.loading}
+                itemLabel="commandes"
+                searchPlaceholder="Rechercher un numéro, un commerce…"
+                initialSorting={[{ id: 'date', desc: true }]}
+                onRowClick={(o) => navigate(`/commandes/${o.id}`)}
+                emptyState={<EmptyState compact icon={<ShoppingBag />} title="Aucune commande" description="Ce client n’a encore rien commandé." />}
+              />
+            </>
           )}
         </TabsContent>
 
