@@ -161,6 +161,14 @@ export interface GrowthAnalytics {
   repeatRate: number;
   /** Restaurants actifs au début de la période toujours actifs à la fin. */
   restaurantRetention: number;
+  /**
+   * Part des commerces abonnés en début de période toujours abonnés (non résiliés) à la
+   * fin — distinct de `restaurantRetention` (qui mesure « commande », pas « reste
+   * abonné »). Même donnée que l'onglet Abonnements (`SubscriptionAnalytics.churnRate`),
+   * présentée ici pour la ligne du cahier « rétention des restaurants (qui restent
+   * abonnés) » (§3 Croissance, corrigé cdc-fix-residuals-7).
+   */
+  subscriptionRetention: number;
 }
 
 export interface FunnelAnalytics {
@@ -179,7 +187,10 @@ export interface PilotageAnalytics {
   section: AnalyticsSection;
   growth?: GrowthAnalytics;
   restaurants?: { rows: RestaurantRankingRow[]; atRisk: RestaurantRankingRow[] };
-  drivers?: { rows: DriverPerformanceRow[]; byZone: Array<{ zoneId: string; name: string; deliveries: number; lateRate: number; averageMinutes: number }> };
+  drivers?: {
+    rows: DriverPerformanceRow[];
+    byZone: Array<{ zoneId: string; name: string; deliveries: number; lateRate: number; averageMinutes: number; acceptanceRate: number; cancellationRate: number }>;
+  };
   cities?: { rows: CityAnalyticsRow[] };
   subscriptions?: SubscriptionAnalytics;
   funnel?: FunnelAnalytics;

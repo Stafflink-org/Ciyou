@@ -144,6 +144,7 @@ export const FRAUD_SIGNAL_LABELS: Record<FraudCase['signals'][number]['code'], s
   fake_orders: 'Commandes fictives',
   refund_rate: 'Taux de remboursement élevé',
   chargeback: 'Rétrofacturation bancaire',
+  identity_check_failed: 'Contrôle d’identité non concluant',
 };
 
 export const FRAUD_STATUS_LABELS: Record<FraudCase['status'], string> = {

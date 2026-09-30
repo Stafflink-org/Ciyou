@@ -28,7 +28,8 @@ export interface FraudCase extends Tracked {
       | 'shared_account'
       | 'fake_orders'
       | 'refund_rate'
-      | 'chargeback';
+      | 'chargeback'
+      | 'identity_check_failed';
     detail: string;
     score: number;
     at: Timestamp;
