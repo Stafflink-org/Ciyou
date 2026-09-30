@@ -11,7 +11,8 @@
     "orderDetail": "Détail de la course",
     "profileSettings": "Réglages du profil",
     "support": "Support",
-    "ticketDetail": "Ma demande"
+    "ticketDetail": "Ma demande",
+    "paymentAccount": "Compte de paiement"
   },
   "language": {
     "label": "Langue",

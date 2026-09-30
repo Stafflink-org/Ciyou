@@ -103,6 +103,8 @@ export function ProfileScreen() {
         style={{ marginTop: spacing.lg }}
       />
 
+      <Button label={t('profile:actions.payments')} variant="outline" onPress={() => navigation.navigate('PaymentAccount')} style={{ marginTop: spacing.md }} />
+
       <Button label="Données personnelles (RGPD)" variant="outline" onPress={() => navigation.navigate('Gdpr')} style={{ marginTop: spacing.md }} />
 
       <Button label={t('profile:actions.support')} variant="outline" onPress={() => navigation.navigate('Support', undefined)} style={{ marginTop: spacing.md }} />
