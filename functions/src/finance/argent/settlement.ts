@@ -41,6 +41,7 @@ import {
   nextInvoiceNumber,
   parisDay,
   platformParty,
+  resolveInvoiceRetentionYears,
   restaurantParty,
   retainUntil,
   seriesPrefix,
@@ -250,6 +251,7 @@ export async function issueReceipt(orderId: string, order: Order, countryHint?: 
   const totals = invoiceTotals(lines);
   const issuedAt = order.timeline.delivered ?? Timestamp.now();
   const year = Number(parisDay(issuedAt.toDate()).slice(0, 4));
+  const invoiceRetentionYears = await resolveInvoiceRetentionYears();
   const series = `${seriesPrefix(order.countryId, country)}-${INVOICE_SERIES_CODES.customer_receipt}`;
   const platform = platformParty(order.countryId, country);
   await db.runTransaction(async (tx) => {
@@ -285,7 +287,7 @@ export async function issueReceipt(orderId: string, order: Order, countryHint?: 
         a.discount.platformFundedCents > 0 ? `Remise de ${(a.discount.platformFundedCents / 100).toFixed(2).replace('.', ',')} € financée par Ciyou Eats.` : '',
         'Montant réglé à la commande.',
       ].filter(Boolean),
-      retainUntil: retainUntil(year),
+      retainUntil: retainUntil(year, invoiceRetentionYears),
     };
     tx.set(invoiceRef, invoice);
   });
@@ -388,6 +390,7 @@ async function creditNoteForRefund(refundId: string, refund: Refund): Promise<vo
   }).filter((l) => l.ttcCents !== 0);
   const totals = invoiceTotals(lines);
   const year = Number(parisDay(new Date()).slice(0, 4));
+  const invoiceRetentionYears = await resolveInvoiceRetentionYears();
   const series = `${seriesPrefix(refund.countryId, country)}-${INVOICE_SERIES_CODES.credit_note}`;
   await db.runTransaction(async (tx) => {
     const [note, rec] = await Promise.all([tx.get(noteRef), tx.get(receiptRef)]);
@@ -412,7 +415,7 @@ async function creditNoteForRefund(refundId: string, refund: Refund): Promise<vo
       issuedAt: now,
       paidAt: null,
       legalMentions: [`Avoir sur la facture ${current.number}.`, ...current.legalMentions.slice(0, 1)],
-      retainUntil: retainUntil(year),
+      retainUntil: retainUntil(year, invoiceRetentionYears),
     };
     tx.set(noteRef, creditNote);
     tx.update(receiptRef, {

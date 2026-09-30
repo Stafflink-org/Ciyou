@@ -41,6 +41,7 @@ import {
   platformParty,
   previousMonth,
   rangeBounds,
+  resolveInvoiceRetentionYears,
   restaurantParty,
   retainUntil,
   seriesPrefix,
@@ -89,6 +90,9 @@ export async function runMonthlyInvoices(options: RunOptions): Promise<MonthlyIn
   const { first, last } = monthBounds(options.month);
   const { start, end } = rangeBounds(first, last);
   const year = Number(options.month.slice(0, 4));
+  // §29 « Durées de conservation » : `settings/retention.keepInvoicesYears` s'applique
+  // désormais réellement (jamais en dessous de l'obligation légale, cf. `retainUntil`).
+  const invoiceRetentionYears = await resolveInvoiceRetentionYears();
   const result: MonthlyInvoicesResult = { month: options.month, restaurantInvoices: 0, driverStatements: 0, skippedExisting: 0, totalTtcCents: 0, preview: [] };
   const inScope = (d: { countryId?: string; cityId?: string | null }) =>
     (!options.countryId || d.countryId === options.countryId) && (!options.cityIds?.length || (d.cityId ? options.cityIds.includes(d.cityId) : false));
@@ -231,7 +235,7 @@ export async function runMonthlyInvoices(options: RunOptions): Promise<MonthlyIn
           'TVA acquittée sur les débits.',
           `Commande${list.length > 1 ? 's' : ''} concernée${list.length > 1 ? 's' : ''} : ${list.length}.`,
         ],
-        retainUntil: retainUntil(year),
+        retainUntil: retainUntil(year, invoiceRetentionYears),
       };
       tx.set(invoiceRef, invoice);
       const entries = feeLedgerEntries({
@@ -340,7 +344,7 @@ export async function runMonthlyInvoices(options: RunOptions): Promise<MonthlyIn
           'Autofacturation : facture émise par Ciyou Eats au nom et pour le compte du prestataire.',
           exempt ? driverVatExemptionMention(driver.countryId) : 'TVA due par le prestataire.',
         ],
-        retainUntil: retainUntil(year),
+        retainUntil: retainUntil(year, invoiceRetentionYears),
       };
       tx.set(ref, invoice);
     });
@@ -406,6 +410,7 @@ export const issueCreditNote = argentCallable(
     const totals = invoiceTotals(lines);
     const country = await loadCountry(source.countryId);
     const year = new Date().getFullYear();
+    const invoiceRetentionYears = await resolveInvoiceRetentionYears();
     const series = `${seriesPrefix(source.countryId, country)}-${INVOICE_SERIES_CODES.credit_note}`;
     const noteRef = db.collection(COLLECTIONS.invoices).doc();
     const number = await db.runTransaction(async (tx) => {
@@ -431,7 +436,7 @@ export const issueCreditNote = argentCallable(
         paidAt: null,
         pdf: null,
         legalMentions: [`Avoir sur la facture ${current.number} du ${current.issuedAt.toDate().toLocaleDateString('fr-FR')}.`, `Motif : ${data.reason}`],
-        retainUntil: retainUntil(year),
+        retainUntil: retainUntil(year, invoiceRetentionYears),
       };
       tx.set(noteRef, note);
       const credited = (current.creditedCents ?? 0) + amount;
