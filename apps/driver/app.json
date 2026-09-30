@@ -1,14 +1,17 @@
 {
   "expo": {
-    "name": "Ciyou Eats Livreur",
-    "slug": "golink-driver",
+    "name": "ciyou-driver",
+    "slug": "ciyou-driver",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.golink.driver"
+      "bundleIdentifier": "com.ciyou.driver",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -18,11 +21,17 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.golink.driver"
+      "package": "com.ciyou.driver"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "scheme": "golink-driver"
+    "scheme": "ciyou-driver",
+    "owner": "nasro-hamou",
+    "extra": {
+      "eas": {
+        "projectId": "e9e7ed81-94e6-44cb-b76e-72b6504fac95"
+      }
+    }
   }
 }
