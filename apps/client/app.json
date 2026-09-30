@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "Ciyou Eats",
-    "slug": "golink-client",
+    "name": "ciyou-client",
+    "slug": "ciyou-client",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.golink.client",
+      "bundleIdentifier": "com.ciyou.client",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -21,17 +21,17 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.golink.client"
+      "package": "com.ciyou.client"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "scheme": "golink-client",
+    "scheme": "ciyou-client",
+    "owner": "nasro-hamou-2",
     "extra": {
       "eas": {
-        "projectId": "b5b3e2bc-043f-45a0-89a4-5637555df183"
+        "projectId": "8ba6203a-5c41-4b59-9d87-3fb57acab5cd"
       }
-    },
-    "owner": "nasro-hamou-2"
+    }
   }
 }
