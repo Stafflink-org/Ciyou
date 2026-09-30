@@ -61,11 +61,18 @@ const monthLabel = (month: string) => `${MONTHS[Number(month.slice(5, 7)) - 1] ?
  * pour DZ/MA/TN, le régime applicable dépend du statut du prestataire (auto-entrepreneur
  * ou équivalent) et n'est pas une franchise de TVA harmonisée comme en UE : mention
  * prudente renvoyant à la réglementation locale plutôt qu'une référence légale inventée.
+ * DZ/MA/TN : ce ne sont PAS de vraies références légales (aucun avis juridique local
+ * réalisé) — seulement un texte prudent qui nomme le régime concerné et renvoie le
+ * prestataire à sa propre situation fiscale ; à faire valider par un fiscaliste local
+ * avant tout lancement commercial dans ces pays (cf. AUDIT_COUVERTURE_CDC.md Annexe E).
  */
 const DRIVER_VAT_EXEMPTION_MENTIONS: Record<string, string> = {
   FR: 'TVA non applicable, article 293 B du Code général des impôts (franchise en base).',
   BE: 'TVA non applicable, article 56bis du Code de la TVA belge (franchise en base pour petites entreprises).',
   LU: 'TVA non applicable, article 57 de la loi TVA luxembourgeoise (franchise en base pour petites entreprises).',
+  DZ: 'TVA non applicable : prestataire relevant du régime fiscal algérien applicable aux activités de prestation de services (statut à vérifier par le prestataire auprès de l’administration fiscale locale — mention indicative, non un avis juridique).',
+  MA: 'TVA non applicable : prestataire relevant du régime fiscal marocain applicable aux auto-entrepreneurs ou assimilés (statut à vérifier par le prestataire auprès de l’administration fiscale locale — mention indicative, non un avis juridique).',
+  TN: 'TVA non applicable : prestataire relevant du régime forfaitaire tunisien ou assimilé (statut à vérifier par le prestataire auprès de l’administration fiscale locale — mention indicative, non un avis juridique).',
 };
 function driverVatExemptionMention(countryId: string): string {
   return DRIVER_VAT_EXEMPTION_MENTIONS[countryId] ?? 'TVA non applicable : prestataire exonéré selon le régime fiscal applicable dans son pays d’établissement.';
