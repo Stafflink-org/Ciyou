@@ -37,6 +37,7 @@ import {
   formatDate,
   formatEUR,
   formatNumber,
+  toast,
   type DataTableBulkAction,
 } from '@golink/ui';
 import { MERCHANT_TYPES, MERCHANT_TYPE_LABELS, QUALITY_THRESHOLDS, type SavedFilter } from '@golink/shared';
@@ -299,12 +300,22 @@ export function RestaurantsPage() {
   }
 
   async function exportRows(list: RestaurantRow[], format: 'csv' | 'xlsx') {
+    // Le droit d'export et la trace d'audit sont contrôlés côté serveur (bulkRestaurantAction
+    // exige `exports.run`) : le fichier n'est généré que si cet appel réussit, jamais avant.
+    const result = await exportAudit.mutate({
+      restaurantIds: list.slice(0, 300).map((r) => r.id),
+      action: 'export',
+      reason: `Export ${format.toUpperCase()} de la liste des commerces`,
+      params: { format },
+    });
+    if (!result) {
+      toast.error("Vous n'avez pas le droit d'exporter cette liste.");
+      return;
+    }
     const sheet = exportSheet(list);
     const filename = `commerces-${todayStamp()}`;
     if (format === 'csv') downloadCsv(sheet, filename);
     else await downloadXlsx(sheet, filename);
-    // Export tracé au journal d'audit (action sensible du cahier).
-    if (can('exports.run')) void exportAudit.mutate({ restaurantIds: list.slice(0, 300).map((r) => r.id), action: 'export', reason: `Export ${format.toUpperCase()} de la liste des commerces`, params: { format } });
   }
 
   const columns = useMemo(

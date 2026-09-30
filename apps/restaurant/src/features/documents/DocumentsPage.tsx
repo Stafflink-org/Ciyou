@@ -35,6 +35,7 @@ import { ContractSection } from './ContractSection';
 import { GdprSection } from './GdprSection';
 import {
   daysUntil,
+  requirementBlocking,
   requirementState,
   requirementsFor,
   usePartnerDocuments,
@@ -97,8 +98,12 @@ export function DocumentsPage() {
     [docs.data],
   );
   const required = rows.filter((r) => r.req.required);
-  const validated = required.filter((r) => r.state === 'approved' || r.state === 'expiring').length;
-  const blocking = required.filter((r) => ['missing', 'rejected', 'expired'].includes(r.state));
+  // Un groupe alternatif (Kbis ou avis SIRET) ne compte que pour une seule pièce obligatoire.
+  const requiredSlots = new Set(required.map((r) => r.req.group ?? r.req.type)).size;
+  const validated = new Set(
+    required.filter((r) => r.state === 'approved' || r.state === 'expiring').map((r) => r.req.group ?? r.req.type),
+  ).size;
+  const blocking = required.filter((r) => requirementBlocking(rows, r));
 
   return (
     <PageContainer>
@@ -131,10 +136,10 @@ export function DocumentsPage() {
               <div className="w-full sm:w-56">
                 <ProgressBar
                   value={validated}
-                  max={required.length}
-                  tone={validated === required.length ? 'success' : 'brand'}
+                  max={requiredSlots}
+                  tone={validated === requiredSlots ? 'success' : 'brand'}
                   label="Pièces obligatoires validées"
-                  valueLabel={`${validated} / ${required.length}`}
+                  valueLabel={`${validated} / ${requiredSlots}`}
                 />
               </div>
             )}
@@ -160,7 +165,8 @@ export function DocumentsPage() {
                 </div>
               )}
               <ul className="divide-y divide-border">
-                {rows.map(({ req, latest, state }) => {
+                {rows.map((row) => {
+                  const { req, latest, state } = row;
                   const meta = STATE_META[state];
                   const uploadedAt = toDate(latest?.file.uploadedAt);
                   const days = latest?.expiresAt ? daysUntil(latest.expiresAt) : null;
@@ -173,7 +179,11 @@ export function DocumentsPage() {
                         <div className="min-w-0">
                           <p className="flex flex-wrap items-center gap-2 font-medium text-fg">
                             {PARTNER_DOCUMENT_LABELS[req.type]}
-                            {req.required ? <Badge size="sm">Obligatoire</Badge> : <Badge size="sm" variant="outline">Facultatif</Badge>}
+                            {req.required ? (
+                              <Badge size="sm">{req.group ? 'Obligatoire (l’un des deux)' : 'Obligatoire'}</Badge>
+                            ) : (
+                              <Badge size="sm" variant="outline">Facultatif</Badge>
+                            )}
                           </p>
                           {latest ? (
                             <p className="mt-0.5 truncate text-xs text-fg-subtle">
@@ -202,7 +212,7 @@ export function DocumentsPage() {
                           </Button>
                         )}
                         <Button
-                          variant={req.required && (state === 'missing' || state === 'rejected' || state === 'expired') ? 'primary' : 'secondary'}
+                          variant={requirementBlocking(rows, row) ? 'primary' : 'secondary'}
                           size="sm"
                           leftIcon={latest ? <RefreshCw /> : <Upload />}
                           onClick={() => setUpload(req)}
