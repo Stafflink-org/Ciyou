@@ -24,6 +24,8 @@ export type MainStackParamList = {
   OrderDetail: { orderId: string };
   ProfileSettings: undefined;
   Gdpr: undefined;
+  Support: { orderId?: string } | undefined;
+  TicketDetail: { ticketId: string };
 };
 
 /** Pile racine : bascule Auth ⇄ Main selon la session (`RootNavigator`). */

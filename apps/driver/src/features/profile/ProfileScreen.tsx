@@ -105,6 +105,8 @@ export function ProfileScreen() {
 
       <Button label="Données personnelles (RGPD)" variant="outline" onPress={() => navigation.navigate('Gdpr')} style={{ marginTop: spacing.md }} />
 
+      <Button label={t('profile:actions.support')} variant="outline" onPress={() => navigation.navigate('Support', undefined)} style={{ marginTop: spacing.md }} />
+
       <Button label={tCommon('language.label')} variant="outline" onPress={() => setLanguageOpen(true)} style={{ marginTop: spacing.md }} />
 
       <Button label={t('profile:actions.signOut')} variant="outline" onPress={() => signOut()} style={{ marginTop: spacing.md }} />

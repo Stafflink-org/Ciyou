@@ -9,7 +9,9 @@
   },
   "screenTitles": {
     "orderDetail": "تفاصيل التوصيلة",
-    "profileSettings": "إعدادات الملف الشخصي"
+    "profileSettings": "إعدادات الملف الشخصي",
+    "support": "الدعم",
+    "ticketDetail": "طلبي"
   },
   "language": {
     "label": "اللغة",

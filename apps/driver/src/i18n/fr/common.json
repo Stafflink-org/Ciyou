@@ -9,7 +9,9 @@
   },
   "screenTitles": {
     "orderDetail": "Détail de la course",
-    "profileSettings": "Réglages du profil"
+    "profileSettings": "Réglages du profil",
+    "support": "Support",
+    "ticketDetail": "Ma demande"
   },
   "language": {
     "label": "Langue",

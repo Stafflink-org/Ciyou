@@ -8,7 +8,9 @@ import { LoadError } from '../pilotage-commun/components';
 import { sortGroups, HIT_ICONS, HitStatus, hitHref, queryKind, useGlobalSearch } from './search';
 
 const PREVIEW = 6;
-const EXAMPLES = ['GL-10482', 'Mina Kitchen', 'contact@', '+33 6', 'SIRET', 'FA-2026'];
+// Exemple de facture réaligné sur le vrai format émis (`formatInvoiceNumber`,
+// `SÉRIE-ANNÉE-000000`) : « FA-2026 » ne correspondait à aucun numéro possible.
+const EXAMPLES = ['GL-10482', 'Mina Kitchen', 'contact@', '+33 6', 'SIRET', 'FR-ABO-2026-000123'];
 
 /** Recherche universelle, résultats complets groupés par type (cahier §2). */
 export function SearchPage() {
