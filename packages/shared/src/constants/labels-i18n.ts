@@ -206,7 +206,7 @@ const EN: TableTranslation = {
     privacy_policy: 'Privacy policy', cookie_policy: 'Cookie policy', legal_notice: 'Legal notice',
   },
   PLATFORM_ALERT_KIND_LABELS: {
-    restaurant_cancellation_rate: 'Abnormal cancellations', restaurant_rejection_rate: 'Order rejections', zone_driver_shortage: 'Courier shortage',
+    restaurant_cancellation_rate: 'Abnormal cancellations', restaurant_rejection_rate: 'Order rejections', restaurant_late_rate: 'Abnormal delays', zone_driver_shortage: 'Courier shortage',
     refund_spike: 'Refund spike', city_order_drop: 'Order drop', service_down: 'Service down', subscription_unpaid: 'Unpaid subscription',
     restaurant_to_validate: 'Restaurant to approve', driver_to_validate: 'Courier to approve', document_expired: 'Expired document',
     ticket_escalated: 'Escalated ticket', review_reported: 'Reported review', gdpr_request: 'GDPR request', payout_failed: 'Failed payout',
@@ -343,7 +343,7 @@ const AR: TableTranslation = {
     privacy_policy: 'سياسة الخصوصية', cookie_policy: 'سياسة ملفات تعريف الارتباط', legal_notice: 'الإشعار القانوني',
   },
   PLATFORM_ALERT_KIND_LABELS: {
-    restaurant_cancellation_rate: 'إلغاءات غير معتادة', restaurant_rejection_rate: 'رفض الطلبات', zone_driver_shortage: 'نقص في الموصّلين',
+    restaurant_cancellation_rate: 'إلغاءات غير معتادة', restaurant_rejection_rate: 'رفض الطلبات', restaurant_late_rate: 'تأخيرات غير معتادة', zone_driver_shortage: 'نقص في الموصّلين',
     refund_spike: 'ارتفاع المبالغ المستردة', city_order_drop: 'انخفاض الطلبات', service_down: 'الخدمة متوقفة', subscription_unpaid: 'اشتراك غير مدفوع',
     restaurant_to_validate: 'مطعم بانتظار الموافقة', driver_to_validate: 'موصّل بانتظار الموافقة', document_expired: 'مستند منتهي الصلاحية',
     ticket_escalated: 'تذكرة مصعّدة', review_reported: 'تقييم مُبلَّغ عنه', gdpr_request: 'طلب حماية البيانات', payout_failed: 'فشل في التحويل',

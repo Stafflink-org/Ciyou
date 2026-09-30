@@ -8,6 +8,7 @@ import type { ServiceKey } from './enums';
 export const PLATFORM_ALERT_KIND_LABELS: Record<PlatformAlert['kind'], string> = {
   restaurant_cancellation_rate: 'Annulations anormales',
   restaurant_rejection_rate: 'Refus de commandes',
+  restaurant_late_rate: 'Retards anormaux',
   zone_driver_shortage: 'Manque de livreurs',
   refund_spike: 'Hausse des remboursements',
   city_order_drop: 'Chute des commandes',
