@@ -26,7 +26,9 @@
     "seed:check": "tsc -p scripts/tsconfig.json",
     "functions:invoker": "node scripts/functions-invoker.mjs",
     "i18n:translate": "node scripts/i18n-translate.mjs",
-    "build:functions": "npm --prefix functions run build"
+    "build:functions": "npm --prefix functions run build",
+    "dev:site": "npm run dev -w @golink/site",
+    "build:site": "npm run build -w @golink/site"
   },
   "devDependencies": {
     "@google-cloud/firestore": "^7.11.6",

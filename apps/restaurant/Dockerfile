@@ -11,6 +11,7 @@ COPY apps/restaurant/package.json apps/restaurant/
 COPY apps/admin/package.json apps/admin/
 COPY apps/client/package.json apps/client/
 COPY apps/driver/package.json apps/driver/
+COPY apps/site/package.json apps/site/
 # npm ci SANS filtre -w : avec un filtre, npm ne réinstalle pas toujours les
 # dépendances imbriquées propres à un workspace (ex. @hookform/resolvers nichée
 # sous apps/*/node_modules à cause de peer deps différentes selon l'app) — le
