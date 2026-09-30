@@ -12,6 +12,7 @@ import { Text } from '../../ui/Text';
 import { Input } from '../../ui/Input';
 import { Button } from '../../ui/Button';
 import { useToast } from '../../ui/Toast';
+import { trackFunnelEvent } from '../../lib/funnel';
 import { PlaceholderScreen } from '../shared/PlaceholderScreen';
 import { useActiveProductOffers, useMenuProducts } from '../restaurant/hooks';
 import { useMenuOptions, useOptionGroups } from './hooks';
@@ -26,7 +27,7 @@ const money = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} 
 export function ProductScreen({ route, navigation }: Props) {
   const { t } = useTranslation('product');
   const { productId, restaurantId, lineId } = route.params;
-  const { data: restaurant } = useDoc<{ name: string }>(docAt(`restaurants/${restaurantId}`));
+  const { data: restaurant } = useDoc<{ name: string; countryId: string; cityId: string }>(docAt(`restaurants/${restaurantId}`));
   const { data: product, loading } = useDoc<Product>(docAt(`restaurants/${restaurantId}/products/${productId}`));
   const { data: groups } = useOptionGroups(restaurantId, product?.optionGroupIds ?? []);
   const groupIds = groups.map((g) => g.id);
@@ -129,6 +130,9 @@ export function ProductScreen({ route, navigation }: Props) {
       toast.show(t('stockMaxToast'), 'danger');
       return;
     }
+    // Tunnel de commande (§3 Analytics) : uniquement un vrai ajout (pas une modification
+    // de ligne existante, déjà comptée à son premier ajout).
+    if (!lineId) trackFunnelEvent('add_to_cart', restaurant);
     toast.show(lineId ? t('updatedInCartToast') : t('addedToCartToast'));
     navigation.navigate('Cart');
   };

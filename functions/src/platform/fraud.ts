@@ -85,7 +85,14 @@ function fraudRef(subjectType: FraudSubjectType, subjectId: string) {
   return db.collection(COLLECTIONS.fraudCases).doc(`${subjectType}_${subjectId}`);
 }
 
-async function upsertSignal(
+/**
+ * Ouvre ou complète un dossier de fraude avec un signal donné (§28). Exportée pour être
+ * appelée depuis un autre module qu'une détection planifiée nocturne : c'est le cas du
+ * contrôle d'identité livreur (`admin/operations/drivers.ts reviewIdentityCheck`), un
+ * échec est un signal fort et immédiat, il n'a pas à attendre le passage de
+ * `detectFraudSignals` la nuit suivante.
+ */
+export async function upsertSignal(
   subjectType: FraudSubjectType,
   subjectId: string,
   subjectName: string,

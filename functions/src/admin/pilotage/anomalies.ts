@@ -11,9 +11,12 @@ import {
   PILOTAGE_SERVICE_LABELS,
   SERVICE_HEALTH_LABELS,
   SUBCOLLECTIONS,
+  resolveDispatchRules,
   type AlertSeverity,
+  type City,
   type ContentReport,
   type DailyStats,
+  type DispatchRules,
   type Driver,
   type GdprRequest,
   type MonitoringSettings,
@@ -205,9 +208,22 @@ async function cityTrends(settings: Awaited<ReturnType<typeof loadMonitoringSett
   return out;
 }
 
-async function zoneShortages(settings: Awaited<ReturnType<typeof loadMonitoringSettings>>): Promise<Candidate[]> {
+/**
+ * Seuil d'alerte aligné sur celui affiché à l'écran « Flotte en direct » (résolution
+ * plateforme → ville → zone des règles d'attribution, `resolveDispatchRules`), au lieu
+ * du seul réglage global `settings/monitoring.zoneDriverRatio` utilisé auparavant :
+ * un responsable de ville qui surchargeait `shortageRatioAlert` pour sa ville ou une
+ * zone voyait l'écran d'un côté et l'alerte automatique de l'autre (corrigé
+ * cdc-fix-residuals-7, §6 « Vue par zone »).
+ */
+export async function zoneShortages(): Promise<Candidate[]> {
   const zones = await db.collection(COLLECTIONS.zones).where('active', '==', true).get();
   const markets = await loadMarkets();
+  const dispatchSnap = await db.collection(COLLECTIONS.settings).doc(SETTINGS_DOCS.dispatch).get();
+  const platformDispatch = (dispatchSnap.exists ? (dispatchSnap.data() as Partial<DispatchRules>) : null) ?? null;
+  const cityIds = [...new Set(zones.docs.map((doc) => (doc.data() as Zone).cityId))];
+  const cityDocs = cityIds.length ? await db.getAll(...cityIds.map((id) => db.collection(COLLECTIONS.cities).doc(id))) : [];
+  const cityDispatchById = new Map(cityDocs.map((snap) => [snap.id, ((snap.data() as City | undefined)?.dispatch as Partial<DispatchRules> | undefined) ?? null]));
   const out: Candidate[] = [];
   for (const doc of zones.docs) {
     const zone = doc.data() as Zone;
@@ -215,17 +231,18 @@ async function zoneShortages(settings: Awaited<ReturnType<typeof loadMonitoringS
     if (!live || live.ordersWaiting < 2) continue;
     if (Date.now() - live.updatedAt.toMillis() > 30 * 60_000) continue;
     const ratio = live.driversAvailable / live.ordersWaiting;
-    if (ratio >= settings.zoneDriverRatio) continue;
+    const threshold = resolveDispatchRules(platformDispatch, cityDispatchById.get(zone.cityId) ?? null, zone.dispatch ?? null).shortageRatioAlert;
+    if (ratio >= threshold) continue;
     out.push({
       kind: 'zone_driver_shortage',
       queue: 'alert',
-      severity: ratio < settings.zoneDriverRatio / 2 ? 'critical' : 'warning',
+      severity: ratio < threshold / 2 ? 'critical' : 'warning',
       title: `Manque de livreurs : ${zone.name}`,
       message: `${live.driversAvailable} livreur${live.driversAvailable > 1 ? 's' : ''} disponible${live.driversAvailable > 1 ? 's' : ''} pour ${live.ordersWaiting} commandes en attente.`,
       target: { type: 'zone', id: doc.id, label: zone.name },
       countryId: markets.cities.get(zone.cityId)?.countryId ?? zone.countryId ?? null,
       cityId: zone.cityId,
-      metric: { value: Math.round(ratio * 100) / 100, threshold: settings.zoneDriverRatio, unit: 'ratio' },
+      metric: { value: Math.round(ratio * 100) / 100, threshold, unit: 'ratio' },
       dedupKey: `zone_driver_shortage_${doc.id}`,
     });
   }
@@ -493,7 +510,7 @@ export async function runMonitoring(): Promise<{ created: number; updated: numbe
   const detectors: Array<{ kinds: PlatformAlert['kind'][]; run: () => Promise<Candidate[]> }> = [
     { kinds: ['restaurant_cancellation_rate', 'restaurant_rejection_rate'], run: () => restaurantRates(settings, today) },
     { kinds: ['city_order_drop', 'refund_spike'], run: () => cityTrends(settings, today) },
-    { kinds: ['zone_driver_shortage'], run: () => zoneShortages(settings) },
+    { kinds: ['zone_driver_shortage'], run: () => zoneShortages() },
     { kinds: ['service_down'], run: () => servicesDown() },
     {
       kinds: ['restaurant_to_validate', 'driver_to_validate', 'subscription_unpaid', 'document_expired', 'ticket_escalated', 'review_reported', 'gdpr_request', 'payout_failed'],

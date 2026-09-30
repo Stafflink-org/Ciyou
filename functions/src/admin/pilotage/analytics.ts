@@ -7,6 +7,7 @@ import {
   type AnalyticsSection,
   type CityAnalyticsRow,
   type DailyStats,
+  type DispatchOffer,
   type Driver,
   type DriverPerformanceRow,
   type GrowthAnalytics,
@@ -30,11 +31,11 @@ import { chunks, resolveScope, type ResolvedScope } from './scope';
 import { addDays, daysInRange, listDays, monthKey, parisDay, rangeBounds } from './time';
 
 type Filters = { from: string; to: string; planCode?: PlanCode | null };
-type OrderLite = Pick<Order, 'customerId' | 'restaurantId' | 'cityId' | 'status' | 'flags' | 'driverId' | 'fulfillment' | 'timeline' | 'createdAt'> & {
-  delivery?: { zoneId?: string | null } | null;
+type OrderLite = Pick<Order, 'customerId' | 'restaurantId' | 'cityId' | 'status' | 'flags' | 'driverId' | 'fulfillment' | 'timeline' | 'createdAt' | 'cancellation'> & {
+  delivery?: { zoneId?: string | null; deliveredBy?: string | null } | null;
 };
 
-const ORDER_FIELDS = ['customerId', 'restaurantId', 'cityId', 'status', 'flags', 'driverId', 'fulfillment', 'timeline', 'createdAt', 'delivery.zoneId'];
+const ORDER_FIELDS = ['customerId', 'restaurantId', 'cityId', 'status', 'flags', 'driverId', 'fulfillment', 'timeline', 'createdAt', 'delivery.zoneId', 'delivery.deliveredBy', 'cancellation'];
 const MAX_ORDERS = 25_000;
 
 function previousPeriod(from: string, to: string): { from: string; to: string } {
@@ -82,11 +83,12 @@ async function growth(scope: ResolvedScope, f: Filters): Promise<GrowthAnalytics
     } else docs.push(...(await base.select('createdAt', 'cityId').get()).docs);
     return docs.map((d) => d.get('createdAt') as FirebaseFirestore.Timestamp);
   };
-  const [restaurants, drivers, customers, stats] = await Promise.all([
+  const [restaurants, drivers, customers, stats, churn] = await Promise.all([
     byCity(COLLECTIONS.restaurants),
     byCity(COLLECTIONS.drivers),
     byCity(COLLECTIONS.users, (q) => q.where('role', '==', 'client')),
     platformDaily(scope, f.from, f.to),
+    subscriptionChurn(scope, f),
   ]);
   const count = (list: FirebaseFirestore.Timestamp[], a: string, b: string) => list.filter((ts) => inRange(ts, a, b)).length;
   const daily = listDays(f.from, f.to).map((day) => {
@@ -158,6 +160,7 @@ async function growth(scope: ResolvedScope, f: Filters): Promise<GrowthAnalytics
     cohorts,
     repeatRate,
     restaurantRetention: prevRestaurants.size ? retained / prevRestaurants.size : 0,
+    subscriptionRetention: 1 - churn.churnRate,
   };
 }
 
@@ -223,21 +226,41 @@ async function driverPerformance(scope: ResolvedScope, f: Filters): Promise<NonN
   if (scope.cityIds) {
     for (const ids of chunks(scope.cityIds)) if (ids.length) driverDocs.push(...(await db.collection(COLLECTIONS.drivers).where('cityId', 'in', ids).get()).docs);
   } else driverDocs.push(...(await db.collection(COLLECTIONS.drivers).get()).docs);
-  const [orders, zonesSnap] = await Promise.all([ordersInScope(scope, f.from, f.to), db.collection(COLLECTIONS.zones).get()]);
+  const { start, end } = rangeBounds(f.from, f.to);
+  const [orders, zonesSnap, offers] = await Promise.all([
+    ordersInScope(scope, f.from, f.to),
+    db.collection(COLLECTIONS.zones).get(),
+    // Propositions de course par zone (§3 « Performance par zone »), sur la même période
+    // que le reste de la section — jusqu'ici seules les livraisons/retards étaient
+    // détaillés par zone, pas l'acceptation ni les annulations (corrigé cdc-fix-residuals-7).
+    scopedDispatchOffers(scope, start, end),
+  ]);
   const zoneNames = new Map(zonesSnap.docs.map((doc) => [doc.id, (doc.data() as Zone).name]));
   const perDriver = new Map<string, { delivered: number; late: number }>();
-  const perZone = new Map<string, { deliveries: number; late: number; minutes: number; timed: number }>();
+  const perZone = new Map<string, { deliveries: number; late: number; minutes: number; timed: number; assigned: number; cancellations: number; offered: number; accepted: number }>();
+  const zoneAcc = (zoneId: string) => perZone.get(zoneId) ?? { deliveries: 0, late: 0, minutes: 0, timed: 0, assigned: 0, cancellations: 0, offered: 0, accepted: 0 };
   for (const o of orders) {
-    if (o.status !== 'delivered' || o.fulfillment !== 'delivery') continue;
     if (o.driverId) {
       const d = perDriver.get(o.driverId) ?? { delivered: 0, late: 0 };
-      d.delivered += 1;
-      if (o.flags?.late) d.late += 1;
+      if (o.status === 'delivered' && o.fulfillment === 'delivery') {
+        d.delivered += 1;
+        if (o.flags?.late) d.late += 1;
+      }
       perDriver.set(o.driverId, d);
     }
     const zoneId = o.delivery?.zoneId;
-    if (zoneId) {
-      const z = perZone.get(zoneId) ?? { deliveries: 0, late: 0, minutes: 0, timed: 0 };
+    if (!zoneId) continue;
+    // Base « annulations » alignée sur `runDriverStatsCompute` (driver-stats.ts) : toute
+    // commande livrée par la plateforme et assignée à un livreur compte dans le
+    // dénominateur, une annulation imputable au livreur au numérateur.
+    if (o.driverId && o.delivery?.deliveredBy === 'platform') {
+      const z = zoneAcc(zoneId);
+      z.assigned += 1;
+      if (o.status === 'cancelled' && (o.cancellation?.by === 'driver' || o.cancellation?.reason === 'address_unreachable')) z.cancellations += 1;
+      perZone.set(zoneId, z);
+    }
+    if (o.status === 'delivered' && o.fulfillment === 'delivery') {
+      const z = zoneAcc(zoneId);
       z.deliveries += 1;
       if (o.flags?.late) z.late += 1;
       const total = minutes(o.timeline?.placedAt ?? o.createdAt, o.timeline?.delivered);
@@ -247,6 +270,15 @@ async function driverPerformance(scope: ResolvedScope, f: Filters): Promise<NonN
       }
       perZone.set(zoneId, z);
     }
+  }
+  // Acceptation par zone : mêmes règles que `runDriverStatsCompute` (une offre encore
+  // `offered` est en attente, ni acceptée ni refusée, exclue du calcul).
+  for (const offer of offers) {
+    if (offer.status === 'offered' || !offer.zoneId) continue;
+    const z = zoneAcc(offer.zoneId);
+    z.offered += 1;
+    if (offer.status === 'accepted') z.accepted += 1;
+    perZone.set(offer.zoneId, z);
   }
   const rows: DriverPerformanceRow[] = driverDocs
     .map((doc) => ({ id: doc.id, d: doc.data() as Driver }))
@@ -275,9 +307,23 @@ async function driverPerformance(scope: ResolvedScope, f: Filters): Promise<NonN
       deliveries: z.deliveries,
       lateRate: z.deliveries ? z.late / z.deliveries : 0,
       averageMinutes: z.timed ? Math.round(z.minutes / z.timed) : 0,
+      acceptanceRate: z.offered ? Math.round((z.accepted / z.offered) * 1000) / 1000 : 0,
+      cancellationRate: z.assigned ? Math.round((z.cancellations / z.assigned) * 1000) / 1000 : 0,
     }))
     .sort((a, b) => b.deliveries - a.deliveries);
   return { rows, byZone };
+}
+
+/** Propositions de course de la période, dans le périmètre géographique (§3 « Performance par zone »). */
+async function scopedDispatchOffers(scope: ResolvedScope, start: Date, end: Date): Promise<DispatchOffer[]> {
+  const base = db.collection(COLLECTIONS.dispatchOffers).where('offeredAt', '>=', Timestamp.fromDate(start)).where('offeredAt', '<', Timestamp.fromDate(end));
+  const out: DispatchOffer[] = [];
+  if (scope.cityIds) {
+    for (const ids of chunks(scope.cityIds)) if (ids.length) out.push(...(await base.where('cityId', 'in', ids).get()).docs.map((doc) => doc.data() as DispatchOffer));
+  } else {
+    out.push(...(await base.get()).docs.map((doc) => doc.data() as DispatchOffer));
+  }
+  return out;
 }
 
 // ------------------------------------------------------------------ Villes et zones
@@ -353,6 +399,30 @@ async function cities(scope: ResolvedScope, f: Filters): Promise<NonNullable<Pil
 function monthlyPrice(s: Subscription): number {
   const discount = s.specialOffer?.discountBps ? 1 - s.specialOffer.discountBps / 10_000 : 1;
   return Math.round((s.billingCycle === 'yearly' ? s.priceHtCents / 12 : s.priceHtCents) * discount);
+}
+
+/**
+ * Souscriptions dans le périmètre + désabonnements de la période (§3 « Croissance »,
+ * « rétention des restaurants (qui restent abonnés) », et §3 « Abonnements »). Factorisé
+ * pour que `growth()` puisse présenter la même rétention d'abonnement que l'onglet
+ * Abonnements sans dupliquer la logique (corrigé cdc-fix-residuals-7 : la ligne
+ * « rétention des restaurants » de Croissance ne mesurait que les restaurants qui
+ * commandent, jamais ceux qui restent abonnés — donnée déjà calculée ici mais jamais
+ * remontée dans cet onglet).
+ */
+async function subscriptionChurn(scope: ResolvedScope, f: Filters): Promise<{ churnRate: number; cancellations: number; activeAtStart: number }> {
+  const restaurants = await restaurantsInScope(scope);
+  const names = new Set(restaurants.map((r) => r.id));
+  const subsSnap = await db.collection(COLLECTIONS.subscriptions).get();
+  const subs = subsSnap.docs
+    .map((doc) => doc.data() as Subscription)
+    .filter((s) => (s.restaurantIds?.length ? s.restaurantIds : [s.subscriberId]).some((id) => names.has(id)))
+    .filter((s) => !f.planCode || s.planCode === f.planCode);
+  const { start, end } = rangeBounds(f.from, f.to);
+  const within = (ts: { toMillis(): number } | null | undefined) => Boolean(ts && ts.toMillis() >= start.getTime() && ts.toMillis() < end.getTime());
+  const cancellations = subs.flatMap((s) => s.history ?? []).filter((h) => h.event === 'cancelled' && within(h.at)).length;
+  const activeAtStart = subs.filter((s) => s.createdAt.toMillis() < start.getTime() && (!s.cancelledAt || s.cancelledAt.toMillis() >= start.getTime())).length;
+  return { churnRate: activeAtStart ? cancellations / activeAtStart : 0, cancellations, activeAtStart };
 }
 
 async function subscriptions(scope: ResolvedScope, f: Filters): Promise<SubscriptionAnalytics> {

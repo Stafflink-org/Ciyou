@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Bike, Repeat, Store, UserPlus, Users } from 'lucide-react';
+import { Bike, CreditCard, Repeat, Store, UserPlus, Users } from 'lucide-react';
 import { AreaChart, BarChart, Card, CardHeader, ChartLegend, EmptyState, StatCard, Tooltip, formatNumber, formatPercent, Table } from '@golink/ui';
 import type { GrowthAnalytics } from '@golink/shared';
 import { ChartCard } from '../pilotage-commun/components';
@@ -64,11 +64,18 @@ export function GrowthSection({ data, period, showMoney }: { data: GrowthAnalyti
           footer="Au moins 2 commandes livrées sur la période."
         />
         <StatCard
-          label="Rétention des commerces"
+          label="Commerces qui recommandent"
           value={formatPercent(data.restaurantRetention)}
           icon={<Users />}
           tone="info"
-          footer="Actifs au début et toujours actifs à la fin."
+          footer="Ont passé au moins une commande au début et à la fin de la période."
+        />
+        <StatCard
+          label="Rétention des abonnements"
+          value={formatPercent(data.subscriptionRetention)}
+          icon={<CreditCard />}
+          tone="amber"
+          footer="Commerces abonnés en début de période toujours abonnés (non résiliés) à la fin."
         />
       </div>
 
