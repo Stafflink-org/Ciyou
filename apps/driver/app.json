@@ -27,10 +27,10 @@
       "favicon": "./assets/favicon.png"
     },
     "scheme": "ciyou-driver",
-    "owner": "nasro-hamou-2",
+    "owner": "nasro-hamou",
     "extra": {
       "eas": {
-        "projectId": "800f283a-da44-4e7c-8cd6-449c1fb046db"
+        "projectId": "e9e7ed81-94e6-44cb-b76e-72b6504fac95"
       }
     }
   }
