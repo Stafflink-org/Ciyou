@@ -182,6 +182,24 @@ export async function buildReport(report: ScheduledReport, owner: AdminUser, per
       paragraphs.push('Meilleures ventes de la période :');
       top.forEach((row, i) => paragraphs.push(`${i + 1}. ${String(row.name)} — ${eur(Number(row.sales))} (${int(Number(row.orders))} commandes)`));
     }
+    if (report.report === 'restaurants') {
+      // KPI dédiés commerces (cahier §4 « contenu du récapitulatif ») : calculés à partir
+      // des mêmes lignes que la pièce jointe (aucune requête supplémentaire).
+      const count = table.rows.length;
+      const totalSales = table.rows.reduce((s, row) => s + Number(row.sales), 0);
+      const totalCommission = table.rows.reduce((s, row) => s + Number(row.commission), 0);
+      const totalOrders = table.rows.reduce((s, row) => s + Number(row.orders), 0);
+      const avgCancellation = totalOrders ? table.rows.reduce((s, row) => s + Number(row.cancellation) * Number(row.orders), 0) / totalOrders : 0;
+      const rated = table.rows.filter((row) => row.rating != null);
+      const avgRating = rated.length ? rated.reduce((s, row) => s + Number(row.rating), 0) / rated.length : null;
+      details = [
+        { label: 'Commerces dans le périmètre', value: int(count) },
+        { label: 'CA total TTC', value: eur(totalSales) },
+        { label: 'Commissions HT', value: eur(totalCommission) },
+        { label: 'Taux d’annulation moyen', value: pct(avgCancellation) },
+        { label: 'Note moyenne', value: avgRating != null ? avgRating.toFixed(1) : '—' },
+      ];
+    }
   } else {
     const ctx: ExportContext = {
       admin: owner,
@@ -191,6 +209,27 @@ export async function buildReport(report: ScheduledReport, owner: AdminUser, per
       limit: report.format === 'pdf' ? 3_000 : 20_000,
     };
     table = await buildEntityTable(entity, ctx);
+    if (report.report === 'drivers') {
+      // KPI dédiés livreurs (cahier §4 « contenu du récapitulatif ») : agrégés à partir des
+      // mêmes lignes que la pièce jointe (`deliveries`/`acceptance`/`onTime`/`rating`
+      // proviennent de `Driver.stats`, cumulés depuis l'inscription — pas de série sur la
+      // période, limite documentée comme pour l'export lui-même).
+      const count = table.rows.length;
+      const totalDeliveries = table.rows.reduce((s, row) => s + Number(row.deliveries ?? 0), 0);
+      const withAcceptance = table.rows.filter((row) => row.acceptance != null);
+      const avgAcceptance = withAcceptance.length ? withAcceptance.reduce((s, row) => s + Number(row.acceptance), 0) / withAcceptance.length : null;
+      const withOnTime = table.rows.filter((row) => row.onTime != null);
+      const avgOnTime = withOnTime.length ? withOnTime.reduce((s, row) => s + Number(row.onTime), 0) / withOnTime.length : null;
+      const rated = table.rows.filter((row) => row.rating != null);
+      const avgRating = rated.length ? rated.reduce((s, row) => s + Number(row.rating), 0) / rated.length : null;
+      details = [
+        { label: 'Livreurs dans le périmètre', value: int(count) },
+        { label: 'Livraisons cumulées', value: int(totalDeliveries) },
+        { label: 'Taux d’acceptation moyen', value: avgAcceptance != null ? pct(avgAcceptance) : '—' },
+        { label: 'Ponctualité moyenne', value: avgOnTime != null ? pct(avgOnTime) : '—' },
+        { label: 'Note moyenne', value: avgRating != null ? avgRating.toFixed(1) : '—' },
+      ];
+    }
   }
   if (report.report === 'daily_summary') {
     const alerts = await db.collection(COLLECTIONS.platformAlerts).where('status', '==', 'open').select('cityId', 'queue').get();
