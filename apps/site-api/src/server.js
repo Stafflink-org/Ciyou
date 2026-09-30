@@ -1,6 +1,4 @@
 import http from 'node:http';
-import { randomUUID } from 'node:crypto';
-
 const PORT = Number(process.env.PORT || 8080);
 const MAX_BODY = 24 * 1024;
 const COMPANY_NAME = process.env.ODOO_CIYOU_COMPANY_NAME || 'Ciyou';
@@ -59,12 +57,12 @@ function validate(input) {
     fullName: cleanString(input.fullName, 120),
     restaurantName: cleanString(input.businessName || input.restaurantName, 140),
     email: cleanString(input.email, 160).toLowerCase(),
-    phone: cleanString(input.phone, 40),
-    city: cleanString(input.city, 90),
+    phone: cleanString(input.phone, 10).replace(/\D/g, ''),
     message: cleanMessage(input.message),
   };
-  if (!lead.fullName || !lead.restaurantName || !lead.email || !lead.phone || !lead.city) throw Object.assign(new Error('invalid_input'), { status: 400 });
+  if (!lead.fullName || !lead.restaurantName || !lead.email || !lead.phone) throw Object.assign(new Error('invalid_input'), { status: 400 });
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(lead.email)) throw Object.assign(new Error('invalid_email'), { status: 400 });
+  if (!/^\d{10}$/.test(lead.phone)) throw Object.assign(new Error('invalid_phone'), { status: 400 });
   return lead;
 }
 
@@ -107,38 +105,23 @@ async function ensureCompany(client) {
   return companyId;
 }
 
-async function createLead(lead, requestId) {
+async function createLead(lead) {
   const client = await createOdooClient();
   const companyId = await ensureCompany(client);
-  const userId = positiveId(process.env.ODOO_CIYOU_USER_ID || process.env.ODOO_STAFFLINK_USER_ID) || client.uid;
-  const marker = `Ciyou public enquiry ${requestId}`;
   const context = { allowed_company_ids: [companyId], mail_create_nosubscribe: true, mail_create_nolog: true };
-  const existing = await client.rpc('object', 'execute_kw', [client.db, client.uid, client.credential, 'crm.lead', 'search', [[[ 'company_id', '=', companyId ], [ 'description', 'ilike', marker ]]], { limit: 1, context: { ...context, active_test: false } }]);
-  if (Array.isArray(existing) && Number.isInteger(existing[0]) && existing[0] > 0) return existing[0];
+  const description = lead.message ? escapeHtml(lead.message).replace(/\n/g, '<br>') : '';
 
-  const description = [
-    `<p>${escapeHtml(marker)}</p>`,
-    '<p>Source : Site vitrine Ciyou Eats</p>',
-    `<p><strong>Contact :</strong> ${escapeHtml(lead.fullName)}</p>`,
-    `<p><strong>Restaurant :</strong> ${escapeHtml(lead.restaurantName)}</p>`,
-    `<p><strong>Ville :</strong> ${escapeHtml(lead.city)}</p>`,
-    `<p><strong>Email :</strong> ${escapeHtml(lead.email)}</p>`,
-    `<p><strong>Téléphone :</strong> ${escapeHtml(lead.phone)}</p>`,
-    lead.message ? `<p><strong>Message :</strong><br>${escapeHtml(lead.message).replace(/\n/g, '<br>')}</p>` : '',
-  ].filter(Boolean).join('');
-
-  const id = await client.rpc('object', 'execute_kw', [client.db, client.uid, client.credential, 'crm.lead', 'create', [{
-    name: `${lead.restaurantName} - Ciyou website enquiry`,
-    type: 'lead',
+  const values = {
+    name: lead.restaurantName,
     partner_name: lead.restaurantName,
     contact_name: lead.fullName,
     email_from: lead.email,
     phone: lead.phone,
-    city: lead.city,
-    description,
-    user_id: userId,
     company_id: companyId,
-  }], { context }]);
+  };
+  if (description) values.description = description;
+
+  const id = await client.rpc('object', 'execute_kw', [client.db, client.uid, client.credential, 'crm.lead', 'create', [values], { context }]);
   if (!Number.isInteger(id) || id <= 0) throw new Error('odoo_invalid_lead_id');
   return id;
 }
@@ -150,7 +133,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method !== 'POST' || req.url !== '/api/contact') return json(res, 404, { ok: false });
     const raw = await readBody(req);
     const lead = validate(JSON.parse(raw || '{}'));
-    const leadId = await createLead(lead, randomUUID());
+    const leadId = await createLead(lead);
     return json(res, 200, { ok: true, leadId });
   } catch (error) {
     const status = Number(error?.status) || 503;
