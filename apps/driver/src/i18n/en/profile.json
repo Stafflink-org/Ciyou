@@ -27,6 +27,13 @@
     "support": "Contact support",
     "signOut": "Sign out"
   },
+  "identityCheck": {
+    "title": "Identity verification",
+    "prompt": "For everyone's safety, send a selfie: our team compares it to your validated ID.",
+    "submit": "Take or upload a photo",
+    "submittedBadge": "Photo sent, under review",
+    "toastSent": "Photo sent, thank you!"
+  },
   "sanction": {
     "until": "Until {{date}}",
     "contestedBadge": "Appeal sent, under review",

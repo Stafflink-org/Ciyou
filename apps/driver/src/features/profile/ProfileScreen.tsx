@@ -5,6 +5,7 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useState } from 'react';
+import * as DocumentPicker from 'expo-document-picker';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { labelOf } from '@golink/shared';
 import { useAuth } from '../../auth/AuthContext';
@@ -15,7 +16,8 @@ import { Card } from '../../ui/Card';
 import { Button } from '../../ui/Button';
 import { Input } from '../../ui/Input';
 import { Text } from '../../ui/Text';
-import { useActiveSanction, useContestSanction, useDriverProfile } from './hooks';
+import { useToast } from '../../ui/Toast';
+import { useActiveSanction, useContestSanction, useDriverProfile, usePendingIdentityCheck, useSubmitIdentitySelfie } from './hooks';
 import { useTranslation } from '../../i18n/I18nProvider';
 import { intlLocale } from '../../i18n/core';
 import { LanguagePicker } from '../../i18n/LanguagePicker';
@@ -41,6 +43,7 @@ export function ProfileScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { data: driver } = useDriverProfile(user?.uid ?? null);
   const { data: sanction } = useActiveSanction(driver);
+  const { data: identityCheck } = usePendingIdentityCheck(user?.uid ?? null);
   const initials = (driver?.displayName ?? user?.email ?? '?').trim().slice(0, 1).toUpperCase();
   const status = driver
     ? { label: t(STATUS_KEY[driver.status] ?? driver.status), tone: STATUS_TONE[driver.status] ?? ('neutral' as const) }
@@ -94,6 +97,8 @@ export function ProfileScreen() {
         </View>
       ) : null}
 
+      {identityCheck ? <IdentityCheckCard check={identityCheck} uid={user?.uid ?? null} /> : null}
+
       {sanction ? <SanctionCard sanction={sanction} uid={user?.uid ?? null} /> : null}
 
       <Button
@@ -115,6 +120,49 @@ export function ProfileScreen() {
 
       <LanguagePicker visible={languageOpen} onClose={() => setLanguageOpen(false)} />
     </ScrollView>
+  );
+}
+
+/**
+ * Contrôle d'identité par selfie en cours (`docs/AUDIT_COUVERTURE_CDC.md` §6, contrat
+ * `docs/CONTRATS_APPS_MOBILES.md` §21) : dépôt réel de la photo (Storage puis
+ * `submitIdentitySelfie`), tant qu'il attend une action du livreur ; état « en cours
+ * d'examen » une fois envoyée. Un agent compare ensuite visuellement le selfie à la
+ * pièce d'identité validée — aucun score de ressemblance n'est jamais affiché ici.
+ */
+function IdentityCheckCard({ check, uid }: { check: NonNullable<ReturnType<typeof usePendingIdentityCheck>['data']>; uid: string | null }) {
+  const { t } = useTranslation('profile');
+  const { submit, pending, error } = useSubmitIdentitySelfie(uid);
+  const toast = useToast();
+
+  const pickAndSubmit = async () => {
+    const result = await DocumentPicker.getDocumentAsync({ type: ['image/*'], copyToCacheDirectory: true });
+    if (result.canceled || !result.assets?.[0]) return;
+    const asset = result.assets[0];
+    const ok = await submit(check.id, { uri: asset.uri, name: asset.name, mimeType: asset.mimeType, file: asset.file });
+    if (ok) toast.show(t('profile:identityCheck.toastSent'));
+  };
+
+  return (
+    <Card style={{ marginTop: spacing.lg, borderColor: colors.danger, borderWidth: 1 }}>
+      <Text variant="bodyStrong">{t('profile:identityCheck.title')}</Text>
+      <Text variant="body" color="muted" style={{ marginTop: 4 }}>
+        {t('profile:identityCheck.prompt')}
+      </Text>
+
+      {check.status === 'submitted' ? (
+        <Badge label={t('profile:identityCheck.submittedBadge')} tone="neutral" style={{ marginTop: spacing.md }} />
+      ) : (
+        <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
+          {error ? (
+            <Text variant="caption" color="danger">
+              {error}
+            </Text>
+          ) : null}
+          <Button label={t('profile:identityCheck.submit')} variant="outline" loading={pending} onPress={pickAndSubmit} />
+        </View>
+      )}
+    </Card>
   );
 }
 
