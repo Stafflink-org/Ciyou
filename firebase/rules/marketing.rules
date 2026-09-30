@@ -85,23 +85,6 @@ match /announcements/{announcementId} {
 // ------------------------------------------------------------ Prospection (mini CRM)
 
 
-match /publicLeads/{leadId} {
-  allow read: if isAdmin('crm.view');
-  allow create: if request.auth == null
-    && incoming().keys().hasOnly(['fullName', 'businessName', 'email', 'phone', 'city', 'message', 'source', 'status', 'createdAt', 'updatedAt'])
-    && isNonEmptyString(incoming().fullName, 120)
-    && isNonEmptyString(incoming().businessName, 140)
-    && isNonEmptyString(incoming().email, 160)
-    && incoming().email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
-    && isNonEmptyString(incoming().phone, 40)
-    && isNonEmptyString(incoming().city, 90)
-    && isOptionalString(incoming().message, 1200)
-    && incoming().source == 'ciyou-public-site'
-    && incoming().status == 'new'
-    && incoming().createdAt == request.time
-    && incoming().updatedAt == request.time;
-  allow update, delete: if false;
-}
 
 match /prospects/{prospectId} {
   allow read: if isAdmin('crm.view');
