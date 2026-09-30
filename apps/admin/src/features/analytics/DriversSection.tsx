@@ -160,7 +160,9 @@ export function DriversSection({ data, cityNames }: { data: NonNullable<Pilotage
                   <tr className="border-b border-border bg-surface-2 text-left font-mono text-3xs uppercase tracking-wider text-fg-subtle">
                     <th className="px-5 py-2.5 font-medium">Zone</th>
                     <th className="px-3 py-2.5 text-right font-medium">Retards</th>
-                    <th className="px-5 py-2.5 text-right font-medium">Temps</th>
+                    <th className="px-3 py-2.5 text-right font-medium">Temps</th>
+                    <th className="px-3 py-2.5 text-right font-medium">Acceptation</th>
+                    <th className="px-5 py-2.5 text-right font-medium">Annulations</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -170,8 +172,14 @@ export function DriversSection({ data, cityNames }: { data: NonNullable<Pilotage
                       <td className="px-3 py-2.5 text-right">
                         <RateCell value={z.lateRate} warn={0.1} danger={0.2} has={z.deliveries > 0} />
                       </td>
-                      <td className="px-5 py-2.5 text-right">
+                      <td className="px-3 py-2.5 text-right">
                         <Num muted>{minutes(z.averageMinutes)}</Num>
+                      </td>
+                      <td className="px-3 py-2.5 text-right">
+                        <Num muted={z.acceptanceRate >= 0.85}>{formatPercent(z.acceptanceRate)}</Num>
+                      </td>
+                      <td className="px-5 py-2.5 text-right">
+                        <RateCell value={z.cancellationRate} warn={0.05} danger={0.1} has={z.deliveries > 0} />
                       </td>
                     </tr>
                   ))}

@@ -25,6 +25,7 @@ import { z, zId, zReason } from '../../lib/validation';
 import { auditDriver, loadDriverFor, notifyDriver, opsCallable, parisDay, type DriverWithRef } from './common';
 import { applyDocumentState, evaluateDriverDocuments } from './compliance';
 import { driverApprovedEmail, driverDocumentsMissingEmail, driverRejectedEmail, driverSanctionEmail } from './emails';
+import { upsertSignal } from '../../platform/fraud';
 
 const isoDay = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date attendue au format AAAA-MM-JJ');
 
@@ -235,6 +236,15 @@ export const reviewIdentityCheck = opsCallable(
         body: 'Votre compte est suspendu le temps d’un échange avec notre équipe. Contactez le support depuis l’application.',
         category: 'account',
         templateKey: 'driver_identity_failed',
+      });
+      // Signal de fraude réel (§28, §6 « Vérification d'identité ») : jusqu'ici aucune
+      // fonction n'émettait ce déclencheur, un contrôle non concluant n'ouvrait donc
+      // jamais de dossier de fraude — corrigé (cdc-fix-residuals-7). Score fixe (comme
+      // les autres signaux de ce module), non réglable dans settings/fraud.
+      await upsertSignal('driver', driver.id, driver.data.displayName, driver.data.countryId, {
+        code: 'identity_check_failed',
+        detail: reason ? `Selfie jugé non concordant avec la pièce d’identité : ${reason}` : 'Selfie jugé non concordant avec la pièce d’identité.',
+        score: 30,
       });
     }
     await auditDriver(caller, driver, `driver.identity_check_${status}`, {

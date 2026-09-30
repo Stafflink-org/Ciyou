@@ -2,7 +2,7 @@
 // (lot 1) + menu complet réel : sections en onglets collants (avec repérage au
 // défilement simplifié — mesure des sections, pas de bibliothèque tierce),
 // cartes produit, indisponibilité, offres automatiques, bandeau fermeture.
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Image, Pressable, ScrollView, View, StyleSheet, type NativeSyntheticEvent, type NativeScrollEvent } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '../../navigation/types';
@@ -13,6 +13,7 @@ import { colors, spacing, radius, shadow } from '../../theme/tokens';
 import { Text } from '../../ui/Text';
 import { Badge } from '../../ui/Badge';
 import { useToast } from '../../ui/Toast';
+import { trackFunnelEvent } from '../../lib/funnel';
 import { PlaceholderScreen } from '../shared/PlaceholderScreen';
 import { useActiveProductOffers, useMenuProducts, useMenuSections } from './hooks';
 import { FloatingCartButton } from '../cart/FloatingCartButton';
@@ -36,6 +37,14 @@ export function RestaurantScreen({ route, navigation }: Props) {
   const scrollRef = useRef<ScrollView>(null);
   const sectionOffsets = useRef<Record<string, number>>({});
   const today = new Date().toISOString().slice(0, 10);
+
+  // Tunnel de commande (§3 Analytics) : une fiche commerce consultée, une seule fois par ouverture d'écran.
+  const trackedView = useRef(false);
+  useEffect(() => {
+    if (trackedView.current || !restaurant) return;
+    trackedView.current = true;
+    trackFunnelEvent('restaurant_view', restaurant);
+  }, [restaurant]);
 
   const offerByProduct = new Map(
     offers

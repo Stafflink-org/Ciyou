@@ -6,7 +6,7 @@
 // lot 3, mêmes cœurs que `FavoritesScreen`) ; adresse et mode restent des
 // états locaux (lot « adresses dans le tunnel d'achat » hors périmètre —
 // voir docs/CONTRAT_MODULES.md).
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps } from '@react-navigation/native';
@@ -16,6 +16,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { colors, spacing } from '../../theme/tokens';
 import { Text } from '../../ui/Text';
 import { RestaurantCardSkeleton } from '../../ui/Skeleton';
+import { trackFunnelEvent } from '../../lib/funnel';
 import { useCityRestaurants, useDefaultCity, useFeaturedProducts } from './hooks';
 import { useFavorites } from '../favorites/hooks';
 import { useTranslation } from '../../i18n/I18nProvider';
@@ -44,6 +45,15 @@ export function HomeScreen({ navigation }: Props) {
   const [query, setQuery] = useState('');
   const favorites = useFavorites();
   const [refreshTick, setRefreshTick] = useState(0);
+
+  // Tunnel de commande (§3 Analytics) : une seule ouverture d'app comptée par session,
+  // dès que la ville par défaut est connue (voir lib/funnel.ts).
+  const trackedOpen = useRef(false);
+  useEffect(() => {
+    if (trackedOpen.current || !city) return;
+    trackedOpen.current = true;
+    trackFunnelEvent('app_open', city);
+  }, [city]);
 
   const firstName = user?.displayName?.split(' ')[0] ?? '';
   const cityLabel = city?.name ?? '';
