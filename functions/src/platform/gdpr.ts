@@ -54,6 +54,7 @@ export const saveLegalDocument = platformCallable(
     if (before?.status === 'published' && (before.title as { fr?: string } | undefined)?.fr !== data.title) throw fail.invalid('Le titre d’une version publiée ne peut plus être modifié : créez une nouvelle version.');
     if (before?.status === 'published' && (before.content as { fr?: string } | undefined)?.fr !== data.content) throw fail.invalid('Le contenu d’une version publiée ne peut plus être modifié : créez une nouvelle version.');
     if (before?.status === 'published' && before.version !== data.version) throw fail.invalid('Le numéro d’une version publiée ne peut plus être modifié.');
+    const now = Timestamp.now();
     const next = {
       type: data.type,
       countryId: data.countryId,
@@ -61,13 +62,24 @@ export const saveLegalDocument = platformCallable(
       title: { fr: data.title },
       content: { fr: data.content },
       status: data.status,
-      publishedAt: data.status === 'published' ? (before?.publishedAt ?? Timestamp.now()) : (before?.publishedAt ?? null),
-      effectiveAt: data.effectiveAt ? Timestamp.fromMillis(data.effectiveAt) : null,
+      publishedAt: data.status === 'published' ? (before?.publishedAt ?? now) : (before?.publishedAt ?? null),
+      effectiveAt: data.effectiveAt ? Timestamp.fromMillis(data.effectiveAt) : data.status === 'published' && before?.status !== 'published' ? now : null,
       requiresReacceptance: data.requiresReacceptance,
       changeSummary: data.changeSummary,
     };
     const change = await recordSettingsChange({ docPath: `${COLLECTIONS.legalDocuments}/${ref.id}`, before, after: next, reason: data.reason, caller });
-    await ref.set({ ...next, updatedAt: FieldValue.serverTimestamp(), updatedBy: caller.uid, createdAt: before?.createdAt ?? FieldValue.serverTimestamp(), createdBy: before?.createdBy ?? caller.uid }, { merge: true });
+    // Publication directe (sans passer par le second éditeur publishPage, experience/display.ts) :
+    // archiver les autres versions déjà publiées du même type+pays, sinon deux documents
+    // "publiés" du même type coexistent (§29, bug réel trouvé et corrigé — les deux chemins
+    // d'écriture n'étaient pas alignés).
+    const publishing = data.status === 'published' && before?.status !== 'published';
+    const toArchive = publishing
+      ? (await db.collection(COLLECTIONS.legalDocuments).where('type', '==', data.type).where('countryId', '==', data.countryId).where('status', '==', 'published').get()).docs.filter((d) => d.id !== ref.id)
+      : [];
+    await db.runTransaction(async (tx) => {
+      for (const d of toArchive) tx.update(d.ref, { status: 'archived', updatedAt: now, updatedBy: caller.uid });
+      tx.set(ref, { ...next, updatedAt: FieldValue.serverTimestamp(), updatedBy: caller.uid, createdAt: before?.createdAt ?? FieldValue.serverTimestamp(), createdBy: before?.createdBy ?? caller.uid }, { merge: true });
+    });
     await writeAudit({
       actor: actorFromCaller(caller, 'admin'),
       action: data.documentId ? 'legal_document.updated' : 'legal_document.created',
@@ -260,6 +272,8 @@ export const handleGdprRequest = platformCallable(
     requestId: zId,
     status: z.enum(['identity_check', 'in_progress', 'completed', 'rejected']),
     note: z.string().trim().max(1000).nullable(),
+    /** Rattache le compte concerné à une demande enregistrée sans identifiant (§29). */
+    subjectId: zId.nullish(),
   }),
   async (data, request) => {
     const { caller } = await requireSecureAdmin(request, 'gdpr.handle');
@@ -267,6 +281,14 @@ export const handleGdprRequest = platformCallable(
     const snap = await ref.get();
     if (!snap.exists) throw fail.notFound('Demande RGPD');
     const gdprRequest = snap.data() as GdprRequest;
+    if (data.subjectId && !gdprRequest.subjectId) gdprRequest.subjectId = data.subjectId;
+    // La vérification d'identité n'était qu'un statut affiché : rien n'empêchait de marquer
+    // une demande access/portability/erasure "Terminée" sans jamais avoir identifié le
+    // compte concerné (aucun export produit, aucun effacement réalisé, mais le statut
+    // affichait quand même "Terminée") — bug de conformité réel, corrigé (§29).
+    if (data.status === 'completed' && (gdprRequest.type === 'access' || gdprRequest.type === 'portability' || gdprRequest.type === 'erasure') && !gdprRequest.subjectId) {
+      throw fail.invalid('Cette demande n’est rattachée à aucun compte : renseignez l’identifiant du compte concerné avant de la clôturer, sinon rien ne sera exporté ni effacé.');
+    }
 
     let exportFile: GdprRequest['export'] = gdprRequest.export ?? null;
     let retainedData = gdprRequest.retainedData;
@@ -309,6 +331,7 @@ export const handleGdprRequest = platformCallable(
 
     await ref.update({
       status: data.status,
+      ...(data.subjectId && !snap.data()?.subjectId ? { subjectId: data.subjectId } : {}),
       completedAt: data.status === 'completed' || data.status === 'rejected' ? FieldValue.serverTimestamp() : null,
       notes: data.note ?? gdprRequest.notes ?? null,
       export: exportFile,
