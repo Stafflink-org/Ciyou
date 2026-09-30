@@ -91,7 +91,7 @@ export function DispatchScreen() {
       await respondToOffer({ offerId: offer.id, accept: true });
       toast.show(t('offer.accepted'));
     } catch (err) {
-      toast.show(errorMessage(err, t('offer.acceptError')), 'danger');
+      toast.show(errorMessage(err, t, t('offer.acceptError')), 'danger');
     } finally {
       setOfferBusy(false);
     }
@@ -103,7 +103,7 @@ export function DispatchScreen() {
     try {
       await respondToOffer({ offerId: offer.id, accept: false });
     } catch (err) {
-      toast.show(errorMessage(err, t('offer.declineError')), 'danger');
+      toast.show(errorMessage(err, t, t('offer.declineError')), 'danger');
     } finally {
       setOfferBusy(false);
     }
@@ -121,7 +121,7 @@ export function DispatchScreen() {
       setCollectionCode('');
       toast.show(t('activeOrder.pickupSuccess'));
     } catch (err) {
-      toast.show(errorMessage(err, t('activeOrder.pickupError')), 'danger');
+      toast.show(errorMessage(err, t, t('activeOrder.pickupError')), 'danger');
     } finally {
       setOrderBusy(false);
     }
@@ -152,7 +152,7 @@ export function DispatchScreen() {
       setHandoverCode('');
       toast.show(t('activeOrder.completeSuccess'));
     } catch (err) {
-      toast.show(errorMessage(err, t('activeOrder.completeError')), 'danger');
+      toast.show(errorMessage(err, t, t('activeOrder.completeError')), 'danger');
     } finally {
       setOrderBusy(false);
     }

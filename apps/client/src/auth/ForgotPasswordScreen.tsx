@@ -31,7 +31,7 @@ export function ForgotPasswordScreen({ navigation }: Props) {
       await sendPasswordReset(email);
       setSent(true);
     } catch (err) {
-      setError(errorMessage(err, t('forgotPassword.sendFailed')));
+      setError(errorMessage(err, t, t('forgotPassword.sendFailed')));
     } finally {
       setLoading(false);
     }

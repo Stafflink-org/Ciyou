@@ -1,0 +1,13 @@
+{
+  "reacceptance": {
+    "title": "Our terms have changed",
+    "description": "Please accept the new version ({{version}}) to keep using Ciyou Eats.",
+    "whatChanges": "What's changing",
+    "accept": "I accept the terms"
+  },
+  "cookieBanner": {
+    "text": "Ciyou Eats uses cookies and audience-measurement data, and may send you offers by email. You can decline everything except what is strictly necessary.",
+    "refuseAll": "Decline all",
+    "acceptAll": "Accept all"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "title": "Données personnelles",
+  "intro": "Demandez l'accès, la portabilité, la rectification ou l'effacement de vos données détenues par Ciyou Eats, ou opposez-vous à un traitement. Réponse sous 30 jours.",
+  "requestLabel": "Demander : {{type}}",
+  "pendingNotice": "Une demande est déjà en cours de traitement pour votre compte. Vous pourrez en déposer une nouvelle une fois celle-ci close.",
+  "submitted": "Votre demande a été enregistrée. Réponse sous 30 jours.",
+  "download": "Télécharger"
+}

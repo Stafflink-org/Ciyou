@@ -1,0 +1,8 @@
+{
+  "title": "Personal data",
+  "intro": "Request access, portability, rectification or erasure of your data held by Ciyou Eats, or object to a processing. Response within 30 days.",
+  "requestLabel": "Request: {{type}}",
+  "pendingNotice": "A request is already being processed for your account. You can submit a new one once this one is closed.",
+  "submitted": "Your request has been recorded. Response within 30 days.",
+  "download": "Download"
+}

@@ -48,7 +48,7 @@ export function SignUpScreen({ navigation }: Props) {
       // d'authentification est démontée). Le rappel de vérification d'e-mail
       // est repris dans `ProfileScreen` tant que `user.emailVerified` est faux.
     } catch (err) {
-      setError(errorMessage(err, t('signup.errors.signUpFailed')));
+      setError(errorMessage(err, t, t('signup.errors.signUpFailed')));
     } finally {
       setLoading(false);
     }

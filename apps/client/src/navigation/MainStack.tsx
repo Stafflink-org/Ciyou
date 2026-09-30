@@ -22,6 +22,7 @@ import { HelpScreen } from '../features/profile/HelpScreen';
 import { SupportScreen } from '../features/support/SupportScreen';
 import { TicketDetailScreen } from '../features/support/TicketDetailScreen';
 import { ReferralScreen } from '../features/referral/ReferralScreen';
+import { GdprScreen } from '../features/gdpr/GdprScreen';
 import { useTranslation } from '../i18n/I18nProvider';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
@@ -56,6 +57,7 @@ export function MainStack() {
       <Stack.Screen name="Support" component={SupportScreen} options={{ title: t('screenTitles.support') }} />
       <Stack.Screen name="TicketDetail" component={TicketDetailScreen} options={{ title: t('screenTitles.ticketDetail') }} />
       <Stack.Screen name="Referral" component={ReferralScreen} options={{ title: t('screenTitles.referral') }} />
+      <Stack.Screen name="Gdpr" component={GdprScreen} options={{ title: t('screenTitles.gdpr') }} />
     </Stack.Navigator>
   );
 }

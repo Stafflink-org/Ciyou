@@ -17,7 +17,8 @@
     "paymentMethods": "Payment methods",
     "help": "Help",
     "support": "Support (my requests)",
-    "language": "Language"
+    "language": "Language",
+    "gdpr": "Personal data"
   },
   "signOut": "Sign out"
 }

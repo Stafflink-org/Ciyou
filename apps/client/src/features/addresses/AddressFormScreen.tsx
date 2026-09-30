@@ -58,7 +58,7 @@ export function AddressFormScreen({ route, navigation }: Props) {
       }
       navigation.goBack();
     } catch (error) {
-      toast.show(errorMessage(error), 'danger');
+      toast.show(errorMessage(error, t), 'danger');
     } finally {
       setSaving(false);
     }

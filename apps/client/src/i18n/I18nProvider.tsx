@@ -88,6 +88,9 @@ import arSupport from './ar/support.json';
 import frLegal from './fr/legal.json';
 import enLegal from './en/legal.json';
 import arLegal from './ar/legal.json';
+import frGdpr from './fr/gdpr.json';
+import enGdpr from './en/gdpr.json';
+import arGdpr from './ar/gdpr.json';
 
 addResources('fr', 'common', frCommon);
 addResources('en', 'common', enCommon);
@@ -155,6 +158,9 @@ addResources('ar', 'support', arSupport);
 addResources('fr', 'legal', frLegal);
 addResources('en', 'legal', enLegal);
 addResources('ar', 'legal', arLegal);
+addResources('fr', 'gdpr', frGdpr);
+addResources('en', 'gdpr', enGdpr);
+addResources('ar', 'gdpr', arGdpr);
 
 const STORAGE_KEY = 'golink-client:locale';
 

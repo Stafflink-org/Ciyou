@@ -37,6 +37,7 @@ export function ProfileScreen({ navigation }: Props) {
     { label: t('shortcuts.language'), icon: '🌐', onPress: () => setLanguageOpen(true) },
     { label: t('shortcuts.help'), icon: '❓', onPress: () => navigation.navigate('Help') },
     { label: t('shortcuts.support'), icon: '💬', onPress: () => navigation.navigate('Support', undefined) },
+    { label: t('shortcuts.gdpr'), icon: '🔒', onPress: () => navigation.navigate('Gdpr') },
   ];
 
   return (
