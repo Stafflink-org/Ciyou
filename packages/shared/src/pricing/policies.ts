@@ -358,6 +358,13 @@ export interface Dac7Transaction {
   grossCents: Cents;
   /** Commissions et frais retenus par la plateforme. */
   feesCents: Cents;
+  /**
+   * false pour un ajustement (remboursement imputé au vendeur, `grossCents` négatif) qui
+   * réduit le montant déclaré sans compter comme une vente supplémentaire (cahier §16,
+   * « les remboursements ne sont pas déduits des montants déclarés » : corrigé pour les
+   * commerces, cdc-fix-residuals-3). Par défaut `true` (comportement inchangé).
+   */
+  countsAsTransaction?: boolean;
 }
 
 export interface Dac7Quarter {
@@ -380,7 +387,7 @@ export function aggregateDac7(transactions: readonly Dac7Transaction[], year: nu
     const q = quarters[Math.floor(t.paidAt.getUTCMonth() / 3)];
     q.grossCents += t.grossCents;
     q.feesCents += t.feesCents;
-    q.transactionsCount += 1;
+    if (t.countsAsTransaction !== false) q.transactionsCount += 1;
   }
   return quarters;
 }
