@@ -1,5 +1,19 @@
 # État d'avancement — Ciyou Eats
 
+## §2 Recherche : un restaurant modifié par l'admin devenait introuvable par son nouveau contact — 01/10/2026 (tâche `cdc-fix-residuals-12`)
+
+Suite immédiate de `cdc-fix-residuals-11` (§19), même session de travail continu. En vérifiant les manques documentés de §2 (recherche universelle), constaté que « restaurants : recherche par e-mail/téléphone » était en réalité déjà indexée depuis la création (texte de l'audit périmé, correctif d'un lot antérieur non tracé) — mais un vrai bug d'édition, non documenté, a été trouvé dans `adminUpdateRestaurant` (`functions/src/admin/acteurs/commercial.ts`).
+
+**Bug trouvé** : quand un administrateur modifiait la fiche d'un restaurant depuis le back-office super admin, `searchKeywords` n'était régénéré que si le **nom** ou l'**adresse** changeaient — jamais si seul l'e-mail ou le téléphone étaient modifiés. Pire, même dans les cas où la régénération avait lieu (changement de nom/adresse en même temps), le code utilisait encore les **anciennes** valeurs d'e-mail/téléphone (`r.email`/`r.phone`) au lieu des nouvelles (`data.email`/`data.phone`). Un restaurant dont le téléphone ou l'e-mail était modifié par ce back-office devenait donc introuvable par ce nouveau contact dans la recherche universelle — silencieusement, sans erreur.
+
+**Corrigé** : condition étendue à `changed.email || changed.phone`, et les nouvelles valeurs (`data.email`, `data.phone`) utilisées au lieu des anciennes.
+
+**Testé réel sur `golink-9f16d`** (`scripts/tests/cdc-fix-residuals-12.flow.mjs`, appel direct du handler déployé, restaurant réel `mina-kitchen`) : 6/6 OK — téléphone changé, mots-clés vérifiés contenir le nouveau numéro et ne plus contenir l'ancien, puis téléphone restauré à sa valeur d'origine et mots-clés revérifiés strictement identiques à l'état initial. Note honnête : ce test a aussi fixé en base le champ `currency` du restaurant (auparavant absent, désormais `EUR`) — effet de bord correct et sans conséquence (champ obligatoire du formulaire, valeur objectivement juste pour un restaurant français), pas une régression.
+
+`npx tsc --noEmit -p functions` vert. Fonction redéployée : `adminUpdateRestaurant`.
+
+**Cahier §2 : aucun élément ni ligne ne change de statut** — le texte périmé (téléphone restaurant « ABSENT », e-mail « égalité exacte seulement ») a été corrigé dans le texte de l'audit, et le vrai bug d'édition a été fermé, mais l'e-mail et le téléphone restent PARTIEL (pas de recherche floue avancée) et la ligne « Recherche universelle » reste PARTIEL (format `SL-` non pris en charge, décision produit non tranchée ; SIRET à grande échelle, effort non minimal). Total cahier super admin inchangé : **110 COMPLET / 56 PARTIEL / 0 ABSENT / 0 FAUX** (166 lignes), recompté honnêtement. Détail : `docs/AUDIT_COUVERTURE_CDC.md` §2.
+
 ## §19 Fidélité : échange de points restaurant ajouté, bug de contamination croisée corrigé — 01/10/2026 (tâche `cdc-fix-residuals-11`)
 
 Suite immédiate de `cdc-fix-residuals-10` (§31), même session de travail continu : un agent d'exploration a confirmé que le manque documenté « aucune fonction ni écran ne permet d'échanger des points d'un compte `scope:'restaurant'` » (§19, ligne « Programme de fidélité ») était toujours réel — et a trouvé, en creusant `redeemLoyaltyPoints`, un vrai bug non documenté, plus sérieux que le manque de fonctionnalité lui-même.
