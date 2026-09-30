@@ -66,7 +66,7 @@ export const saveLegalDocument = callFunction<
   { documentId: string }
 >('saveLegalDocument');
 export const receiveGdprRequest = callFunctionWithReason<{ type: string; subjectType: string; subjectId?: string | null; email: string; notes: string | null }, { requestId: string; dueAt: number }>('receiveGdprRequest', { title: 'Enregistrer la demande RGPD', description: 'Indiquez l’origine de la demande (courrier, appel, e-mail).' });
-export const handleGdprRequest = callFunction<{ requestId: string; status: string; note: string | null }, { status: string }>('handleGdprRequest');
+export const handleGdprRequest = callFunction<{ requestId: string; status: string; note: string | null; subjectId: string | null }, { status: string }>('handleGdprRequest');
 /** Lien signé (15 minutes) vers l'export RGPD déjà traité, pour vérification ou renvoi assisté. */
 export const getGdprExportLink = callFunction<{ requestId: string }, { url: string; name: string; expiresInMinutes: number }>('getGdprExportLink');
 export const previewRetentionRun = callFunction<void, { inactiveAccounts: number; trashToPurge: number }>('previewRetentionRun');

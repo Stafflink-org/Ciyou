@@ -8,6 +8,7 @@ import {
   Button,
   createColumnHelper,
   DataTable,
+  DatePicker,
   Dialog,
   DialogBody,
   DialogContent,
@@ -68,9 +69,24 @@ function LegalDocDialog({ doc, open, onOpenChange }: { doc: (LegalDocument & { i
   const [content, setContent] = useState(doc?.content?.fr ?? '');
   const [status, setStatus] = useState<LegalDocument['status']>(doc?.status ?? 'draft');
   const [requiresReacceptance, setRequiresReacceptance] = useState(doc?.requiresReacceptance ?? true);
+  const [effectiveAt, setEffectiveAt] = useState<Date | undefined>(doc?.effectiveAt ? new Date(doc.effectiveAt.toMillis()) : undefined);
+  const [changeSummary, setChangeSummary] = useState(doc?.changeSummary ?? '');
   const [reason, setReason] = useState('');
   const save = useMutation(
-    () => saveLegalDocument({ documentId: doc?.id ?? null, type, countryId, version, title, content, status, effectiveAt: null, requiresReacceptance, changeSummary: null, reason }),
+    () =>
+      saveLegalDocument({
+        documentId: doc?.id ?? null,
+        type,
+        countryId,
+        version,
+        title,
+        content,
+        status,
+        effectiveAt: effectiveAt ? effectiveAt.getTime() : null,
+        requiresReacceptance,
+        changeSummary: changeSummary.trim() || null,
+        reason,
+      }),
     { success: 'Document enregistré.' },
   );
   const blocked = title.trim().length < 2 || content.trim().length < 20 || reason.trim().length < 3;
@@ -89,6 +105,14 @@ function LegalDocDialog({ doc, open, onOpenChange }: { doc: (LegalDocument & { i
           <div className="grid gap-3 sm:grid-cols-2">
             <FormField label="Statut" required><Select value={status} onValueChange={(v) => setStatus(v as LegalDocument['status'])} options={[{ value: 'draft', label: 'Brouillon' }, { value: 'published', label: 'Publié' }, { value: 'archived', label: 'Archivé' }]} /></FormField>
             <FormField label="Exige une nouvelle acceptation"><div className="flex h-10 items-center"><Switch checked={requiresReacceptance} onCheckedChange={setRequiresReacceptance} /></div></FormField>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <FormField label="Date d'entrée en vigueur" hint="Laissez vide pour prendre la date de publication.">
+              <DatePicker value={effectiveAt} onChange={setEffectiveAt} placeholder="Date de publication" />
+            </FormField>
+            <FormField label="Résumé du changement" hint="Affiché aux personnes concernées lors de la réacceptation.">
+              <Input value={changeSummary} onChange={(e) => setChangeSummary(e.target.value)} maxLength={500} placeholder="Ex. clarification de la politique de remboursement" />
+            </FormField>
           </div>
           <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} placeholder="Motif (conservé dans le journal d'audit)" maxLength={500} />
         </DialogBody>
@@ -130,21 +154,37 @@ function LegalDocsTab() {
 function GdprDialog({ request, onOpenChange }: { request: (GdprRequest & { id: string }) | null; onOpenChange: (v: boolean) => void }) {
   const [status, setStatus] = useState<GdprRequestStatus>('in_progress');
   const [note, setNote] = useState('');
-  const handle = useMutation(() => handleGdprRequest({ requestId: request!.id, status, note: note || null }), { success: 'Demande mise à jour.' });
+  const [subjectId, setSubjectId] = useState('');
+  const handle = useMutation(
+    () => handleGdprRequest({ requestId: request!.id, status, note: note || null, subjectId: subjectId.trim() || null }),
+    { success: 'Demande mise à jour.' },
+  );
   if (!request) return null;
+  const needsAction = request.type === 'access' || request.type === 'portability' || request.type === 'erasure';
+  const missingSubject = needsAction && !request.subjectId;
+  const blockedOnSubject = status === 'completed' && missingSubject && !subjectId.trim();
   return (
     <Dialog open={Boolean(request)} onOpenChange={onOpenChange}>
       <DialogContent size="sm">
         <DialogHeader title={request.email} description={`${GDPR_REQUEST_TYPE_LABELS[request.type]} · échéance ${formatDateTime(toDate(request.dueAt) ?? new Date())}`} />
         <DialogBody className="space-y-4 pt-2">
           <FormField label="Statut" required><Select value={status} onValueChange={(v) => setStatus(v as GdprRequestStatus)} options={(['identity_check', 'in_progress', 'completed', 'rejected'] as const).map((s) => ({ value: s, label: GDPR_REQUEST_STATUS_LABELS[s] }))} /></FormField>
+          {missingSubject ? (
+            <FormField
+              label={`Identifiant du compte ${request.subjectType === 'client' ? 'client' : request.subjectType === 'restaurant' ? 'restaurant' : 'livreur'}`}
+              hint="Demande enregistrée sans compte identifié : requis pour exporter ou effacer les données avant de clôturer."
+              required={status === 'completed'}
+            >
+              <Input value={subjectId} onChange={(e) => setSubjectId(e.target.value.trim())} placeholder="Identifiant du document Firestore" />
+            </FormField>
+          ) : null}
           <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} placeholder="Note (visible dans la fiche de la demande)" maxLength={1000} />
           {status === 'completed' && request.type === 'erasure' && <p className="text-xs text-fg-subtle">Anonymise le profil et désactive le compte, en conservant les données requises par la loi (factures, litiges).</p>}
           {request.export ? <GdprExportDownload requestId={request.id} /> : null}
         </DialogBody>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Annuler</Button>
-          <Button loading={handle.loading} onClick={async () => { const res = await handle.mutate(); if (res) onOpenChange(false); }}>Enregistrer</Button>
+          <Button loading={handle.loading} disabled={blockedOnSubject} onClick={async () => { const res = await handle.mutate(); if (res) onOpenChange(false); }}>Enregistrer</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
