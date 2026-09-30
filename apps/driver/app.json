@@ -8,7 +8,10 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.golink.driver"
+      "bundleIdentifier": "com.golink.driver",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -23,6 +26,12 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "scheme": "golink-driver"
+    "scheme": "golink-driver",
+    "extra": {
+      "eas": {
+        "projectId": "04ec19c7-2c1f-42b4-ae15-c6ef3a2d31c1"
+      }
+    },
+    "owner": "nasro-hamou-2"
   }
 }
