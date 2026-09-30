@@ -14,8 +14,9 @@ import {
   type StaffRole,
   type WithId,
 } from '@golink/shared';
-import { AccessDeniedScreen, FullScreenLoader, PermissionProvider, useAuth, usePersistentState } from '@golink/web';
+import { AccessDeniedScreen, FeatureProvider, FullScreenLoader, PermissionProvider, useAuth, usePersistentState } from '@golink/web';
 import { docAt, useDoc, useDocs } from '@/lib/firestore';
+import { useEntitlements } from './useEntitlements';
 
 export interface RestaurantAccess {
   /** Établissements accessibles, triés par nom. */
@@ -116,9 +117,17 @@ export function RestaurantAccessGate({ children }: { children?: ReactNode }) {
 
   return (
     <RestaurantAccessContext.Provider value={value}>
-      <PermissionProvider can={(permission) => can(permission as RestaurantPermission)}>{children ?? <Outlet />}</PermissionProvider>
+      <PermissionProvider can={(permission) => can(permission as RestaurantPermission)}>
+        <EntitlementsGate>{children ?? <Outlet />}</EntitlementsGate>
+      </PermissionProvider>
     </RestaurantAccessContext.Provider>
   );
+}
+
+/** Expose la formule active de l'établissement (`useEntitlements`) au menu (`Shell.tsx`) et aux routes des modules. */
+export function EntitlementsGate({ children }: { children: ReactNode }) {
+  const { hasFeature } = useEntitlements();
+  return <FeatureProvider hasFeature={(feature) => hasFeature(feature as Parameters<typeof hasFeature>[0])}>{children}</FeatureProvider>;
 }
 
 /** Établissement actif, membre connecté et droits (sous les routes connectées). */

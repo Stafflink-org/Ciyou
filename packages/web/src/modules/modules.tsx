@@ -9,8 +9,8 @@ import type { Locale } from '@golink/shared';
 import { getLocale } from '../i18n/core';
 import { translateOr } from '../i18n/shell';
 import { useLocale } from '../i18n/I18nProvider';
-import { usePermissionCheck } from '../auth/guards';
-import { AccessDeniedPanel } from '../screens/StatusScreens';
+import { useFeatureCheck, usePermissionCheck } from '../auth/guards';
+import { AccessDeniedPanel, FeatureNotIncludedPanel } from '../screens/StatusScreens';
 
 export interface ModuleNav<G extends string = string> {
   /** Groupe de la sidebar (identifiant déclaré dans app/navigation.ts). */
@@ -36,6 +36,13 @@ export interface ModuleNav<G extends string = string> {
    * directe. Faux par défaut (aucun changement pour les modules existants).
    */
   hidden?: boolean;
+  /**
+   * Fonctionnalité de formule requise (`PlanFeatureKey` de `@golink/shared`), en plus de la
+   * permission. Absente : rubrique toujours visible pour qui a la permission (comportement
+   * inchangé). Un `FeatureProvider` doit être monté au-dessus du shell pour que ce soit vérifié ;
+   * sans lui (ex. super admin), `useFeatureCheck()` renvoie toujours vrai.
+   */
+  feature?: string;
 }
 
 export interface AppModule<G extends string = string, P extends string = string> {
@@ -94,18 +101,22 @@ export function moduleHref(module: AppModule): string {
   return `/${first.path.replace(/^\/+/, '').replace(/\/?\*$/, '')}`;
 }
 
-/** Contrôle de permission d'un module, en tête de ses routes. */
-function ModuleGate({ permission }: { permission?: string }) {
+/** Contrôle de permission puis de formule d'un module, en tête de ses routes. */
+function ModuleGate({ permission, feature }: { permission?: string; feature?: string }) {
   const can = usePermissionCheck();
+  const hasFeature = useFeatureCheck();
   if (permission && !can(permission)) return <AccessDeniedPanel />;
+  // Rubrique visible par permission mais absente de la formule active (ex. lien direct, favori) :
+  // état cohérent plutôt qu'un plantage — message clair renvoyant vers l'abonnement.
+  if (feature && !hasFeature(feature)) return <FeatureNotIncludedPanel />;
   return <Outlet />;
 }
 
-/** Routes de tous les modules, chacune derrière le contrôle de permission de son module. */
+/** Routes de tous les modules, chacune derrière le contrôle de permission et de formule de son module. */
 export function moduleRoutes(modules: readonly AppModule[]): RouteObject[] {
   return modules.map((module) => ({
     id: `module:${module.id}`,
-    element: <ModuleGate permission={module.permission} />,
+    element: <ModuleGate permission={module.permission} feature={module.nav.feature} />,
     handle: { moduleId: module.id } satisfies ModuleHandle,
     children: module.routes,
   }));
@@ -130,6 +141,7 @@ export function useModuleNav<M extends AppModule>(
   can: (permission: string) => boolean,
 ): NavGroup[] {
   const { locale } = useLocale();
+  const hasFeature = useFeatureCheck();
   // Nombre d'appels constant : la liste des modules est figée au chargement de l'application.
   const badges = modules.map((module) => (module.nav.badge ?? noBadge)());
   return groups
@@ -137,7 +149,13 @@ export function useModuleNav<M extends AppModule>(
       id: group.id,
       label: translateOr(`nav:groups.${group.id}`, group.label, locale),
       items: modules.flatMap((module, index) => {
-        if (module.nav.group !== group.id || module.nav.hidden || (module.permission && !can(module.permission))) return [];
+        if (
+          module.nav.group !== group.id ||
+          module.nav.hidden ||
+          (module.permission && !can(module.permission)) ||
+          (module.nav.feature && !hasFeature(module.nav.feature))
+        )
+          return [];
         const badge = badges[index];
         return [
           {
@@ -160,12 +178,18 @@ export function moduleCommands(
   can: (permission: string) => boolean,
   navigate: (href: string) => void,
   locale: Locale = getLocale(),
+  hasFeature: (feature: string) => boolean = () => true,
 ): CommandGroup[] {
   return groups
     .map((group) => ({
       heading: translateOr(`nav:groups.${group.id}`, group.label, locale),
       items: modules
-        .filter((module) => module.nav.group === group.id && (!module.permission || can(module.permission)))
+        .filter(
+          (module) =>
+            module.nav.group === group.id &&
+            (!module.permission || can(module.permission)) &&
+            (!module.nav.feature || hasFeature(module.nav.feature)),
+        )
         .map((module) => ({
           id: `nav:${module.id}`,
           label: translateOr(`nav:modules.${module.id}`, module.nav.label, locale),

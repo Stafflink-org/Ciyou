@@ -4,6 +4,7 @@ import { ABSENCE_TYPE_LABELS, type Absence, type AbsenceType, type Employee } fr
 import { db, FieldValue } from '../lib/admin';
 import { actorFromCaller, writeAudit } from '../lib/audit';
 import { callable } from '../lib/callable';
+import { assertFeatureAllowed } from '../finance/argent/entitlements';
 import { fail } from '../lib/errors';
 import { requireRestaurantAccess } from '../lib/permissions';
 import { z, zId } from '../lib/validation';
@@ -43,6 +44,7 @@ export const reviewAbsence = callable(
   }),
   async (data, request) => {
     const actor = await requireRestaurantAccess(request, data.restaurantId, 'absences.manage');
+    await assertFeatureAllowed(data.restaurantId, 'absences');
     if (data.decision !== 'approve' && (data.reason ?? '').length < 3) throw fail.invalid('Indiquez un motif.');
     const settings = await loadPayrollSettings(data.restaurantId);
     const absenceRef = sub(data.restaurantId, 'absences').doc(data.absenceId);

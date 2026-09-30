@@ -6,7 +6,7 @@ const page = <K extends string>(load: () => Promise<Record<K, ComponentType>>, n
 
 export default defineModule({
   id: 'haccp',
-  nav: { group: 'equipe', label: 'HACCP', icon: <ShieldCheck />, order: 80, keywords: ['hygiène', 'températures', 'traçabilité', 'nettoyage', 'allergènes', 'sanitaire'] },
+  nav: { group: 'equipe', label: 'HACCP', icon: <ShieldCheck />, order: 80, keywords: ['hygiène', 'températures', 'traçabilité', 'nettoyage', 'allergènes', 'sanitaire'], feature: 'haccp' },
   permission: 'haccp.record',
   routes: [
     { path: 'equipe/haccp', lazy: page(() => import('./HaccpDashboardPage'), 'HaccpDashboardPage') },

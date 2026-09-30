@@ -19,6 +19,7 @@ import {
 import { db, FieldValue, storage, Timestamp } from '../lib/admin';
 import { actorFromCaller, writeAudit } from '../lib/audit';
 import { callable } from '../lib/callable';
+import { assertFeatureAllowed } from '../finance/argent/entitlements';
 import { sendEmail } from '../lib/brevo';
 import { renderEmail } from '../lib/email-layout';
 import { fail } from '../lib/errors';
@@ -171,6 +172,7 @@ export const computePayroll = callable(
   }),
   async (data, request) => {
     const actor = await requireRestaurantAccess(request, data.restaurantId, 'payroll.manage');
+    await assertFeatureAllowed(data.restaurantId, 'payroll');
     const { first, last } = monthBounds(data.period);
     const employeesSnap = await sub(data.restaurantId, 'employees').get();
     const wanted = data.employeeIds && data.employeeIds.length > 0 ? new Set(data.employeeIds) : null;
@@ -241,6 +243,7 @@ export const savePayslipAdjustments = callable(
   }),
   async (data, request) => {
     const actor = await requireRestaurantAccess(request, data.restaurantId, 'payroll.manage');
+    await assertFeatureAllowed(data.restaurantId, 'payroll');
     const ref = sub(data.restaurantId, 'payslips').doc(data.payslipId);
     const snap = await ref.get();
     if (!snap.exists) throw fail.notFound('Bulletin');
@@ -274,6 +277,7 @@ export const setPayslipStatus = callable(
   }),
   async (data, request) => {
     const actor = await requireRestaurantAccess(request, data.restaurantId, 'payroll.manage');
+    await assertFeatureAllowed(data.restaurantId, 'payroll');
     let updated = 0;
     const batch = db.batch();
     for (const id of data.payslipIds) {
@@ -388,6 +392,7 @@ export const sendPayslips = callable(
   z.object({ restaurantId: zId, payslipIds: z.array(zId).min(1).max(200) }),
   async (data, request) => {
     const actor = await requireRestaurantAccess(request, data.restaurantId, 'payroll.manage');
+    await assertFeatureAllowed(data.restaurantId, 'payroll');
     const restaurant = (await db.collection(COLLECTIONS.restaurants).doc(data.restaurantId).get()).data() as Restaurant | undefined;
     let sent = 0;
     let emailed = 0;

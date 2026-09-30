@@ -3,7 +3,7 @@ import { defineModule } from '@/app/define-module';
 
 export default defineModule({
   id: 'taches',
-  nav: { group: 'equipe', label: 'Tâches', icon: <ListTodo />, order: 60, keywords: ['to-do', 'checklist', 'ouverture', 'fermeture', 'missions'] },
+  nav: { group: 'equipe', label: 'Tâches', icon: <ListTodo />, order: 60, keywords: ['to-do', 'checklist', 'ouverture', 'fermeture', 'missions'], feature: 'tasks' },
   permission: 'tasks.view',
   routes: [
     { path: 'equipe/taches', lazy: () => import('./TasksPage').then((m) => ({ Component: m.TasksPage })) },
