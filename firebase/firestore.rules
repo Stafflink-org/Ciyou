@@ -1433,12 +1433,18 @@ service cloud.firestore {
         'defaultAddressId', 'notificationPrefs', 'lastSeenAt', 'updatedAt', 'updatedBy'];
     }
 
-    function adminCanViewUsers() {
-      return isAdmin('customers.view') || isAdmin('drivers.view') || isAdmin('restaurants.view');
+    // `customers.view` et `restaurants.view` restent non bornés par ville : un client n'a pas de ville
+    // fixe (`users/{uid}.cityId` toujours `null` pour un client, il peut commander dans plusieurs
+    // villes). `drivers.view` est en revanche borné par la ville du livreur (`cityId`, alignée sur
+    // `drivers/{driverId}`, cf. `firebase/rules/drivers.rules`) : un responsable de ville limité à
+    // Metz ne doit pas pouvoir lire le profil d'un livreur d'une autre ville en appelant Firestore
+    // directement (l'écran filtre déjà côté client, mais la règle elle-même ne bornait rien).
+    function adminCanViewUsers(cityId) {
+      return isAdmin('customers.view') || isAdminIn('drivers.view', cityId) || isAdmin('restaurants.view');
     }
 
     match /users/{userId} {
-      allow read: if isSelf(userId) || adminCanViewUsers();
+      allow read: if isSelf(userId) || adminCanViewUsers(resource.data.cityId);
       allow update: if isSelf(userId)
           && onlyChanges(userEditableFields())
           && isNonEmptyString(incoming().firstName, 60)

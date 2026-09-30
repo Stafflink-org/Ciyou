@@ -1,5 +1,21 @@
 # État d'avancement — Ciyou Eats
 
+## §26 Administrateurs : faille de contournement du périmètre ville sur les profils livreur — 01/10/2026 (tâche `cdc-fix-residuals-13`)
+
+Suite immédiate de `cdc-fix-residuals-12` (§2), même session de travail continu. Un agent d'exploration a vérifié les défauts documentés de §26 (Administrateurs internes) et §27 (Sécurité et journal d'audit) : la quasi-totalité s'est révélée périmée (déjà corrigée par des lots antérieurs non tracés dans l'annexe — 2FA de `inviteAdmin`, plafond de remboursement, `countryIds`, sondes de connexion inhabituelle) et a été recomptée avec preuve fichier:ligne dans `docs/AUDIT_COUVERTURE_CDC.md`. Un seul vrai défaut de code, non documenté jusqu'ici, a été trouvé — une faille de sécurité réelle, pas une simple fonctionnalité manquante.
+
+**Faille trouvée** : la règle Firestore `users/{userId}` (`firebase/rules/users.rules`) autorisait la lecture de **n'importe quel** profil livreur (nom, e-mail, téléphone) à tout administrateur disposant de la permission `drivers.view`, **sans aucun contrôle de ville** — contrairement à la règle de la collection `drivers/{driverId}` (données opérationnelles), déjà correctement bornée par ville. Un responsable de ville limité (ex. Metz) pouvait donc lire le profil d'un livreur d'une **autre** ville en appelant Firestore directement (REST ou SDK, depuis la console du navigateur avec sa propre session), contournant entièrement le filtrage qui n'était appliqué que côté écran (`DriversPage`).
+
+**Corrigé** : `adminCanViewUsers()` scinde désormais le contrôle par permission — `drivers.view` est borné par la ville du livreur (`isAdminIn('drivers.view', resource.data.cityId)`, même mécanisme que `drivers/{driverId}`) ; `customers.view` reste volontairement **non** borné, car un client n'a pas de ville fixe (`users/{uid}.cityId` toujours `null` pour un rôle client, vérifié en base — un client peut commander dans plusieurs villes, contrairement à un livreur).
+
+**Test réel contre la production** (`scripts/tests/cdc-fix-residuals-13.flow.mjs`, les règles ne peuvent pas être testées de façon significative avec le SDK Admin qui les contourne toujours — un compte admin **jetable**, limité à `drivers.view` + `cityIds:['metz']`, a été créé puis supprimé pour isoler précisément l'effet du correctif) : 5/5 OK — livreur de Metz lisible, livreurs de Longwy et du Luxembourg refusés (`PERMISSION_DENIED`), client refusé (cet admin n'a pas `customers.view`, comportement déjà correct non régressé), nettoyage vérifié. Non-régression confirmée sur le compte partagé réel `metz@golink.test` (toujours capable de lire un livreur de Metz comme avant).
+
+**Limite honnêtement documentée, non corrigée ce tour** : la permission `restaurants.view` (que `city_manager` et d'autres rôles possèdent aussi) accorde, via la même règle, une lecture **non bornée** de `users/{userId}` — confirmé par le test de non-régression (`metz@golink.test`, qui a aussi `restaurants.view`, peut toujours lire un livreur hors Metz par ce biais). Incertitude sur l'usage légitime ou non de ce droit à cette fin (accès au profil du propriétaire d'un restaurant ?) : signalé dans l'audit plutôt que corrigé à l'aveugle sans comprendre l'intention d'origine.
+
+Fichiers modifiés : `firebase/rules/users.rules` (source), `firebase/firestore.rules` régénéré (`npm run rules:build`), déployé (`firebase deploy --only firestore:rules`).
+
+**Cahier §26 : aucune ligne ne change de statut** (règle du pire élément : chaque ligne composite garde au moins un autre défaut réel distinct, détaillé dans l'audit). Total cahier super admin inchangé : **110 COMPLET / 56 PARTIEL / 0 ABSENT / 0 FAUX** (166 lignes), recompté honnêtement. Détail : `docs/AUDIT_COUVERTURE_CDC.md` §26.
+
 ## §2 Recherche : un restaurant modifié par l'admin devenait introuvable par son nouveau contact — 01/10/2026 (tâche `cdc-fix-residuals-12`)
 
 Suite immédiate de `cdc-fix-residuals-11` (§19), même session de travail continu. En vérifiant les manques documentés de §2 (recherche universelle), constaté que « restaurants : recherche par e-mail/téléphone » était en réalité déjà indexée depuis la création (texte de l'audit périmé, correctif d'un lot antérieur non tracé) — mais un vrai bug d'édition, non documenté, a été trouvé dans `adminUpdateRestaurant` (`functions/src/admin/acteurs/commercial.ts`).
