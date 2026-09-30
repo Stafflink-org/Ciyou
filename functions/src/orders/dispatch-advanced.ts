@@ -8,6 +8,7 @@
 //   puis le suivant ; la tâche planifiée fait avancer les propositions expirées).
 // Interface identique à `dispatchOrder` du module commandes, qui délègue ici.
 import {
+  buildSearchKeywords,
   COLLECTIONS,
   SETTINGS_DOCS,
   SUBCOLLECTIONS,
@@ -179,6 +180,10 @@ export async function assignDriverInTransaction(
   const at = Timestamp.now();
   const driverName = publicDisplayName(driver.firstName, driver.lastName);
   const toAssigned = order.status === 'ready';
+  // §8 cahier : la recherche « Toutes les commandes » doit aussi trouver une commande
+  // par nom de livreur — le livreur n'est connu qu'à l'attribution, donc ses mots-clés
+  // sont ajoutés ici (fusionnés, pas remplacés, pour garder numéro/client/commerce/adresse).
+  const searchKeywords = [...new Set([...(order.searchKeywords ?? []), ...buildSearchKeywords(driverName)])];
 
   tx.update(orderSnap.ref, {
     driverId: input.driverId,
@@ -190,6 +195,7 @@ export async function assignDriverInTransaction(
     'delivery.dispatchRound': input.round,
     'delivery.dispatchOfferId': null,
     'timeline.assigned': at,
+    searchKeywords,
     ...(toAssigned ? { status: 'assigned' } : {}),
     updatedAt: at,
   });

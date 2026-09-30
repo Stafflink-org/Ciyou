@@ -67,6 +67,7 @@ type Candidate = Omit<PlatformAlert, 'status' | 'detectedAt' | 'acknowledgedBy' 
 const MANAGED_KINDS: ReadonlySet<PlatformAlert['kind']> = new Set([
   'restaurant_cancellation_rate',
   'restaurant_rejection_rate',
+  'restaurant_late_rate',
   'zone_driver_shortage',
   'refund_spike',
   'city_order_drop',
@@ -90,7 +91,7 @@ export async function loadMonitoringSettings(): Promise<Omit<MonitoringSettings,
 
 // ------------------------------------------------------------------ Détections
 
-async function restaurantRates(settings: Awaited<ReturnType<typeof loadMonitoringSettings>>, today: string): Promise<Candidate[]> {
+export async function restaurantRates(settings: Awaited<ReturnType<typeof loadMonitoringSettings>>, today: string): Promise<Candidate[]> {
   const restaurants = await db.collection(COLLECTIONS.restaurants).where('status', 'in', ['active', 'paused']).get();
   const from = addDays(today, -6);
   const out: Candidate[] = [];
@@ -136,6 +137,30 @@ async function restaurantRates(settings: Awaited<ReturnType<typeof loadMonitorin
           metric: { value: Math.round(rejectRate * 1000) / 10, threshold: Math.round(settings.restaurantRejectionRate * 1000) / 10, unit: '%' },
           dedupKey: `restaurant_rejection_rate_${doc.id}`,
         });
+      }
+      // §8 cahier « Anomalies » : le retard n'était surveillé par aucune tâche planifiée
+      // (seuls l'annulation et le refus l'étaient) — ajouté sur la même base que les deux
+      // autres taux, par commerce (le lateCount quotidien existe déjà, `orders/triggers.ts`,
+      // et respecte la tolérance réglable `lateToleranceMinutes`). Dénominateur = livraisons
+      // (une commande annulée ou refusée ne peut pas être en retard).
+      const delivered = days.reduce((s, d) => s + d.deliveredCount, 0);
+      const late = days.reduce((s, d) => s + d.lateCount, 0);
+      if (delivered >= settings.restaurantMinOrders) {
+        const lateRate = late / delivered;
+        if (lateRate > settings.restaurantLateRate) {
+          out.push({
+            kind: 'restaurant_late_rate',
+            queue: 'alert',
+            severity: lateRate > settings.restaurantLateRate * 2 ? 'critical' : 'warning',
+            title: `Retards fréquents : ${r.name}`,
+            message: `${percent(lateRate)} de livraisons en retard sur 7 jours (${late} sur ${delivered} livrées), seuil ${percent(settings.restaurantLateRate)}.`,
+            target,
+            countryId: r.countryId,
+            cityId: r.cityId,
+            metric: { value: Math.round(lateRate * 1000) / 10, threshold: Math.round(settings.restaurantLateRate * 1000) / 10, unit: '%' },
+            dedupKey: `restaurant_late_rate_${doc.id}`,
+          });
+        }
       }
     }),
   );
@@ -508,7 +533,7 @@ export async function runMonitoring(): Promise<{ created: number; updated: numbe
   const settings = await loadMonitoringSettings();
   const today = parisDay(new Date());
   const detectors: Array<{ kinds: PlatformAlert['kind'][]; run: () => Promise<Candidate[]> }> = [
-    { kinds: ['restaurant_cancellation_rate', 'restaurant_rejection_rate'], run: () => restaurantRates(settings, today) },
+    { kinds: ['restaurant_cancellation_rate', 'restaurant_rejection_rate', 'restaurant_late_rate'], run: () => restaurantRates(settings, today) },
     { kinds: ['city_order_drop', 'refund_spike'], run: () => cityTrends(settings, today) },
     { kinds: ['zone_driver_shortage'], run: () => zoneShortages() },
     { kinds: ['service_down'], run: () => servicesDown() },

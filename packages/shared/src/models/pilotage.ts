@@ -310,6 +310,8 @@ export interface MonitoringSettings {
   restaurantCancellationRate: number;
   /** Taux de refus d'un restaurant sur 7 jours (0 à 1). */
   restaurantRejectionRate: number;
+  /** Taux de commandes en retard (`flags.late`) d'un restaurant sur 7 jours (0 à 1). */
+  restaurantLateRate: number;
   /** Nombre minimal de commandes sur 7 jours pour évaluer un restaurant. */
   restaurantMinOrders: number;
   /** Chute des commandes d'une ville vs moyenne des 4 mêmes jours précédents (0 à 1). */
@@ -333,6 +335,7 @@ export interface MonitoringSettings {
 export const DEFAULT_MONITORING_SETTINGS: Omit<MonitoringSettings, 'updatedAt' | 'updatedBy'> = {
   restaurantCancellationRate: 0.06,
   restaurantRejectionRate: 0.08,
+  restaurantLateRate: 0.25,
   restaurantMinOrders: 15,
   cityOrderDrop: 0.35,
   cityMinOrders: 10,

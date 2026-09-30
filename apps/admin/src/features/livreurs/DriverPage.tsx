@@ -378,9 +378,18 @@ function DriverOrders({ driverId }: { driverId: string }) {
   const orders = useCollection<Order>(q);
   if (orders.loading) return <ListSkeleton rows={4} />;
   if (orders.error) return <LoadError error={orders.error} />;
-  if (orders.data.length === 0) return <Card><EmptyState icon={<Bike />} title="Aucune course" description="Les courses du livreur apparaîtront ici." /></Card>;
   return (
-    <Card className="divide-y divide-border overflow-hidden">
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        {/* §8 cahier « Toutes les commandes » : seul point d'entrée réel vers le filtre ?livreur= (sinon jamais accessible depuis l'interface). */}
+        <Link to={`/commandes?livreur=${driverId}`} className="text-sm text-primary hover:underline">
+          Voir toutes les commandes de ce livreur →
+        </Link>
+      </div>
+      {orders.data.length === 0 ? (
+        <Card><EmptyState icon={<Bike />} title="Aucune course" description="Les courses du livreur apparaîtront ici." /></Card>
+      ) : (
+      <Card className="divide-y divide-border overflow-hidden">
       {orders.data.map((o) => {
         const at = toDate(o.createdAt);
         return (
@@ -393,7 +402,9 @@ function DriverOrders({ driverId }: { driverId: string }) {
           </Link>
         );
       })}
-    </Card>
+      </Card>
+      )}
+    </div>
   );
 }
 
