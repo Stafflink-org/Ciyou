@@ -22,6 +22,7 @@ import {
   useActiveModule,
   useAuth,
   useDocumentTitle,
+  useFeatureCheck,
   useModuleNav,
   useShellI18n,
 } from '@golink/web';
@@ -64,6 +65,7 @@ export function Shell() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const { t, locale, dir, labels, moduleLabel, groupLabel } = useShellI18n();
 
+  const hasFeature = useFeatureCheck();
   const check = useCallback((permission: string) => can(permission as Parameters<typeof can>[0]), [can]);
   const nav = useModuleNav(MODULES, NAV_GROUPS, check);
   const active = useActiveModule(MODULES);
@@ -74,7 +76,7 @@ export function Shell() {
 
   const go = useCallback((href: string) => navigate(href), [navigate]);
   const commands = useMemo<CommandGroup[]>(() => {
-    const groups = moduleCommands(MODULES, NAV_GROUPS, check, go, locale);
+    const groups = moduleCommands(MODULES, NAV_GROUPS, check, go, locale, hasFeature);
     const switchable = restaurants.filter((item) => item.id !== restaurant.id);
     if (switchable.length > 0) {
       groups.push({
@@ -102,7 +104,7 @@ export function Shell() {
       ],
     });
     return groups;
-  }, [check, go, restaurants, restaurant.id, setRestaurantId, mode, toggle, signOut, locale, t]);
+  }, [check, go, restaurants, restaurant.id, setRestaurantId, mode, toggle, signOut, locale, t, hasFeature]);
 
   const displayName = member.displayName || user?.displayName || user?.email || t('shell.myAccount');
   const role = roles[restaurant.id] ?? member.role;

@@ -4,6 +4,7 @@ import type { Shift, ShiftChangeRequest } from '@golink/shared';
 import { db, FieldValue } from '../lib/admin';
 import { actorFromCaller, writeAudit } from '../lib/audit';
 import { callable } from '../lib/callable';
+import { assertFeatureAllowed } from '../finance/argent/entitlements';
 import { fail } from '../lib/errors';
 import { requireRestaurantAccess } from '../lib/permissions';
 import { z, zId } from '../lib/validation';
@@ -25,6 +26,7 @@ export const publishSchedule = callable(
   async (data, request) => {
     if (mondayOf(data.weekStart) !== data.weekStart) throw fail.invalid('La semaine doit commencer un lundi.');
     const actor = await requireRestaurantAccess(request, data.restaurantId, 'planning.manage');
+    await assertFeatureAllowed(data.restaurantId, 'planning');
     const weekEnd = addDays(data.weekStart, 6);
     const snap = await sub(data.restaurantId, 'shifts').where('date', '>=', data.weekStart).where('date', '<=', weekEnd).get();
     const wanted = data.employeeIds && data.employeeIds.length > 0 ? new Set(data.employeeIds) : null;
@@ -92,6 +94,7 @@ export const reviewShiftChangeRequest = callable(
   }),
   async (data, request) => {
     const actor = await requireRestaurantAccess(request, data.restaurantId, 'planning.manage');
+    await assertFeatureAllowed(data.restaurantId, 'planning');
     if (data.decision === 'reject' && (data.reason ?? '').length < 3) throw fail.invalid('Indiquez le motif du refus.');
     const requestRef = sub(data.restaurantId, 'shiftChangeRequests').doc(data.requestId);
 

@@ -108,6 +108,25 @@ export function AccessDeniedPanel({ description }: { description?: ReactNode }) 
   );
 }
 
+/** Rubrique non incluse dans la formule active : masquée du menu, message clair si ouverte par lien direct. */
+export function FeatureNotIncludedPanel({ description, subscriptionHref = '/abonnement' }: { description?: ReactNode; subscriptionHref?: string }) {
+  const { t } = useTranslation();
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <EmptyState
+        icon={<LockKeyhole />}
+        title={t('status.featureDeniedTitle')}
+        description={description ?? t('status.featureDeniedDescription')}
+        action={
+          <Button asChild variant="primary">
+            <Link to={subscriptionHref}>{t('status.seeSubscription')}</Link>
+          </Button>
+        }
+      />
+    </div>
+  );
+}
+
 /** Page introuvable, dans le contenu de l'application. */
 export function NotFoundPanel() {
   const { t } = useTranslation();

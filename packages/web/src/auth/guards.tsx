@@ -56,3 +56,23 @@ export function Can({ permission, children, fallback = null }: { permission: str
   const can = useContext(PermissionContext);
   return <>{can(permission) ? children : fallback}</>;
 }
+
+/* -------------------------------------------------------------- Fonctionnalités de formule */
+
+/**
+ * Vérification qu'une fonctionnalité (`PlanFeatureKey`) est incluse dans la formule active de
+ * l'établissement courant, en plus de la permission du membre. Contexte séparé de
+ * `PermissionContext` : une app qui ne connaît pas la notion de formule (super admin) n'a rien
+ * à fournir, et `useFeatureCheck()` renvoie alors toujours vrai (aucune restriction).
+ */
+const FeatureContext = createContext<Check>(() => true);
+
+/** Fournit la vérification `hasFeature(clé)` de la formule active du restaurant courant. */
+export function FeatureProvider({ hasFeature, children }: { hasFeature: Check; children: ReactNode }) {
+  return <FeatureContext.Provider value={hasFeature}>{children}</FeatureContext.Provider>;
+}
+
+/** Fonction `hasFeature(clé)` de la formule active (toujours vraie si aucun `FeatureProvider` n'est monté). */
+export function useFeatureCheck<K extends string = string>(): (key: K) => boolean {
+  return useContext(FeatureContext);
+}

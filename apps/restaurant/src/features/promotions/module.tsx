@@ -10,6 +10,7 @@ export default defineModule({
     order: 10,
     keywords: ['promotion', 'remise', 'réduction', 'offre', 'code'],
     hidden: true, // regroupé dans le hub Marketing (features/marketing)
+    feature: 'promo_codes',
   },
   permission: 'marketing.manage',
   routes: [

@@ -13,6 +13,7 @@ import {
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { db, Timestamp } from '../../lib/admin';
 import { callable } from '../../lib/callable';
+import { assertFeatureAllowed } from '../../finance/argent/entitlements';
 import { fail } from '../../lib/errors';
 import { requireRestaurantAccess } from '../../lib/permissions';
 import { z, zId } from '../../lib/validation';
@@ -120,6 +121,7 @@ export const sendMessage = callable(
     const conversation = snap.data() as Conversation | undefined;
     if (!conversation?.restaurantId) throw fail.notFound('Conversation');
     const actor = await requireRestaurantAccess(request, conversation.restaurantId, 'messages.use');
+    await assertFeatureAllowed(conversation.restaurantId, 'messaging');
     if (conversation.closed) throw fail.precondition('Cette conversation est close : la commande est terminée depuis plusieurs jours.');
     for (const file of data.attachments) {
       if (!file.path.startsWith(`conversations/${data.conversationId}/`)) throw fail.invalid('Pièce jointe invalide.');
