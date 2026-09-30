@@ -10,6 +10,7 @@ export default defineModule({
     order: 70,
     keywords: ['membres', 'rôles', 'permissions', 'inviter', 'accès', 'révoquer'],
     hidden: true, // regroupé dans le hub Paramètres (features/parametres)
+    feature: 'team',
   },
   permission: 'team.view',
   routes: [{ path: 'utilisateurs', lazy: () => import('./UtilisateursPage').then((m) => ({ Component: m.UtilisateursPage })) }],

@@ -10,6 +10,7 @@ export default defineModule({
     order: 20,
     keywords: ['notification', 'push', 'e-mail', 'newsletter', 'envoi'],
     hidden: true, // regroupé dans le hub Marketing (features/marketing)
+    feature: 'push_campaigns',
   },
   permission: 'marketing.manage',
   routes: [{ path: 'campagnes', lazy: () => import('./CampaignsPage').then((m) => ({ Component: m.CampaignsPage })) }],

@@ -235,6 +235,78 @@ Règles d'interface :
 - Vitrine des composants : `npm run dev:admin` puis http://localhost:5174/_ui (`?theme=admin`, `restaurant`, `restaurant-dark`).
 - **Parité visuelle restaurant / admin (2026-09-30, correctif rejet client)** : le restaurant démarre désormais en mode **sombre par défaut** (comme l'admin, qui n'a pas de sélecteur), et la palette `[data-theme="restaurant"][data-mode="dark"]` (`packages/ui/src/styles/tokens.css`) est **strictement identique**, valeur par valeur, à `[data-theme="admin"]`. Le sélecteur clair/sombre du restaurant est **conservé** (le retour client portait sur l'identité de base, pas sur l'existence du sélecteur) ; un script inline dans `apps/restaurant/index.html` pose `data-mode="dark"` avant le premier rendu pour éviter un flash clair au chargement. Structure des pages (colonnes Commandes, listes Produits/Options) non modifiée — seul le skin a été harmonisé. Point non tranché : si le client souhaite à terme retirer complètement le sélecteur clair pour le restaurant (fixer comme l'admin), c'est un choix produit restant à confirmer explicitement.
 
+### 3.5 Modules activables par formule (`PlanFeatureKey`, cahier §17)
+
+Retour client explicite : StaffLink (équipe/RH) et certaines rubriques marketing sont des **produits
+supplémentaires** de Ciyou, activables par formule côté super admin (`apps/admin/src/features/abonnements/PlansPage.tsx`,
+cases à cocher `PLAN_FEATURE_KEYS` — `packages/shared/src/constants/argent.ts`). Le back-office restaurant doit
+refléter cette formule : masquer le menu, bloquer les routes, bloquer le serveur. Une formule dont `features`
+est vide (`[]`) ne restreint rien (décision client, `entitlements.ts`) — c'est le cas de toutes les formules
+Basic/Pro/Premium actuelles.
+
+**Correspondance rubrique du menu restaurant → `PlanFeatureKey`** (`nav.feature` dans chaque `features/<id>/module.tsx`) :
+
+| `PlanFeatureKey` | Rubrique(s) restaurant (id du dossier) | Libellé menu |
+|---|---|---|
+| `team` | `employes`, `utilisateurs` | Employés, Utilisateurs & accès |
+| `planning` | `planning` | Planning |
+| `timeclock` | `pointages` | Pointages |
+| `absences` | `absences` | Absences |
+| `tasks` | `taches` | Tâches |
+| `documents` | `documents-entreprise` | Documents (équipe) |
+| `payroll` | `paie` | Paie |
+| `haccp` | `haccp` | HACCP |
+| `promo_codes` | `promotions` | Codes promo |
+| `loyalty` | `fidelite` | Fidélité |
+| `push_campaigns` | `campagnes` | Campagnes |
+| `messaging` | `messages` | Messages (conversations client/livreur) |
+| `orders`, `menu`, `finance` | — | Fonctions de base, jamais gatées (aucune rubrique dédiée à masquer) |
+| `multi_outlet`, `pos_integration`, `priority_support`, `sponsored` | — | Pas encore de rubrique restaurant dédiée ; déjà affichées comme argument de vente dans `AbonnementPage.tsx` |
+
+Rubriques **volontairement non gatées** malgré un lien avec le marketing : `annonces` (offres sur les plats)
+et `reseaux-sociaux` (visuels/QR code) sont des outils marketing de base sans `PlanFeatureKey` dédié, comme
+`avis` (réponse aux avis, permission `reviews.reply` seule) ; `clients` n'a pas de clé de formule. `abonnement`
+(changer de formule) n'est **jamais** gaté : un établissement doit toujours pouvoir voir/changer sa formule.
+`paie` n'a pas de permission de rubrique (chaque salarié y voit son propre bulletin) mais est gaté par `payroll` :
+si la formule ne comprend pas la paie, personne n'y accède, y compris pour son propre bulletin (cohérent avec
+« StaffLink est un produit supplémentaire »).
+
+**Mécanisme (générique, `packages/web`, réutilisable par n'importe quelle app)** :
+
+- `ModuleNav.feature?: string` (`packages/web/src/modules/modules.tsx`) : optionnel, en plus de `permission`.
+- `FeatureProvider` / `useFeatureCheck()` (`packages/web/src/auth/guards.tsx`, même patron que `PermissionProvider` /
+  `usePermissionCheck()`). Sans `FeatureProvider` monté (ex. super admin), `useFeatureCheck()` renvoie toujours
+  `true` : aucune régression pour les apps qui ignorent la notion de formule.
+  `useModuleNav` (sidebar) et `moduleCommands` (palette ⌘K) filtrent maintenant aussi sur `nav.feature`.
+- `ModuleGate` (garde de route de chaque module) affiche `FeatureNotIncludedPanel` (nouveau, `screens/StatusScreens.tsx`,
+  clés i18n `status.featureDenied*`/`status.seeSubscription`, fr/en/ar) si la fonctionnalité n'est pas incluse —
+  état cohérent pour un lien direct ou un favori vers une rubrique masquée du menu, plutôt qu'un plantage.
+- **Restaurant** (`apps/restaurant/src/auth/useEntitlements.ts`) : lit `restaurant.planCode` (champ du document
+  public `restaurants/{rid}`, lisible par tout membre — pas `restaurants/{rid}/private/commercial`, réservé aux
+  membres `finance.view`) puis `plans/{planCode}` (lecture publique) ; expose `hasFeature(key: PlanFeatureKey)`
+  avec exactement la même règle que le serveur (`functions/src/finance/argent/entitlements.ts`) : formule vide
+  = aucune restriction. `EntitlementsGate` (`apps/restaurant/src/auth/RestaurantAccess.tsx`, exporté et réutilisé
+  par la session « voir comme » de `Impersonation.tsx`) monte `FeatureProvider` sous `RestaurantAccessContext`.
+  `Shell.tsx` passe `useFeatureCheck()` à `moduleCommands`. Le hub `features/marketing/MarketingPage.tsx` filtre
+  aussi ses cartes (`promotions`, `campagnes`, `fidelite`) par `hasFeature`, en plus de la permission.
+- **Cloud Functions (défense en profondeur, point 4)** : `assertFeatureAllowed(restaurantId, key)` ajouté aux
+  fonctions sensibles qui ne l'appelaient pas encore : `publishSchedule`/`reviewShiftChangeRequest` (planning),
+  `clockEvent`/`correctTimeEntry`/`validateWeek` (timeclock), `reviewAbsence` (absences), `computePayroll`/
+  `savePayslipAdjustments`/`setPayslipStatus`/`sendPayslips` (payroll — `generatePayslipPdf` volontairement non
+  gaté : un salarié doit pouvoir retélécharger un bulletin déjà émis), `exportHaccpRegister` (haccp), `sendMessage`
+  (messaging). Déjà protégées avant cette tâche : `invitations.ts` (team), `promotions.ts` (promo_codes),
+  `loyalty.ts` (loyalty), `campaigns.ts` (push_campaigns). Non modifié (hors périmètre) : `restaurant/documents.ts`
+  (justificatifs KYC du commerce, sans rapport avec la clé `documents` = documents d'équipe StaffLink) ;
+  création de tâches (`hr/tasks.ts` ne contient qu'un trigger `onDocumentWritten`, pas de callable — l'écriture
+  passe par les règles Firestore, hors périmètre d'un correctif Cloud Functions).
+- **Déploiement** : le menu (front) est visible dès la mise en ligne d'`apps/restaurant`/`packages/web` ; les
+  nouveaux appels `assertFeatureAllowed` nécessitent en plus un redéploiement des fonctions listées ci-dessus
+  (`firebase deploy --only functions:<noms>`) pour être actifs en ligne.
+- **Testé réellement** (voir `.autopilot/progress/cdc-fix.md`) : formule de test temporaire sans `team`/`planning`
+  assignée à `mina-kitchen`, connecté en `sofia.martin@golink.test` — Employés et Planning disparaissent du menu,
+  un lien direct vers `/equipe/employes` affiche « Non inclus dans votre formule » avec un bouton vers
+  `/abonnement`, formule restaurée ensuite (`mina-kitchen` → `pro`) et réapparition confirmée.
+
 ---
 
 ## 4. Données partagées (`packages/shared`)

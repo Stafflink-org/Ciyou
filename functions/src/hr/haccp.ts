@@ -20,6 +20,7 @@ import type { Timestamp as AdminTimestamp } from 'firebase-admin/firestore';
 import { db, FieldValue, storage, Timestamp } from '../lib/admin';
 import { actorFromCaller, writeAudit } from '../lib/audit';
 import { callable } from '../lib/callable';
+import { assertFeatureAllowed } from '../finance/argent/entitlements';
 import { fail } from '../lib/errors';
 import { requireRestaurantAccess } from '../lib/permissions';
 import { z, zId } from '../lib/validation';
@@ -179,6 +180,7 @@ export const exportHaccpRegister = callable(
   }),
   async (data, request) => {
     const actor = await requireRestaurantAccess(request, data.restaurantId, 'haccp.manage', 'restaurants.view');
+    await assertFeatureAllowed(data.restaurantId, 'haccp');
 
     if (data.exportId) {
       const snap = await sub(data.restaurantId, 'haccpExports').doc(data.exportId).get();

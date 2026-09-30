@@ -19,7 +19,7 @@ import {
 import { AccessDeniedScreen, FullScreenLoader, PermissionProvider, toMillis, useAuth } from '@golink/web';
 import { db } from '@/lib/firebase';
 import { callFunction, docAt, useCollection, useDoc, useMutation } from '@/lib/firestore';
-import { RestaurantAccessContext, RestaurantAccessGate, type RestaurantAccess } from './RestaurantAccess';
+import { EntitlementsGate, RestaurantAccessContext, RestaurantAccessGate, type RestaurantAccess } from './RestaurantAccess';
 
 const STORAGE_KEY = 'golink:restaurant:voir-comme';
 
@@ -138,7 +138,9 @@ function ImpersonatedAccess({ restaurantId, children }: { restaurantId: string; 
   return (
     <ImpersonationContext.Provider value={active}>
       <RestaurantAccessContext.Provider value={value}>
-        <PermissionProvider can={(permission) => value.can(permission as RestaurantPermission)}>{children ?? <Outlet />}</PermissionProvider>
+        <PermissionProvider can={(permission) => value.can(permission as RestaurantPermission)}>
+          <EntitlementsGate>{children ?? <Outlet />}</EntitlementsGate>
+        </PermissionProvider>
       </RestaurantAccessContext.Provider>
     </ImpersonationContext.Provider>
   );

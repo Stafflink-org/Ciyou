@@ -17,6 +17,7 @@ import { GeoPoint, type Timestamp as AdminTimestamp } from 'firebase-admin/fires
 import { db, FieldValue, Timestamp } from '../lib/admin';
 import { actorFromCaller, writeAudit } from '../lib/audit';
 import { callable } from '../lib/callable';
+import { assertFeatureAllowed } from '../finance/argent/entitlements';
 import { fail } from '../lib/errors';
 import { loadMember, requireAuth, requireRestaurantAccess } from '../lib/permissions';
 import { z, zId, zReason } from '../lib/validation';
@@ -93,6 +94,7 @@ export const clockEvent = callable(
     const caller = requireAuth(request);
     const member = await loadMember(data.restaurantId, caller.uid);
     if (!member?.active) throw fail.forbidden();
+    await assertFeatureAllowed(data.restaurantId, 'timeclock');
 
     const own = await employeeOfUser(data.restaurantId, caller.uid, member);
     let employeeId: string;
@@ -248,6 +250,7 @@ export const correctTimeEntry = callable(
   }),
   async (data, request) => {
     const actor = await requireRestaurantAccess(request, data.restaurantId, 'timeclock.manage');
+    await assertFeatureAllowed(data.restaurantId, 'timeclock');
     const employee = await loadEmployee(data.restaurantId, data.employeeId);
     const weekStart = mondayOf(data.date);
     const validation = await sub(data.restaurantId, 'weekValidations').doc(`${data.employeeId}_${weekStart}`).get();
@@ -373,6 +376,7 @@ export const validateWeek = callable(
     } else if (!memberHasPermission(member, 'timeclock.manage')) {
       throw fail.forbidden();
     }
+    await assertFeatureAllowed(data.restaurantId, 'timeclock');
     if (data.action === 'reject' && (data.comment ?? '').length < 3) throw fail.invalid('Indiquez le motif du refus.');
 
     const weekEnd = addDays(data.weekStart, 6);

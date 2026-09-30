@@ -7,8 +7,9 @@ import { Link } from 'react-router';
 import { ArrowRight, BadgePercent, FileText, Gift, Heart, Megaphone, Share2, Star } from 'lucide-react';
 import { Badge, Card, PageContainer, PageHeader, Skeleton } from '@golink/ui';
 import { AccessDeniedPanel, useDocumentTitle } from '@golink/web';
-import type { RestaurantPermission } from '@golink/shared';
+import type { PlanFeatureKey, RestaurantPermission } from '@golink/shared';
 import { useCan, useRestaurantAccess } from '@/auth/RestaurantAccess';
+import { useEntitlements } from '@/auth/useEntitlements';
 import { productOfferStatus, today, useRestaurantOffers } from '../annonces/lib';
 import { displayStatus, useRestaurantPromotions } from '../promotions/lib';
 import { useRestaurantCampaigns } from '../campagnes/lib';
@@ -20,6 +21,8 @@ interface MarketingCard {
   description: string;
   icon: ReactNode;
   permission: RestaurantPermission;
+  /** Fonctionnalité de formule requise en plus de la permission (absente : toujours proposée, comme Réseaux sociaux et Annonces). */
+  feature?: PlanFeatureKey;
   summary: ReactNode;
   loading?: boolean;
 }
@@ -29,6 +32,7 @@ export function MarketingPage() {
   useDocumentTitle('Marketing · Ciyou Eats Restaurant');
   const { restaurant } = useRestaurantAccess();
   const can = useCan();
+  const { hasFeature } = useEntitlements();
 
   const offers = useRestaurantOffers();
   const promotions = useRestaurantPromotions();
@@ -55,6 +59,7 @@ export function MarketingPage() {
       description: 'Remises à code, plafonnées par la plateforme.',
       icon: <BadgePercent />,
       permission: 'marketing.manage',
+      feature: 'promo_codes',
       loading: promotions.loading,
       summary: promotions.loading ? '…' : `${activePromotions} code${activePromotions > 1 ? 's' : ''} actif${activePromotions > 1 ? 's' : ''}`,
     },
@@ -72,6 +77,7 @@ export function MarketingPage() {
       description: 'Notifications et e-mails, immédiats ou programmés.',
       icon: <Megaphone />,
       permission: 'marketing.manage',
+      feature: 'push_campaigns',
       loading: campaigns.loading,
       summary: campaigns.loading ? '…' : scheduledCampaigns > 0 ? `${scheduledCampaigns} programmée${scheduledCampaigns > 1 ? 's' : ''}` : 'Aucune campagne programmée',
     },
@@ -81,6 +87,7 @@ export function MarketingPage() {
       description: 'Points cumulés et récompenses à chaque commande.',
       icon: <Heart />,
       permission: 'marketing.manage',
+      feature: 'loyalty',
       summary: 'Programme configurable',
     },
     {
@@ -109,7 +116,7 @@ export function MarketingPage() {
     },
   ];
 
-  const visible = cards.filter((card) => can(card.permission));
+  const visible = cards.filter((card) => can(card.permission) && (!card.feature || hasFeature(card.feature)));
 
   if (visible.length === 0) {
     return (
