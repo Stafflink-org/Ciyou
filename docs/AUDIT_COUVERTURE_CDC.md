@@ -56,10 +56,10 @@ Une ligne du cahier = une ligne de tableau « Fonctionnalité » du PDF. Le stat
 | 26 | Administrateurs internes | 5 | 4 | 1 | 0 | 0 |
 | 27 | Sécurité et journal d'audit | 4 | 3 | 1 | 0 | 0 |
 | 28 | Lutte contre la fraude | 5 | 5 | 0 | 0 | 0 |
-| 29 | Légal, RGPD et conformité | 6 | 0 | 6 | 0 | 0 |
+| 29 | Légal, RGPD et conformité | 6 | 1 | 5 | 0 | 0 |
 | 30 | Santé et maintenance | 4 | 3 | 1 | 0 | 0 |
 | 31 | Données et sauvegardes | 3 | 2 | 1 | 0 | 0 |
-| | **TOTAL** | **166** | **104** | **62** | **0** | **0** |
+| | **TOTAL** | **166** | **109** | **57** | **0** | **0** |
 
 **Mise à jour du 28/09/2026 (`cdc-p2-final`, clôture de la série) :** recomptage complet de l'annexe J §14-17 (aucune ligne ne change de statut : tous les items listés comme « restants » y étaient en réalité déjà résolus par `cdc-fix-c`, sauf le grand livre) puis correction réelle de 3 points sur les 6 demandés par cette dernière tâche : (1) grand livre `settleOrder` — écritures `promo_funded` et contrepartie `commission` du compte `platform` désormais écrites (§15 « Historique » PARTIEL→COMPLET, +1 ligne) ; (2) RGPD self-service — `submitGdprRequest` créée et écran minimal côté restaurant (§29, reste PARTIEL car d'autres manques subsistent sur cette ligne à éléments multiples) ; (3) export de sauvegarde téléchargeable — `getBackupDownloadLinks` et bouton « Télécharger » (§31, reste PARTIEL, le format n'est pas un CSV/JSON lisible). Les deux autres points demandés étaient déjà résolus, confirmé par lecture de code sans qu'aucune correction ne soit nécessaire : suivi des refus de carte (déjà tracé par `cdc-fix-c`) et seuils réglables de détection de fraude (déjà tous paramétrables, onglet « Seuils » de `FraudePage.tsx`). Total à l'issue de cette tâche : **102 COMPLET / 64 PARTIEL / 0 ABSENT / 0 FAUX** (166 lignes).
 
