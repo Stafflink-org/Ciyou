@@ -216,12 +216,12 @@ function RetentionForm() {
       <CardContent className="grid gap-4 sm:grid-cols-2">
         <FormField label="Compte client inactif (mois)" required><Input type="number" value={form.inactiveAccountMonths ?? 24} onChange={(e) => set('inactiveAccountMonths', Number(e.target.value))} /></FormField>
         <FormField label="Anonymiser les commandes après (mois)" required><Input type="number" value={form.anonymizeOrdersAfterMonths ?? 36} onChange={(e) => set('anonymizeOrdersAfterMonths', Number(e.target.value))} /></FormField>
-        <FormField label="Conserver les factures (années)" required><Input type="number" value={form.keepInvoicesYears ?? 10} onChange={(e) => set('keepInvoicesYears', Number(e.target.value))} /></FormField>
+        <FormField label="Conserver les factures (années)" required hint="Appliqué à chaque émission (jamais en dessous de l'obligation légale de 10 ans)."><Input type="number" value={form.keepInvoicesYears ?? 10} onChange={(e) => set('keepInvoicesYears', Number(e.target.value))} /></FormField>
         <FormField label="Conserver le journal d'audit (années)" required><Input type="number" value={form.keepAuditLogsYears ?? 5} onChange={(e) => set('keepAuditLogsYears', Number(e.target.value))} /></FormField>
-        <FormField label="Positions livreur (jours)" required><Input type="number" value={form.deleteDriverLocationsAfterDays ?? 30} onChange={(e) => set('deleteDriverLocationsAfterDays', Number(e.target.value))} /></FormField>
+        <FormField label="Positions livreur (jours)" required hint="Sans effet aujourd'hui : seule la position courante du livreur est conservée, aucun historique de position n'existe encore en base."><Input type="number" value={form.deleteDriverLocationsAfterDays ?? 30} onChange={(e) => set('deleteDriverLocationsAfterDays', Number(e.target.value))} /></FormField>
         <FormField label="Corbeille (jours)" required><Input type="number" value={form.trashRetentionDays ?? 30} onChange={(e) => set('trashRetentionDays', Number(e.target.value))} /></FormField>
-        <FormField label="Anonymisation automatique planifiée" hint="Nuit à 4 h : applique ces durées sans intervention.">
-          <div className="flex h-10 items-center"><Switch checked={Boolean(form.autoAnonymize)} onCheckedChange={(v) => set('autoAnonymize', v)} /></div>
+        <FormField label="Anonymisation automatique planifiée" hint="Nuit à 4 h : applique ces durées sans intervention. Active par défaut (obligation légale) : seul un refus explicite ci-dessous la désactive.">
+          <div className="flex h-10 items-center"><Switch checked={form.autoAnonymize !== false} onCheckedChange={(v) => set('autoAnonymize', v)} /></div>
         </FormField>
         <div className="sm:col-span-2">
           <ReasonField value={reason} onChange={setReason} />
@@ -240,7 +240,8 @@ function RetentionForm() {
               keepAuditLogsYears: Number(form.keepAuditLogsYears ?? 5),
               deleteDriverLocationsAfterDays: Number(form.deleteDriverLocationsAfterDays ?? 30),
               trashRetentionDays: Number(form.trashRetentionDays ?? 30),
-              autoAnonymize: Boolean(form.autoAnonymize),
+              // Active par défaut (obligation légale, §29) : ne jamais écrire `false` sauf refus explicite du réglage.
+              autoAnonymize: form.autoAnonymize !== false,
             })
           }
         >

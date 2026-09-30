@@ -6,6 +6,7 @@ import {
   COLLECTIONS,
   INVOICE_RETENTION_YEARS,
   RESTAURANT_PRIVATE_DOCS,
+  SETTINGS_DOCS,
   SUBCOLLECTIONS,
   formatInvoiceNumber,
   maskEmail,
@@ -154,8 +155,37 @@ export function invoiceTotals(lines: InvoiceLine[]) {
   return { vatSummary, totalHtCents, totalVatCents, totalTtcCents: totalHtCents + totalVatCents };
 }
 
-export function retainUntil(year: number): string {
-  return `${year + INVOICE_RETENTION_YEARS}-12-31`;
+/**
+ * Échéance de conservation d'une facture émise en `year`. `years` permet à
+ * `settings/retention.keepInvoicesYears` de prolonger la conservation (jamais
+ * de la raccourcir sous l'obligation légale, cf. `resolveInvoiceRetentionYears`).
+ */
+export function retainUntil(year: number, years: number = INVOICE_RETENTION_YEARS): string {
+  return `${year + Math.max(years, INVOICE_RETENTION_YEARS)}-12-31`;
+}
+
+let invoiceRetentionCache: { at: number; years: number } | null = null;
+
+/**
+ * Nombre d'années de conservation à appliquer à une facture émise maintenant : le
+ * réglage plateforme `settings/retention.keepInvoicesYears` (§29) s'il est renseigné
+ * et supérieur à l'obligation légale (`INVOICE_RETENTION_YEARS`), sinon l'obligation
+ * légale elle-même. Mis en cache 5 min (comme `loadCountry`) : appelé sur un chemin
+ * emprunté à chaque règlement de commande, une lecture Firestore par commande serait
+ * un coût inutile pour un réglage qui change rarement.
+ */
+export async function resolveInvoiceRetentionYears(): Promise<number> {
+  if (invoiceRetentionCache && Date.now() - invoiceRetentionCache.at < 300_000) return invoiceRetentionCache.years;
+  let years = INVOICE_RETENTION_YEARS;
+  try {
+    const snap = await db.collection(COLLECTIONS.settings).doc(SETTINGS_DOCS.retention).get();
+    const configured = Number((snap.data() as Record<string, unknown> | undefined)?.keepInvoicesYears);
+    if (Number.isFinite(configured) && configured > 0) years = Math.max(configured, INVOICE_RETENTION_YEARS);
+  } catch {
+    // Défaut légal conservé en cas d'erreur de lecture du réglage.
+  }
+  invoiceRetentionCache = { at: Date.now(), years };
+  return years;
 }
 
 const countryCache = new Map<string, { at: number; country: Country | null }>();
