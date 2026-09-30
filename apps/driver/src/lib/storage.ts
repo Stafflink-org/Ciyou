@@ -57,3 +57,26 @@ export async function uploadPrivateDriverDocument(
 export function privateDriverFileUrl(path: string): Promise<string> {
   return getDownloadURL(ref(storage, path));
 }
+
+/**
+ * Selfie de vérification d'identité (§6, `docs/CONTRATS_APPS_MOBILES.md` §21) : dépôt à plat
+ * dans `drivers/{uid}/private/`, exactement comme documenté dans le contrat — jamais de
+ * sous-dossier ici, `getDriverFile` (`functions/src/admin/operations/drivers.ts`, consommé par
+ * la page admin de vérification) valide le chemin avec un motif qui n'autorise aucun `/`
+ * après `private/` ; un sous-dossier le ferait échouer silencieusement (aperçu « indisponible »).
+ */
+export async function uploadDriverSelfie(driverId: string, picked: PickedFile, onProgress?: (ratio: number) => void): Promise<string> {
+  const blob: Blob = picked.file ?? (await (await fetch(picked.uri)).blob());
+  const contentType = picked.mimeType || picked.file?.type || 'application/octet-stream';
+  const path = `${STORAGE_PATHS.driverPrivate(driverId)}/selfie-${Date.now()}.${extensionOf(contentType, picked.name)}`;
+  await new Promise<void>((resolve, reject) => {
+    const task = uploadBytesResumable(ref(storage, path), blob, { contentType });
+    task.on(
+      'state_changed',
+      (snap) => onProgress?.(snap.totalBytes ? snap.bytesTransferred / snap.totalBytes : 0),
+      reject,
+      () => resolve(),
+    );
+  });
+  return path;
+}

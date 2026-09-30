@@ -1,7 +1,8 @@
 import { useCallback, useState } from 'react';
-import { orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
-import type { Driver, DriverSanction, PartnerDocument, PartnerDocumentType, VehicleType, WithId } from '@golink/shared';
+import { limit, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
+import type { Driver, DriverSanction, IdentityCheck, PartnerDocument, PartnerDocumentType, VehicleType, WithId } from '@golink/shared';
 import { callFunction, collectionAt, docAt, useCollection, useDoc } from '../../lib/firestore';
+import { uploadDriverSelfie } from '../../lib/storage';
 
 export function useDriverProfile(uid: string | null) {
   return useDoc<Driver>(uid ? docAt(`drivers/${uid}`) : null);
@@ -93,6 +94,54 @@ export function useUpdateDriverSettings(uid: string | null) {
   );
 
   return { save, pending, error };
+}
+
+/**
+ * Contrôle d'identité le plus récent du livreur (`identityChecks`, §6, `docs/CONTRATS_APPS_MOBILES.md`
+ * §21). N'a pas de pointeur direct sur `drivers/{uid}` (contrairement à `activeSanctionId`) :
+ * requête sur le plus récent, index déjà déployé (`driverId` ASC + `requestedAt` DESC).
+ * Affiché seulement s'il attend une action du livreur (`requested`) ou est en cours d'examen
+ * (`submitted`) ; un contrôle déjà tranché (`passed`/`failed`/`expired`) ne s'affiche plus.
+ */
+export function usePendingIdentityCheck(uid: string | null): { data: WithId<IdentityCheck> | null; loading: boolean } {
+  const target = uid ? query(collectionAt('identityChecks'), where('driverId', '==', uid), orderBy('requestedAt', 'desc'), limit(1)) : null;
+  const { data, loading } = useCollection<IdentityCheck>(target);
+  const latest = data?.[0] ?? null;
+  if (!latest || (latest.status !== 'requested' && latest.status !== 'submitted')) return { data: null, loading };
+  return { data: latest, loading };
+}
+
+/**
+ * Dépôt réel du selfie par le livreur (`functions/src/admin/operations/drivers.ts::submitIdentitySelfie`,
+ * contrat `docs/CONTRATS_APPS_MOBILES.md` §21) : upload Storage puis appel de la fonction qui vérifie
+ * le fichier et passe le contrôle à `submitted`. Aucune similarité automatique n'est calculée côté
+ * serveur (pas de service de reconnaissance faciale) : ne jamais afficher de score de ressemblance ici.
+ */
+export function useSubmitIdentitySelfie(uid: string | null) {
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const submitSelfie = callFunction<{ checkId: string; photoPath: string }, { status: string }>('submitIdentitySelfie');
+
+  const submit = useCallback(
+    async (checkId: string, picked: { uri: string; name: string; mimeType?: string; file?: File }, onProgress?: (ratio: number) => void) => {
+      if (!uid) return false;
+      setError(null);
+      setPending(true);
+      try {
+        const photoPath = await uploadDriverSelfie(uid, picked, onProgress);
+        await submitSelfie({ checkId, photoPath });
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Impossible d’envoyer votre photo.');
+        return false;
+      } finally {
+        setPending(false);
+      }
+    },
+    [uid, submitSelfie],
+  );
+
+  return { submit, pending, error };
 }
 
 /** Justificatifs déjà déposés par ce livreur, les plus récents en premier. */

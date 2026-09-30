@@ -27,6 +27,13 @@
     "support": "Contacter le support",
     "signOut": "Se déconnecter"
   },
+  "identityCheck": {
+    "title": "Vérification d’identité",
+    "prompt": "Pour la sécurité de tous, envoyez un selfie : notre équipe le compare à votre pièce d’identité validée.",
+    "submit": "Prendre ou envoyer une photo",
+    "submittedBadge": "Photo envoyée, en cours d’examen",
+    "toastSent": "Photo envoyée, merci !"
+  },
   "sanction": {
     "until": "Jusqu’au {{date}}",
     "contestedBadge": "Contestation envoyée, en cours d’examen",
