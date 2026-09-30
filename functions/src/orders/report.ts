@@ -16,10 +16,7 @@ import { db, FieldValue, Timestamp } from '../lib/admin';
 import { ordersCallable as callable } from './runtime';
 import { z, zId } from '../lib/validation';
 import { addEvent, eventActorOf, loadOrder, orderRef, requireOrderStaff } from './context';
-
-/** Délais de prise en charge (minutes) : urgence pendant le service. */
-const FIRST_RESPONSE_MINUTES = { high: 15, normal: 60 } as const;
-const RESOLUTION_MINUTES = { high: 120, normal: 24 * 60 } as const;
+import { loadSupportSettings } from '../admin/experience/common';
 
 export const reportOrderIssue = callable(
   z.object({ orderId: zId, category: z.enum(ORDER_ISSUE_CATEGORIES), message: z.string().trim().min(10, 'Décrivez le problème en quelques mots (10 caractères au moins).').max(1500) }),
@@ -30,6 +27,13 @@ export const reportOrderIssue = callable(
     const active = !['delivered', 'cancelled'].includes(order.status);
     const priority = active && data.category !== 'other' ? 'high' : 'normal';
     const label = ORDER_ISSUE_CATEGORY_LABELS[data.category];
+    // Correctif : ce ticket lisait ses propres délais codés en dur (15/60 min, 2 h/24 h) au lieu du
+    // réglage `settings/support` partagé (`firstResponseTargetMinutes`/`resolutionTargetHours`,
+    // modifiable dans `SettingsPage.tsx`) — les tickets ouverts depuis une commande ne suivaient donc
+    // jamais un changement de SLA fait par l'équipe support (`docs/AUDIT_COUVERTURE_CDC.md` §13).
+    const supportSettings = await loadSupportSettings();
+    const firstResponseMinutes = supportSettings.firstResponseTargetMinutes[priority];
+    const resolutionMinutes = supportSettings.resolutionTargetHours[priority] * 60;
 
     return db.runTransaction(async (tx) => {
       const counterRef = db.collection(COLLECTIONS.counters).doc('tickets');
@@ -58,8 +62,8 @@ export const reportOrderIssue = callable(
         escalatedTo: null,
         escalatedAt: null,
         firstResponseAt: null,
-        firstResponseDueAt: Timestamp.fromMillis(at.toMillis() + FIRST_RESPONSE_MINUTES[priority] * 60_000),
-        resolutionDueAt: Timestamp.fromMillis(at.toMillis() + RESOLUTION_MINUTES[priority] * 60_000),
+        firstResponseDueAt: Timestamp.fromMillis(at.toMillis() + firstResponseMinutes * 60_000),
+        resolutionDueAt: Timestamp.fromMillis(at.toMillis() + resolutionMinutes * 60_000),
         resolvedAt: null,
         closedAt: null,
         refundIds: [],

@@ -93,6 +93,12 @@ export function queryKind(query: string): string | null {
   if (/^\S+@\S+$/.test(q)) return 'Adresse e-mail';
   if (/^\+?[\d\s.-]{8,}$/.test(q)) return q.replace(/\D/g, '').length === 14 ? 'SIRET' : 'Téléphone';
   if (/^(fa|av|fac|inv)[-\s]?\d+/i.test(q)) return 'Numéro de facture';
+  // Vrai format des numéros émis (`formatInvoiceNumber`, `functions/src/finance/argent/common.ts`) :
+  // `SÉRIE-ANNÉE-000000`, la série pouvant elle-même contenir un tiret (ex. `LU-ABO-2026-000002`).
+  // Sans cette branche, taper le numéro réel d'une facture n'était jamais reconnu comme tel par le
+  // regroupement des résultats (`docs/AUDIT_COUVERTURE_CDC.md` §2) — seul l'exemple d'écran (« FA-2026 »,
+  // qui ne correspond à aucune série réelle) était couvert.
+  if (/^[a-z]{2,4}(-[a-z]{2,6}){0,2}-\d{4}-\d{3,}$/i.test(q)) return 'Numéro de facture';
   if (/^(t|tk|tic)[-\s]?\d+/i.test(q)) return 'Numéro de ticket';
   return null;
 }

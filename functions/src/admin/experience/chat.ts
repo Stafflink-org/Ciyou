@@ -16,7 +16,7 @@ import { fail } from '../../lib/errors';
 import { assertFeatureOn } from '../../lib/features';
 import { assertAdminCovers, requireAdmin } from '../../lib/permissions';
 import { z, zId } from '../../lib/validation';
-import { agentPublicName, experienceCallable, notify, preview } from './common';
+import { agentPublicName, experienceCallable, loadSupportSettings, notify, preview } from './common';
 
 export const openSupportChat = experienceCallable(
   z.object({
@@ -32,6 +32,11 @@ export const openSupportChat = experienceCallable(
     if (!order) throw fail.notFound('Commande');
     assertAdminCovers(admin, order.cityId);
     await assertFeatureOn('live_chat', { restaurantId: order.restaurantId, cityId: order.cityId, countryId: order.countryId }, 'Le chat en direct est désactivé.');
+    // Réglage « Chat en direct » de `settings/support` (`SettingsPage.tsx`, écrit par `updateExperienceSettings`
+    // mais jusqu'ici jamais lu par aucune fonction) : distinct de l'interrupteur §24 ci-dessus, propre au module
+    // support. Absent en base = actif (comportement par défaut du reste des réglages support).
+    const supportSettings = await loadSupportSettings();
+    if (supportSettings.liveChatEnabled === false) throw fail.precondition('Le chat en direct est désactivé par l’équipe support.');
     const participants: Conversation['participants'] = {
       [caller.uid]: { name: agentPublicName(admin), role: 'admin' },
       [order.customerId]: { name: order.customerName, role: 'client' },
@@ -146,7 +151,7 @@ export const closeSupportChat = experienceCallable(
     const at = Timestamp.now();
     await db.runTransaction(async (tx) => {
       tx.update(ref, { closed: true });
-      const message: ConversationMessage = { senderId: caller.uid, senderRole: 'system', senderName: 'Ciyou Eats', text: 'Conversation close par le support. Merci de nous avoir contactés.', attachments: [], readBy: [caller.uid], createdAt: at, auto: 'support_closed' };
+      const message: ConversationMessage = { senderId: caller.uid, senderRole: 'system', senderName: 'Ciyou Eats', text: 'Conversation clôturée par le support. Merci de nous avoir contactés.', attachments: [], readBy: [caller.uid], createdAt: at, auto: 'support_closed' };
       tx.create(ref.collection(SUBCOLLECTIONS.conversations.messages).doc(), message);
     });
     await writeAudit({
