@@ -15,11 +15,13 @@ function readMode(): ColorMode {
     const stored = window.localStorage.getItem(MODE_KEY);
     if (stored === 'light' || stored === 'dark') return stored;
   } catch {
-    // Stockage indisponible : on utilise le défaut clair.
+    // Stockage indisponible : on utilise le défaut sombre.
   }
-  // Défaut restaurant : clair, quelle que soit la préférence système ;
-  // le sombre reste disponible via le sélecteur et mémorisé une fois choisi.
-  return 'light';
+  // Défaut restaurant : sombre, aligné sur l'identité visuelle du super admin
+  // (retour client 2026-09-30 : le restaurant doit reposer sur le même visuel
+  // de base que l'admin). Le clair reste disponible via le sélecteur et
+  // mémorisé une fois choisi.
+  return 'dark';
 }
 
 /**
