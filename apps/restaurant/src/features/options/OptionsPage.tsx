@@ -403,8 +403,8 @@ export function OptionsPage() {
         title={`Supprimer ${deleting?.label ?? ''} ?`}
         description={
           deleting?.kind === 'option'
-            ? `Retirée des listes qui l’utilisent (bornes réajustées). Restaurable depuis la corbeille pendant ${MENU_LIMITS.trashDays} jours.`
-            : `Retirée des produits qui la proposent ; les options restent disponibles. Restaurable depuis la corbeille pendant ${MENU_LIMITS.trashDays} jours.`
+            ? 'Retirée des listes qui l’utilisent (bornes réajustées). Restaurable depuis la corbeille pendant le délai réglé par la plateforme.'
+            : 'Retirée des produits qui la proposent ; les options restent disponibles. Restaurable depuis la corbeille pendant le délai réglé par la plateforme.'
         }
         confirmLabel="Supprimer"
         onConfirm={async () => {

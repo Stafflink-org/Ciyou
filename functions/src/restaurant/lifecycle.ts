@@ -6,7 +6,6 @@ import {
   ACTIVE_ORDER_STATUSES,
   COLLECTIONS,
   DEFAULT_ORDER_RULES,
-  SETTINGS_DOCS,
   merchantInactivityAction,
   type Restaurant,
 } from '@golink/shared';
@@ -23,7 +22,7 @@ import { OPS_RUNTIME } from '../admin/operations/common';
 import { loadMarket, loadOrderRules } from '../orders/context';
 import { sendPlatformMessage } from '../notifications/messages';
 import { restaurantStaffTargets } from '../notifications/order-messages';
-import { moveToTrash } from '../platform/backups';
+import { moveToTrash, resolveTrashRetentionDays } from '../platform/backups';
 import { tryAutoValidateRestaurant } from './auto-validation';
 
 const DAY_MS = 86_400_000;
@@ -43,11 +42,6 @@ export interface LifecycleReport {
  */
 function protectedFromRemoval(data: Restaurant & { seed?: boolean; test?: boolean; inactivityDemo?: boolean }): boolean {
   return (data.seed === true || data.test === true) && data.inactivityDemo !== true;
-}
-
-async function trashRetentionDays(): Promise<number> {
-  const snap = await db.collection(COLLECTIONS.settings).doc(SETTINGS_DOCS.retention).get();
-  return (snap.get('trashRetentionDays') as number | undefined) ?? 30;
 }
 
 function frDate(ms: number): string {
@@ -78,7 +72,7 @@ export async function runMerchantLifecycle(options: { restaurantId?: string | nu
     ? [await db.collection(COLLECTIONS.restaurants).doc(options.restaurantId).get()].filter((s) => s.exists)
     : (await db.collection(COLLECTIONS.restaurants).where('status', '==', 'active').limit(1000).get()).docs;
   const rulesByCity = new Map<string, Awaited<ReturnType<typeof loadOrderRules>>>();
-  const retention = await trashRetentionDays();
+  const retention = await resolveTrashRetentionDays();
 
   for (const doc of actives) {
     const restaurant = doc.data() as Restaurant & { seed?: boolean; test?: boolean; inactivityDemo?: boolean };

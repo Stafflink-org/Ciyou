@@ -9,12 +9,12 @@ import { callable } from '../lib/callable';
 import { fail } from '../lib/errors';
 import { requireRestaurantAccess } from '../lib/permissions';
 import { z, zId } from '../lib/validation';
+import { resolveTrashRetentionDays } from '../platform/backups';
 import { loadConfigContext, merchantDeliveryBounds, restaurantRef, CONFIG_FUNCTION_OPTIONS } from './config-context';
 
 const MAX_ZONES = 12;
 /** Garde-fou de saisie ; la borne réelle est un paramètre de la plateforme. */
 const MAX_FEE_CENTS = 10_000;
-const TRASH_RETENTION_DAYS = 30;
 
 const point = z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) });
 
@@ -128,6 +128,7 @@ export const deleteDeliveryZone = callable(
     const rRef = restaurantRef(data.restaurantId);
     const zoneRef = rRef.collection(SUBCOLLECTIONS.restaurants.deliveryZones).doc(data.zoneId);
     const now = Timestamp.now();
+    const retentionDays = await resolveTrashRetentionDays();
     const restaurant = await db.runTransaction(async (tx) => {
       const [rSnap, zSnap, enabledSnap] = await Promise.all([
         tx.get(rRef),
@@ -151,7 +152,7 @@ export const deleteDeliveryZone = callable(
         deletedBy: actor.caller.uid,
         deletedAt: now,
         reason: null,
-        purgeAt: Timestamp.fromMillis(now.toMillis() + TRASH_RETENTION_DAYS * 86_400_000),
+        purgeAt: Timestamp.fromMillis(now.toMillis() + retentionDays * 86_400_000),
         restoredAt: null,
         restoredBy: null,
       };

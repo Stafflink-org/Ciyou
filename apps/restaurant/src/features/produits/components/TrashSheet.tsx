@@ -1,7 +1,6 @@
 // Corbeille de la carte : éléments supprimés, restaurables jusqu'à leur purge.
 import { useState } from 'react';
 import { ArchiveRestore, LayoutList, ListChecks, Package, SlidersHorizontal, Trash2 } from 'lucide-react';
-import { MENU_LIMITS } from '@golink/shared';
 import { Badge, Button, EmptyState, formatRelative, Sheet, SheetBody, SheetContent, SheetHeader, Skeleton, toast } from '@golink/ui';
 import { errorMessage, toDate } from '@/lib/firestore';
 import { menuFunctions, useMenuTrash, type MenuTrashItem } from '../menu/data';
@@ -38,7 +37,7 @@ export function TrashSheet({ open, onOpenChange, restaurantId, kinds }: { open: 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-lg">
-        <SheetHeader icon={<Trash2 />} title="Corbeille de la carte" description={`Les éléments supprimés sont conservés ${MENU_LIMITS.trashDays} jours, puis effacés définitivement.`} />
+        <SheetHeader icon={<Trash2 />} title="Corbeille de la carte" description="Les éléments supprimés sont conservés le délai réglé par la plateforme, puis effacés définitivement." />
         <SheetBody className="px-4 sm:px-6">
           {trash.loading ? (
             <div className="space-y-2">

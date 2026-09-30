@@ -1,7 +1,6 @@
 // Fenêtres secondaires de la carte : suppression d'une section, déplacement de produits.
 import { useEffect, useState } from 'react';
 import { FolderInput, Trash2 } from 'lucide-react';
-import { MENU_LIMITS } from '@golink/shared';
 import { Button, Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, RadioGroup, Select } from '@golink/ui';
 import type { Section } from '../menu/data';
 import { plural } from '../menu/helpers';
@@ -37,7 +36,7 @@ export function DeleteSectionDialog({
         <DialogHeader
           icon={<Trash2 className="text-danger" />}
           title={`Supprimer « ${section?.name ?? ''} » ?`}
-          description={`La section part dans la corbeille : vous pourrez la restaurer pendant ${MENU_LIMITS.trashDays} jours.`}
+          description="La section part dans la corbeille : vous pourrez la restaurer pendant le délai réglé par la plateforme."
         />
         <DialogBody>
           {productCount > 0 ? (

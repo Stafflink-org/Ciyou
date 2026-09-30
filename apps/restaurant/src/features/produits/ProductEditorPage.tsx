@@ -913,7 +913,7 @@ export function ProductEditorPage() {
         onOpenChange={setConfirmDelete}
         destructive
         title={`Supprimer « ${draft.name} » ?`}
-        description={`Retiré immédiatement de la carte, il reste restaurable depuis la corbeille pendant ${MENU_LIMITS.trashDays} jours.`}
+        description="Retiré immédiatement de la carte, il reste restaurable depuis la corbeille pendant le délai réglé par la plateforme."
         confirmLabel="Supprimer"
         onConfirm={async () => {
           try {
