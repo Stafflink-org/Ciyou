@@ -23,7 +23,7 @@ import { callable } from '../../lib/callable';
 import { fail } from '../../lib/errors';
 import { assertFeatureOn, isFeatureOn } from '../../lib/features';
 import { requireAuth } from '../../lib/permissions';
-import { z } from '../../lib/validation';
+import { z, zId } from '../../lib/validation';
 import { loadLoyaltySettings, pushInApp } from './common';
 
 const DAY_MS = 86_400_000;
@@ -146,23 +146,49 @@ export async function earnLoyaltyPoints(orderId: string, order: Order): Promise<
   return { earned, welcome, restaurantEarned, restaurantWelcome };
 }
 
-/** Échange de points contre du crédit au portefeuille : palier exact du programme, points les plus anciens d'abord. */
-export const redeemLoyaltyPoints = callable(z.object({ points: z.number().int().min(1).max(10_000_000) }), async (data, request) => {
+/**
+ * Échange de points contre du crédit au portefeuille : palier exact du programme, points les plus
+ * anciens d'abord. Sans `restaurantId` : compte plateforme (`loyaltyAccounts/{uid}`), palier de
+ * `settings/loyalty`. Avec `restaurantId` : compte propre au commerce (`loyaltyAccounts/{uid}_{restaurantId}`,
+ * `scope:'restaurant'`), palier du programme du commerce (`saveLoyaltyProgram`) — coût imputé au
+ * commerce (`ledgerEntries.accountType:'restaurant'`) et non à la plateforme.
+ */
+export const redeemLoyaltyPoints = callable(z.object({ points: z.number().int().min(1).max(10_000_000), restaurantId: zId.nullish() }), async (data, request) => {
   const caller = requireAuth(request);
-  const settings = await loadLoyaltySettings();
-  if (!settings.enabled) throw fail.precondition('Le programme de fidélité n’est pas ouvert pour le moment.');
-  await assertFeatureOn('loyalty', {}, 'Le programme de fidélité n’est pas ouvert pour le moment.');
-  const tier = settings.rewards.find((r) => r.points === data.points);
-  if (!tier) throw fail.invalid('Ce palier n’existe pas : choisissez un palier proposé par le programme.');
   const uid = caller.uid;
+  const accountId = data.restaurantId ? `${uid}_${data.restaurantId}` : uid;
+
+  let tier: { points: number; valueCents: number };
+  let costAccount: { accountType: 'platform' | 'restaurant'; accountId: string };
+  if (data.restaurantId) {
+    const programSnap = await db.collection(COLLECTIONS.restaurants).doc(data.restaurantId).collection(SUBCOLLECTIONS.restaurants.settings).doc(RESTAURANT_SETTINGS_DOCS.loyalty).get();
+    const program = programSnap.data() as RestaurantLoyaltySettings | undefined;
+    if (!program?.enabled) throw fail.precondition('Le programme de fidélité de ce commerce n’est pas ouvert pour le moment.');
+    const reward = (program.rewards ?? []).find((r) => r.points === data.points);
+    if (!reward) throw fail.invalid('Ce palier n’existe pas : choisissez un palier proposé par ce commerce.');
+    tier = { points: reward.points, valueCents: reward.rewardCents };
+    costAccount = { accountType: 'restaurant', accountId: data.restaurantId };
+  } else {
+    const settings = await loadLoyaltySettings();
+    if (!settings.enabled) throw fail.precondition('Le programme de fidélité n’est pas ouvert pour le moment.');
+    await assertFeatureOn('loyalty', {}, 'Le programme de fidélité n’est pas ouvert pour le moment.');
+    const found = settings.rewards.find((r) => r.points === data.points);
+    if (!found) throw fail.invalid('Ce palier n’existe pas : choisissez un palier proposé par le programme.');
+    tier = { points: found.points, valueCents: found.valueCents };
+    costAccount = { accountType: 'platform', accountId: 'golink' };
+  }
+
   const userRef = db.collection(COLLECTIONS.users).doc(uid);
-  const sources = await txCol().where('userId', '==', uid).orderBy('createdAt', 'asc').limit(500).get();
+  // Filtré par `accountId` (pas `userId`) : un même client peut avoir un compte plateforme et un ou
+  // plusieurs comptes restaurant qui partagent le même `userId` (cf. `expireLoyaltyPoints` ci-dessus,
+  // même précaution) — filtrer par `userId` consommerait les lots d'un autre compte que celui débité.
+  const sources = await txCol().where('accountId', '==', accountId).orderBy('createdAt', 'asc').limit(500).get();
   const buckets = sources.docs.filter((d) => ['earn', 'welcome'].includes(String(d.get('type'))) && ((d.get('remaining') as number | undefined) ?? 0) > 0);
   const now = Timestamp.now();
   const walletTxRef = db.collection(COLLECTIONS.walletTransactions).doc();
   const redeemRef = txCol().doc();
   const result = await db.runTransaction(async (tx) => {
-    const [account, user] = await Promise.all([tx.get(accountRef(uid)), tx.get(userRef)]);
+    const [account, user] = await Promise.all([tx.get(accountRef(accountId)), tx.get(userRef)]);
     const acc = account.data() as LoyaltyAccount | undefined;
     if (!acc || acc.points < data.points) throw fail.precondition(`Il vous manque ${data.points - (acc?.points ?? 0)} points pour ce palier.`);
     const profile = user.data() as UserProfile | undefined;
@@ -180,8 +206,8 @@ export const redeemLoyaltyPoints = callable(z.object({ points: z.number().int().
     }
     if (left > 0) throw fail.precondition('Vos points ne sont plus valables : ils ont expiré.');
     const balanceAfter = (profile.walletBalanceCents ?? 0) + tier.valueCents;
-    tx.set(redeemRef, { accountId: uid, userId: uid, restaurantId: null, type: 'redeem', points: -data.points, orderId: null, valueCents: tier.valueCents, createdAt: now, createdBy: uid });
-    tx.set(accountRef(uid), { ...acc, points: acc.points - data.points, updatedAt: now });
+    tx.set(redeemRef, { accountId, userId: uid, restaurantId: data.restaurantId ?? null, type: 'redeem', points: -data.points, orderId: null, valueCents: tier.valueCents, createdAt: now, createdBy: uid });
+    tx.set(accountRef(accountId), { ...acc, points: acc.points - data.points, updatedAt: now });
     const wallet: WalletTransaction = { userId: uid, type: 'credit', amountCents: tier.valueCents, balanceAfterCents: balanceAfter, reason: 'loyalty_reward', orderId: null, ticketId: null, refundId: null, expiresAt: null, note: `Échange de ${data.points} points`, createdAt: now, createdBy: 'system' };
     tx.set(walletTxRef, wallet);
     tx.update(userRef, { walletBalanceCents: balanceAfter, updatedAt: now });
@@ -189,12 +215,12 @@ export const redeemLoyaltyPoints = callable(z.object({ points: z.number().int().
     const base = { currency: 'EUR' as const, bookingDate: day, countryId: 'FR', cityId: null, description: `Fidélité : ${data.points} points échangés`, createdAt: now, createdBy: 'system' };
     const credit: LedgerEntry = { ...base, accountType: 'customer_wallet', accountId: uid, type: 'wallet_credit', amountCents: tier.valueCents };
     tx.set(db.collection(COLLECTIONS.ledgerEntries).doc(`wc-${walletTxRef.id}`), credit);
-    // Coût du programme supporté par la plateforme.
-    const cost: LedgerEntry = { ...base, accountType: 'platform', accountId: 'golink', type: 'wallet_credit', amountCents: -tier.valueCents };
+    // Coût du programme supporté par la plateforme, ou par le commerce pour son propre programme.
+    const cost: LedgerEntry = { ...base, accountType: costAccount.accountType, accountId: costAccount.accountId, type: 'wallet_credit', amountCents: -tier.valueCents };
     tx.set(db.collection(COLLECTIONS.ledgerEntries).doc(`wp-${walletTxRef.id}`), cost);
     return { pointsLeft: acc.points - data.points, balanceCents: balanceAfter, valueCents: tier.valueCents };
   });
-  await writeAudit({ actor: actorFromCaller(caller, 'client'), action: 'loyalty.redeemed', target: { type: 'client', id: uid }, after: { points: data.points, valueCents: result.valueCents } });
+  await writeAudit({ actor: actorFromCaller(caller, 'client'), action: 'loyalty.redeemed', target: { type: 'client', id: uid }, after: { points: data.points, valueCents: result.valueCents, restaurantId: data.restaurantId ?? null } });
   return result;
 }, { maxInstances: 2, cpu: 'gcf_gen1' });
 
