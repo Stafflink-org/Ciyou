@@ -8,6 +8,7 @@ import { ProfileSettingsScreen } from '../features/profile/ProfileSettingsScreen
 import { GdprScreen } from '../features/gdpr/GdprScreen';
 import { SupportScreen } from '../features/support/SupportScreen';
 import { TicketDetailScreen } from '../features/support/TicketDetailScreen';
+import { PaymentAccountScreen } from '../features/payments/PaymentAccountScreen';
 import { useTranslation } from '../i18n/I18nProvider';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
@@ -29,6 +30,7 @@ export function MainStack() {
       <Stack.Screen name="Gdpr" component={GdprScreen} options={{ title: 'Données personnelles' }} />
       <Stack.Screen name="Support" component={SupportScreen} options={{ title: t('screenTitles.support') }} />
       <Stack.Screen name="TicketDetail" component={TicketDetailScreen} options={{ title: t('screenTitles.ticketDetail') }} />
+      <Stack.Screen name="PaymentAccount" component={PaymentAccountScreen} options={{ title: t('screenTitles.paymentAccount') }} />
     </Stack.Navigator>
   );
 }

@@ -58,7 +58,10 @@ async function main() {
   await db.collection('drivers').doc(UID).set(
     {
       cityId: 'longwy',
-      countryId: 'fr',
+      // Code pays exact des documents `countries/{id}` (`FR`, voir packages/shared/src/pricing/decisions.ts) :
+      // une casse différente empêche toute lecture (`countries/fr` n'existe pas) — bug réel trouvé et
+      // corrigé ici (cdc-fix-residuals-5), qui bloquait l'écran de compte de paiement du livreur.
+      countryId: 'FR',
       firstName: 'Driver',
       lastName: 'Test',
       displayName: 'Driver Test',

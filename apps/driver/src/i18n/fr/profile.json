@@ -23,6 +23,7 @@
   },
   "actions": {
     "settings": "Véhicule, distance et documents",
+    "payments": "Compte de paiement",
     "support": "Contacter le support",
     "signOut": "Se déconnecter"
   },

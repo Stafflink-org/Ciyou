@@ -1,0 +1,36 @@
+{
+  "employedByRestaurant": "You are employed by a restaurant: they pay you directly, no Ciyou Eats payment account is needed.",
+  "loading": "Loading…",
+  "stripe": {
+    "title": "Stripe payment account",
+    "description": "Your payouts (deliveries, bonuses, tips) are paid to this account, securely managed by Stripe.",
+    "status": {
+      "none": "Not activated",
+      "pending": "Information needed",
+      "restricted": "Information missing",
+      "enabled": "Active"
+    },
+    "enabledHint": "Your account is active: your next payouts will be paid there automatically.",
+    "pendingHint": "Activate your account to receive payouts: Stripe will ask for your identity and bank details.",
+    "restrictedHint": "Stripe needs more information to activate your account: continue the verification.",
+    "activate": "Activate my payment account",
+    "manage": "Manage my payment account",
+    "refresh": "Refresh",
+    "refreshed": "Account status updated.",
+    "openError": "Could not open the Stripe link. Try again."
+  },
+  "local": {
+    "title": "Payment account",
+    "description": "Stripe is not available in your country: provide an account to receive your payouts by manual transfer.",
+    "bankTransfer": "Bank transfer",
+    "mobileWallet": "Mobile wallet",
+    "holderName": "Account holder",
+    "accountNumber": "Account number / IBAN",
+    "save": "Save",
+    "replace": "Replace",
+    "saved": "Payment account saved, pending verification.",
+    "saveError": "Could not save this account.",
+    "verified": "Verified account ({{account}})",
+    "pendingVerification": "Pending verification ({{account}})"
+  }
+}

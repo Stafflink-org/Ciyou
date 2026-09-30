@@ -1,0 +1,36 @@
+{
+  "employedByRestaurant": "Vous êtes salarié d’un commerce : c’est lui qui vous règle directement, aucun compte de paiement Ciyou Eats n’est nécessaire.",
+  "loading": "Chargement…",
+  "stripe": {
+    "title": "Compte de paiement Stripe",
+    "description": "Vos reversements (courses, primes, pourboires) sont versés sur ce compte, géré de façon sécurisée par Stripe.",
+    "status": {
+      "none": "Non activé",
+      "pending": "En attente d’informations",
+      "restricted": "Informations manquantes",
+      "enabled": "Actif"
+    },
+    "enabledHint": "Votre compte est actif : vos prochains reversements y seront versés automatiquement.",
+    "pendingHint": "Activez votre compte pour recevoir vos reversements : Stripe vous demandera votre identité et vos coordonnées bancaires.",
+    "restrictedHint": "Stripe a besoin d’informations supplémentaires pour activer votre compte : poursuivez la vérification.",
+    "activate": "Activer mon compte de paiement",
+    "manage": "Gérer mon compte de paiement",
+    "refresh": "Actualiser",
+    "refreshed": "État du compte mis à jour.",
+    "openError": "Impossible d’ouvrir le lien Stripe. Réessayez."
+  },
+  "local": {
+    "title": "Compte de paiement",
+    "description": "Stripe n’est pas disponible dans votre pays : indiquez un compte pour recevoir vos reversements par virement manuel.",
+    "bankTransfer": "Virement bancaire",
+    "mobileWallet": "Portefeuille mobile",
+    "holderName": "Titulaire du compte",
+    "accountNumber": "Numéro de compte / IBAN",
+    "save": "Enregistrer",
+    "replace": "Remplacer",
+    "saved": "Compte de paiement enregistré, en attente de vérification.",
+    "saveError": "Impossible d’enregistrer ce compte.",
+    "verified": "Compte vérifié ({{account}})",
+    "pendingVerification": "En attente de vérification ({{account}})"
+  }
+}
