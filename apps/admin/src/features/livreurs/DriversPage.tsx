@@ -165,8 +165,17 @@ export function DriversPage() {
           { label: 'Désactiver', icon: <Ban />, destructive: true, onClick: (rows: Row[], c: () => void) => (setPending({ kind: 'deactivate', rows }), setClear(() => c)) },
         ]
       : []),
-    { label: 'Exporter', icon: <Download />, onClick: (rows) => void exportDriversCsv(rows, names.city, contact.masked) },
+    ...(can('exports.run') ? [{ label: 'Exporter', icon: <Download />, onClick: (rows: Row[]) => void runExport(rows) }] : []),
   ];
+
+  // Cahier §6 « Actions groupées / export » (cdc-fix-residuals-3) : l'export CSV contient des
+  // données personnelles (téléphone, e-mail non masqués selon le rôle) mais n'exigeait aucun
+  // droit `exports.run` ni aucune trace au journal d'audit — corrigé : le bouton n'apparaît
+  // plus sans ce droit, et chaque export réel est audité côté serveur avant le téléchargement.
+  async function runExport(rows: Row[]) {
+    await fn.auditDriversExport({ driverIds: rows.map((r) => r.id), reason: `Export CSV livreurs (${rows.length} ligne${rows.length > 1 ? 's' : ''})` });
+    await exportDriversCsv(rows, names.city, contact.masked);
+  }
 
   const bulk = useMutation(fn.bulkUpdateDrivers, { success: (r) => bulkSummary(r, pending?.kind === 'activate' ? 'Réactivation' : 'Désactivation') });
   const selfie = useMutation(fn.requestIdentityChecks, { success: (r) => bulkSummary(r, 'Selfie demandé') });
@@ -182,9 +191,11 @@ export function DriversPage() {
       title="Livreurs"
       description="Flotte Ciyou Eats et livreurs salariés des commerces : statut, performance, conformité."
       actions={
-        <Button variant="secondary" leftIcon={<Download />} disabled={list.length === 0} onClick={() => void exportDriversCsv(list, names.city, contact.masked)}>
-          Exporter
-        </Button>
+        can('exports.run') ? (
+          <Button variant="secondary" leftIcon={<Download />} disabled={list.length === 0} onClick={() => void runExport(list)}>
+            Exporter
+          </Button>
+        ) : undefined
       }
     >
       <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">

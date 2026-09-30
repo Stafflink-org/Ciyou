@@ -17,6 +17,7 @@ import {
 } from '@golink/shared';
 import { callable } from '../../lib/callable';
 import { db, FieldValue, storage, Timestamp } from '../../lib/admin';
+import { actorFromCaller, writeAudit } from '../../lib/audit';
 import { fail } from '../../lib/errors';
 import { requireAdmin, requireAuth } from '../../lib/permissions';
 import { EMAIL_SECRETS } from '../../lib/secrets';
@@ -475,7 +476,11 @@ export const bulkUpdateDrivers = opsCallable(
   async (data, request): Promise<BulkResult> => {
     const permission = data.action === 'message' ? 'drivers.view' : data.action === 'activate' || data.action === 'deactivate' ? 'drivers.sanction' : 'drivers.edit';
     const { caller, admin } = await requireAdmin(request, permission);
-    if (data.driverIds.length > 1 && !admin.permissions.includes('drivers.bulk') && admin.role !== 'super_admin' && data.action !== 'message') {
+    // Cahier §6 « Actions groupées » (cdc-fix-residuals-3) : le message groupé échappait au
+    // contrôle `drivers.bulk` (seul `drivers.view` était exigé) — un profil en lecture seule
+    // pouvait notifier jusqu'à 300 livreurs. Corrigé : même contrôle que les autres actions
+    // groupées dès plus d'un destinataire.
+    if (data.driverIds.length > 1 && !admin.permissions.includes('drivers.bulk') && admin.role !== 'super_admin') {
       throw fail.forbidden('Les actions groupées sur les livreurs ne font pas partie de vos droits.');
     }
     if (data.action === 'message' && !data.message) throw fail.invalid('Rédigez le message à envoyer.');
@@ -539,6 +544,32 @@ export const bulkUpdateDrivers = opsCallable(
       }
     }
     return result;
+  },
+);
+
+/**
+ * Trace au journal d'audit l'export CSV des livreurs (cahier §6 « Actions groupées ») :
+ * l'export lui-même reste généré côté navigateur (`exportDriversCsv`, colonnes déjà
+ * masquées selon le rôle), mais jusqu'ici aucun droit ni aucune trace n'étaient exigés
+ * pour une liste contenant des données personnelles — corrigé (cdc-fix-residuals-3).
+ * Le bouton d'export n'est affiché côté client que si l'appelant a `exports.run`
+ * (voir `apps/admin/src/features/livreurs/DriversPage.tsx`) ; ce contrôle est
+ * revérifié ici côté serveur.
+ */
+export const auditDriversExport = opsCallable(
+  z.object({ driverIds: z.array(zId).min(1).max(2000), reason: zReason }),
+  async (data, request) => {
+    const { caller } = await requireAdmin(request, 'exports.run');
+    await writeAudit({
+      actor: actorFromCaller(caller, 'admin'),
+      action: 'driver.export',
+      target: { type: 'other', id: `drivers-export-${Date.now()}`, label: `Export CSV livreurs (${data.driverIds.length})` },
+      reason: data.reason,
+      after: { count: data.driverIds.length, driverIds: data.driverIds.slice(0, 50) },
+      sensitive: true,
+      request,
+    });
+    return { ok: true as const };
   },
 );
 

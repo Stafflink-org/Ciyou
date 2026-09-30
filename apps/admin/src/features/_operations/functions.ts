@@ -40,6 +40,7 @@ export const fn = {
   decideSanctionContest: callFunction<DecideSanctionContestInput, { status: string }>('decideSanctionContest'),
   getDriverFile: callFunction<{ path: string }, { contentType: string; dataBase64: string; name: string }>('getDriverFile'),
   bulkUpdateDrivers: callFunction<BulkUpdateDriversInput, BulkResult>('bulkUpdateDrivers'),
+  auditDriversExport: callFunction<{ driverIds: string[]; reason: string }, { ok: true }>('auditDriversExport'),
   dispatchOrder: callFunction<AdminDispatchOrderInput, AdminDispatchOrderResult>('dispatchOrder'),
   previewDispatch: callFunction<{ orderId: string }, { rules: DispatchRules; candidates: DispatchCandidate[] }>('previewDispatch'),
   updateDispatchRules: callFunction<UpdateDispatchRulesInput, { rules: DispatchRules }>('updateDispatchRules'),

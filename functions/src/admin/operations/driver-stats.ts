@@ -26,10 +26,14 @@ function empty(): Accumulator {
   return { deliveries: 0, cancellations: 0, assigned: 0, onTime: 0, deliveryMinutesTotal: 0, deliveryMinutesCount: 0, offered: 0, accepted: 0 };
 }
 
-/** Recalcule `drivers.stats` de tous les livreurs actifs (§6) sur une fenêtre glissante de 30 jours. */
-export const computeDriverStats = onSchedule(
-  { schedule: '15 3 * * *', timeZone: TIMEZONE, ...OPS_SCHEDULE_RUNTIME, timeoutSeconds: 300, memory: '512MiB' },
-  async () => {
+/**
+ * Recalcule `drivers.stats` de tous les livreurs actifs (§6) sur une fenêtre glissante de 30 jours.
+ * Exportée séparément du déclencheur planifié pour permettre un test réel direct
+ * (cdc-fix-residuals-3 : la tâche planifiée échouait chaque nuit depuis le 28/09,
+ * index composite `orders` (fulfillment + createdAt) manquant, jamais créé).
+ */
+export async function runDriverStatsCompute(): Promise<{ drivers: number; windowDays: number }> {
+  {
     const since = Timestamp.fromMillis(Date.now() - WINDOW_DAYS * 86_400_000);
     const byDriver = new Map<string, Accumulator>();
     const get = (id: string) => byDriver.get(id) ?? (byDriver.set(id, empty()), byDriver.get(id)!);
@@ -100,5 +104,13 @@ export const computeDriverStats = onSchedule(
     }
     if (pending) await batch.commit();
     logger.info('Statistiques livreurs recalculées', { drivers: updated, windowDays: WINDOW_DAYS });
+    return { drivers: updated, windowDays: WINDOW_DAYS };
+  }
+}
+
+export const computeDriverStats = onSchedule(
+  { schedule: '15 3 * * *', timeZone: TIMEZONE, ...OPS_SCHEDULE_RUNTIME, timeoutSeconds: 300, memory: '512MiB' },
+  async () => {
+    await runDriverStatsCompute();
   },
 );
