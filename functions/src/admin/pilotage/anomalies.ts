@@ -252,7 +252,9 @@ async function servicesDown(): Promise<Candidate[]> {
   });
 }
 
-async function todoQueue(settings: Awaited<ReturnType<typeof loadMonitoringSettings>>, today: string): Promise<Candidate[]> {
+// Exportée uniquement pour être exercée directement par un script de test réel
+// (scripts/tests/cdc-fix-residuals-1.flow.mjs) sans attendre le déclencheur planifié.
+export async function todoQueue(settings: Awaited<ReturnType<typeof loadMonitoringSettings>>, today: string): Promise<Candidate[]> {
   const out: Candidate[] = [];
   const [restaurants, drivers, subscriptions, docsExpired, docsOutdated, tickets, reports, gdpr, payouts] = await Promise.all([
     db.collection(COLLECTIONS.restaurants).where('onboardingStatus', 'in', ['pending', 'documents_missing']).get(),
@@ -401,7 +403,7 @@ async function todoQueue(settings: Awaited<ReturnType<typeof loadMonitoringSetti
     const p = doc.data() as Payout;
     out.push({
       kind: 'payout_failed',
-      queue: 'alert',
+      queue: 'todo',
       severity: 'critical',
       title: `Reversement en échec : ${p.beneficiaryName}`,
       message: `${(p.netCents / 100).toFixed(2).replace('.', ',')} € non versés (période du ${p.periodStart.split('-').reverse().join('/')} au ${p.periodEnd.split('-').reverse().join('/')}).`,
