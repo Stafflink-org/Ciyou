@@ -28,7 +28,8 @@
     "i18n:translate": "node scripts/i18n-translate.mjs",
     "build:functions": "npm --prefix functions run build",
     "dev:site": "npm run dev -w @golink/site",
-    "build:site": "npm run build -w @golink/site"
+    "build:site": "npm run build -w @golink/site",
+    "odoo:setup-ciyou-crm": "node scripts/odoo/setup-ciyou-crm-view.mjs"
   },
   "devDependencies": {
     "@google-cloud/firestore": "^7.11.6",

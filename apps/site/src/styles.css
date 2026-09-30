@@ -113,9 +113,11 @@ label { display: grid; gap: 8px; color: #f8fbf8; font-size: 14px; font-weight: 7
 input, textarea { width: 100%; border: 1px solid rgb(255 255 255 / 0.24); background: rgb(7 28 32 / 0.92); color: #f8fbf8; border-radius: 16px; outline: none; padding: 14px 15px; transition: border-color .18s ease, box-shadow .18s ease, background .18s ease; }
 input::placeholder, textarea::placeholder { color: rgb(238 247 244 / 0.44); }
 input:focus, textarea:focus { border-color: rgb(244 122 77 / 0.82); box-shadow: 0 0 0 4px rgb(244 122 77 / 0.16); background: rgb(7 28 32 / 0.98); }
+input[aria-invalid="true"] { border-color: rgb(255 121 91 / 0.82); }
+.field-error { color: #ffd5c9; font-size: 12px; font-weight: 700; }
 textarea { resize: vertical; min-height: 132px; }
 .submit { border: 0; min-height: 56px; border-radius: 18px; color: #251006; background: linear-gradient(135deg, #ff9a72, var(--ciyou)); font-weight: 950; cursor: pointer; box-shadow: 0 16px 42px rgb(244 122 77 / 0.24); }
-.submit:disabled { opacity: .72; cursor: wait; }
+.submit:disabled { opacity: .48; cursor: not-allowed; box-shadow: none; }
 .form-message { margin: -4px 0 0; padding: 12px 14px; border-radius: 14px; font-weight: 750; font-size: 14px; }
 .form-message.success { color: #c7f6e3; background: rgb(48 174 124 / 0.18); border: 1px solid rgb(112 224 176 / 0.24); }
 .form-message.error { color: #ffd5c9; background: rgb(255 95 80 / 0.16); border: 1px solid rgb(255 121 91 / 0.28); }

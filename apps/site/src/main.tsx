@@ -1,6 +1,6 @@
 import { StrictMode, useState, type FormEvent } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ArrowRight, Building2, CheckCircle2, Clock3, Mail, MapPin, ShieldCheck, Store, Wrench } from 'lucide-react';
+import { ArrowRight, Building2, CheckCircle2, Clock3, Mail, ShieldCheck, Store, Wrench } from 'lucide-react';
 import { Logo } from '@golink/ui';
 import './styles.css';
 
@@ -11,7 +11,6 @@ interface LeadPayload {
   businessName: string;
   email: string;
   phone: string;
-  city: string;
   message: string;
 }
 
@@ -20,7 +19,6 @@ const initialForm: LeadPayload = {
   businessName: '',
   email: '',
   phone: '',
-  city: '',
   message: '',
 };
 
@@ -29,25 +27,34 @@ function App() {
   const [state, setState] = useState<SubmitState>('idle');
 
   const update = (field: keyof LeadPayload, value: string) => {
-    setForm((current) => ({ ...current, [field]: value }));
+    const nextValue = field === 'phone' ? value.replace(/\D/g, '').slice(0, 10) : value;
+    setForm((current) => ({ ...current, [field]: nextValue }));
     if (state !== 'idle') setState('idle');
   };
 
+  const cleanedForm = {
+    fullName: form.fullName.trim(),
+    businessName: form.businessName.trim(),
+    email: form.email.trim().toLowerCase(),
+    phone: form.phone.trim(),
+    message: form.message.trim(),
+  };
+  const isValidEmail = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(cleanedForm.email);
+  const isValidPhone = /^\d{10}$/.test(cleanedForm.phone);
+  const isFormValid = Boolean(cleanedForm.fullName && cleanedForm.businessName && isValidEmail && isValidPhone);
+
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!isFormValid) {
+      setState('error');
+      return;
+    }
     setState('submitting');
     try {
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fullName: form.fullName.trim(),
-          businessName: form.businessName.trim(),
-          email: form.email.trim().toLowerCase(),
-          phone: form.phone.trim(),
-          city: form.city.trim(),
-          message: form.message.trim(),
-        }),
+        body: JSON.stringify(cleanedForm),
       });
       if (!response.ok) throw new Error('contact_failed');
       setForm(initialForm);
@@ -135,7 +142,6 @@ function App() {
           </p>
           <div className="info-list">
             <span><Building2 size={18} /> Restaurants</span>
-            <span><MapPin size={18} /> Déploiement progressif par ville</span>
           </div>
         </div>
 
@@ -153,26 +159,24 @@ function App() {
           <div className="field-grid">
             <label>
               E-mail professionnel *
-              <input type="email" value={form.email} onChange={(e) => update('email', e.target.value)} required maxLength={160} autoComplete="email" />
+              <input type="email" value={form.email} onChange={(e) => update('email', e.target.value)} required maxLength={160} autoComplete="email" aria-invalid={form.email.length > 0 && !isValidEmail} />
+              {form.email.length > 0 && !isValidEmail && <span className="field-error">Entrez une adresse e-mail valide.</span>}
             </label>
             <label>
               Téléphone *
-              <input value={form.phone} onChange={(e) => update('phone', e.target.value)} required maxLength={40} autoComplete="tel" />
+              <input value={form.phone} onChange={(e) => update('phone', e.target.value)} required inputMode="numeric" pattern="\d{10}" minLength={10} maxLength={10} autoComplete="tel" placeholder="10 chiffres" aria-invalid={form.phone.length > 0 && !isValidPhone} />
+              {form.phone.length > 0 && !isValidPhone && <span className="field-error">Le numéro doit contenir exactement 10 chiffres.</span>}
             </label>
           </div>
-          <label>
-            Ville *
-            <input value={form.city} onChange={(e) => update('city', e.target.value)} required maxLength={90} autoComplete="address-level2" />
-          </label>
           <label>
             Message
             <textarea value={form.message} onChange={(e) => update('message', e.target.value)} maxLength={1200} rows={5} placeholder="Présentez votre activité, vos besoins ou la date souhaitée pour être rappelé." />
           </label>
-          <button className="submit" type="submit" disabled={state === 'submitting'}>
+          <button className="submit" type="submit" disabled={state === 'submitting' || !isFormValid}>
             {state === 'submitting' ? 'Envoi en cours…' : 'Envoyer ma demande'}
           </button>
           {state === 'success' && <p className="form-message success">Votre demande a bien été envoyée. Nous vous contacterons prochainement.</p>}
-          {state === 'error' && <p className="form-message error">L’envoi n’a pas abouti. Réessayez dans quelques instants.</p>}
+          {state === 'error' && <p className="form-message error">Vérifiez les informations saisies ou réessayez dans quelques instants.</p>}
         </form>
       </section>
     </main>
