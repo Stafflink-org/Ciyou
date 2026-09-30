@@ -23,6 +23,7 @@
   },
   "actions": {
     "settings": "Véhicule, distance et documents",
+    "support": "Contacter le support",
     "signOut": "Se déconnecter"
   },
   "sanction": {

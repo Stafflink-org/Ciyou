@@ -9,7 +9,9 @@
   },
   "screenTitles": {
     "orderDetail": "Delivery detail",
-    "profileSettings": "Profile settings"
+    "profileSettings": "Profile settings",
+    "support": "Support",
+    "ticketDetail": "My request"
   },
   "language": {
     "label": "Language",
