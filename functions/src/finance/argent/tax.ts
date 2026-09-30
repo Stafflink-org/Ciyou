@@ -17,6 +17,7 @@ import {
   type LedgerEntry,
   type OrderFinancials,
   type Payout,
+  type Refund,
   type Restaurant,
   type RestaurantLegal,
   type TaxReport,
@@ -32,10 +33,11 @@ import { ARGENT_HEAVY_RUNTIME, argentCallable } from './runtime';
 
 const zCountry = z.string().trim().length(2).toUpperCase();
 
-async function runDac7(countryId: string, year: number): Promise<{ lines: Dac7Line[]; totals: { grossCents: number; feesCents: number; vatCents: number } }> {
+/** Exportée pour un test réel direct (cdc-fix-residuals-3 : déduction des remboursements). */
+export async function runDac7(countryId: string, year: number): Promise<{ lines: Dac7Line[]; totals: { grossCents: number; feesCents: number; vatCents: number } }> {
   const { start, end } = rangeBounds(`${year}-01-01`, `${year}-12-31`);
   const finSnap = await db.collection(COLLECTIONS.orderFinancials).where('deliveredAt', '>=', Timestamp.fromDate(start)).where('deliveredAt', '<', Timestamp.fromDate(end)).get();
-  const byRestaurant = new Map<string, Array<{ paidAt: Date; grossCents: number; feesCents: number }>>();
+  const byRestaurant = new Map<string, Array<{ paidAt: Date; grossCents: number; feesCents: number; countsAsTransaction?: boolean }>>();
   for (const doc of finSnap.docs) {
     const fin = doc.data() as OrderFinancials;
     if (fin.countryId !== countryId || !fin.deliveredAt) continue;
@@ -43,6 +45,16 @@ async function runDac7(countryId: string, year: number): Promise<{ lines: Dac7Li
     // Contrepartie versée au vendeur : prix des articles après remises qu'il finance ; frais = commission TTC + frais de paiement.
     const tx = { paidAt: fin.deliveredAt.toDate(), grossCents: r.grossCents - r.discountFundedCents + r.deliveryFeeCents, feesCents: r.commissionTtcCents + r.paymentFeeCents };
     byRestaurant.set(fin.restaurantId, [...(byRestaurant.get(fin.restaurantId) ?? []), tx]);
+  }
+  // Remboursements traités dans l'année, imputés au commerce (§16 « Déclarations » — corrigé,
+  // cdc-fix-residuals-3) : réduisent le montant déclaré sans compter comme une vente de plus.
+  const refundSnap = await db.collection(COLLECTIONS.refunds).where('status', '==', 'processed').where('processedAt', '>=', Timestamp.fromDate(start)).where('processedAt', '<', Timestamp.fromDate(end)).get();
+  for (const doc of refundSnap.docs) {
+    const refund = doc.data() as Refund;
+    const restaurantCents = refund.allocation?.restaurantCents ?? 0;
+    if (restaurantCents <= 0 || !refund.processedAt) continue;
+    if (!byRestaurant.has(refund.restaurantId)) continue; // Restaurant hors périmètre pays (pas de vente déclarée cette année).
+    byRestaurant.get(refund.restaurantId)!.push({ paidAt: refund.processedAt.toDate(), grossCents: -restaurantCents, feesCents: 0, countsAsTransaction: false });
   }
   const lines: Dac7Line[] = [];
   for (const part of chunk([...byRestaurant.keys()], 100)) {
