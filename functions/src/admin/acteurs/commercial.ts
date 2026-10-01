@@ -404,9 +404,16 @@ export const saveRestaurantGroup = acteursCallable(groupSchema, async (data, req
   removed.forEach((id) => batch.update(db.collection(COLLECTIONS.restaurants).doc(id), { groupId: null, updatedAt: now, updatedBy: caller.uid }));
   await batch.commit();
 
-  // Conditions communes : formule et commission appliquées à chaque établissement.
-  if (commercialChanged && (data.planCode || data.commissionBps != null)) {
-    for (const r of restaurants) {
+  // Conditions communes : formule et commission appliquées à chaque établissement. Si les
+  // conditions du groupe changent, tout le groupe les reçoit ; sinon (conditions inchangées),
+  // seuls les établissements nouvellement ajoutés en ont besoin — avant ce correctif, un
+  // établissement ajouté à un groupe dont les conditions n'avaient pas changé par rapport au
+  // dernier appel n'héritait jamais des conditions communes (gardait ses conditions
+  // individuelles antérieures, silencieusement).
+  const addedIds = new Set(restaurants.map((r) => r.id).filter((id) => !(existing?.restaurantIds ?? []).includes(id)));
+  const commercialTargets = commercialChanged ? restaurants : restaurants.filter((r) => addedIds.has(r.id));
+  if (commercialTargets.length > 0 && (data.planCode || data.commissionBps != null)) {
+    for (const r of commercialTargets) {
       await applyCommercialPatch(
         caller,
         r,
