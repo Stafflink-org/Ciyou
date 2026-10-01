@@ -17,7 +17,7 @@ export function useActiveOrders() {
     const base = collection(db, COLLECTIONS.orders);
     const statuses = where('status', 'in', [...ACTIVE_ORDER_STATUSES, 'scheduled']);
     if (ids && ids.length === 0) return null;
-    if (ids) return query(base, ids.length === 1 ? where('cityId', '==', ids[0]) : where('cityId', 'in', ids.slice(0, 4)), statuses, limit(1000));
+    if (ids) return query(base, ids.length === 1 ? where('cityId', '==', ids[0]) : where('cityId', 'in', ids.slice(0, 10)), statuses, limit(1000));
     return query(base, statuses, limit(1000));
   }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
   return useCollection<Order>(q);
