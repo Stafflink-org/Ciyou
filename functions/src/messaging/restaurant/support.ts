@@ -5,6 +5,7 @@ import {
   SETTINGS_DOCS,
   SUBCOLLECTIONS,
   formatTicketNumber,
+  type HelpArticle,
   type Order,
   type StoredFile,
   type SupportSettings,
@@ -17,7 +18,7 @@ import { db, FieldValue, Timestamp } from '../../lib/admin';
 import { actorFromCaller, writeAudit } from '../../lib/audit';
 import { callable } from '../../lib/callable';
 import { fail } from '../../lib/errors';
-import { requireRestaurantAccess } from '../../lib/permissions';
+import { requireAuth, requireRestaurantAccess } from '../../lib/permissions';
 import { z, zId } from '../../lib/validation';
 import { actorDisplayName, loadRestaurant } from '../../marketing/restaurant/helpers';
 
@@ -267,5 +268,27 @@ export const updateSupportTicket = callable(
       request,
     });
     return { status };
+  },
+);
+
+// ------------------------------------------------------------------ Centre d'aide
+
+/**
+ * Statistiques d'un article du centre d'aide (vues, « utile » / « pas utile ») : les règles
+ * Firestore (`platform.rules`) interdisent toute écriture directe de ces 3 champs, même par un
+ * admin — seule cette fonction (SDK Admin) peut les incrémenter. Ouvert à tout utilisateur connecté
+ * (pas seulement le personnel restaurant) : seul `apps/restaurant` consomme le centre d'aide
+ * aujourd'hui, mais l'action elle-même n'a rien de spécifique à ce rôle.
+ */
+export const recordHelpArticleFeedback = callable(
+  z.object({ articleId: zId, action: z.enum(['view', 'helpful_yes', 'helpful_no']) }),
+  async (data, request) => {
+    requireAuth(request);
+    const field = data.action === 'view' ? 'views' : data.action === 'helpful_yes' ? 'helpfulYes' : 'helpfulNo';
+    const ref = db.collection(COLLECTIONS.helpArticles).doc(data.articleId);
+    const article = (await ref.get()).data() as HelpArticle | undefined;
+    if (!article?.published) throw fail.notFound('Article');
+    await ref.update({ [field]: FieldValue.increment(1) });
+    return { ok: true as const };
   },
 );

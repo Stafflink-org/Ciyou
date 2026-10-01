@@ -85,6 +85,7 @@ export const replyToSupportTicket = callFunction<
   { messageId: string; status?: SupportTicket['status'] }
 >('replyToSupportTicket');
 export const updateSupportTicket = callFunction<{ ticketId: string; action: 'close' | 'reopen' }, { status: SupportTicket['status'] }>('updateSupportTicket');
+export const recordHelpArticleFeedback = callFunction<{ articleId: string; action: 'view' | 'helpful_yes' | 'helpful_no' }, { ok: true }>('recordHelpArticleFeedback');
 
 export async function uploadTicketFiles(ticketId: string, files: File[]): Promise<TicketAttachmentInput[]> {
   const out: TicketAttachmentInput[] = [];
