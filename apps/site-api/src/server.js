@@ -66,10 +66,6 @@ function validate(input) {
   return lead;
 }
 
-function escapeHtml(text) {
-  return text.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
-}
-
 async function createOdooClient() {
   const url = env('ODOO_URL').replace(/\/$/, '');
   const db = env('ODOO_DB', env('ODOO_DATABASE'));
@@ -105,24 +101,25 @@ async function ensureCompany(client) {
   return companyId;
 }
 
-async function createLead(lead) {
+async function createProspect(lead) {
   const client = await createOdooClient();
   const companyId = await ensureCompany(client);
   const context = { allowed_company_ids: [companyId], mail_create_nosubscribe: true, mail_create_nolog: true };
-  const description = lead.message ? escapeHtml(lead.message).replace(/\n/g, '<br>') : '';
+  const userId = positiveId(process.env.ODOO_CIYOU_USER_ID || process.env.ODOO_STAFFLINK_USER_ID) || client.uid;
 
   const values = {
-    name: lead.restaurantName,
-    partner_name: lead.restaurantName,
-    contact_name: lead.fullName,
-    email_from: lead.email,
-    phone: lead.phone,
-    company_id: companyId,
+    x_full_name: lead.fullName,
+    x_restaurant_name: lead.restaurantName,
+    x_email: lead.email,
+    x_phone: lead.phone,
+    x_message: lead.message || false,
+    x_source: 'ciyou.io',
+    x_company_id: companyId,
+    x_user_id: userId,
   };
-  if (description) values.description = description;
 
-  const id = await client.rpc('object', 'execute_kw', [client.db, client.uid, client.credential, 'crm.lead', 'create', [values], { context }]);
-  if (!Number.isInteger(id) || id <= 0) throw new Error('odoo_invalid_lead_id');
+  const id = await client.rpc('object', 'execute_kw', [client.db, client.uid, client.credential, 'x_ciyou_prospect', 'create', [values], { context }]);
+  if (!Number.isInteger(id) || id <= 0) throw new Error('odoo_invalid_prospect_id');
   return id;
 }
 
@@ -133,8 +130,8 @@ const server = http.createServer(async (req, res) => {
     if (req.method !== 'POST' || req.url !== '/api/contact') return json(res, 404, { ok: false });
     const raw = await readBody(req);
     const lead = validate(JSON.parse(raw || '{}'));
-    const leadId = await createLead(lead);
-    return json(res, 200, { ok: true, leadId });
+    const prospectId = await createProspect(lead);
+    return json(res, 200, { ok: true, prospectId });
   } catch (error) {
     const status = Number(error?.status) || 503;
     if (status >= 500) console.error('Ciyou contact submission failed');
