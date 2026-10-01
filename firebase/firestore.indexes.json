@@ -2527,6 +2527,20 @@
       ]
     },
     {
+      "collectionGroup": "impersonationSessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "endedAt",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "expiresAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "legalAcceptances",
       "queryScope": "COLLECTION",
       "fields": [

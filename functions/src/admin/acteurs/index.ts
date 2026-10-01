@@ -4,7 +4,7 @@ export { liftExpiredSuspensions, reactivateRestaurant, suspendRestaurant } from 
 export { adminUpdateRestaurant, saveRestaurantGroup, updateCommercialTerms } from './commercial';
 export { bulkRestaurantAction } from './bulk';
 export { importRestaurants } from './import';
-export { endImpersonation, startImpersonation } from './impersonation';
+export { closeExpiredImpersonations, endImpersonation, startImpersonation } from './impersonation';
 export { computeRestaurantScores, refreshRestaurantScores } from './quality';
 export { fixRestaurantProduct, resolveMenuIssue } from './menu-fixes';
 export { auditCustomersExport, blockCustomer, creditCustomer, deleteCustomerAccount } from './customers';
