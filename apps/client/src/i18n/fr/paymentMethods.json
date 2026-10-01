@@ -1,7 +1,13 @@
 {
   "title": "Modes de paiement",
-  "description": "Espèces toujours possibles à la livraison ou au retrait selon le commerce. Le paiement par carte à la commande n'est pas encore branché dans cette version (aucun formulaire de saisie bancaire) : vos cartes enregistrées, s'il y en a, sont listées ici en lecture seule.",
+  "description": "Espèces toujours possibles à la livraison ou au retrait selon le commerce. Vos cartes enregistrées sont listées ci-dessous, utilisables au moment de payer une commande.",
   "empty": "Aucune carte enregistrée.",
   "expires": "Expire {{month}}/{{year}}",
-  "default": "Par défaut"
+  "default": "Par défaut",
+  "addCard": "Ajouter une carte",
+  "cardFieldLabel": "Carte bancaire",
+  "cancel": "Annuler",
+  "save": "Enregistrer",
+  "cardAddedToast": "Carte enregistrée.",
+  "genericError": "Impossible d'enregistrer la carte. Réessayez."
 }

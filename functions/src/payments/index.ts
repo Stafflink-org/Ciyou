@@ -1,4 +1,4 @@
-// Paiements : Stripe Connect des restaurants et webhooks Stripe.
+// Paiements : Stripe Connect des restaurants, moyens de paiement enregistrés du client, webhooks.
 export {
   createConnectAccount,
   createConnectAccountLink,
@@ -6,4 +6,5 @@ export {
   refreshConnectAccountStatus,
 } from './connect';
 export { createDriverConnectAccount, createDriverConnectAccountLink, refreshDriverConnectAccountStatus } from './driver-connect';
+export { createSetupIntent, savePaymentMethod } from './cards';
 export { stripeWebhook } from './webhook';

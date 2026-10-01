@@ -9,7 +9,7 @@ import { colors, radius } from '../../../theme/tokens';
 import type { CardPayment } from './types';
 
 export function useCardPayment(): CardPayment {
-  const { createPaymentMethod, handleNextAction } = useStripe();
+  const { createPaymentMethod, handleNextAction, confirmSetupIntent } = useStripe();
   return {
     createCardPaymentMethod: useCallback(async () => {
       const { paymentMethod, error } = await createPaymentMethod({ paymentMethodType: 'Card' });
@@ -23,6 +23,14 @@ export function useCardPayment(): CardPayment {
         return { status: paymentIntent?.status };
       },
       [handleNextAction],
+    ),
+    confirmCardSetup: useCallback(
+      async (clientSecret: string) => {
+        const { setupIntent, error } = await confirmSetupIntent(clientSecret, { paymentMethodType: 'Card' });
+        if (error || !setupIntent) return { error: error?.message ?? 'Carte refusée.' };
+        return { id: setupIntent.id };
+      },
+      [confirmSetupIntent],
     ),
   };
 }
