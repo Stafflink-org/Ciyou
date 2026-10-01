@@ -8,7 +8,6 @@ import {
   DEFAULT_PLANS,
   FEATURE_LABELS,
   FULFILLMENT_MODES,
-  PAYMENT_METHODS,
   RESTAURANT_PRIVATE_DOCS,
   RESTAURANT_SETTINGS_DOCS,
   SETTINGS_DOCS,
@@ -82,6 +81,10 @@ function closureText(closure: { message: { fr?: string; en?: string; ar?: string
   return text && text.trim() ? text : null;
 }
 
+// Moyens de paiement qu'un client peut réellement choisir : `wallet` est délibérément exclu,
+// voir le commentaire sur le schéma plus bas.
+const CLIENT_PAYMENT_METHODS = ['card', 'apple_pay', 'google_pay', 'cash', 'meal_voucher'] as const;
+
 const schema = z.object({
   restaurantId: zId,
   fulfillment: z.enum(FULFILLMENT_MODES),
@@ -102,7 +105,10 @@ const schema = z.object({
     .min(1, 'Votre panier est vide.')
     .max(40),
   addressId: zId.nullish(),
-  paymentMethod: z.enum(PAYMENT_METHODS),
+  // `wallet` est exclu volontairement : ce n'est jamais un moyen de paiement choisi par le
+  // client, mais une désignation calculée côté serveur (plus bas, à partir du solde réel
+  // d'avoirs) — l'accepter ici permettrait un contournement total du paiement (voir plus bas).
+  paymentMethod: z.enum(CLIENT_PAYMENT_METHODS),
   paymentMethodId: z.string().trim().max(120).nullish(),
   promoCode: z.string().trim().toUpperCase().max(24).nullish(),
   /** Régler tout ou partie de la commande avec le solde d'avoirs Ciyou Eats du client. */
