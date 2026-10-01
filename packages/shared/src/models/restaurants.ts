@@ -141,6 +141,9 @@ export interface Restaurant extends Tracked, SoftDeletable, Localized {
   /** Dossier d'inscription : pièces demandées et motif du refus (envoyés au restaurant). */
   missingDocuments?: PartnerDocumentType[];
   rejectionReason?: string | null;
+  /** Relance automatique d'un dossier resté bloqué sans qu'aucune pièce obligatoire n'ait jamais été déposée (compteur de seuils franchis, plafonné). */
+  onboardingRemindersSent?: number;
+  onboardingLastReminderAt?: Timestamp | null;
   /** Dernier examen automatique du dossier et jour de la validation automatique (plafond quotidien). */
   autoValidation?: import('./automations').MerchantAutoValidation | null;
   autoValidatedDay?: string | null;

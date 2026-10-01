@@ -542,3 +542,55 @@ export const runDocumentExpiryNow = acteursCallable(
   { secrets: EMAIL_SECRETS, timeoutSeconds: 300 },
 );
 
+// ------------------------------------------------------------------ Dossiers bloqués sans aucune pièce déposée
+
+/** Jours depuis l'inscription sans qu'une pièce obligatoire n'ait jamais été déposée. */
+const STUCK_ONBOARDING_REMINDER_DAYS = [3, 7, 14] as const;
+
+/**
+ * `runDocumentExpiryCheck` ne relance que les pièces déjà approuvées proches de l'expiration :
+ * un dossier resté en attente (`pending`/`documents_missing`) sans qu'aucune pièce obligatoire
+ * n'ait jamais été déposée pour un type donné n'a aucune entrée dans `partnerDocuments` pour ce
+ * type et n'est donc jamais inclus dans ce contrôle — il peut rester bloqué indéfiniment sans
+ * relance ni alerte. Relancé ici, mêmes seuils que les autres relances documentaires, plafonné
+ * par un compteur sur le restaurant (pas de document à incrémenter puisqu'aucun n'existe).
+ */
+export async function runStuckOnboardingReminderCheck(): Promise<{ checked: number; reminded: number }> {
+  const today = parisDay();
+  const snap = await db.collection(COLLECTIONS.restaurants).where('onboardingStatus', 'in', ['pending', 'documents_missing']).get();
+  const report = { checked: 0, reminded: 0 };
+  for (const doc of snap.docs) {
+    const restaurant = doc.data() as Restaurant;
+    if (restaurant.deletedAt) continue;
+    report.checked += 1;
+    const docs = await restaurantDocuments(doc.id);
+    const neverSubmitted = REQUIRED_RESTAURANT_DOCUMENTS.filter((group) => !docs.some((d) => group.types.includes(d.type)));
+    if (neverSubmitted.length === 0) continue;
+    const daysSince = Math.floor((Date.parse(`${today}T12:00:00Z`) - restaurant.createdAt.toDate().getTime()) / 86_400_000);
+    const due = STUCK_ONBOARDING_REMINDER_DAYS.filter((threshold) => daysSince >= threshold).length;
+    if (due <= (restaurant.onboardingRemindersSent ?? 0)) continue;
+    const labels = neverSubmitted.map((g) => g.label);
+    await notifyRestaurantOwner(
+      { id: doc.id, data: restaurant, ref: doc.ref },
+      {
+        title: 'Dossier d’inscription incomplet',
+        body: labels.join(', '),
+        category: 'document',
+        email: documentsMissingEmail({ restaurantName: restaurant.name, reason: 'Votre dossier d’inscription est toujours incomplet : merci de déposer ces pièces pour pouvoir être validé.', documents: labels }),
+        templateKey: 'restaurant_onboarding_stuck',
+      },
+    );
+    await doc.ref.update({ onboardingRemindersSent: due, onboardingLastReminderAt: FieldValue.serverTimestamp() });
+    report.reminded += 1;
+  }
+  return report;
+}
+
+export const checkStuckOnboarding = onSchedule(
+  { schedule: 'every day 07:00', timeZone: TIMEZONE, ...ACTEURS_SCHEDULE_RUNTIME, secrets: EMAIL_SECRETS },
+  async () => {
+    const report = await runStuckOnboardingReminderCheck();
+    logger.info('Relance des dossiers d’inscription jamais complétés', report);
+  },
+);
+
