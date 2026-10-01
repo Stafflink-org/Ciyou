@@ -16,6 +16,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "rules:build": "node scripts/build-rules.mjs",
     "rules:check": "node scripts/build-rules.mjs --check",
+    "check:mobile": "tsx scripts/tests/check-mobile-native-config.mjs",
     "test:shared": "npm run test -w @golink/shared",
     "deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes,storage",
     "deploy:functions": "firebase deploy --only functions",
