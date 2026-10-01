@@ -46,7 +46,10 @@ match /zones/{zoneId} {
 }
 
 match /surgeRules/{ruleId} {
-  allow read: if isAdmin('zones.edit') || isAdmin('drivers.pay_rules');
+  // Cloisonnement par ville (comme `assertAdminCovers` côté `saveSurgeRule`) : un admin
+  // `city_manager` limité à une ville (qui a justement `zones.edit` par défaut) pouvait sinon
+  // lire directement les règles de majoration tarifaire de n'importe quelle autre ville.
+  allow read: if isAdminIn('zones.edit', resource.data.cityId) || isAdminIn('drivers.pay_rules', resource.data.cityId);
   // Écriture : saveSurgeRule, applySurge (Cloud Functions).
   allow write: if false;
 }

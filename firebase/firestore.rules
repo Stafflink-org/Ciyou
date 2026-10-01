@@ -552,9 +552,13 @@ service cloud.firestore {
     }
 
     match /refunds/{refundId} {
+      // `refunds.create` (seule permission de ce rôle) doit être bornée par ville : un
+      // `city_manager` limité à une ville (qui a `refunds.create` mais ni `refunds.approve` ni
+      // `finance.view`) pouvait sinon lire directement tous les remboursements de la plateforme,
+      // contournant le périmètre déjà appliqué côté Cloud Function (`loadTicketFor`).
       allow read: if isSelf(resource.data.customerId)
         || can(resource.data.restaurantId, 'finance.view')
-        || isAdmin('refunds.create')
+        || isAdminIn('refunds.create', resource.data.cityId)
         || isAdmin('finance.view');
       allow write: if false;
     }
@@ -831,9 +835,17 @@ service cloud.firestore {
     }
 
     // Historique des réglages d'exploitation (règles des commandes, attribution,
-    // rémunération, zones) : lisible par ceux qui peuvent les modifier.
+    // rémunération, zones) : lisible par ceux qui peuvent les modifier. Une entrée scopée à une
+    // ville (`cityId` posé par `writeSettingsHistory`) borne la lecture à cette ville — sans ça, un
+    // admin `city_manager` limité à une ville (qui a `zones.edit` par défaut) pouvait lire
+    // l'historique des réglages (avant/après, motif) de n'importe quelle autre ville. Une entrée
+    // sans ville (réglage plateforme/pays) reste lisible par simple détention de la permission,
+    // comme avant.
     match /settingsHistory/{entryId} {
-      allow read: if isAdmin('order_rules.edit') || isAdmin('zones.edit') || isAdmin('drivers.pay_rules');
+      allow read: if (resource.data.get('cityId', null) == null
+          && (isAdmin('order_rules.edit') || isAdmin('zones.edit') || isAdmin('drivers.pay_rules')))
+        || (resource.data.get('cityId', null) != null
+          && (isAdminIn('order_rules.edit', resource.data.cityId) || isAdminIn('zones.edit', resource.data.cityId) || isAdminIn('drivers.pay_rules', resource.data.cityId)));
     }
 
     // ----- orders.rules
@@ -930,7 +942,10 @@ service cloud.firestore {
     }
 
     match /surgeRules/{ruleId} {
-      allow read: if isAdmin('zones.edit') || isAdmin('drivers.pay_rules');
+      // Cloisonnement par ville (comme `assertAdminCovers` côté `saveSurgeRule`) : un admin
+      // `city_manager` limité à une ville (qui a justement `zones.edit` par défaut) pouvait sinon
+      // lire directement les règles de majoration tarifaire de n'importe quelle autre ville.
+      allow read: if isAdminIn('zones.edit', resource.data.cityId) || isAdminIn('drivers.pay_rules', resource.data.cityId);
       // Écriture : saveSurgeRule, applySurge (Cloud Functions).
       allow write: if false;
     }

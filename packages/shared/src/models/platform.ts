@@ -506,6 +506,8 @@ export interface SettingsHistoryEntry {
   reason?: string | null;
   changedBy: string;
   changedAt: Timestamp;
+  /** Ville concernée, quand le réglage modifié est scopé à une ville (règles Firestore : cloisonne la lecture). */
+  cityId?: string | null;
 }
 
 // ============================================================ Marchés

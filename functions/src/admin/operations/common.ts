@@ -162,6 +162,8 @@ export async function writeSettingsHistory(input: {
   after: Record<string, unknown> | null;
   reason: string | null;
   caller: Caller;
+  /** Ville concernée (réglage scopé à une ville) : borne la lecture aux admins de cette ville (règles Firestore). */
+  cityId?: string | null;
 }): Promise<string[]> {
   const fields = changedFields(input.before, input.after);
   if (fields.length === 0) return fields;
@@ -175,6 +177,7 @@ export async function writeSettingsHistory(input: {
     changedBy: input.caller.uid,
     changedByName: input.caller.name,
     changedAt: FieldValue.serverTimestamp(),
+    cityId: input.cityId ?? null,
   };
   await db.collection(COLLECTIONS.settingsHistory).add(entry);
   return fields;
