@@ -218,6 +218,16 @@ export const onOrderWritten = onDocumentWritten({ document: 'orders/{orderId}', 
   // Commande annulée : l'offre utilisée est libérée et les avoirs Ciyou Eats sont rendus au client.
   if (after?.status === 'cancelled' && before?.status !== 'cancelled') {
     await safely('cancelEffects', event.params.orderId, () => applyCancellationEffects(event.params.orderId, after));
+    // §7 « Indicateurs de risque » (fiche client) : `stats.cancelledCount` était initialisé à 0 à
+    // la création du compte mais jamais incrémenté ensuite — le signal « annulations fréquentes »
+    // ne pouvait donc jamais se déclencher. Le statut `cancelled` est terminal (une commande ne
+    // repasse jamais par un autre statut après), le garde `before?.status !== 'cancelled'` suffit
+    // à éviter un double comptage en cas de rejeu de l'évènement.
+    if (after.customerId) {
+      await safely('customerCancelledCount', event.params.orderId, () =>
+        db.collection(COLLECTIONS.users).doc(after.customerId).update({ 'stats.cancelledCount': FieldValue.increment(1) }),
+      );
+    }
   }
 });
 
