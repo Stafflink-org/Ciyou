@@ -74,6 +74,23 @@ export function driverSanctionEmail(firstName: string, type: SanctionType, reaso
   };
 }
 
+export function driverDocumentExpiringEmail(firstName: string, type: PartnerDocumentType, expiresOn: string, daysLeft: number): EmailMessage {
+  return {
+    subject: `${PARTNER_DOCUMENT_LABELS[type]} : expiration dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''}`,
+    ...renderEmail({
+      preheader: 'Déposez la nouvelle version avant la date d’expiration.',
+      eyebrow: 'Rappel',
+      title: 'Un document arrive à expiration',
+      paragraphs: [
+        `Bonjour ${firstName},`,
+        `Le document « ${PARTNER_DOCUMENT_LABELS[type]} » expire le ${expiresOn}.`,
+        'Déposez une version à jour depuis l’application pour continuer à recevoir des courses.',
+      ],
+      footerReason: footer,
+    }),
+  };
+}
+
 export function driverDocumentExpiredEmail(firstName: string, types: PartnerDocumentType[]): EmailMessage {
   return {
     subject: 'Document expiré : votre compte est en pause',
