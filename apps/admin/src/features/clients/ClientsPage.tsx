@@ -30,7 +30,7 @@ import { toDate, useInfiniteCollection } from '@/lib/firestore';
 import { downloadCsv, todayStamp } from '../acteurs-commun/export';
 import { ErrorPanel, eur, plural } from '../acteurs-commun/ui';
 import { BlockCustomerDialog } from './components/CustomerDialogs';
-import { CUSTOMER_STATUS_META, RISK_META, displayEmail, displayPhone, riskOf, searchToken } from './lib';
+import { CUSTOMER_STATUS_META, RISK_META, auditCustomersExport, displayEmail, displayPhone, riskOf, searchToken } from './lib';
 
 type Row = WithId<UserProfile>;
 type Status = 'all' | 'active' | 'blocked' | 'deleted';
@@ -183,7 +183,19 @@ export function ClientsPage() {
     [full, cityName],
   );
 
-  function exportRows(list: Row[]) {
+  // Cahier §7 « Liste et filtres / export » (cdc-fix-residuals-26) : l'export CSV contient des
+  // données personnelles (e-mail, téléphone non masqués selon le rôle, dépenses, avoirs) mais
+  // n'exigeait aucun droit `exports.run` ni aucune trace au journal d'audit — même défaut déjà
+  // corrigé pour les livreurs (`cdc-fix-residuals-3`), jamais appliqué aux clients. Corrigé : le
+  // bouton n'apparaît plus sans ce droit, et chaque export réel est audité côté serveur avant le
+  // téléchargement.
+  async function exportRows(list: Row[]) {
+    try {
+      await auditCustomersExport({ userIds: list.map((u) => u.id), reason: `Export CSV clients (${list.length} ligne${list.length > 1 ? 's' : ''})` });
+    } catch {
+      toast.error("Vous n'avez pas le droit d'exporter cette liste.");
+      return;
+    }
     downloadCsv(
       {
         name: 'Clients',
@@ -217,7 +229,8 @@ export function ClientsPage() {
     toast.success(`${plural(list.length, 'client exporté', 'clients exportés')}`);
   }
 
-  const bulkActions: DataTableBulkAction<Row>[] = [{ label: 'Exporter', icon: <Download />, onClick: (list) => exportRows(list) }];
+  const bulkActions: DataTableBulkAction<Row>[] = [];
+  if (can('exports.run')) bulkActions.push({ label: 'Exporter', icon: <Download />, onClick: (list) => void exportRows(list) });
   if (can('customers.block')) bulkActions.push({ label: 'Bloquer', icon: <Ban />, destructive: true, onClick: (list, clear) => setBlocking({ rows: list.filter((u) => u.status === 'active'), clear }) });
 
   return (

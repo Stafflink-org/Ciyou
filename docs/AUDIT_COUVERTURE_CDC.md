@@ -589,7 +589,7 @@ Données : 168 comptes `users` dont 150 clients visibles côté finance (`ui-fin
 
 **Trous §7 (priorité proposée)**
 - ✅ **CORRIGÉ (`cdc-fix-residuals-18`, 01/10)** `users.stats.cancelledCount` et `refundsCount` sont désormais réellement incrémentés (`onOrderWritten`, `onRefundProcessed`), testé réel 3/3. Reste P1 : `userPrivate.riskFlags`/`riskScore` toujours muets (`fraud.ts` alimente `fraudCases`, jamais recopié) — décision à prendre (dupliquer, ou faire lire `fraudCases` par l'écran), non traité ce tour.
-- P1 — Export CSV des clients fait dans le navigateur (`ClientsPage.tsx:186`), sans contrôle `exports.run` ni audit (données personnelles ; un seuil d'alerte `massExportRows` existe dans `settings/security`).
+- ✅ **CORRIGÉ ET TESTÉ RÉEL (`cdc-fix-residuals-27`, 01/10)** Export CSV des clients fait dans le navigateur (`ClientsPage.tsx:186`) sans contrôle `exports.run` ni audit — même défaut déjà corrigé une fois pour les livreurs (`cdc-fix-residuals-3`), jamais appliqué aux clients. Nouvelle fonction `auditCustomersExport` (exige `exports.run`, audit sensible `customer.exported`) appelée avant tout téléchargement ; le bouton « Exporter » n'apparaît plus sans ce droit. Testé réel sur `golink-9f16d` (comptes réels `metz@golink.test` refusé 403, `finance@golink.test` accepté + audit vérifié en base) : 4/4 OK. Vérifié aussi par un clic réel dans l'app admin (toast « 1 client exporté », audit confirmé puis supprimé).
 - P2 — Plafond d'avoir et paliers de risque en paramètres ; appliquer la validité par défaut des avoirs ; unifier les deux chemins de crédit ; rembourser ou reporter le solde d'avoir à la suppression.
 
 ---
@@ -2149,7 +2149,7 @@ Principaux trous, par priorité :
 - Export et message groupés : contrôles `exports.run` et `drivers.bulk`, audit de l'export.
 - Aligner le seuil d'alerte de manque de livreurs (un seul paramètre, surcharge ville et zone).
 - ✅ **CORRIGÉ (01/10, `cdc-fix-residuals-18`)** `users.stats.cancelledCount` et `refundsCount` désormais réellement incrémentés (`onOrderWritten`, `onRefundProcessed`), testé réel 3/3. Reste : `userPrivate.riskFlags`/`riskScore` toujours muets (ou lire les `fraudCases`), non traité ce tour.
-- Export CSV des clients fait dans le navigateur (`ClientsPage.tsx:186`), sans contrôle `exports.run` ni audit (données personnelles ; un seuil d'alerte `massExportRows` existe dans `settings/security`).
+- ✅ **CORRIGÉ ET TESTÉ RÉEL (`cdc-fix-residuals-27`, 01/10)** Export CSV des clients fait dans le navigateur (`ClientsPage.tsx:186`), sans contrôle `exports.run` ni audit — corrigé (`auditCustomersExport`), testé réel 4/4 OK, voir §7 pour le détail.
 
 **P2**
 

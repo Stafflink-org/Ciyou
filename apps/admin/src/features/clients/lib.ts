@@ -8,6 +8,7 @@ import { callFunction } from '@/lib/firestore';
 export const creditCustomer = callFunction<CreditCustomerInput, { transactionId: string; balanceAfterCents: number; chargedToRestaurant: boolean }>('creditCustomer');
 export const blockCustomer = callFunction<{ userId: string; blocked: boolean; reason: string }, { status: string; authUpdated: boolean }>('blockCustomer');
 export const deleteCustomerAccount = callFunction<{ userId: string; reason: string }, { authDeleted: boolean; forfeitedCents: number }>('deleteCustomerAccount');
+export const auditCustomersExport = callFunction<{ userIds: string[]; reason: string }, { ok: true }>('auditCustomersExport');
 
 export const CUSTOMER_STATUS_META: Record<string, StatusMeta> = {
   active: { label: 'Actif', tone: 'success' },
