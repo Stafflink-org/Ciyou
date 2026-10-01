@@ -37,7 +37,15 @@
       }
     },
     "plugins": [
-      "./plugins/with-stripe-disable-spm"
+      "./plugins/with-stripe-disable-spm",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "dynamic"
+          }
+        }
+      ]
     ]
   }
 }
