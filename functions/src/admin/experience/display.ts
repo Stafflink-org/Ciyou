@@ -165,22 +165,25 @@ export const bookSponsoredPlacement = experienceCallable(
     const endsAt = Timestamp.fromMillis(startsAt.toMillis() + offer.durationDays * data.periods * DAY);
     const listPrice = offer.priceHtCents * data.periods;
 
-    // Capacité : placements du même emplacement et de la même ville qui chevauchent la période.
-    const overlapping = await db.collection(COLLECTIONS.sponsoredPlacements)
-      .where('cityId', '==', restaurant.cityId).where('slot', '==', offer.slot).where('status', 'in', [...ACTIVE_PLACEMENT, 'pending_payment']).get();
-    const concurrent = overlapping.docs.filter((d) => {
-      const p = d.data() as SponsoredPlacement;
-      if (offer.slot === 'category_top' && p.categoryId !== data.categoryId) return false;
-      return p.startsAt.toMillis() < endsAt.toMillis() && p.endsAt.toMillis() > startsAt.toMillis();
-    });
-    if (concurrent.some((d) => d.get('restaurantId') === data.restaurantId)) throw fail.alreadyExists('Ce commerce est déjà mis en avant sur cet emplacement pendant cette période.');
-    if (concurrent.length >= offer.maxConcurrent) throw fail.precondition(`Emplacement complet sur cette période (${offer.maxConcurrent} commerce${offer.maxConcurrent > 1 ? 's' : ''} au maximum).`);
-
     const ref = db.collection(COLLECTIONS.sponsoredPlacements).doc();
     const commercialRef = restaurantRef.collection(SUBCOLLECTIONS.restaurants.private).doc(RESTAURANT_PRIVATE_DOCS.commercial);
     const at = Timestamp.now();
     const status: SponsoredPlacement['status'] = startsAt.toMillis() <= Date.now() ? 'active' : 'scheduled';
+    const overlapQuery = db.collection(COLLECTIONS.sponsoredPlacements)
+      .where('cityId', '==', restaurant.cityId).where('slot', '==', offer.slot).where('status', 'in', [...ACTIVE_PLACEMENT, 'pending_payment']);
     const adCreditUsed = await db.runTransaction(async (tx) => {
+      // Capacité relue DANS la transaction (pas avant) : sans cela, deux réservations
+      // concurrentes sur le même emplacement/ville/période passaient toutes les deux le
+      // contrôle de capacité avant qu'aucune n'ait écrit, dépassant `maxConcurrent`.
+      const overlapping = await tx.get(overlapQuery);
+      const concurrent = overlapping.docs.filter((d) => {
+        const p = d.data() as SponsoredPlacement;
+        if (offer.slot === 'category_top' && p.categoryId !== data.categoryId) return false;
+        return p.startsAt.toMillis() < endsAt.toMillis() && p.endsAt.toMillis() > startsAt.toMillis();
+      });
+      if (concurrent.some((d) => d.get('restaurantId') === data.restaurantId)) throw fail.alreadyExists('Ce commerce est déjà mis en avant sur cet emplacement pendant cette période.');
+      if (concurrent.length >= offer.maxConcurrent) throw fail.precondition(`Emplacement complet sur cette période (${offer.maxConcurrent} commerce${offer.maxConcurrent > 1 ? 's' : ''} au maximum).`);
+
       let used = 0;
       if (data.billing === 'ad_credit') {
         const commercial = (await tx.get(commercialRef)).data() as RestaurantCommercial | undefined;
