@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { BookOpen, ChevronDown, ChevronRight, Clock, Headphones, Inbox, LifeBuoy, Mail, MessageSquareDot, Phone, Plus, Search } from 'lucide-react';
+import { BookOpen, ChevronDown, ChevronRight, Clock, Headphones, Inbox, LifeBuoy, Mail, MessageSquareDot, Phone, Plus, Search, ThumbsDown, ThumbsUp } from 'lucide-react';
 import {
   Badge,
   Button,
@@ -20,9 +20,9 @@ import {
   formatRelative,
 } from '@golink/ui';
 import { SETTINGS_DOCS, paths, type GeneralSettings, type SupportSettings } from '@golink/shared';
-import { docAt, errorMessage, toDate, toMillis, useDoc } from '@/lib/firestore';
+import { docAt, errorMessage, toDate, toMillis, useDoc, useMutation } from '@/lib/firestore';
 import { NewTicketDialog } from './NewTicketDialog';
-import { PRIORITY_TONE, TICKET_PRIORITY_LABELS, TICKET_STATUS, useHelpArticles, useRestaurantTickets, useTicketReasons } from './lib';
+import { PRIORITY_TONE, TICKET_PRIORITY_LABELS, TICKET_STATUS, recordHelpArticleFeedback, useHelpArticles, useRestaurantTickets, useTicketReasons } from './lib';
 
 type Filter = 'active' | 'all' | 'closed';
 
@@ -211,6 +211,9 @@ function HelpCenter() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [voted, setVoted] = useState<Record<string, 'helpful_yes' | 'helpful_no'>>({});
+  const viewed = useRef<Set<string>>(new Set());
+  const feedback = useMutation(recordHelpArticleFeedback, { errorToast: false });
   const categories = useMemo(() => [...new Set(articles.data.map((a) => a.category))], [articles.data]);
   const list = useMemo(() => {
     const needle = search.trim().toLowerCase();
@@ -252,7 +255,14 @@ function HelpCenter() {
                   <button
                     type="button"
                     aria-expanded={open}
-                    onClick={() => setOpenId(open ? null : a.id)}
+                    onClick={() => {
+                      const next = open ? null : a.id;
+                      setOpenId(next);
+                      if (next && !viewed.current.has(next)) {
+                        viewed.current.add(next);
+                        feedback.mutate({ articleId: next, action: 'view' });
+                      }
+                    }}
                     className="flex w-full items-center gap-3 px-3.5 py-3 text-left text-sm transition-colors hover:bg-surface-2"
                   >
                     <span className="min-w-0 flex-1">
@@ -261,7 +271,42 @@ function HelpCenter() {
                     </span>
                     <ChevronDown className={cn('size-4 shrink-0 text-fg-subtle transition-transform', open && 'rotate-180')} />
                   </button>
-                  {open && <p className="whitespace-pre-line px-3.5 pb-4 text-sm leading-6 text-fg-muted">{a.body.fr}</p>}
+                  {open && (
+                    <div className="px-3.5 pb-4">
+                      <p className="whitespace-pre-line text-sm leading-6 text-fg-muted">{a.body.fr}</p>
+                      {voted[a.id] ? (
+                        <p className="mt-3 text-2xs text-fg-subtle">Merci pour votre retour !</p>
+                      ) : (
+                        <div className="mt-3 flex items-center gap-2">
+                          <span className="text-2xs text-fg-subtle">Cet article vous a-t-il aidé ?</span>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            aria-label="Utile"
+                            onClick={() => {
+                              setVoted((v) => ({ ...v, [a.id]: 'helpful_yes' }));
+                              feedback.mutate({ articleId: a.id, action: 'helpful_yes' });
+                            }}
+                          >
+                            <ThumbsUp className="size-3.5" />
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            aria-label="Pas utile"
+                            onClick={() => {
+                              setVoted((v) => ({ ...v, [a.id]: 'helpful_no' }));
+                              feedback.mutate({ articleId: a.id, action: 'helpful_no' });
+                            }}
+                          >
+                            <ThumbsDown className="size-3.5" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </li>
               );
             })}

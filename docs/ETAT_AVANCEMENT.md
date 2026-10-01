@@ -1,5 +1,19 @@
 # État d'avancement — Ciyou Eats
 
+## §13 Centre d'aide : les compteurs de vues/votes n'avaient aucun producteur — 01/10/2026 (tâche `cdc-fix-residuals-15`)
+
+Suite immédiate de `cdc-fix-residuals-14` (§12/§10), même session de travail continu. Un agent d'exploration a vérifié §13 (Support et litiges) et §16 (Facturation et TVA) : dans §16, tous les défauts PARTIEL documentés sont de vraies décisions produit non tranchées ou des fonctionnalités à construire (catégories de TVA figées, DAC7 sans fichier XML officiel, export comptable manuel…), confirmés réels mais hors périmètre d'un correctif ciblé — rien corrigé là. Dans §13, un vrai défaut à petit périmètre a été trouvé et corrigé, et une mention périmée corrigée au passage (le plafond d'avoir `creditCustomer`, déjà confirmé correct lors de `cdc-fix-residuals-13`, apparaissait encore comme un défaut dans le texte de la ligne « Actions depuis le ticket »).
+
+**Défaut corrigé** : les compteurs `views`/`helpfulYes`/`helpfulNo` du centre d'aide (`helpArticles`) affichaient des statistiques (« 5 655 consultations, 90,5 % jugés utiles ») mais n'avaient en réalité **aucun producteur** — les règles Firestore interdisent même à un admin de les écrire directement (seule une Cloud Function le peut), et aucune fonction ne les incrémentait : les chiffres affichés étaient figés depuis le jeu d'essai initial. Corrigé : nouvelle fonction `recordHelpArticleFeedback` (`functions/src/messaging/restaurant/support.ts`), câblée dans l'écran du centre d'aide restaurant (`apps/restaurant/src/features/support/SupportPage.tsx`) — une vue comptée une fois par article et par session à l'ouverture, deux boutons « utile » / « pas utile » sous le texte déplié.
+
+**Testé réel** : d'abord en navigateur, back-office restaurant réel (compte Lune Coffee), article réel `aide-3` — vue et vote « utile » vérifiés incrémentés en base (584→585 vues, 83→84 votes utiles), compteurs restaurés à leur valeur d'origine après vérification ; puis rejoué par script pour une preuve reproductible (`scripts/tests/cdc-fix-residuals-15.flow.mjs`, 4/4 OK, y compris le rejet d'un article inexistant).
+
+`npx tsc --noEmit` (`functions`, `apps/restaurant`) vert. Fonction déployée : `recordHelpArticleFeedback`.
+
+**Correction de marque séparée (hors cahier, repérée en testant)** : l'écran Support du back-office restaurant affichait encore « support@golink.fr » — `settings/general.platformName` contenait toujours « GoLink » en base (donnée de seed jamais mise à jour après le renommage du produit en code). Corrigé via l'écran réel (motif audité) : `platformName` → « Ciyou Eats ». **Non corrigé, signalé plutôt que deviné** : `legalEntityName` (« GoLink SAS ») et `supportEmail`/`supportPhone` (`support@golink.fr`, numéro de test) restent inchangés — ce sont des informations légales/de contact réelles que je ne peux pas inventer ; à faire renseigner par le client avec les vraies coordonnées Ciyou Eats avant toute mise en production.
+
+**Cahier §13 : aucune ligne ne change de statut** (« Centre d'aide » reste PARTIEL : apps client et livreur toujours sans consommateur, non traité ce tour). Total cahier super admin inchangé : **110 COMPLET / 56 PARTIEL / 0 ABSENT / 0 FAUX** (166 lignes), recompté honnêtement. Détail : `docs/AUDIT_COUVERTURE_CDC.md` §13.
+
 ## §12/§10 : réponses des restaurants aux avis non filtrées, bannière de fermeture d'urgence figée en français — 01/10/2026 (tâche `cdc-fix-residuals-14`)
 
 Suite immédiate de `cdc-fix-residuals-13` (§26), même session de travail continu. Un agent d'exploration a vérifié les défauts documentés de §10 (Zones et villes) et §12 (Avis et notes) ; plusieurs se sont révélés périmés (déjà corrigés par des lots antérieurs — `city.active` bien contrôlé par `placeOrder`), et deux vrais bugs non documentés ou sous-documentés ont été trouvés et corrigés.

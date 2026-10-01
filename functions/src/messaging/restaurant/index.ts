@@ -2,4 +2,4 @@
 export { replyToReview, reportReview } from './reviews';
 export { onConversationMessageCreated, openOrderConversation, sendMessage } from './conversations';
 export { onOrderAutoMessages, onReviewAutoReply } from './auto-messages';
-export { createSupportTicket, replyToSupportTicket, updateSupportTicket } from './support';
+export { createSupportTicket, recordHelpArticleFeedback, replyToSupportTicket, updateSupportTicket } from './support';
