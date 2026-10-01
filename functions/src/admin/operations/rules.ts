@@ -84,7 +84,7 @@ export const updateDispatchRules = opsCallable(
       after = override ? { ...override } : null;
       await ref.update({ dispatch: override, updatedAt: FieldValue.serverTimestamp(), updatedBy: caller.uid });
     }
-    await writeSettingsHistory({ docPath: `${docPath}#dispatch`, before, after, reason: data.reason, caller });
+    await writeSettingsHistory({ docPath: `${docPath}#dispatch`, before, after, reason: data.reason, caller, cityId });
     await writeAudit({
       actor: actorFromCaller(caller, 'admin'),
       action: data.rules ? 'dispatch_rules.updated' : 'dispatch_rules.reset',
@@ -203,7 +203,7 @@ export const updateOrderRules = opsCallable(
       await ref.update({ orderRules: after, updatedAt: FieldValue.serverTimestamp(), updatedBy: caller.uid });
       docPath = `${collection}/${snap.id}`;
     }
-    const fields = await writeSettingsHistory({ docPath: data.scope === 'platform' ? docPath : `${docPath}#orderRules`, before, after, reason: data.reason, caller });
+    const fields = await writeSettingsHistory({ docPath: data.scope === 'platform' ? docPath : `${docPath}#orderRules`, before, after, reason: data.reason, caller, cityId });
     await writeAudit({
       actor: actorFromCaller(caller, 'admin'),
       action: rules ? 'order_rules.updated' : 'order_rules.reset',
@@ -270,7 +270,7 @@ export const updateCourierPay = opsCallable(
       else delete pricing.courier;
       await ref.update({ pricing: Object.keys(pricing).length ? pricing : null, updatedAt: FieldValue.serverTimestamp(), updatedBy: caller.uid });
     }
-    const fields = await writeSettingsHistory({ docPath: `${collection}/${snap.id}#courier`, before, after, reason: data.reason, caller });
+    const fields = await writeSettingsHistory({ docPath: `${collection}/${snap.id}#courier`, before, after, reason: data.reason, caller, cityId });
     await writeAudit({
       actor: actorFromCaller(caller, 'admin'),
       action: data.courier ? 'courier_pay.updated' : 'courier_pay.reset',

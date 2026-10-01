@@ -14,9 +14,13 @@ match /payments/{paymentId} {
 }
 
 match /refunds/{refundId} {
+  // `refunds.create` (seule permission de ce rôle) doit être bornée par ville : un
+  // `city_manager` limité à une ville (qui a `refunds.create` mais ni `refunds.approve` ni
+  // `finance.view`) pouvait sinon lire directement tous les remboursements de la plateforme,
+  // contournant le périmètre déjà appliqué côté Cloud Function (`loadTicketFor`).
   allow read: if isSelf(resource.data.customerId)
     || can(resource.data.restaurantId, 'finance.view')
-    || isAdmin('refunds.create')
+    || isAdminIn('refunds.create', resource.data.cityId)
     || isAdmin('finance.view');
   allow write: if false;
 }

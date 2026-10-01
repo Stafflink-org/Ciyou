@@ -60,7 +60,7 @@ export const saveCity = opsCallable(
       if (city.countryId !== data.countryId) throw fail.invalid('Le pays d’une ville ne peut pas être modifié.');
       const update = { name: data.name, timezone: data.timezone, center: data.center, serviceHours: data.serviceHours as WeeklyHours };
       await ref.update({ ...update, updatedAt: now, updatedBy: caller.uid });
-      await writeSettingsHistory({ docPath: `${COLLECTIONS.cities}/${snap.id}`, before: plain({ name: city.name, timezone: city.timezone, center: city.center, serviceHours: city.serviceHours }), after: plain(update), reason: data.reason ?? null, caller });
+      await writeSettingsHistory({ docPath: `${COLLECTIONS.cities}/${snap.id}`, before: plain({ name: city.name, timezone: city.timezone, center: city.center, serviceHours: city.serviceHours }), after: plain(update), reason: data.reason ?? null, caller, cityId: snap.id });
       await writeAudit({ actor: actorFromCaller(caller, 'admin'), action: 'city.updated', target: { type: 'city', id: snap.id, label: data.name }, reason: data.reason ?? null, countryId: city.countryId, cityId: snap.id, request });
       return { cityId: snap.id };
     }
@@ -123,7 +123,7 @@ export const setCityActive = opsCallable(
       updatedAt: FieldValue.serverTimestamp(),
       updatedBy: caller.uid,
     });
-    await writeSettingsHistory({ docPath: `${COLLECTIONS.cities}/${data.cityId}`, before: { active: city.active }, after: { active: data.active }, reason: data.reason, caller });
+    await writeSettingsHistory({ docPath: `${COLLECTIONS.cities}/${data.cityId}`, before: { active: city.active }, after: { active: data.active }, reason: data.reason, caller, cityId: data.cityId });
     await writeAudit({
       actor: actorFromCaller(caller, 'admin'),
       action: data.active ? 'city.activated' : 'city.deactivated',
@@ -189,6 +189,7 @@ export const saveZone = opsCallable(
         after: plain({ ...fields, bounds: undefined }),
         reason: data.reason ?? null,
         caller,
+        cityId: data.cityId,
       });
       await writeAudit({ actor: actorFromCaller(caller, 'admin'), action: 'zone.updated', target: { type: 'zone', id: snap.id, label: data.name }, reason: data.reason ?? null, countryId: city.countryId, cityId: data.cityId, request });
       return { zoneId: snap.id };
@@ -261,6 +262,7 @@ export const closeZone = opsCallable(
       after: { emergencyClosure: closure ? { reason: closure.reason, message: closure.message.fr, endsAt: data.endsAt ?? null } : null },
       reason: data.note,
       caller,
+      cityId,
     });
     await writeAudit({
       actor: actorFromCaller(caller, 'admin'),
@@ -358,7 +360,7 @@ export const saveSurgeRule = opsCallable(
       const rule: SurgeRule = { ...fields, startsAt: null, endsAt: null, createdAt: now, createdBy: caller.uid, updatedAt: now, updatedBy: caller.uid };
       await ref.set(rule);
     }
-    await writeSettingsHistory({ docPath: `${COLLECTIONS.surgeRules}/${id}`, before, after: plain(fields), reason: data.reason ?? null, caller });
+    await writeSettingsHistory({ docPath: `${COLLECTIONS.surgeRules}/${id}`, before, after: plain(fields), reason: data.reason ?? null, caller, cityId: data.cityId });
     await writeAudit({ actor: actorFromCaller(caller, 'admin'), action: data.ruleId ? 'surge_rule.updated' : 'surge_rule.created', target: { type: 'city', id: data.cityId, label: data.name }, reason: data.reason ?? null, countryId: fields.countryId, cityId: data.cityId, sensitive: true, request });
     return { ruleId: id };
   },

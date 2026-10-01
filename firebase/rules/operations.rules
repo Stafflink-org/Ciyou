@@ -14,7 +14,15 @@ match /auditLogs/{logId} {
 }
 
 // Historique des réglages d'exploitation (règles des commandes, attribution,
-// rémunération, zones) : lisible par ceux qui peuvent les modifier.
+// rémunération, zones) : lisible par ceux qui peuvent les modifier. Une entrée scopée à une
+// ville (`cityId` posé par `writeSettingsHistory`) borne la lecture à cette ville — sans ça, un
+// admin `city_manager` limité à une ville (qui a `zones.edit` par défaut) pouvait lire
+// l'historique des réglages (avant/après, motif) de n'importe quelle autre ville. Une entrée
+// sans ville (réglage plateforme/pays) reste lisible par simple détention de la permission,
+// comme avant.
 match /settingsHistory/{entryId} {
-  allow read: if isAdmin('order_rules.edit') || isAdmin('zones.edit') || isAdmin('drivers.pay_rules');
+  allow read: if (resource.data.get('cityId', null) == null
+      && (isAdmin('order_rules.edit') || isAdmin('zones.edit') || isAdmin('drivers.pay_rules')))
+    || (resource.data.get('cityId', null) != null
+      && (isAdminIn('order_rules.edit', resource.data.cityId) || isAdminIn('zones.edit', resource.data.cityId) || isAdminIn('drivers.pay_rules', resource.data.cityId)));
 }
