@@ -1,5 +1,21 @@
 # État d'avancement — Ciyou Eats
 
+## §7 Clients : les signaux « annulations/remboursements répétés » n'avaient aucun producteur — 01/10/2026 (tâche `cdc-fix-residuals-18`)
+
+Suite immédiate de `cdc-fix-residuals-17` (§22), même session de travail continu. Un agent d'exploration a vérifié §1 (Tableau de bord), §7 (Clients) et §9 (Règles automatiques des commandes) : §1 et §9 ont chacun un défaut réel mais bloqué par une vraie décision produit (calcul temps réel non trivial pour §1 ; deux plafonds de préparation distincts à unifier ou non pour §9) — rien corrigé là. §7 avait un vrai bug à petit périmètre, déjà repéré dans le texte de l'audit mais jamais corrigé.
+
+**Défaut corrigé** : `users/{uid}.stats.cancelledCount` et `.refundsCount` étaient initialisés à 0 à la création du compte (`lib/accounts.ts`) mais **jamais incrémentés** par aucune fonction ensuite (grep exhaustif confirmé) — les deux signaux « annulations fréquentes » et « remboursements répétés » de la fiche client (seuils ≥3, `packages/shared/src/models/admin-actors.ts`) ne pouvaient donc jamais se déclencher ; la liste clients affichait quasi toujours « Faible ».
+
+**Corrigé** :
+- `functions/src/orders/triggers.ts::onOrderWritten` incrémente désormais `stats.cancelledCount` à la transition d'une commande vers `status:'cancelled'` (même garde anti-doublon que les autres automatismes déjà présents dans ce trigger).
+- `functions/src/finance/argent/settlement.ts::onRefundProcessed` incrémente désormais `stats.refundsCount` à la transition d'un remboursement vers `status:'processed'`, **avant** l'appel à `bookRefund` — cette dernière retourne tôt pour une commande annulée avant livraison (`!fin.exists`), le cas le plus fréquent de remboursement, et aurait donc manqué la majorité des cas si le compteur avait été posé à l'intérieur.
+
+**Testé réel sur `golink-9f16d`** (`scripts/tests/cdc-fix-residuals-18.flow.mjs`) : les deux triggers Firestore réels déclenchés par de vraies écritures de documents (commande et remboursement jetables) sur le compte client réel existant `client.mobilerecompte@golink.test` — 3/3 OK : les deux compteurs incrémentés de 1 chacun, vérifiés en base, puis restaurés à leur valeur d'origine par écriture en notation pointée (`stats.cancelledCount`/`stats.refundsCount` seuls, le reste de `stats.*` — commandes, dépense totale — resté intact), toutes les données de test supprimées.
+
+`npx tsc --noEmit -p functions` vert. Fonctions redéployées : `onOrderWritten`, `onRefundProcessed`.
+
+**Cahier §7 : la ligne « Indicateurs de risque » ne change pas de statut** (reste PARTIEL) — un troisième volet de la même ligne reste muet : `userPrivate.riskFlags`/`riskScore` ne sont jamais écrits par `fraud.ts` (qui alimente une collection séparée, `fraudCases`, jamais recopiée) ; corriger ce point suppose de décider s'il faut dupliquer les données ou faire lire `fraudCases` par l'écran — non traité ce tour. Total cahier super admin inchangé : **110 COMPLET / 56 PARTIEL / 0 ABSENT / 0 FAUX** (166 lignes), recompté honnêtement. Détail : `docs/AUDIT_COUVERTURE_CDC.md` §7.
+
 ## §22 Marque : l'icône d'onglet (favicon) téléversée n'était jamais appliquée — 01/10/2026 (tâche `cdc-fix-residuals-17`)
 
 Suite immédiate de `cdc-fix-residuals-16` (§17), même session de travail continu. Un agent d'exploration a vérifié §22 (Paramètres plateforme) et §4 (Rapports et exports) : dans §4, les deux défauts PARTIEL (export « finances » unifié, preuve d'envoi Brevo réel) sont confirmés comme de vraies décisions produit ou blocages d'infrastructure de test — rien corrigé là. Dans §22, un vrai bug à petit périmètre a été trouvé (favicon jamais appliqué) et corrigé ; l'agent a aussi signalé que la section détaillée §22 du cahier était restée figée à un état antérieur à la tâche `cdc-fix-d`, qui l'avait déjà recomptée correctement dans une annexe séparée (« Annexe M ») jamais reliée à la section d'origine — corrigé en ajoutant un renvoi explicite plutôt qu'en dupliquant le travail.

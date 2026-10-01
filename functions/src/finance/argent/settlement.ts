@@ -333,6 +333,16 @@ export const onRefundProcessed = onDocumentWritten({ document: 'refunds/{refundI
   const before = event.data?.before.data() as Refund | undefined;
   const after = event.data?.after.data() as Refund | undefined;
   if (!after || after.status !== 'processed' || before?.status === 'processed') return;
+  // §7 « Indicateurs de risque » (fiche client) : `stats.refundsCount` était initialisé à 0 à la
+  // création du compte mais jamais incrémenté ensuite — le signal « remboursements répétés » ne
+  // pouvait donc jamais se déclencher. Compté ici plutôt que dans `bookRefund` : cette dernière
+  // retourne tôt pour une commande annulée avant livraison (`!fin.exists`), le cas le plus
+  // fréquent de remboursement, et ce trigger est le seul point de passage commun à toutes les
+  // origines (annulation, geste depuis un ticket, auto-remboursement). Déjà protégé par le garde
+  // `before?.status === 'processed'` ci-dessus contre un double comptage au rejeu.
+  await db.collection(COLLECTIONS.users).doc(after.customerId).update({ 'stats.refundsCount': FieldValue.increment(1) }).catch((error) =>
+    logger.error('Compteur de remboursements client en échec', { refundId: event.params.refundId, error: error instanceof Error ? error.stack : String(error) }),
+  );
   await bookRefund(event.params.refundId, after);
 });
 
