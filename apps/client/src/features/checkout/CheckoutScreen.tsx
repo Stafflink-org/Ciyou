@@ -15,6 +15,7 @@ import type { MainStackParamList } from '../../navigation/types';
 import { useAuth } from '../../auth/AuthContext';
 import { docAt, useCollection, useDoc, callFunction, createdFields, errorMessage } from '../../lib/firestore';
 import { db } from '../../lib/firebase';
+import { APP_VERSION } from '../../lib/env';
 import type { FulfillmentMode, PaymentMethod, PlaceOrderInput, PlaceOrderResult, Restaurant, UserAddress } from '@golink/shared';
 import { paths } from '@golink/shared';
 import { colors, radius, spacing } from '../../theme/tokens';
@@ -210,6 +211,7 @@ function CheckoutScreenInner({ navigation }: Props) {
       source: Platform.OS === 'web' ? 'client_web' : Platform.OS === 'ios' ? 'client_ios' : 'client_android',
       clientRequestId: clientRequestId.current,
       expectedTotalCents: quote.totalCents,
+      appVersion: APP_VERSION,
     };
     setSubmitting(true);
     setSubmittingLabel(null);

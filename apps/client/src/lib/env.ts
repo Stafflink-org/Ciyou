@@ -8,3 +8,11 @@ export const env = {
   /** Clé publiable Stripe (même compte de test que les back-offices restaurant/admin). */
   stripePublishableKey: process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '',
 } as const;
+
+/**
+ * Version de l'app (§30 « Versions des applications »), à faire évoluer avec `app.json::expo.version`
+ * à chaque publication. `placeOrder` (`functions/src/orders/place.ts`) refuse la commande si elle
+ * est inférieure à `appVersions/client.minimumVersion` — un contrôle déjà réel côté serveur mais
+ * jusqu'ici sans effet car aucun appel de `placeOrder` ne transmettait cette version.
+ */
+export const APP_VERSION = '1.0.0';

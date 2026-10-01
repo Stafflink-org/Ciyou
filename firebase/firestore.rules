@@ -846,10 +846,13 @@ service cloud.firestore {
       allow write: if false;
 
       match /events/{eventId} {
+        // Bornée par ville comme la lecture de la commande elle-même (`canReadOrder` ci-dessus) : un
+        // admin limité à `orders.view` sur une seule ville ne doit pas pouvoir lire la chronologie
+        // d'une commande d'une autre ville en ouvrant directement cette sous-collection.
         allow read: if (resource.data.visibleToCustomer == true
             && isSelf(get(/databases/$(database)/documents/orders/$(orderId)).data.customerId))
           || can(get(/databases/$(database)/documents/orders/$(orderId)).data.restaurantId, 'orders.view')
-          || isAdmin('orders.view');
+          || isAdminIn('orders.view', get(/databases/$(database)/documents/orders/$(orderId)).data.cityId);
         allow write: if false;
       }
     }
