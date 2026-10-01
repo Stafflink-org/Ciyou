@@ -63,10 +63,12 @@ service firebase.storage {
     // Factures, relevés et exports : lecture par URL signée délivrée par Cloud Function.
     // ---------------------------------------------------------------------------
 
-    // Logos, couvertures, photos de la carte.
+    // Logos, couvertures, photos de la carte. Écriture réservée à l'équipe du commerce (aucune
+    // fonctionnalité admin n'édite ces fichiers — un admin n'a donc jamais besoin d'y écrire
+    // directement, hors Cloud Function avec motif et audit).
     match /restaurants/{rid}/public/{allPaths=**} {
       allow read: if true;
-      allow write: if (can(rid, 'menu.edit') || can(rid, 'settings.manage') || isAdmin('restaurants.edit'))
+      allow write: if (can(rid, 'menu.edit') || can(rid, 'settings.manage'))
         && (request.resource == null || isImage(5));
     }
 
