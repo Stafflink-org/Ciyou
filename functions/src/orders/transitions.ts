@@ -1,13 +1,13 @@
 // Avancement des commandes : acceptation (avec temps de préparation), début de
 // préparation, commande prête, prolongation, remise au client par code,
 // récupération et livraison par le livreur, confirmation du paiement.
-import { COLLECTIONS, PREP_MINUTES_MAX, PREP_MINUTES_MIN, type Order, type OrderStatus } from '@golink/shared';
+import { COLLECTIONS, PREP_MINUTES_MAX, PREP_MINUTES_MIN, type Order, type OrderStatus, type Restaurant } from '@golink/shared';
 import type { CallableRequest } from 'firebase-functions/v2/https';
 import { GeoPoint } from 'firebase-admin/firestore';
 import { db, Timestamp } from '../lib/admin';
 import { ordersCallable as callable } from './runtime';
 import { fail } from '../lib/errors';
-import { requireAuth } from '../lib/permissions';
+import { requireAuth, requireRestaurantAccess } from '../lib/permissions';
 import { STRIPE_SECRET_KEY } from '../lib/secrets';
 import { z, zId } from '../lib/validation';
 import { cancelBySystem } from './cancel';
@@ -156,6 +156,33 @@ export const extendPrepTime = callable(
       return extended;
     });
     return { prepExtendedMinutes: total };
+  },
+);
+
+/**
+ * Mode affluence du commerce (bascule rapide `ServiceStatus.tsx`) : ajoute `busyExtraMinutes`
+ * au temps de préparation de TOUTES les commandes tant qu'il est actif (`place.ts`). Jusqu'ici
+ * écrit directement par le restaurant (règles Firestore), plafonné à 90 min codées en dur —
+ * totalement indépendant de `rules.maxPrepExtensionMinutes` (30 par défaut, réglable par
+ * ville/pays) qui plafonne la notion équivalente côté `extendPrepTime` : deux plafonds
+ * différents pour la même idée métier (cahier §9, défaut documenté). Désormais validé ici
+ * contre la même règle, écriture directe retirée des règles Firestore pour une valeur non nulle.
+ */
+export const setBusyMode = callable(
+  z.object({ restaurantId: zId, isOpen: z.boolean(), busyExtraMinutes: z.number().int().min(0).max(120) }),
+  async (data, request) => {
+    const actor = await requireRestaurantAccess(request, data.restaurantId, 'orders.manage', 'restaurants.edit');
+    const ref = db.collection(COLLECTIONS.restaurants).doc(data.restaurantId);
+    const snap = await ref.get();
+    if (!snap.exists) throw fail.notFound('Restaurant');
+    const restaurant = snap.data() as Restaurant;
+    const rules = await loadOrderRules(await loadMarket(restaurant.countryId, restaurant.cityId));
+    if (data.busyExtraMinutes > rules.maxPrepExtensionMinutes) {
+      throw fail.invalid(`Le mode affluence est limité à ${rules.maxPrepExtensionMinutes} minutes dans cette ville.`);
+    }
+    const at = Timestamp.now();
+    await ref.update({ isOpen: data.isOpen, busyExtraMinutes: data.busyExtraMinutes, updatedAt: at, updatedBy: actor.caller.uid });
+    return { ok: true };
   },
 );
 

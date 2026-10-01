@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { updateDoc } from 'firebase/firestore';
 import { Check, ChevronDown, Flame, PauseCircle, PlayCircle } from 'lucide-react';
 import {
   DropdownMenu,
@@ -13,10 +12,12 @@ import {
   toast,
   type Tone,
 } from '@golink/ui';
-import { paths, type Restaurant } from '@golink/shared';
-import { translate, useAuth, useTranslation } from '@golink/web';
+import { type Restaurant } from '@golink/shared';
+import { translate, useTranslation } from '@golink/web';
 import { useRestaurantAccess } from '@/auth/RestaurantAccess';
-import { docAt, updatedFields, useMutation } from '@/lib/firestore';
+import { callFunction, useMutation } from '@/lib/firestore';
+
+const setBusyMode = callFunction<{ restaurantId: string; isOpen: boolean; busyExtraMinutes: number }, { ok: true }>('setBusyMode');
 
 /** Minutes ajoutées au temps de préparation en mode affluence. */
 const RUSH_STEPS = [10, 20, 30, 45] as const;
@@ -53,7 +54,6 @@ export function useServiceStateLabel(): (state: ServiceState, short?: boolean) =
 
 /** Pastille d'état du service en barre supérieure, avec bascule rapide ouvert / affluence / pause. */
 export function ServiceStatus() {
-  const { user } = useAuth();
   const { t } = useTranslation('accueil');
   const stateLabel = useServiceStateLabel();
   const { restaurant, can } = useRestaurantAccess();
@@ -61,11 +61,8 @@ export function ServiceStatus() {
   const editable = can('orders.manage') && restaurant.status !== 'suspended';
 
   const write = useCallback(
-    (isOpen: boolean, busyExtraMinutes: number) =>
-      updateDoc(docAt(paths.restaurant(restaurant.id)), { isOpen, busyExtraMinutes, ...updatedFields(user?.uid ?? '') }).then(
-        () => true,
-      ),
-    [restaurant.id, user],
+    (isOpen: boolean, busyExtraMinutes: number) => setBusyMode({ restaurantId: restaurant.id, isOpen, busyExtraMinutes }).then(() => true),
+    [restaurant.id],
   );
   const { mutate, loading } = useMutation(write);
 
