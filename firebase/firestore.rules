@@ -726,7 +726,11 @@ service cloud.firestore {
     match /prospects/{prospectId} {
       allow read: if isAdmin('crm.view');
       allow create: if isAdmin('crm.edit') && createdNow();
-      allow update: if isAdmin('crm.edit') && keepsUnchanged(['restaurantId', 'signedUpAt']) && updatedNow();
+      // `stage`/`lostReason`/`ownerId` doivent passer par `moveProspect`/`saveProspect` (Cloud
+      // Functions) : périmètre ville, motif de perte, commission du commercial créée/annulée,
+      // garde-fou anti-réouverture d'un prospect déjà commissionné, audit — une écriture directe sur
+      // ces champs contournait silencieusement tout ça.
+      allow update: if isAdmin('crm.edit') && keepsUnchanged(['restaurantId', 'signedUpAt', 'stage', 'lostReason', 'ownerId']) && updatedNow();
       allow delete: if false;
 
       match /activities/{activityId} {
