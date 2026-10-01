@@ -4,6 +4,7 @@ import {
   COLLECTIONS,
   REVIEW_REPORT_REASONS,
   SUBCOLLECTIONS,
+  scanReviewText,
   type ContentReport,
   type ReplyTemplate,
   type Review,
@@ -14,6 +15,7 @@ import { callable } from '../../lib/callable';
 import { fail, isFirestoreAlreadyExists } from '../../lib/errors';
 import { requireRestaurantAccess } from '../../lib/permissions';
 import { z, zId } from '../../lib/validation';
+import { moderationRules } from '../../admin/experience/reviews';
 import { containsContactDetails, loadRestaurant, notifyUser } from '../../marketing/restaurant/helpers';
 
 async function loadReview(orderId: string): Promise<Review> {
@@ -47,6 +49,17 @@ export const replyToReview = callable(
     }
     if (data.text && containsContactDetails(data.text)) {
       throw fail.invalid('Une réponse publique ne doit contenir ni adresse e-mail ni numéro de téléphone.');
+    }
+    // Le texte de l'avis passe par ce même filtre (`onReviewCreated`, `admin/experience/reviews.ts`) ;
+    // la réponse du commerce, publiée tout aussi publiquement, doit l'être aussi — elle ne rejoue pas
+    // le trigger de création (c'est une mise à jour du document existant), donc le contrôle doit être
+    // fait ici explicitement, avant publication plutôt qu'a posteriori par signalement.
+    if (data.text) {
+      const rules = await moderationRules();
+      const verdict = scanReviewText(data.text, rules);
+      if (verdict.blocked) {
+        throw fail.invalid('Votre réponse contient des termes non autorisés (insulte, propos haineux ou menace) : merci de la reformuler.');
+      }
     }
     const restaurant = await loadRestaurant(review.restaurantId);
     const ref = db.collection(COLLECTIONS.reviews).doc(data.orderId);

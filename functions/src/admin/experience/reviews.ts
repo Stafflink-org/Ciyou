@@ -35,7 +35,7 @@ const DAY = 86_400_000;
 
 let termsCache: { at: number; rules: Array<ModerationRule & { id?: string }> } | null = null;
 
-async function moderationRules(): Promise<Array<ModerationRule & { id?: string }>> {
+export async function moderationRules(): Promise<Array<ModerationRule & { id?: string }>> {
   if (termsCache && Date.now() - termsCache.at < 5 * 60_000) return termsCache.rules;
   const snap = await db.collection(COLLECTIONS.moderationTerms).where('active', '==', true).get();
   const custom = snap.docs.map((d) => {
