@@ -1,5 +1,21 @@
 # État d'avancement — Ciyou Eats
 
+## §20 Communication : « Règles des campagnes » inaccessible à un responsable de ville — 01/10/2026 (tâche `cdc-fix-residuals-19`)
+
+Suite immédiate de `cdc-fix-residuals-18` (§7), même session de travail continu. Un agent d'exploration a vérifié §18 (Promotions), §20 (Notifications et communication) et §21 (Acquisition commerciale CRM) : §18 (compteur « commandes générées » manquant) et §21 (rattachement manuel du prospect) sont déjà classés P2/cosmétiques dans l'audit, confirmés réels mais non prioritaires — rien corrigé là. §20 avait un vrai bug à petit périmètre, déjà repéré dans le texte de l'audit (marqué P2) mais jamais corrigé — en le creusant, sa gravité réelle (incohérence lecture/écriture, pas juste cosmétique) justifiait de le traiter.
+
+**Défaut corrigé** : l'onglet « Règles des campagnes » (Communication, `settings/campaignRules`) n'exigeait que la permission `notifications.send` pour s'afficher dans le menu et pour l'écriture (déjà correctement gouvernée par cette même permission côté serveur) — mais la **règle Firestore de lecture** du document exigeait `settings.view`, une permission distincte qu'un rôle avec `notifications.send` (ex. `city_manager`, compte réel `metz@golink.test`) n'a pas forcément. Un tel admin voyait l'onglet dans le menu, cliquait dessus, et obtenait un refus de permission dès l'ouverture — alors que l'écriture elle-même aurait de toute façon refusé la modification (contrôle « équipe centrale » déjà correct côté serveur). Incohérence lecture/écriture, pas une faille de sécurité (rien de trop permissif, au contraire trop restrictif en lecture).
+
+**Corrigé** : `firebase/rules/platform.rules` — la règle de lecture de `settings/campaignRules` suit désormais la même permission que l'écriture (`notifications.send`), sans toucher à l'écriture elle-même (`allow write: if false` inchangé, toujours exclusivement via `updateGrowthSettings`).
+
+**Testé réel sur `golink-9f16d`** (`scripts/tests/cdc-fix-residuals-19.flow.mjs`, deux comptes administrateur jetables isolés créés puis supprimés — l'un avec `notifications.send` seul, l'autre sans aucune des deux permissions, pour prouver que le correctif discrimine bien et n'« ouvre pas tout ») : **4/4 OK** — lecture désormais autorisée pour le premier (plus de `PERMISSION_DENIED`, le document `campaignRules` n'existe simplement pas encore en base donc renvoie `NOT_FOUND`, preuve que les règles l'autorisent) ; écriture directe toujours refusée (non régressé) ; admin sans la permission toujours refusé en lecture (contrôle négatif) ; nettoyage complet.
+
+Au passage, deux mentions périmées corrigées dans le texte de l'audit §20 (gabarits de messages déjà branchés depuis `cdc-fix-b`/`cdc-fix-c`, `estimatePlatformAudience` déjà redéployée — toutes deux encore listées comme P0 ouverts par erreur) et le paragraphe de bilan §20 resynchronisé (4 COMPLET / 1 PARTIEL, cohérent avec le tableau §3 — affichait encore « 1 FAUX » d'avant correctif).
+
+`npx tsc --noEmit` non applicable (changement de règles Firestore uniquement, pas de code TypeScript). Règles déployées (`firebase deploy --only firestore:rules`).
+
+**Cahier §20 : aucune ligne ne change de statut** (« Envois » reste PARTIEL : jetons FCM toujours jamais enregistrés côté client/livreur, effort disproportionné pour une correction ciblée — confirmé réel et non traité ce tour). Total cahier super admin inchangé : **110 COMPLET / 56 PARTIEL / 0 ABSENT / 0 FAUX** (166 lignes), recompté honnêtement. Détail : `docs/AUDIT_COUVERTURE_CDC.md` §20.
+
 ## §7 Clients : les signaux « annulations/remboursements répétés » n'avaient aucun producteur — 01/10/2026 (tâche `cdc-fix-residuals-18`)
 
 Suite immédiate de `cdc-fix-residuals-17` (§22), même session de travail continu. Un agent d'exploration a vérifié §1 (Tableau de bord), §7 (Clients) et §9 (Règles automatiques des commandes) : §1 et §9 ont chacun un défaut réel mais bloqué par une vraie décision produit (calcul temps réel non trivial pour §1 ; deux plafonds de préparation distincts à unifier ou non pour §9) — rien corrigé là. §7 avait un vrai bug à petit périmètre, déjà repéré dans le texte de l'audit mais jamais corrigé.

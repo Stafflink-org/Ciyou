@@ -11,6 +11,12 @@ match /settings/{docId} {
   allow read: if docId in ['general', 'branding', 'payments', 'maintenance', 'display', 'loyalty', 'referral']
     || (signedIn() && docId in ['orderRules', 'promotions', 'support'])
     || (isAnyAdmin() && docId in ['merchantValidation', 'notificationDelivery', 'dispatch', 'limits'])
+    // `campaignRules` (§20) : l'écran « Règles des campagnes » est accessible à tout admin ayant
+    // `notifications.send` (apps/admin/src/features/communication/module.tsx), même sans
+    // `settings.view` (ex. city_manager) — la règle de lecture doit suivre la même permission que
+    // l'écriture (`PERMISSION.campaignRules`, functions/src/marketing/platform/settings.ts),
+    // sinon l'écran est visible dans le menu mais échoue en « permission denied » à l'ouverture.
+    || (isAdmin('notifications.send') && docId == 'campaignRules')
     || isAdmin('settings.view');
   // Écriture : Cloud Functions uniquement (updatePlatformSettings, updateFinanceSettings, ...).
   allow write: if false;
