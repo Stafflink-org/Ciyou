@@ -1,23 +1,5 @@
 # État d'avancement — Ciyou Eats
 
-## §14/§23 Paiements DZ/MA/TN : clarification client et test réel décisif contre l'API Stripe — 01/10/2026 (tâche `cdc-fix-residuals-28`)
-
-Le client a clarifié une décision produit : l'encaissement des clients en Algérie, au Maroc et en Tunisie se fait **par carte bancaire via Stripe**, comme en France/Belgique/Luxembourg — pas de prestataire de paiement local par défaut.
-
-**Investigation préalable** : l'audit documentait jusqu'ici `countries/{dz,ma,tn}.stripeAvailable = false` et « aucun prestataire de paiement local n'est branché » comme un manque bloquant le paiement. Lecture du code (`functions/src/orders/place.ts`, `orders/payment.ts`) : `stripeAvailable` ne gouverne en réalité **que le reversement** (payout) aux commerces et livreurs via Stripe Connect (`finance/argent/providers.ts`, `payments/driver-connect.ts`) — un sujet entièrement différent de l'encaissement. Le chemin d'encaissement client (`authorizePayment`) ne lit jamais ce champ ; il transmet simplement `country.currency` à l'API Stripe. L'audit initial avait donc confondu deux sujets distincts.
-
-**Restait un vrai doute, non vérifiable par simple lecture de code** : Stripe accepte-t-il réellement le dinar algérien (DZD), le dirham marocain (MAD) et le dinar tunisien (TND) comme devise d'encaissement ? Aucune ville ni commerce n'existait dans ces 3 pays pour le tester en conditions réelles.
-
-**Test réel décisif** (`scripts/tests/cdc-fix-residuals-28.flow.mjs`) : une ville et un commerce entièrement jetables ont été créés dans chacun des 3 pays, et une vraie commande réglée par une vraie carte de test Stripe a été tentée dans chaque devise, directement contre l'API Stripe (mode test). **Résultat (8/8 OK, confirmé par l'API Stripe elle-même, pas une supposition de code)** :
-- **Maroc (MAD) : accepté.** Autorisation Stripe réussie, `providerIntentId` réel obtenu — l'encaissement carte fonctionne déjà techniquement pour ce pays, aucun développement nécessaire.
-- **Algérie (DZD) et Tunisie (TND) : refusés par Stripe lui-même**, quel que soit le pays d'implantation du compte Stripe de la plateforme. Ce n'est pas une limite du code de ce dépôt — l'erreur vient directement de l'API Stripe.
-
-Ville, commerce, produit, client et commande jetables entièrement supprimés après coup ; `countries/{dz,ma,tn}.active` non modifié (décision de lancement commercial distincte, hors périmètre de cette tâche).
-
-**Documenté** : `docs/DECISIONS_CLIENT.md` (ligne « Pays ») et `docs/AUDIT_COUVERTURE_CDC.md` (§14 « Moyens de paiement », §23 « Devises ») mis à jour avec ce fait technique confirmé. **Point à retrancher avec le client avant le lancement des marchés algérien et tunisien** : soit encaisser dans une devise que Stripe accepte (ex. EUR), soit prévoir malgré tout un prestataire de paiement local pour ces 2 pays précisément. Le reversement aux commerces/livreurs de ces pays (Stripe Connect) reste de toute façon un blocage de configuration externe distinct, déjà documenté (`docs/AUDIT_COUVERTURE_CDC.md:94`).
-
-**Cahier : aucune ligne ne change de statut** (clarification factuelle, les lignes concernées restaient déjà PARTIEL pour d'autres raisons). Total cahier super admin inchangé : **106 COMPLET / 60 PARTIEL / 0 ABSENT / 0 FAUX** (166 lignes).
-
 ## §7 Clients : export CSV sans contrôle ni audit — 01/10/2026 (tâche `cdc-fix-residuals-27`)
 
 Suite immédiate de `cdc-fix-residuals-26` (§19), même session de travail continu. Un agent d'exploration a vérifié §7 (Gestion des clients) et §20 (Notifications et communication), déjà corrigées une fois chacune avant la compaction de contexte de cette session : §20 n'a révélé aucun nouveau défaut de code (tout ce qui reste PARTIEL est décision produit ou chantier d'app mobile disproportionné) — rien corrigé là. §7 avait un vrai bug de code à petit périmètre, déjà documenté comme P1 dans le texte de l'audit mais jamais corrigé, avec un précédent exact déjà appliqué ailleurs dans le même repo.
