@@ -107,7 +107,7 @@ match /reviews/{orderId} {
   allow read: if resource.data.status == 'published'
     || isSelf(resource.data.customerId)
     || can(resource.data.restaurantId, 'reviews.reply')
-    || isAdmin('reviews.view');
+    || isAdminIn('reviews.view', resource.data.cityId);
   allow create: if isSelf(incoming().customerId)
     && reviewableOrder(orderId).customerId == request.auth.uid
     && reviewableOrder(orderId).status == 'delivered'
@@ -122,7 +122,7 @@ match /reviews/{orderId} {
   // Le champ « reply » n'est jamais écrit directement par le restaurant : la
   // réponse (et son audit) passe obligatoirement par la Cloud Function
   // replyToReview / moderateReview (écriture Admin SDK, hors règles).
-  allow update: if isAdmin('reviews.moderate')
+  allow update: if isAdminIn('reviews.moderate', resource.data.cityId)
     && onlyChanges(['status', 'moderation', 'reply', 'updatedAt'])
     && incoming().updatedAt == request.time;
   allow delete: if false;

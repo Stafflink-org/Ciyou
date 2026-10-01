@@ -32,8 +32,8 @@ match /moderationTerms/{termId} {
 
 // Calculé par la tâche planifiée detectRatingDrops ; l'équipe peut en prendre acte.
 match /ratingWatch/{watchId} {
-  allow read: if isAdmin('reviews.view');
-  allow update: if isAdmin('reviews.moderate')
+  allow read: if isAdminIn('reviews.view', resource.data.cityId);
+  allow update: if isAdminIn('reviews.moderate', resource.data.cityId)
     && onlyChanges(['acknowledgedAt', 'acknowledgedBy', 'note'])
     && (incoming().acknowledgedAt == null || incoming().acknowledgedAt == request.time && incoming().acknowledgedBy == uid())
     && isOptionalString(incoming().get('note', null), 500);
