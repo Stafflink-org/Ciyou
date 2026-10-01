@@ -6,6 +6,7 @@ export { inviteOwnCourier, updateCourier } from './couriers';
 // Configuration de l'établissement (back-office restaurant, rubriques « Configuration »).
 export { updateRestaurantSettings } from './settings';
 export { onRestaurantSettingsWrite, resumePausedRestaurants } from './settings-sync';
+export { onRestaurantProfileWritten } from './profile-audit';
 export { onFeatureFlagWrite } from './feature-sync';
 export { deleteDeliveryZone, saveDeliveryZone } from './zones';
 export { deleteStaffRole, revokeMember, saveStaffRole, setMemberPermissions } from './members';
