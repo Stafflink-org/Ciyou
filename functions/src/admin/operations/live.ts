@@ -28,7 +28,7 @@ import { EMAIL_SECRETS } from '../../lib/secrets';
 import { isOpenAt } from '../../orders/context';
 import { addDays, notifyDriver, OPS_SCHEDULE_RUNTIME, parisDay, TIMEZONE } from './common';
 import { applyDocumentState, evaluateDriverDocuments } from './compliance';
-import { driverDocumentExpiredEmail } from './emails';
+import { driverDocumentExpiredEmail, driverDocumentExpiringEmail } from './emails';
 import { clearSurge, setSurge } from './zones';
 
 type ZoneLive = NonNullable<Zone['live']>;
@@ -180,7 +180,33 @@ export const computeZoneLive = onSchedule({ schedule: 'every 1 minutes', timeZon
 
 // ------------------------------------------------------------------ Conformité quotidienne
 
-async function documentExpiry(today: string): Promise<{ reminded: number; expired: number; blocked: number }> {
+function formatFrDay(day: string): string {
+  const [y, m, d] = day.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+/** Relance (notification + e-mail) d'une pièce livreur qui approche de son expiration. Renvoie `true` si une relance a été envoyée. */
+export async function remindDriverDocumentExpiry(
+  doc: FirebaseFirestore.QueryDocumentSnapshot | FirebaseFirestore.DocumentSnapshot,
+  d: PartnerDocument,
+  driver: { id: string; data: Driver },
+  today: string,
+): Promise<boolean> {
+  const daysLeft = Math.round((Date.parse(d.expiresAt!) - Date.parse(today)) / 86_400_000);
+  const due = (daysLeft <= 7 && d.remindersSent < 2) || (daysLeft <= 30 && d.remindersSent < 1);
+  if (!due) return false;
+  await notifyDriver(driver, {
+    title: `${PARTNER_DOCUMENT_LABELS[d.type]} : expiration dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''}`,
+    body: 'Déposez une version à jour depuis l’application pour continuer à recevoir des courses.',
+    category: 'document',
+    email: driverDocumentExpiringEmail(driver.data.firstName, d.type, formatFrDay(d.expiresAt!), daysLeft),
+    templateKey: 'driver_document_reminder',
+  });
+  await doc.ref.update({ remindersSent: daysLeft <= 7 ? 2 : 1, lastReminderAt: FieldValue.serverTimestamp() });
+  return true;
+}
+
+export async function documentExpiry(today: string): Promise<{ reminded: number; expired: number; blocked: number }> {
   const horizon = addDays(today, 30);
   const snap = await db.collection(COLLECTIONS.partnerDocuments).where('status', '==', 'approved').where('expiresAt', '<=', horizon).get();
   let reminded = 0;
@@ -198,17 +224,8 @@ async function documentExpiry(today: string): Promise<{ reminded: number; expire
       expired += 1;
       continue;
     }
-    const daysLeft = Math.round((Date.parse(d.expiresAt) - Date.parse(today)) / 86_400_000);
-    const due = (daysLeft <= 7 && d.remindersSent < 2) || (daysLeft <= 30 && d.remindersSent < 1);
-    if (!due) continue;
-    await notifyDriver(driver, {
-      title: `${PARTNER_DOCUMENT_LABELS[d.type]} : expiration dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''}`,
-      body: 'Déposez une version à jour depuis l’application pour continuer à recevoir des courses.',
-      category: 'document',
-      templateKey: 'driver_document_reminder',
-    });
-    await doc.ref.update({ remindersSent: daysLeft <= 7 ? 2 : 1, lastReminderAt: FieldValue.serverTimestamp() });
-    reminded += 1;
+    const sent = await remindDriverDocumentExpiry(doc, d, driver, today);
+    if (sent) reminded += 1;
   }
   let blocked = 0;
   for (const driverId of touchedDrivers) {
