@@ -13,6 +13,7 @@
     "@stripe/stripe-js": "^9.17.0",
     "@stripe/stripe-react-native": "^0.78.0",
     "expo": "~57.0.25",
+    "expo-build-properties": "~57.0.22",
     "expo-status-bar": "~57.0.1",
     "firebase": "^12.19.0",
     "react": "19.2.3",
