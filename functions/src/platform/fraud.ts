@@ -19,13 +19,14 @@ import {
 } from '@golink/shared';
 import { createHash } from 'node:crypto';
 import { logger } from 'firebase-functions/v2';
+import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { auth, db, FieldValue, Timestamp } from '../lib/admin';
 import { actorFromCaller, writeAudit } from '../lib/audit';
 import { fail } from '../lib/errors';
 import { requireAdmin } from '../lib/permissions';
 import { z, zId, zReason } from '../lib/validation';
-import { PLATFORM_SCHEDULE_RUNTIME, TIMEZONE, platformCallable, requireSecureAdmin } from './runtime';
+import { PLATFORM_RUNTIME, PLATFORM_SCHEDULE_RUNTIME, TIMEZONE, platformCallable, requireSecureAdmin } from './runtime';
 
 export async function loadFraudSettings(): Promise<Omit<FraudSettings, 'updatedAt' | 'updatedBy'>> {
   const snap = await db.collection(COLLECTIONS.settings).doc(SETTINGS_DOCS.fraud).get();
@@ -137,6 +138,27 @@ export async function upsertSignal(
     updatedBy: 'system',
   });
 }
+
+/**
+ * La fiche client (§7 « Indicateurs de risque ») lit `userPrivate/{uid}.riskScore`/`.riskFlags`
+ * — jamais alimentés par aucune fonction jusqu'ici (seule l'écriture à la création du compte,
+ * à 0/[], existait) : un client avec un dossier de fraude réel ouvert dans `fraudCases` restait
+ * donc affiché sans aucun signal de risque. Recopie ici le score et les codes de signaux dès
+ * qu'un dossier client est créé ou complété.
+ */
+export const onFraudCaseWritten = onDocumentWritten({ document: `${COLLECTIONS.fraudCases}/{caseId}`, ...PLATFORM_RUNTIME }, async (event) => {
+  const after = event.data?.after.data() as FraudCase | undefined;
+  if (!after || after.subjectType !== 'client') return;
+  const riskFlags = [...new Set(after.signals.map((s) => s.code))];
+  // Un seul dossier par client (identifiant `client_{uid}`, cf. fraudRef) : fraudCaseIds reflète
+  // simplement son existence, lue par la fiche client (ClientPage.tsx) sans jamais être posée.
+  const fraudCaseIds = [event.params.caseId as string];
+  const ref = db.collection(COLLECTIONS.userPrivate).doc(after.subjectId);
+  const snap = await ref.get();
+  if (!snap.exists) return; // Compte supprimé entre-temps : rien à synchroniser.
+  if (snap.get('riskScore') === after.riskScore && JSON.stringify(snap.get('riskFlags') ?? []) === JSON.stringify(riskFlags)) return;
+  await ref.update({ riskScore: after.riskScore, riskFlags, fraudCaseIds, updatedAt: Timestamp.now() });
+});
 
 /** Clients : réclamations répétées, « non reçu » fréquent, annulations anormales, comptes liés (§28). */
 async function detectClientSignals(since: Timestamp, settings: Omit<FraudSettings, 'updatedAt' | 'updatedBy'>): Promise<number> {
