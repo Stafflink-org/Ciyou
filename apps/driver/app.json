@@ -10,7 +10,10 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.ciyou.driver",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Cette application utilise l’appareil photo uniquement si vous ajoutez une photo ou un justificatif depuis votre appareil.",
+        "NSPhotoLibraryUsageDescription": "Cette application peut accéder à vos photos uniquement si vous choisissez d’ajouter une image ou un justificatif.",
+        "NSPhotoLibraryAddUsageDescription": "Cette application peut enregistrer une image uniquement lorsque vous le demandez."
       }
     },
     "android": {
