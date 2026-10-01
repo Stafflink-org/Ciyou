@@ -91,13 +91,17 @@ export async function runDac7(countryId: string, year: number): Promise<{ lines:
     });
   }
 
-  // Livreurs indépendants : services personnels, déclarables dès le premier euro.
+  // Livreurs indépendants : services personnels, déclarables dès le premier euro. Les
+  // remboursements imputés au livreur (`refund_charge`, cdc-fix-residuals-32) réduisent le
+  // revenu brut déclaré sans compter comme une course de plus — même principe que pour les
+  // commerces ci-dessus.
+  const DRIVER_EARNING_TYPES = ['courier_earning', 'courier_bonus', 'hourly_guarantee_topup', 'courier_tip', 'refund_charge'];
   const ledger = await db.collection(COLLECTIONS.ledgerEntries).where('accountType', '==', 'driver').where('bookingDate', '>=', `${year}-01-01`).where('bookingDate', '<=', `${year}-12-31`).get();
-  const byDriver = new Map<string, Array<{ paidAt: Date; grossCents: number; feesCents: number }>>();
+  const byDriver = new Map<string, Array<{ paidAt: Date; grossCents: number; feesCents: number; countsAsTransaction?: boolean }>>();
   for (const doc of ledger.docs) {
     const entry = doc.data() as LedgerEntry;
-    if (entry.countryId !== countryId || !['courier_earning', 'courier_bonus', 'hourly_guarantee_topup', 'courier_tip'].includes(entry.type)) continue;
-    const tx = { paidAt: new Date(`${entry.bookingDate}T12:00:00Z`), grossCents: entry.amountCents, feesCents: 0 };
+    if (entry.countryId !== countryId || !DRIVER_EARNING_TYPES.includes(entry.type)) continue;
+    const tx = { paidAt: new Date(`${entry.bookingDate}T12:00:00Z`), grossCents: entry.amountCents, feesCents: 0, countsAsTransaction: entry.type !== 'refund_charge' };
     byDriver.set(entry.accountId, [...(byDriver.get(entry.accountId) ?? []), tx]);
   }
   for (const part of chunk([...byDriver.keys()], 100)) {
@@ -110,8 +114,9 @@ export async function runDac7(countryId: string, year: number): Promise<{ lines:
       const priv = privs[i]?.exists ? (privs[i]?.data() as DriverPrivate) : null;
       const txs = byDriver.get(snap.id) ?? [];
       const quarters = aggregateDac7(txs, year);
-      // Une course = une transaction (les pourboires s'ajoutent au montant sans compter en plus).
-      const courses = txs.length;
+      // Une course = une transaction (les pourboires s'ajoutent au montant sans compter en plus) ;
+      // un remboursement imputé (`countsAsTransaction: false`) ne compte pas comme une course de plus.
+      const courses = quarters.reduce((s, q) => s + q.transactionsCount, 0);
       const grossCents = quarters.reduce((s, q) => s + q.grossCents, 0);
       const missing: string[] = [];
       if (!priv?.taxIdentificationNumber) missing.push('numéro fiscal');
