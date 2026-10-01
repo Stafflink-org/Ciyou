@@ -42,6 +42,34 @@ export function laneOf(order: Order): Lane | null {
 export const ACTIVE_STATUSES: OrderStatus[] = ['new', 'accepted', 'preparing', 'ready', 'assigned', 'picked_up'];
 export const CLOSED_STATUSES: OrderStatus[] = ['delivered', 'cancelled'];
 
+/**
+ * Tuiles de résumé du service (alignées sur la maquette de référence) :
+ * « En cours » = total des commandes actives, « À traiter » = nouvelles et
+ * acceptées (pas encore en préparation), « En préparation » = en cuisine,
+ * « Prêtes » = prêtes ou assignées à un livreur, en attente de récupération.
+ */
+export type SummaryTile = 'active' | 'toHandle' | 'preparing' | 'ready';
+
+export const SUMMARY_TILES: Array<{ id: SummaryTile; label: string; hint: string; tone: Tone; statuses: OrderStatus[] }> = [
+  { id: 'active', label: 'En cours', hint: 'Total des commandes actives', tone: 'brand', statuses: ['new', 'accepted', 'preparing', 'ready', 'assigned', 'picked_up'] },
+  { id: 'toHandle', label: 'À traiter', hint: 'Nouvelles et acceptées', tone: 'amber', statuses: ['new', 'accepted'] },
+  { id: 'preparing', label: 'En préparation', hint: 'En cuisine', tone: 'plum', statuses: ['preparing'] },
+  { id: 'ready', label: 'Prêtes', hint: 'Prêtes ou assignées à un livreur', tone: 'teal', statuses: ['ready', 'assigned'] },
+];
+
+/** Filtres par statut (file « En cours »), alignés sur la maquette de référence. */
+export type StatusFilter = 'all' | OrderStatus;
+
+export const STATUS_FILTERS: Array<{ id: StatusFilter; label: string; statuses: OrderStatus[] | null }> = [
+  { id: 'all', label: 'Tous les statuts', statuses: null },
+  { id: 'new', label: 'Nouvelles', statuses: ['new'] },
+  { id: 'accepted', label: 'Acceptées', statuses: ['accepted'] },
+  { id: 'preparing', label: 'En préparation', statuses: ['preparing'] },
+  { id: 'ready', label: 'Prêtes', statuses: ['ready'] },
+  { id: 'assigned', label: 'Assignées', statuses: ['assigned'] },
+  { id: 'picked_up', label: 'En livraison', statuses: ['picked_up'] },
+];
+
 const STATUS_TONES: Record<OrderStatus, Tone> = {
   scheduled: 'plum',
   new: 'brand',

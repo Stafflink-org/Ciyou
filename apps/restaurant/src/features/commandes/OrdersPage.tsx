@@ -1,21 +1,22 @@
-// Service en cours : commandes en temps réel rangées par étape (nouvelles, en
-// cuisine, prêtes, en livraison), avec minuteurs, recherche, filtres et épinglage.
+// Service en cours : liste compacte des commandes en temps réel (numéro,
+// client, service, délai, statut, total), avec tuiles de résumé, filtres par
+// statut, recherche et épinglage — alignée sur la maquette de référence.
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { Bike, CalendarClock, ClipboardList, Columns3, List, Radio, Search, ShoppingBag, Utensils, X } from 'lucide-react';
+import { Bike, ClipboardList, Radio, Search, ShoppingBag, Utensils, X } from 'lucide-react';
 import { Button, Card, EmptyState, Input, SegmentedControl, Skeleton, cn, toneClass } from '@golink/ui';
 import type { FulfillmentMode } from '@golink/shared';
 import { usePersistentState } from '@golink/web';
 import { errorMessage } from '@/lib/firestore';
 import { useActiveOrders, useNow, usePinnedOrders } from './hooks';
-import { LANES, laneOf, orderMatches, readyAtMs, type Lane, type OrderRow } from './lib';
+import { orderMatches, readyAtMs, STATUS_FILTERS, SUMMARY_TILES, type OrderRow, type StatusFilter } from './lib';
 import { OrderActionsProvider } from './components/OrderActions';
-import { OrderCard } from './components/OrderCard';
+import { OrderListRow } from './components/OrderListRow';
 import { OrderSheet, OrdersLayout } from './components/OrdersLayout';
 
 type ModeFilter = 'all' | FulfillmentMode;
 
-/** Urgence dans une colonne : délai restant le plus court en premier. */
+/** Urgence dans la file : délai restant le plus court en premier. */
 function urgency(order: OrderRow): number {
   if (order.status === 'new') return order.acceptDeadline?.toMillis() ?? order.createdAt.toMillis();
   return readyAtMs(order) ?? order.createdAt.toMillis();
@@ -29,9 +30,8 @@ export function OrdersPage() {
   const { data, loading, error } = useActiveOrders();
   const { isPinned, toggle } = usePinnedOrders();
   const [search, setSearch] = useState('');
-  const [mode, setMode] = useState<ModeFilter>('all');
-  const [lane, setLane] = useState<'all' | Lane>('all');
-  const [layout, setLayout] = usePersistentState<'board' | 'list'>('golink:restaurant:commandes-vue', 'board');
+  const [mode, setMode] = usePersistentState<ModeFilter>('golink:restaurant:commandes-mode', 'all');
+  const [status, setStatus] = useState<StatusFilter>('all');
 
   const open = (id: string | null) => {
     const next = new URLSearchParams(params);
@@ -42,40 +42,37 @@ export function OrdersPage() {
 
   const live = useMemo(() => data.filter((o) => o.status !== 'scheduled'), [data]);
   const scheduled = useMemo(() => data.filter((o) => o.status === 'scheduled'), [data]);
-  const filtered = useMemo(
-    () =>
-      live
-        .filter((o) => (mode === 'all' ? true : o.fulfillment === mode))
-        .filter((o) => orderMatches(o, search))
-        .sort((a, b) => Number(isPinned(b.id)) - Number(isPinned(a.id)) || urgency(a) - urgency(b)),
-    [live, mode, search, isPinned],
-  );
-  const byLane = useMemo(() => {
-    const map: Record<Lane, OrderRow[]> = { new: [], kitchen: [], ready: [], delivery: [] };
-    for (const o of filtered) {
-      const l = laneOf(o);
-      if (l) map[l].push(o);
-    }
-    return map;
-  }, [filtered]);
-  const counts = useMemo(() => {
-    const c: Record<Lane, number> = { new: 0, kitchen: 0, ready: 0, delivery: 0 };
-    for (const o of live) {
-      const l = laneOf(o);
-      if (l) c[l] += 1;
-    }
-    return c;
+
+  const tileCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const tile of SUMMARY_TILES) counts[tile.id] = live.filter((o) => tile.statuses.includes(o.status)).length;
+    return counts;
   }, [live]);
-  const late = live.filter((o) => (o.status === 'preparing' || o.status === 'accepted') && (readyAtMs(o) ?? Infinity) < now).length;
-  const filtersActive = search.trim() !== '' || mode !== 'all';
+
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const f of STATUS_FILTERS) counts[f.id] = f.statuses ? live.filter((o) => f.statuses!.includes(o.status)).length : live.length;
+    return counts;
+  }, [live]);
+
+  const filtered = useMemo(() => {
+    const active = STATUS_FILTERS.find((f) => f.id === status);
+    return live
+      .filter((o) => (mode === 'all' ? true : o.fulfillment === mode))
+      .filter((o) => (!active?.statuses ? true : active.statuses.includes(o.status)))
+      .filter((o) => orderMatches(o, search))
+      .sort((a, b) => Number(isPinned(b.id)) - Number(isPinned(a.id)) || urgency(a) - urgency(b));
+  }, [live, mode, status, search, isPinned]);
+
+  const filtersActive = search.trim() !== '' || mode !== 'all' || status !== 'all';
   const reset = () => {
     setSearch('');
     setMode('all');
-    setLane('all');
+    setStatus('all');
   };
 
-  const card = (o: OrderRow, showStatus = false) => (
-    <OrderCard key={o.id} order={o} now={now} pinned={isPinned(o.id)} onTogglePin={() => toggle(o.id)} onOpen={() => open(o.id)} showStatus={showStatus} />
+  const row = (o: OrderRow) => (
+    <OrderListRow key={o.id} order={o} now={now} pinned={isPinned(o.id)} onTogglePin={() => toggle(o.id)} onOpen={() => open(o.id)} />
   );
 
   const emptyAll = (
@@ -108,133 +105,103 @@ export function OrdersPage() {
 
   return (
     <OrderActionsProvider>
-      <OrdersLayout activeCount={live.length} pendingCount={counts.new}>
-        {/* Résumé du service */}
+      <OrdersLayout activeCount={live.length} pendingCount={statusCounts.new ?? 0}>
+        {/* Tuiles de résumé */}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Résumé du service">
-          {LANES.map((l) => (
-            <button
-              key={l.id}
-              type="button"
-              onClick={() => setLane(lane === l.id ? 'all' : l.id)}
-              aria-pressed={lane === l.id}
-              className={cn(
-                toneClass[l.tone],
-                'group rounded-xl border bg-surface px-4 py-3 text-left shadow-card transition-[border-color,box-shadow] hover:border-border-strong focus-visible:outline-2 focus-visible:outline-ring',
-                lane === l.id ? 'border-(--tone-solid) ring-1 ring-(--tone-solid)/30' : 'border-border',
-              )}
-            >
+          {SUMMARY_TILES.map((tile) => (
+            <div key={tile.id} className={cn(toneClass[tile.tone], 'rounded-xl border border-border bg-surface px-4 py-3 text-left shadow-card')}>
               <span className="flex items-center gap-2 text-xs font-medium text-fg-muted">
-                <span className={cn('size-2 rounded-full bg-(--tone-solid)', l.id === 'new' && counts.new > 0 && 'animate-pulse')} />
-                {l.label}
+                <span className={cn('size-2 rounded-full bg-(--tone-solid)', tile.id === 'toHandle' && tileCounts.toHandle > 0 && 'animate-pulse')} />
+                {tile.label}
               </span>
               {loading ? (
                 <Skeleton className="mt-2 h-8 w-12" />
               ) : (
-                <span className="num mt-1 block font-display text-3xl font-semibold tracking-display text-fg">{counts[l.id]}</span>
+                <span className="num mt-1 block font-display text-3xl font-semibold tracking-display text-fg">{tileCounts[tile.id]}</span>
               )}
-              <span className="mt-0.5 block truncate text-2xs text-fg-subtle">
-                {l.id === 'kitchen' && late > 0 ? <span className="tone-danger font-medium text-(--tone-fg)">{late} en retard</span> : l.hint}
-              </span>
-            </button>
+              <span className="mt-0.5 block truncate text-2xs text-fg-subtle">{tile.hint}</span>
+            </div>
           ))}
         </div>
 
-        {/* Barre d'outils */}
-        <div className="mt-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="w-full md:max-w-sm">
-            <Input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="N° de commande, client, adresse, plat…"
-              aria-label="Rechercher une commande"
-              leading={<Search className="size-4" />}
-              trailing={
-                search ? (
-                  <button type="button" onClick={() => setSearch('')} className="grid size-6 place-items-center rounded-md text-fg-subtle hover:text-fg" aria-label="Effacer la recherche">
-                    <X className="size-3.5" />
-                  </button>
-                ) : undefined
-              }
-            />
-          </div>
-          <div className="flex min-w-0 items-center justify-between gap-2">
+        {/* Onglet En cours / Historique + recherche */}
+        <div className="mt-5 flex flex-col gap-3 rounded-xl border border-border bg-surface p-3">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="w-full md:max-w-sm">
+              <Input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="N° commande, client, adresse…"
+                aria-label="Rechercher une commande"
+                leading={<Search className="size-4" />}
+                trailing={
+                  search ? (
+                    <button type="button" onClick={() => setSearch('')} className="grid size-6 place-items-center rounded-md text-fg-subtle hover:text-fg" aria-label="Effacer la recherche">
+                      <X className="size-3.5" />
+                    </button>
+                  ) : undefined
+                }
+              />
+            </div>
+            {/* Mode de service : filtre secondaire, combiné à la recherche (fonctionnalité conservée, non prioritaire). */}
             <SegmentedControl
-              aria-label="Filtrer par mode"
+              aria-label="Filtrer par mode de service"
               value={mode}
               onValueChange={(v) => setMode(v as ModeFilter)}
               options={[
                 { value: 'all', label: 'Tous' },
-                { value: 'delivery', label: 'Livraison', icon: <Bike /> },
-                { value: 'pickup', label: 'À emporter', icon: <ShoppingBag /> },
-                { value: 'dine_in', label: 'Sur place', icon: <Utensils /> },
-              ]}
-            />
-            <SegmentedControl
-              aria-label="Présentation"
-              className="hidden xl:inline-flex"
-              value={layout}
-              onValueChange={(v) => setLayout(v as 'board' | 'list')}
-              options={[
-                { value: 'board', label: <span className="sr-only">Colonnes</span>, icon: <Columns3 /> },
-                { value: 'list', label: <span className="sr-only">Liste</span>, icon: <List /> },
+                { value: 'delivery', label: <span className="sr-only">Livraison</span>, icon: <Bike /> },
+                { value: 'pickup', label: <span className="sr-only">À emporter</span>, icon: <ShoppingBag /> },
+                { value: 'dine_in', label: <span className="sr-only">Sur place</span>, icon: <Utensils /> },
               ]}
             />
           </div>
+
+          {/* Filtres par statut */}
+          <div data-scroll-ok className="flex items-center gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
+            {STATUS_FILTERS.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setStatus(f.id)}
+                aria-pressed={status === f.id}
+                className={cn(
+                  'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
+                  status === f.id ? 'border-primary bg-primary-soft text-primary-soft-fg' : 'border-border text-fg-muted hover:border-border-strong hover:text-fg',
+                )}
+              >
+                {f.label}
+                <span className="num rounded-full bg-surface-3 px-1.5 py-px font-mono text-2xs text-fg-muted">{statusCounts[f.id] ?? 0}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="mt-5">
+        {/* Liste des commandes */}
+        <div className="mt-4">
           {error ? (
             <Card className="p-6 text-sm text-danger">{errorMessage(error)}</Card>
           ) : loading ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="space-y-2">
               {Array.from({ length: 4 }, (_, i) => (
-                <Skeleton key={i} className="h-52 rounded-xl" />
+                <Skeleton key={i} className="h-16 rounded-xl" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
             emptyAll
-          ) : layout === 'board' && lane === 'all' ? (
-            <>
-              {/* Colonnes (grand écran) */}
-              <div className="hidden gap-4 xl:grid xl:grid-cols-4">
-                {LANES.map((l) => (
-                  <section key={l.id} aria-label={l.label} className="min-w-0">
-                    <header className={cn(toneClass[l.tone], 'mb-3 flex items-center justify-between px-1')}>
-                      <h2 className="flex items-center gap-2 text-sm font-semibold text-fg">
-                        <span className="size-2 rounded-full bg-(--tone-solid)" />
-                        {l.label}
-                      </h2>
-                      <span className="num rounded-full bg-surface-3 px-2 py-px font-mono text-2xs text-fg-muted">{byLane[l.id].length}</span>
-                    </header>
-                    <div className="space-y-3">
-                      {byLane[l.id].length === 0 ? (
-                        <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-xs text-fg-subtle">Aucune commande</p>
-                      ) : (
-                        byLane[l.id].map((o) => card(o))
-                      )}
-                    </div>
-                  </section>
-                ))}
-              </div>
-              {/* File unique (tablette et mobile) */}
-              <div className="grid gap-3 md:grid-cols-2 xl:hidden">{filtered.map((o) => card(o, true))}</div>
-            </>
           ) : (
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {(lane === 'all' ? filtered : byLane[lane]).map((o) => card(o, true))}
-              {lane !== 'all' && byLane[lane].length === 0 && <p className="text-sm text-fg-subtle">Aucune commande à cette étape.</p>}
-            </div>
+            <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border">{filtered.map((o) => row(o))}</ul>
           )}
         </div>
 
         {scheduled.length > 0 && (
-          <section className="mt-8">
+          <section className="mt-6">
             <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-fg">
-              <CalendarClock className="size-4 text-fg-subtle" /> Commandes programmées
+              Commandes programmées
               <span className="num rounded-full bg-surface-3 px-2 py-px font-mono text-2xs text-fg-muted">{scheduled.length}</span>
             </h2>
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{scheduled.map((o) => card(o, true))}</div>
+            <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border">{scheduled.map((o) => row(o))}</ul>
           </section>
         )}
       </OrdersLayout>
