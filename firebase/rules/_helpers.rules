@@ -44,6 +44,13 @@ function adminCovers(a, cityId) {
   return a.cityIds.size() == 0 || cityId in a.cityIds;
 }
 
+// Variante pour une ressource scopée à PLUSIEURS villes à la fois (ex. promotions
+// plateforme ciblées, groupes de restaurants) : liste vide (ressource ou admin) = aucune
+// restriction de ce côté-là.
+function adminCoversAny(a, cityIds) {
+  return a.cityIds.size() == 0 || cityIds.size() == 0 || a.cityIds.hasAny(cityIds);
+}
+
 // Membre actif de l'équipe interne, quelle que soit sa permission.
 function isAnyAdmin() {
   return isRole('admin') && adminData().active == true;
@@ -57,6 +64,11 @@ function isAdmin(perm) {
 // Permission `perm` et ville dans le périmètre de l'administrateur (liste vide = toutes).
 function isAdminIn(perm, cityId) {
   return isRole('admin') && adminHas(adminData(), perm) && adminCovers(adminData(), cityId);
+}
+
+// Variante pour une ressource scopée à plusieurs villes (voir adminCoversAny).
+function isAdminInAny(perm, cityIds) {
+  return isRole('admin') && adminHas(adminData(), perm) && adminCoversAny(adminData(), cityIds);
 }
 
 // ----------------------------------------------------------------- Personnel restaurant

@@ -37,6 +37,8 @@ export interface RestaurantGroup extends Tracked, SoftDeletable {
   siren?: string | null;
   vatNumber?: string | null;
   restaurantIds: string[];
+  /** Dénormalisé depuis les établissements membres (saveRestaurantGroup) : périmètre ville des règles Firestore. */
+  cityIds: string[];
   /** Conditions communes appliquées à tous les établissements du groupe. */
   commercial?: { commissionBps?: Bps | null; planCode?: PlanCode | null; subscriptionId?: string | null } | null;
   /** Facturation consolidée au niveau du groupe. */

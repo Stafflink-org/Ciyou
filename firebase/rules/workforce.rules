@@ -19,7 +19,7 @@ function ownsIncoming() {
 }
 
 match /restaurants/{rid}/employees/{employeeId} {
-  allow read: if can(rid, 'team.view') || ownsEmployeeRecord() || isAdmin('restaurants.view');
+  allow read: if can(rid, 'team.view') || ownsEmployeeRecord() || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
   allow create: if can(rid, 'team.manage') && createdNow()
     && isNonEmptyString(incoming().firstName, 60)
     && isNonEmptyString(incoming().lastName, 60);
@@ -176,21 +176,21 @@ match /restaurants/{rid}/documents/{documentId} {
 // ------------------------------------------------------------ HACCP
 
 match /restaurants/{rid}/haccpEquipments/{id} {
-  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
   allow create: if can(rid, 'haccp.manage') && createdNow();
   allow update: if can(rid, 'haccp.manage') && updatedNow();
   allow delete: if false;
 }
 
 match /restaurants/{rid}/haccpCleaningTasks/{id} {
-  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
   allow create: if can(rid, 'haccp.manage') && createdNow();
   allow update: if can(rid, 'haccp.manage') && updatedNow();
   allow delete: if false;
 }
 
 match /restaurants/{rid}/haccpTemperatureLogs/{id} {
-  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
   allow create: if can(rid, 'haccp.record')
     && incoming().value is number
     && incoming().recordedBy == uid()
@@ -203,7 +203,7 @@ match /restaurants/{rid}/haccpTemperatureLogs/{id} {
 }
 
 match /restaurants/{rid}/haccpReceptions/{id} {
-  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
   allow create: if can(rid, 'haccp.record')
     && incoming().receivedBy == uid()
     && incoming().receivedAt == request.time
@@ -216,7 +216,7 @@ match /restaurants/{rid}/haccpReceptions/{id} {
 }
 
 match /restaurants/{rid}/haccpNonConformities/{id} {
-  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
   allow create: if can(rid, 'haccp.record')
     && incoming().declaredBy == uid()
     && incoming().declaredAt == request.time
@@ -227,20 +227,20 @@ match /restaurants/{rid}/haccpNonConformities/{id} {
 }
 
 match /restaurants/{rid}/haccpCleaningLogs/{id} {
-  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
   allow create: if can(rid, 'haccp.record') && incoming().doneBy == uid() && incoming().doneAt == request.time;
   allow update, delete: if false;
 }
 
 match /restaurants/{rid}/haccpPestVisits/{id} {
-  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
   allow create: if can(rid, 'haccp.manage') && incoming().createdBy == uid() && incoming().createdAt == request.time;
   allow update: if can(rid, 'haccp.manage') && keepsUnchanged(['createdBy', 'createdAt']);
   allow delete: if false;
 }
 
 match /restaurants/{rid}/haccpPestReports/{id} {
-  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
   allow create: if can(rid, 'haccp.record')
     && incoming().reportedBy == uid()
     && incoming().reportedAt == request.time
@@ -252,20 +252,20 @@ match /restaurants/{rid}/haccpPestReports/{id} {
 }
 
 match /restaurants/{rid}/haccpPersonnelChecks/{id} {
-  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
   allow create, update: if can(rid, 'haccp.record') && isIsoDay(incoming().date);
   allow delete: if false;
 }
 
 match /restaurants/{rid}/haccpDocuments/{id} {
-  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
   allow create: if can(rid, 'haccp.manage') && incoming().uploadedBy == uid() && incoming().uploadedAt == request.time;
   allow delete: if can(rid, 'haccp.manage');
   allow update: if false;
 }
 
 match /restaurants/{rid}/haccpAudits/{id} {
-  allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+  allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
   allow create: if can(rid, 'haccp.manage') && incoming().performedBy == uid() && incoming().createdAt == request.time;
   allow update: if can(rid, 'haccp.manage') && keepsUnchanged(['performedBy', 'createdAt']);
   allow delete: if false;
@@ -273,6 +273,6 @@ match /restaurants/{rid}/haccpAudits/{id} {
 
 // Exports PDF générés par la Cloud Function exportHaccpRegister.
 match /restaurants/{rid}/haccpExports/{id} {
-  allow read: if can(rid, 'haccp.manage') || isAdmin('restaurants.view');
+  allow read: if can(rid, 'haccp.manage') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
   allow write: if false;
 }

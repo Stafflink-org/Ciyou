@@ -31,7 +31,10 @@ function withinProductLimit(rid) {
 }
 
 match /restaurantGroups/{groupId} {
-  allow read: if isSelf(resource.data.ownerId) || isAdmin('restaurants.view');
+  // `cityIds` dénormalisé depuis les établissements membres (saveRestaurantGroup) : un admin
+  // limité à une ville ne devrait voir que les groupes ayant au moins un établissement dans
+  // son périmètre, pas tous les groupes de la plateforme.
+  allow read: if isSelf(resource.data.ownerId) || isAdminInAny('restaurants.view', resource.data.get('cityIds', []));
   // Modification : saveRestaurantGroup (Cloud Function, audit).
   allow write: if false;
 }
@@ -68,11 +71,11 @@ match /restaurants/{rid} {
       || isAdmin('finance.view');
     allow write: if false;
     // Super admin, validation des dossiers : identité légale consultable par les validateurs.
-    allow read: if docId == 'legal' && isAdmin('restaurants.validate');
+    allow read: if docId == 'legal' && isAdminIn('restaurants.validate', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
   }
 
   match /settings/{docId} {
-    allow read: if isRestaurantMember(rid) || isAdmin('restaurants.view');
+    allow read: if isRestaurantMember(rid) || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
     allow write: if updatedNow() && (
       (docId in ['orders', 'hours', 'payments', 'loyalty', 'notifications'] && can(rid, 'settings.manage'))
       || (docId == 'payroll' && can(rid, 'payroll.manage'))
@@ -163,7 +166,7 @@ match /restaurants/{rid} {
   }
 
   match /stockMovements/{movementId} {
-    allow read: if can(rid, 'menu.view') || isAdmin('restaurants.view');
+    allow read: if can(rid, 'menu.view') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
     allow create: if can(rid, 'stock.edit')
       && incoming().reason in ['manual_adjust', 'reception', 'waste', 'inventory']
       && incoming().createdBy == uid()
@@ -179,13 +182,13 @@ match /restaurants/{rid} {
   // Invitations, rôles et permissions : Cloud Functions inviteMember, updateMemberRole.
 
   match /members/{memberId} {
-    allow read: if isSelf(memberId) || can(rid, 'team.view') || isAdmin('restaurants.view');
+    allow read: if isSelf(memberId) || can(rid, 'team.view') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
     allow update: if can(rid, 'team.manage') && onlyChanges(['onDuty']);
     allow create, delete: if false;
   }
 
   match /staffRoles/{roleId} {
-    allow read: if can(rid, 'team.view') || isAdmin('restaurants.view');
+    allow read: if can(rid, 'team.view') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
     allow create: if can(rid, 'team.manage') && createdNow() && incoming().system == false;
     allow update: if can(rid, 'team.manage') && existing().system == false && updatedNow();
     allow delete: if can(rid, 'team.manage') && existing().system == false;
@@ -194,7 +197,7 @@ match /restaurants/{rid} {
   // ------------------------------------------------------------ Clients et livreurs
 
   match /customers/{customerId} {
-    allow read: if can(rid, 'customers.view') || isAdmin('customers.view');
+    allow read: if can(rid, 'customers.view') || isAdminIn('customers.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
     allow update: if can(rid, 'customers.manage')
       && onlyChanges(['blocked', 'blockedReason', 'internalNote', 'tags', 'updatedAt'])
       && incoming().updatedAt == request.time;
@@ -202,13 +205,13 @@ match /restaurants/{rid} {
 
     // Notes internes de l'équipe : ajout et suppression par Cloud Function (addCustomerNote, deleteCustomerNote).
     match /notes/{noteId} {
-      allow read: if can(rid, 'customers.view') || isAdmin('customers.view');
+      allow read: if can(rid, 'customers.view') || isAdminIn('customers.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
       allow write: if false;
     }
   }
 
   match /couriers/{driverId} {
-    allow read: if isSelf(driverId) || can(rid, 'orders.view') || isAdmin('drivers.view');
+    allow read: if isSelf(driverId) || can(rid, 'orders.view') || isAdminIn('drivers.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
     allow update: if can(rid, 'couriers.manage')
       && onlyChanges(['status', 'note', 'updatedAt', 'updatedBy'])
       && incoming().status in ['active', 'inactive', 'blocked']
@@ -217,7 +220,7 @@ match /restaurants/{rid} {
   }
 
   match /dailyStats/{day} {
-    allow read: if can(rid, 'dashboard.view') || can(rid, 'finance.view') || isAdmin('restaurants.view');
+    allow read: if can(rid, 'dashboard.view') || can(rid, 'finance.view') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
     allow write: if false;
   }
 
@@ -234,8 +237,8 @@ match /restaurants/{rid} {
 match /partnerDocuments/{documentId} {
   allow read: if (resource.data.ownerType == 'restaurant' && can(resource.data.ownerId, 'settings.manage'))
     || (resource.data.ownerType == 'driver' && isSelf(resource.data.ownerId))
-    || isAdmin('restaurants.validate')
-    || isAdmin('drivers.validate');
+    || isAdminIn('restaurants.validate', resource.data.get('cityId', null))
+    || isAdminIn('drivers.validate', resource.data.get('cityId', null));
   // Super admin, fiche restaurant : liste des justificatifs (sans accès aux fichiers, réservés aux validateurs).
   allow read: if resource.data.ownerType == 'restaurant' && isAdminIn('restaurants.view', resource.data.get('cityId', ''));
   allow create: if (
@@ -250,7 +253,7 @@ match /partnerDocuments/{documentId} {
 }
 
 match /menuIssues/{issueId} {
-  allow read: if can(resource.data.restaurantId, 'menu.view') || isAdmin('restaurants.view');
+  allow read: if can(resource.data.restaurantId, 'menu.view') || isAdminIn('restaurants.view', resource.data.cityId);
   // Traitement par l'équipe interne : resolveMenuIssue (Cloud Function, motif, audit).
   allow update: if can(resource.data.restaurantId, 'menu.edit')
     && onlyChanges(['status', 'resolvedAt', 'resolvedBy'])
