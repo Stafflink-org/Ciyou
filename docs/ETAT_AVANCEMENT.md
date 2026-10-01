@@ -1,5 +1,21 @@
 # État d'avancement — Ciyou Eats
 
+## §22 Marque : l'icône d'onglet (favicon) téléversée n'était jamais appliquée — 01/10/2026 (tâche `cdc-fix-residuals-17`)
+
+Suite immédiate de `cdc-fix-residuals-16` (§17), même session de travail continu. Un agent d'exploration a vérifié §22 (Paramètres plateforme) et §4 (Rapports et exports) : dans §4, les deux défauts PARTIEL (export « finances » unifié, preuve d'envoi Brevo réel) sont confirmés comme de vraies décisions produit ou blocages d'infrastructure de test — rien corrigé là. Dans §22, un vrai bug à petit périmètre a été trouvé (favicon jamais appliqué) et corrigé ; l'agent a aussi signalé que la section détaillée §22 du cahier était restée figée à un état antérieur à la tâche `cdc-fix-d`, qui l'avait déjà recomptée correctement dans une annexe séparée (« Annexe M ») jamais reliée à la section d'origine — corrigé en ajoutant un renvoi explicite plutôt qu'en dupliquant le travail.
+
+**Défaut corrigé** : l'icône d'onglet (favicon) de la plateforme était téléversable depuis l'écran « Marque » (`ParametresPage.tsx`, slot « Icône »), enregistrée correctement dans `settings/branding.favicon` — mais **jamais relue** : `useBranding` (`packages/web/src/branding/branding.tsx`) n'extrayait même pas ce champ, et aucun effet ne touchait le `<link rel="icon">` du document. Les deux back-offices (admin et restaurant) gardaient toujours l'icône statique livrée avec l'application, quel que soit le réglage enregistré.
+
+**Corrigé** : `faviconUrl` ajouté à `BrandingState` ; nouveau composant `FaviconEffect` (même fichier), monté dans `apps/admin/src/app/App.tsx` et `apps/restaurant/src/app/App.tsx` à côté de `BrandingEffect` déjà existant — met à jour le `<link rel="icon">` quand un favicon est réglé, restaure l'icône d'origine si le réglage est retiré.
+
+**Bug annexe trouvé et corrigé** : le texte affiché par l'écran lui-même affirmait à tort que « les autres couleurs [secondaire/accent/fond] sont transmises aux applications client et livreur » — aucune des deux apps n'a la moindre référence à `settings/branding` (grep exhaustif). Texte corrigé pour ne plus promettre un effet qui n'existe pas.
+
+**Testé réel sur `golink-9f16d`**, dans les deux back-offices : icône de test téléversée depuis l'écran réel (motif audité) → `<link rel="icon">` vérifié pointant vers l'URL Storage réelle dans `apps/admin` **et** `apps/restaurant` → icône retirée → DOM revérifié revenu à l'icône statique d'origine dans les deux apps. Aucune donnée de test résiduelle (favicon retiré, `settings/branding` revenu à son état initial).
+
+`npx tsc --noEmit` (`packages/web`, `apps/admin`, `apps/restaurant`) vert (une erreur préexistante sans rapport, dans `packages/ui`, confirmée non introduite par ce correctif).
+
+**Cahier §22 : aucune ligne ne change de statut** — « Identité » reste PARTIEL (apps client/livreur toujours sans consommateur de marque, hors périmètre). Correction de documentation au passage : la section détaillée §22 d'origine (restée figée depuis avant `cdc-fix-d`) pointe désormais explicitement vers l'Annexe M, déjà à jour et déjà cohérente avec le tableau §3 (2 COMPLET / 2 PARTIEL) — évite de fausses relectures futures. Total cahier super admin inchangé : **110 COMPLET / 56 PARTIEL / 0 ABSENT / 0 FAUX** (166 lignes), recompté honnêtement. Détail : `docs/AUDIT_COUVERTURE_CDC.md` §22 et Annexe M.3.
+
 ## §17 Formules : la limite de produits était contournable via l'import CSV — 01/10/2026 (tâche `cdc-fix-residuals-16`)
 
 Suite immédiate de `cdc-fix-residuals-15` (§13), même session de travail continu. Un agent d'exploration a vérifié §14 (Paiements) et §17 (Abonnements et commissions) : dans §14, les deux défauts PARTIEL (prestataire de paiement local DZ/MA/TN, frais de paiement par commerce) sont confirmés comme de vrais blocages produit/business — rien corrigé là, cohérent avec les constats déjà faits lors de tâches précédentes (`cdc-fix-residuals-1`/`-5`). Dans §17, un vrai défaut à petit périmètre a été trouvé et corrigé, et une désynchronisation de texte corrigée au passage (le paragraphe « Comptage strict par ligne du cahier » affichait encore un décompte d'avant `cdc-fix-c`, en contradiction directe avec les statuts déjà COMPLET affichés juste au-dessus — même défaut déjà rencontré sur §6).

@@ -11,6 +11,7 @@ export interface BrandingState {
   platformName: string | null;
   logoUrl: string | null;
   logoDarkUrl: string | null;
+  faviconUrl: string | null;
   primary: string | null;
 }
 
@@ -19,6 +20,7 @@ const DEFAULT_PRIMARY = '#e8784b';
 interface BrandingDoc {
   logo?: { url?: string } | null;
   logoDark?: { url?: string } | null;
+  favicon?: { url?: string } | null;
   colors?: { primary?: string } | null;
 }
 
@@ -29,8 +31,32 @@ export function useBranding(db: Firestore): BrandingState {
     platformName: general.data?.platformName ?? null,
     logoUrl: branding.data?.logo?.url ?? null,
     logoDarkUrl: branding.data?.logoDark?.url ?? null,
+    faviconUrl: branding.data?.favicon?.url ?? null,
     primary: branding.data?.colors?.primary ?? null,
   };
+}
+
+/**
+ * Icône d'onglet (favicon) du réglage « Marque » : jusqu'ici téléversée par l'écran mais jamais
+ * relue nulle part (`settings/branding.favicon` sans consommateur) — l'onglet du navigateur
+ * restait toujours sur le favicon statique livré avec l'application (`index.html`).
+ */
+export function FaviconEffect({ db }: { db: Firestore }) {
+  const { faviconUrl } = useBranding(db);
+  useEffect(() => {
+    if (!faviconUrl) return;
+    const existing = document.querySelectorAll<HTMLLinkElement>('link[rel="icon"]');
+    const previous = existing.length > 0 ? [...existing].map((link) => ({ link, href: link.href })) : null;
+    const link = existing[0] ?? document.createElement('link');
+    link.rel = 'icon';
+    link.href = faviconUrl;
+    if (existing.length === 0) document.head.appendChild(link);
+    return () => {
+      if (previous) previous.forEach(({ link: l, href }) => (l.href = href));
+      else link.remove();
+    };
+  }, [faviconUrl]);
+  return null;
 }
 
 function parse(hex: string): [number, number, number] | null {
