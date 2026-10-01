@@ -5,10 +5,12 @@
 // ---------------------------------------------------------------------------
 
 // Champs de la fiche modifiables par le restaurant (permission settings.manage).
+// `busyExtraMinutes` n'y figure plus : voir le commentaire sur la branche `orders.manage`
+// ci-dessous (match /restaurants/{rid}).
 function restaurantProfileFields() {
   return ['description', 'phone', 'email', 'logo', 'cover', 'photos', 'accent', 'mark',
     'cuisineIds', 'tags', 'priceLevel', 'prepMinutes', 'etaMinutes', 'ownDeliveryFeeCents',
-    'ownDeliveryRadiusMeters', 'isOpen', 'busyExtraMinutes', 'updatedAt', 'updatedBy'];
+    'ownDeliveryRadiusMeters', 'isOpen', 'updatedAt', 'updatedBy'];
 }
 
 // Vente d'alcool interdite (décision client) : aucun produit de type boisson alcoolisée.
@@ -41,7 +43,14 @@ match /restaurants/{rid} {
     || isRestaurantMember(rid)
     || isAdminIn('restaurants.view', resource.data.cityId);
   allow update: if (can(rid, 'settings.manage') && onlyChanges(restaurantProfileFields())
+      // Mode affluence (busyExtraMinutes) : la remise à zéro directe reste possible (fermeture
+      // automatique, AutoPauseBanner.tsx), mais toute valeur non nulle doit passer par
+      // `setBusyMode` (Cloud Function, functions/src/orders/transitions.ts) — seule à connaître
+      // `rules.maxPrepExtensionMinutes` (réglage par ville/pays). Une écriture directe ici
+      // acceptait jusqu'à 90 min codées en dur, indépendamment de ce réglage (cahier §9, défaut
+      // déjà documenté).
       || can(rid, 'orders.manage') && onlyChanges(['isOpen', 'busyExtraMinutes', 'updatedAt', 'updatedBy'])
+        && (incoming().busyExtraMinutes == resource.data.busyExtraMinutes || incoming().busyExtraMinutes == 0)
       // Modification par l'équipe interne : adminUpdateRestaurant (Cloud Function, motif, audit).
       )
     && incoming().busyExtraMinutes is int

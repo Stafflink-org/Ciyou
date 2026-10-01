@@ -9,6 +9,7 @@ export {
   extendPrepTime,
   markOrderPickedUp,
   markOrderReady,
+  setBusyMode,
   startPreparation,
 } from './transitions';
 export { cancelOrder, rejectOrder } from './cancel';
