@@ -727,18 +727,22 @@ service cloud.firestore {
 
 
     match /prospects/{prospectId} {
-      allow read: if isAdmin('crm.view');
-      allow create: if isAdmin('crm.edit') && createdNow();
+      // Cloisonnement par ville (comme `assertAdminCovers` côté Cloud Function, `saveProspect`/
+      // `moveProspect`) : un admin `city_manager` limité à une ville avait sinon accès en lecture
+      // ET en écriture directe aux prospects de n'importe quelle autre ville.
+      allow read: if isAdminIn('crm.view', resource.data.cityId);
+      allow create: if isAdminIn('crm.edit', incoming().cityId) && createdNow();
       // `stage`/`lostReason`/`ownerId` doivent passer par `moveProspect`/`saveProspect` (Cloud
       // Functions) : périmètre ville, motif de perte, commission du commercial créée/annulée,
       // garde-fou anti-réouverture d'un prospect déjà commissionné, audit — une écriture directe sur
       // ces champs contournait silencieusement tout ça.
-      allow update: if isAdmin('crm.edit') && keepsUnchanged(['restaurantId', 'signedUpAt', 'stage', 'lostReason', 'ownerId']) && updatedNow();
+      allow update: if isAdminIn('crm.edit', resource.data.cityId) && keepsUnchanged(['restaurantId', 'signedUpAt', 'stage', 'lostReason', 'ownerId']) && updatedNow();
       allow delete: if false;
 
       match /activities/{activityId} {
-        allow read: if isAdmin('crm.view');
-        allow create: if isAdmin('crm.edit') && incoming().by == uid() && incoming().at == request.time;
+        allow read: if isAdminIn('crm.view', get(/databases/$(database)/documents/prospects/$(prospectId)).data.cityId);
+        allow create: if isAdminIn('crm.edit', get(/databases/$(database)/documents/prospects/$(prospectId)).data.cityId)
+          && incoming().by == uid() && incoming().at == request.time;
         allow update, delete: if false;
       }
     }
@@ -1042,10 +1046,12 @@ service cloud.firestore {
     // ---------------------------------------------------------------------------
 
     // Champs de la fiche modifiables par le restaurant (permission settings.manage).
+    // `busyExtraMinutes` n'y figure plus : voir le commentaire sur la branche `orders.manage`
+    // ci-dessous (match /restaurants/{rid}).
     function restaurantProfileFields() {
       return ['description', 'phone', 'email', 'logo', 'cover', 'photos', 'accent', 'mark',
         'cuisineIds', 'tags', 'priceLevel', 'prepMinutes', 'etaMinutes', 'ownDeliveryFeeCents',
-        'ownDeliveryRadiusMeters', 'isOpen', 'busyExtraMinutes', 'updatedAt', 'updatedBy'];
+        'ownDeliveryRadiusMeters', 'isOpen', 'updatedAt', 'updatedBy'];
     }
 
     // Vente d'alcool interdite (décision client) : aucun produit de type boisson alcoolisée.
@@ -1078,7 +1084,14 @@ service cloud.firestore {
         || isRestaurantMember(rid)
         || isAdminIn('restaurants.view', resource.data.cityId);
       allow update: if (can(rid, 'settings.manage') && onlyChanges(restaurantProfileFields())
+          // Mode affluence (busyExtraMinutes) : la remise à zéro directe reste possible (fermeture
+          // automatique, AutoPauseBanner.tsx), mais toute valeur non nulle doit passer par
+          // `setBusyMode` (Cloud Function, functions/src/orders/transitions.ts) — seule à connaître
+          // `rules.maxPrepExtensionMinutes` (réglage par ville/pays). Une écriture directe ici
+          // acceptait jusqu'à 90 min codées en dur, indépendamment de ce réglage (cahier §9, défaut
+          // déjà documenté).
           || can(rid, 'orders.manage') && onlyChanges(['isOpen', 'busyExtraMinutes', 'updatedAt', 'updatedBy'])
+            && (incoming().busyExtraMinutes == resource.data.busyExtraMinutes || incoming().busyExtraMinutes == 0)
           // Modification par l'équipe interne : adminUpdateRestaurant (Cloud Function, motif, audit).
           )
         && incoming().busyExtraMinutes is int
