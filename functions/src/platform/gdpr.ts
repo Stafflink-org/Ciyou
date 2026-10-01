@@ -7,9 +7,11 @@ import {
   COLLECTIONS,
   LEGAL_DOCUMENT_TYPES,
   RESTAURANT_PRIVATE_DOCS,
+  REVIEW_REPORT_REASONS,
   SETTINGS_DOCS,
   SUBCOLLECTIONS,
   type ConsentKey,
+  type ContentReport,
   type GdprRequest,
   type LegalAcceptance,
   type RetentionRunSummary,
@@ -385,17 +387,38 @@ export const getGdprExportLink = platformCallable(
 
 // ------------------------------------------------------------------ Signalements de contenus
 
+// Schéma aligné sur le modèle réel `ContentReport` (packages/shared/src/models/support.ts) et sur
+// `reportReview` (messaging/restaurant/reviews.ts), seul autre producteur de `contentReports` —
+// `entityType`/`entityId`/reason en texte libre (version précédente) ne correspondaient à rien de
+// ce que lit `decideContentReport`/`ReportsPage.tsx` (qui attendent `targetType`/`targetPath`,
+// `reason` en énumération stricte) : un signalement créé par cette fonction faisait planter
+// l'écran de traitement dès qu'un agent l'ouvrait (`report.targetPath.startsWith(...)` sur
+// `undefined`).
 export const reportContent = platformCallable(
   z.object({
-    entityType: z.enum(['review', 'product', 'restaurant', 'photo']),
-    entityId: zId,
-    reason: zReason,
+    targetType: z.enum(['review', 'review_reply', 'product', 'restaurant', 'image', 'message']),
+    targetPath: z.string().trim().min(1),
+    restaurantId: zId.nullish(),
+    reason: z.enum(REVIEW_REPORT_REASONS),
+    details: z.string().trim().max(2000).nullable().default(null),
   }),
   async (data, request) => {
     const { caller } = await requireSecureAdmin(request);
-    const ref = db.collection('contentReports').doc();
-    await ref.set({ entityType: data.entityType, entityId: data.entityId, reason: data.reason, status: 'open', createdAt: FieldValue.serverTimestamp(), createdBy: caller.uid });
-    await writeAudit({ actor: actorFromCaller(caller, 'admin'), action: 'content.reported', target: { type: 'other', id: data.entityId, label: data.entityType }, reason: data.reason, request });
+    const ref = db.collection(COLLECTIONS.contentReports).doc();
+    const report: ContentReport = {
+      targetType: data.targetType,
+      targetPath: data.targetPath,
+      restaurantId: data.restaurantId ?? null,
+      reporterId: caller.uid,
+      reporterType: 'system',
+      reason: data.reason,
+      details: data.details,
+      status: 'open',
+      decision: null,
+      createdAt: Timestamp.now(),
+    };
+    await ref.set(report);
+    await writeAudit({ actor: actorFromCaller(caller, 'admin'), action: 'content.reported', target: { type: 'other', id: data.targetPath, label: data.targetType }, reason: data.reason, request });
     return { reportId: ref.id };
   },
 );

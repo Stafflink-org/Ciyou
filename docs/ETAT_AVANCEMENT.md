@@ -1,5 +1,19 @@
 # État d'avancement — Ciyou Eats
 
+## §29 Légal/RGPD : signalement de contenu écrivait un schéma incompatible avec son propre traitement — 01/10/2026 (tâche `cdc-fix-residuals-29`)
+
+Suite immédiate du correctif mobile Stripe (plantage au lancement iOS). Un agent d'exploration a d'abord vérifié que les deux PR mergées le même jour par une autre session de travail (§27 Sécurité, §6 Livreurs) n'avaient introduit aucune désynchronisation du tableau §3 — tout était déjà cohérent, rien à corriger là. Puis exploration de §29 (Légal/RGPD, la rubrique avec le pire ratio COMPLET/PARTIEL du cahier : 1/5) : toutes les lignes PARTIEL ont déjà été examinées lors de tâches antérieures, sauf un vrai bug de code resté non corrigé sur la ligne « Signalements de contenus ».
+
+**Défaut corrigé** : `reportContent` (`functions/src/platform/gdpr.ts`), fonction déployée et atteignable par tout administrateur authentifié, écrivait un document `contentReports` au format `{ entityType, entityId, reason, status, createdAt, createdBy }` — un schéma qui ne correspond à rien de ce que lisent `decideContentReport` (`admin/experience/reviews.ts`), `ReportsPage.tsx`, ni le modèle réel `ContentReport` (`packages/shared/src/models/support.ts`), qui attendent tous `targetType`/`targetPath`/`reporterId`/`reporterType`/`reason` en énumération stricte. Conséquence réelle, pas seulement théorique : un signalement créé par cette fonction n'avait ni `targetType` ni `targetPath` — `decideContentReport` plantait immédiatement (`TypeError` sur `report.targetPath.startsWith(undefined)`) dès qu'un agent tentait de le traiter.
+
+**Corrigé** : `reportContent` écrit désormais exactement le modèle `ContentReport`, sur le même patron que `reportReview` (seul autre producteur réel de `contentReports`) — `targetType`/`targetPath` en entrée, `reason` validé par la même énumération stricte (`REVIEW_REPORT_REASONS`), `reporterType: 'system'` (signalement par un administrateur, pas par un usager).
+
+**Testé réel sur `golink-9f16d`** (`scripts/tests/cdc-fix-residuals-29.flow.mjs`, signalement réel d'un commerce existant — lecture seule, aucune mutation du commerce lui-même) : **7/7 OK** — document créé avec `targetType`/`targetPath` corrects (plus d'`entityType`/`entityId`), `decideContentReport` traite le signalement sans lever d'exception (statut passé à `dismissed`), nettoyage complet vérifié.
+
+`npx tsc --noEmit -p functions` vert. Fonction déployée (`functions:reportContent`).
+
+**Cahier : aucune ligne ne change de statut** — « Signalements de contenus » (§29) reste PARTIEL (contenus photo/texte/produit non pris en charge par le retrait, aucun canal de signalement public dans les apps client/driver, pas de délai de traitement suivi — non traités ce tour). Total cahier super admin inchangé : **107 COMPLET / 59 PARTIEL / 0 ABSENT / 0 FAUX** (166 lignes). Détail : `docs/AUDIT_COUVERTURE_CDC.md` §29.
+
 ## §7 Clients : export CSV sans contrôle ni audit — 01/10/2026 (tâche `cdc-fix-residuals-27`)
 
 Suite immédiate de `cdc-fix-residuals-26` (§19), même session de travail continu. Un agent d'exploration a vérifié §7 (Gestion des clients) et §20 (Notifications et communication), déjà corrigées une fois chacune avant la compaction de contexte de cette session : §20 n'a révélé aucun nouveau défaut de code (tout ce qui reste PARTIEL est décision produit ou chantier d'app mobile disproportionné) — rien corrigé là. §7 avait un vrai bug de code à petit périmètre, déjà documenté comme P1 dans le texte de l'audit mais jamais corrigé, avec un précédent exact déjà appliqué ailleurs dans le même repo.
