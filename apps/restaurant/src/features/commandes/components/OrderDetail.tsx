@@ -25,7 +25,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
   IconButton,
   Skeleton,
@@ -91,6 +90,15 @@ const ACTOR_LABELS: Record<OrderEvent['actor'], string> = {
 function eventTitle(event: OrderEvent): string {
   if (event.type === 'status_changed' && event.to) return labelOf('ORDER_STATUS_LABELS', event.to, getLocale());
   return ORDER_EVENT_TYPE_LABELS[event.type];
+}
+
+/** En-tête numéroté d'une colonne de la fiche (« 01 / LE PANIER », « 02 / RÉCAPITULATIF »). */
+function SectionNumber({ index, title }: { index: string; title: string }) {
+  return (
+    <p className="flex items-center gap-2 text-2xs font-semibold uppercase tracking-eyebrow text-fg-subtle">
+      <span className="text-primary">{index} /</span> {title}
+    </p>
+  );
 }
 
 function Block({ title, icon, children, action }: { title: string; icon: ReactNode; children: ReactNode; action?: ReactNode }) {
@@ -208,9 +216,6 @@ export function OrderDetail({ order, compactHeader }: { order: OrderRow; compact
                 </IconButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-60">
-                <DropdownMenuItem icon={<Printer />} onSelect={() => actions.print(order)}>
-                  Imprimer le ticket cuisine
-                </DropdownMenuItem>
                 <DropdownMenuItem icon={<Copy />} onSelect={copyNumber}>
                   Copier le numéro
                 </DropdownMenuItem>
@@ -218,14 +223,6 @@ export function OrderDetail({ order, compactHeader }: { order: OrderRow; compact
                   <DropdownMenuItem icon={<LifeBuoy />} onSelect={() => actions.open('report', order)}>
                     Signaler un problème
                   </DropdownMenuItem>
-                )}
-                {!closed && can('orders.cancel') && order.status !== 'new' && order.status !== 'picked_up' && order.status !== 'assigned' && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem icon={<Ban />} destructive onSelect={() => actions.open('cancel', order)}>
-                      Annuler la commande
-                    </DropdownMenuItem>
-                  </>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -239,11 +236,6 @@ export function OrderDetail({ order, compactHeader }: { order: OrderRow; compact
           {order.containsAlcohol && <Badge tone="amber" icon={<ShieldCheck />}>Alcool · pièce d’identité</Badge>}
           {order.test && <Badge tone="neutral">Démonstration</Badge>}
         </div>
-        {!closed && (
-          <div className="flex flex-wrap gap-2">
-            <PrimaryActions order={order} size="md" stretch />
-          </div>
-        )}
       </div>
 
       {order.status !== 'cancelled' && (
@@ -283,8 +275,9 @@ export function OrderDetail({ order, compactHeader }: { order: OrderRow; compact
       )}
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        <div className="min-w-0 space-y-4">
-          <Block title="Panier" icon={<Receipt />} action={<span className="text-xs text-fg-subtle">{order.itemsCount} article{order.itemsCount > 1 ? 's' : ''}</span>}>
+        <div className="min-w-0 space-y-3">
+          <SectionNumber index="01" title="Le panier" />
+          <Block title="Produits commandés" icon={<Receipt />} action={<span className="text-xs text-fg-subtle">{order.itemsCount} article{order.itemsCount > 1 ? 's' : ''}</span>}>
             <ul className="divide-y divide-border">
               {order.items.map((item) => {
                 const groups = new Map<string, typeof item.options>();
@@ -364,7 +357,22 @@ export function OrderDetail({ order, compactHeader }: { order: OrderRow; compact
           </Block>
         </div>
 
-        <div className="min-w-0 space-y-4">
+        <div className="min-w-0 space-y-3">
+          <SectionNumber index="02" title="Récapitulatif" />
+          <div className="rounded-xl border border-border bg-surface-2 px-4 py-3.5">
+            <Line label="Client" text value={order.customerName} strong />
+            <Line label="Service" text value={fulfillmentLabel(order.fulfillment)} />
+            <Line label="Total commande" value={eur(order.amounts.totalCents)} strong className="mt-1 border-t border-border pt-2" />
+          </div>
+
+          {!closed && (
+            <div className="rounded-xl border border-border bg-surface px-4 py-3.5">
+              <p className="mb-2 text-sm font-semibold text-fg">Demande de livreur indépendant</p>
+              <CourierLine order={order} />
+            </div>
+          )}
+
+          <div className="space-y-4">
           <Block title="Client" icon={<User />}>
             <p className="text-sm font-semibold text-fg">{order.customerName}</p>
             {order.customerPhoneMasked && (
@@ -453,7 +461,25 @@ export function OrderDetail({ order, compactHeader }: { order: OrderRow; compact
               {fulfillmentLabel(order.fulfillment)} · {meta.label.toLowerCase()} · actualisé en temps réel
             </p>
           )}
+          </div>
         </div>
+      </div>
+
+      {/* Actions : imprimer, action principale selon le statut, annuler. */}
+      <div className={cn('flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4', compactHeader && 'sticky bottom-0 -mx-6 -mb-5 bg-surface px-6 pb-5')}>
+        <Button variant="secondary" leftIcon={<Printer />} onClick={() => actions.print(order)}>
+          Imprimer
+        </Button>
+        {!closed && (
+          <div className="flex flex-wrap gap-2">
+            <PrimaryActions order={order} size="md" stretch />
+          </div>
+        )}
+        {!closed && can('orders.cancel') && order.status !== 'new' && order.status !== 'picked_up' && order.status !== 'assigned' && (
+          <Button variant="ghost" className="text-danger hover:bg-danger-soft" leftIcon={<Ban />} onClick={() => actions.open('cancel', order)}>
+            Annuler la commande
+          </Button>
+        )}
       </div>
     </div>
   );
