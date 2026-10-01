@@ -6,9 +6,11 @@ import {
   CUSTOMER_CREDIT_REASON_LABELS,
   CUSTOMER_RETAINED_DATA,
   formatPrice,
+  SETTINGS_DOCS,
   type GdprRequest,
   type LedgerEntry,
   type Order,
+  type RefundSettings,
   type UserProfile,
   type WalletTransaction,
 } from '@golink/shared';
@@ -122,6 +124,13 @@ export const creditCustomer = acteursCallable(creditSchema, async (data, request
   // Décision client : les remboursements liés à une commande sont imputés au commerce.
   const chargeRestaurant = Boolean(order && (data.reason === 'refund' || data.reason === 'late_delivery'));
 
+  // Même règle de validité par défaut que `creditFromTicket` (expérience/refunds.ts) : sans
+  // cela, un avoir crédité depuis la fiche client (plutôt que depuis un ticket) n'expirait
+  // jamais (`validityDays` non renseigné → `expiresAt: null`), jamais purgé par la tâche
+  // d'expiration des avoirs.
+  const refundSettings = (await db.collection(COLLECTIONS.settings).doc(SETTINGS_DOCS.refunds).get()).data() as RefundSettings | undefined;
+  const validityDays = data.validityDays ?? refundSettings?.walletCreditValidityDays ?? 180;
+
   const now = Timestamp.now();
   const txRef = db.collection(COLLECTIONS.walletTransactions).doc();
   let balanceAfter = 0;
@@ -138,7 +147,7 @@ export const creditCustomer = acteursCallable(creditSchema, async (data, request
       orderId: data.orderId ?? null,
       ticketId: null,
       refundId: null,
-      expiresAt: data.validityDays ? Timestamp.fromMillis(now.toMillis() + data.validityDays * 86_400_000) : null,
+      expiresAt: Timestamp.fromMillis(now.toMillis() + validityDays * 86_400_000),
       note: data.note,
       createdAt: now,
       createdBy: caller.uid,
