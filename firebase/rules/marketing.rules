@@ -44,13 +44,16 @@ match /promotionRedemptions/{redemptionId} {
 match /campaigns/{campaignId} {
   allow read: if (resource.data.scope == 'restaurant' && can(resource.data.restaurantId, 'marketing.manage'))
     || isAdmin('notifications.send');
-  allow create: if (incoming().scope == 'restaurant' && can(incoming().restaurantId, 'marketing.manage')
-      || incoming().scope == 'platform' && isAdmin('notifications.send'))
+  // Campagne plateforme : écriture réservée à `savePlatformCampaign` (SDK Admin, seul chemin qui
+  // applique le périmètre ville/pays de l'admin et les plages horaires légales d'envoi,
+  // `scopeAudience`/`assertQuietHours`) — une écriture directe ici ne les appliquait pas,
+  // permettant à un admin limité à une ville de diffuser une campagne plateforme à toute heure,
+  // vers n'importe quelle ville.
+  allow create: if incoming().scope == 'restaurant' && can(incoming().restaurantId, 'marketing.manage')
     && incoming().status in ['draft', 'scheduled']
     && incoming().stats.sent == 0
     && createdNow();
-  allow update: if (existing().scope == 'restaurant' && can(existing().restaurantId, 'marketing.manage')
-      || existing().scope == 'platform' && isAdmin('notifications.send'))
+  allow update: if existing().scope == 'restaurant' && can(existing().restaurantId, 'marketing.manage')
     && existing().status in ['draft', 'scheduled']
     && incoming().status in ['draft', 'scheduled', 'cancelled']
     && keepsUnchanged(['scope', 'restaurantId', 'stats', 'sentAt'])
