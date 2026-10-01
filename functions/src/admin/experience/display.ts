@@ -265,6 +265,25 @@ export const cancelSponsoredPlacement = experienceCallable(
   },
 );
 
+// `impressions`/`clicks` n'avaient aucun producteur : les règles Firestore interdisent déjà toute
+// écriture admin directe sur ces champs (architecture qui prévoyait cette fonction, jamais écrite).
+// Anonyme et tolérant aux erreurs, sur le modèle de `trackFunnelEvent` (jamais bloquant côté client).
+export const trackSponsoredEvent = experienceCallable(
+  z.object({ restaurantId: zId, event: z.enum(['impression', 'click']) }),
+  async (data) => {
+    const field = data.event === 'impression' ? 'impressions' : 'clicks';
+    const activeSnap = await db.collection(COLLECTIONS.sponsoredPlacements).where('restaurantId', '==', data.restaurantId).where('status', '==', 'active').get();
+    await Promise.all(
+      activeSnap.docs.map((doc) =>
+        doc.ref.update({ [field]: FieldValue.increment(1), updatedAt: Timestamp.now() }).catch((error) =>
+          logger.warn('Événement sponsorisé non compté', { event: data.event, restaurantId: data.restaurantId, error: String(error) }),
+        ),
+      ),
+    );
+    return { ok: true as const };
+  },
+);
+
 async function syncRestaurantSponsored(restaurantId: string): Promise<void> {
   const active = await db.collection(COLLECTIONS.sponsoredPlacements).where('restaurantId', '==', restaurantId).where('status', '==', 'active').limit(1).get();
   const ref = db.collection(COLLECTIONS.restaurants).doc(restaurantId);

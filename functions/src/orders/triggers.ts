@@ -229,6 +229,15 @@ export const onOrderWritten = onDocumentWritten({ document: 'orders/{orderId}', 
       );
     }
   }
+  // Mise en avant payante (§11) : `impressions`/`clicks` sont comptés par `trackSponsoredEvent`
+  // (appelé depuis l'app client), mais `orders` n'avait aucun producteur — compté ici une seule
+  // fois, à la création de la commande (`!before`), sur tous les emplacements actifs du commerce.
+  if (!before && after) {
+    await safely('sponsoredOrders', event.params.orderId, async () => {
+      const activeSnap = await db.collection(COLLECTIONS.sponsoredPlacements).where('restaurantId', '==', after.restaurantId).where('status', '==', 'active').get();
+      await Promise.all(activeSnap.docs.map((doc) => doc.ref.update({ orders: FieldValue.increment(1), updatedAt: Timestamp.now() })));
+    });
+  }
 });
 
 async function safely(step: string, orderId: string, run: () => Promise<unknown>): Promise<void> {

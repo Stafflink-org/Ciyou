@@ -8,12 +8,14 @@
 // Aucune bibliothèque d'icônes n'est ajoutée dans ce lot (RAM limitée, un seul
 // paquet à la fois) : les icônes sont des glyphes Unicode, choisis proches de
 // ceux de la maquette (cloche, sac, cœur, épingle).
+import { useEffect } from 'react';
 import { Image, Pressable, ScrollView, View, StyleSheet } from 'react-native';
 import type { Restaurant, WithId } from '@golink/shared';
 import { colors, radius, spacing, shadow } from '../../theme/tokens';
 import { Text } from '../../ui/Text';
 import { Badge } from '../../ui/Badge';
 import { useTranslation } from '../../i18n/I18nProvider';
+import { trackSponsoredEvent } from '../../lib/sponsored';
 import type { FeaturedProduct } from './hooks';
 
 /* --------------------------------- En-tête ---------------------------------- */
@@ -232,8 +234,16 @@ export function RestaurantCard({ restaurant, onPress, onToggleFavorite, favorite
   const { t } = useTranslation('home');
   const initials = restaurant.mark || restaurant.name.slice(0, 2).toUpperCase();
   const cuisines = restaurant.cuisineIds.slice(0, 2).join(' · ');
+  // §11 « Mise en avant payante » : impressions/clics jamais comptés faute d'appel côté client.
+  useEffect(() => {
+    if (restaurant.sponsored) trackSponsoredEvent('impression', restaurant.id);
+  }, [restaurant.sponsored, restaurant.id]);
+  const handlePress = () => {
+    if (restaurant.sponsored) trackSponsoredEvent('click', restaurant.id);
+    onPress();
+  };
   return (
-    <Pressable onPress={onPress} style={styles.restaurantCard}>
+    <Pressable onPress={handlePress} style={styles.restaurantCard}>
       <View style={[styles.restaurantBanner, { backgroundColor: restaurant.accent || colors.primary }]}>
         {restaurant.cover?.url ? (
           <Image source={{ uri: restaurant.cover.url }} style={StyleSheet.absoluteFill} resizeMode="cover" />
