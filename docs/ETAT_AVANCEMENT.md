@@ -1,5 +1,17 @@
 # État d'avancement — Ciyou Eats
 
+## Documentation : troisième désynchronisation du tableau §3 trouvée (§10), nettoyage §14 — 01/10/2026 (tâche `cdc-fix-residuals-25b`)
+
+Suite immédiate de `cdc-fix-residuals-25` (§26), même session de travail continu. Un agent d'exploration a vérifié §1 (Tableau de bord), §10 (Zones et villes) et §22 (Paramètres plateforme), puis, n'y trouvant aucun bug de code corrigible à petit périmètre, a élargi sa recherche à §8, §12 et §14 (déjà corrigées une fois chacune cette session) : aucune des six rubriques n'a révélé de nouveau bug de code — §1 reste bloquée par un chantier de calcul temps réel non trivial (confirmé par relecture : un correctif naïf créerait même un risque de régression identifié dans `recomputeCity`, `functions/src/admin/pilotage/platform-stats.ts`), §10 et §22 n'ont que des manques déjà qualifiés de chantiers disproportionnés dans le texte même de l'audit, §8/§12/§14 sont déjà à jour en code (vérifié notamment que l'index Firestore §12 fonctionne bien en réel et que `settings/payments.tips` est bien lu).
+
+**Découverte documentaire (aucun changement de code)** : §10 « Zones et villes » est un **troisième cas** de la désynchronisation du tableau §3 déjà trouvée et corrigée deux fois cette session (§27, §26) — mais cette fois-ci, la cause remonte à la toute première version du document (27/09, vérifié par `git log -p -S"Bilan §10"`) : le tableau §3 et le « Bilan §10 » affichaient 4 COMPLET/2 PARTIEL alors que les 6 lignes détaillées de la section (dont « Fermeture d'urgence », déjà marquée COMPLET depuis le début) comptent en réalité 5 COMPLET/1 PARTIEL (seule « Villes » reste PARTIEL — statistiques par ville, chantier d'agrégation non construit). Jamais une régression : simplement jamais recalculé. Corrigé (tableau §3 ligne 10 et Bilan §10 : 4/2 → 5/1).
+
+Au passage, nettoyage d'un texte périmé sans impact chiffré : le « Bilan §14 » et sa liste « TROUS » affichaient encore l'état d'avant `cdc-fix-c` (1 COMPLET/4 PARTIEL/1 FAUX, des P0 « Espèces jamais alimenté » déjà faux dans le code actuel), alors que le tableau §3 pour §14 était déjà correct (4 COMPLET/2 PARTIEL) — resynchronisé.
+
+`npx tsc --noEmit` non applicable (aucun changement de code). Aucun déploiement.
+
+**Total cahier super admin corrigé : 106 COMPLET / 60 PARTIEL / 0 ABSENT / 0 FAUX** (166 lignes) — gain de 1 ligne COMPLET par rapport au total précédent (105/61), dû exclusivement à la correction de synchronisation §10 ci-dessus (la correction §14 n'a aucun impact chiffré, le tableau §3 y était déjà juste). Détail : `docs/AUDIT_COUVERTURE_CDC.md` §10 et §14.
+
 ## §26 Administrateurs internes : deuxième fuite de périmètre ville (restaurants.view) + correction du tableau §3 — 01/10/2026 (tâche `cdc-fix-residuals-25`)
 
 Suite immédiate de `cdc-fix-residuals-24` (§6), même session de travail continu. Un agent d'exploration a vérifié §9 (Règles automatiques des commandes, déjà bloquée par une décision produit confirmée inchangée), §22 (Paramètres plateforme, déjà entièrement à jour via l'Annexe M) et §26 (Administrateurs internes) : §9 et §22 n'ont révélé aucun bug de code corrigible à petit périmètre — rien corrigé là. §26 avait un vrai bug de sécurité à petit périmètre, déjà explicitement documenté comme « signalé mais non corrigé » par la tâche précédente sur cette même rubrique (`cdc-fix-residuals-13`).
