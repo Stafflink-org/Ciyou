@@ -16,7 +16,7 @@ import { useAuth } from '../../auth/AuthContext';
 import { docAt, useCollection, useDoc, callFunction, createdFields, errorMessage } from '../../lib/firestore';
 import { db } from '../../lib/firebase';
 import { APP_VERSION } from '../../lib/env';
-import type { FulfillmentMode, PaymentMethod, PlaceOrderInput, PlaceOrderResult, Restaurant, UserAddress } from '@golink/shared';
+import type { FulfillmentMode, PaymentMethod, PlaceOrderInput, PlaceOrderResult, Restaurant, UserAddress, UserProfile } from '@golink/shared';
 import { paths } from '@golink/shared';
 import { colors, radius, spacing } from '../../theme/tokens';
 import { Text } from '../../ui/Text';
@@ -70,6 +70,7 @@ function CheckoutScreenInner({ navigation }: Props) {
   const { city } = useDefaultCity();
   const { data: restaurant } = useDoc<Restaurant>(cart.restaurantId ? docAt(`restaurants/${cart.restaurantId}`) : null);
   const { data: addresses } = useCollection<UserAddress>(user ? collection(db, paths.userSub(user.uid, 'addresses')) : null);
+  const { data: profile } = useDoc<UserProfile>(user ? docAt(`users/${user.uid}`) : null);
 
   const [fulfillment, setFulfillment] = useState<FulfillmentMode | null>(null);
   const [addressId, setAddressId] = useState<string | null>(null);
@@ -84,6 +85,10 @@ function CheckoutScreenInner({ navigation }: Props) {
   const [scheduledTime, setScheduledTime] = useState('');
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
+  // Avoirs Ciyou Eats (§19 cahier) : jamais consommés à la commande faute d'appel côté client,
+  // alors que le serveur (orders/place.ts) sait déjà les appliquer intégralement (paymentMethod:
+  // 'wallet', aucune carte requise) ou partiellement (reste réglé par le moyen choisi).
+  const [useWallet, setUseWallet] = useState(false);
   // Préremplit avec le code choisi depuis l'écran Promotions (lot 3), le cas échéant.
   const [promoCode, setPromoCode] = useState(cart.promoCode ?? '');
   const [submitting, setSubmitting] = useState(false);
@@ -110,6 +115,10 @@ function CheckoutScreenInner({ navigation }: Props) {
     () => previewQuote(cart.lines, (activeMode ?? 'delivery') as FulfillmentMode, restaurant?.ownDeliveryFeeCents ?? null, restaurant?.minOrderCents ?? 0, config),
     [cart.lines, activeMode, restaurant?.ownDeliveryFeeCents, restaurant?.minOrderCents, config],
   );
+  const walletBalanceCents = Math.max(0, profile?.walletBalanceCents ?? 0);
+  const walletAppliedCents = useWallet ? Math.min(walletBalanceCents, quote.totalCents) : 0;
+  const remainingCents = quote.totalCents - walletAppliedCents;
+  const walletCoversFull = useWallet && remainingCents <= 0;
 
   if (cart.loaded && cart.lines.length === 0) {
     return <PlaceholderScreen icon="🧾" title={t('emptyTitle')} note={t('emptyNote')} />;
@@ -165,7 +174,7 @@ function CheckoutScreenInner({ navigation }: Props) {
       setErrorText(t('addressMissingError'));
       return;
     }
-    if (!activeMethod) {
+    if (!walletCoversFull && !activeMethod) {
       setErrorText(t('paymentMissingError'));
       return;
     }
@@ -182,7 +191,7 @@ function CheckoutScreenInner({ navigation }: Props) {
     // selon la plateforme — voir features/checkout/payment/) avant d'appeler `placeOrder`, qui autorise
     // réellement le montant côté serveur (functions/src/orders/payment.ts::authorizePayment).
     let paymentMethodId: string | null = null;
-    if (activeMethod === 'card') {
+    if (!walletCoversFull && activeMethod === 'card') {
       if (!cardComplete) {
         setErrorText(t('cardIncompleteError'));
         return;
@@ -203,8 +212,13 @@ function CheckoutScreenInner({ navigation }: Props) {
       fulfillment: activeMode,
       lines: cartLinesToInput(cart.lines),
       addressId: activeMode === 'delivery' ? addressId : null,
-      paymentMethod: activeMethod,
+      // 'wallet' n'est jamais envoyé ici : le serveur le détermine lui-même à partir du solde
+      // réel (useWallet + chargedCents === 0) — un client ne peut pas se l'auto-attribuer (voir
+      // orders/place.ts). Quand les avoirs couvrent tout, la valeur ci-dessous est ignorée côté
+      // serveur (la branche d'autorisation de paiement est sautée), un simple repli valide suffit.
+      paymentMethod: walletCoversFull ? 'card' : (activeMethod as PaymentMethod),
       paymentMethodId,
+      useWallet,
       promoCode: promoCode.trim() || null,
       customerNote: null,
       scheduledFor,
@@ -341,22 +355,40 @@ function CheckoutScreenInner({ navigation }: Props) {
         </Section>
 
         <Section title={t('paymentTitle')}>
-          <Text variant="caption" color="muted" style={{ marginBottom: spacing.sm }}>
-            {t('paymentNote')}
-          </Text>
-          <View style={styles.modeRow}>
-            {availableMethods.length === 0 ? <Text color="danger">{t('noPaymentAvailable')}</Text> : null}
-            {acceptsCard ? <ModeButton testID="button-payment-card" label={t('paymentCard')} active={activeMethod === 'card'} onPress={() => setPaymentMethod('card')} /> : null}
-            {acceptsCash ? <ModeButton testID="button-payment-cash" label={t('paymentCash')} active={activeMethod === 'cash'} onPress={() => setPaymentMethod('cash')} /> : null}
-          </View>
-          {activeMethod === 'card' ? (
-            <View style={{ marginTop: spacing.md }}>
-              <Text variant="label" color="muted" style={{ marginBottom: spacing.xs }}>
-                {t('cardFieldLabel').toUpperCase()}
-              </Text>
-              <CardEntry onChange={setCardComplete} />
+          {walletBalanceCents > 0 ? (
+            <View style={{ marginBottom: spacing.sm }}>
+              <ModeButton
+                testID="button-use-wallet"
+                label={t('walletToggleLabel', { amount: money(walletBalanceCents) })}
+                active={useWallet}
+                onPress={() => setUseWallet((v) => !v)}
+              />
             </View>
           ) : null}
+          {walletCoversFull ? (
+            <Text variant="caption" color="muted" testID="text-wallet-covers-full">
+              {t('walletCoversFullNote')}
+            </Text>
+          ) : (
+            <>
+              <Text variant="caption" color="muted" style={{ marginBottom: spacing.sm }}>
+                {t('paymentNote')}
+              </Text>
+              <View style={styles.modeRow}>
+                {availableMethods.length === 0 ? <Text color="danger">{t('noPaymentAvailable')}</Text> : null}
+                {acceptsCard ? <ModeButton testID="button-payment-card" label={t('paymentCard')} active={activeMethod === 'card'} onPress={() => setPaymentMethod('card')} /> : null}
+                {acceptsCash ? <ModeButton testID="button-payment-cash" label={t('paymentCash')} active={activeMethod === 'cash'} onPress={() => setPaymentMethod('cash')} /> : null}
+              </View>
+              {activeMethod === 'card' ? (
+                <View style={{ marginTop: spacing.md }}>
+                  <Text variant="label" color="muted" style={{ marginBottom: spacing.xs }}>
+                    {t('cardFieldLabel').toUpperCase()}
+                  </Text>
+                  <CardEntry onChange={setCardComplete} />
+                </View>
+              ) : null}
+            </>
+          )}
         </Section>
 
         <Section title={t('orderTitle')}>
@@ -381,10 +413,11 @@ function CheckoutScreenInner({ navigation }: Props) {
           <SummaryLine label={t('subtotal')} value={money(quote.subtotalCents)} />
           <SummaryLine label={t('delivery')} value={activeMode === 'delivery' ? (quote.deliveryFeeCents > 0 ? money(quote.deliveryFeeCents) : t('deliveryFree')) : t('notApplicable')} />
           <SummaryLine label={t('serviceFee')} value={money(quote.serviceFeeCents)} />
+          {walletAppliedCents > 0 ? <SummaryLine label={t('walletAppliedLabel')} value={`-${money(walletAppliedCents)}`} /> : null}
           <View style={styles.totalRow}>
-            <Text variant="title">{t('total')}</Text>
+            <Text variant="title">{walletAppliedCents > 0 ? t('remainingToPay') : t('total')}</Text>
             <Text variant="title" color="primary">
-              {money(quote.totalCents)}
+              {money(remainingCents)}
             </Text>
           </View>
           {errorText ? (
