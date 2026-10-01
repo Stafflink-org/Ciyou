@@ -55,6 +55,13 @@ service cloud.firestore {
       return a.cityIds.size() == 0 || cityId in a.cityIds;
     }
 
+    // Variante pour une ressource scopée à PLUSIEURS villes à la fois (ex. promotions
+    // plateforme ciblées, groupes de restaurants) : liste vide (ressource ou admin) = aucune
+    // restriction de ce côté-là.
+    function adminCoversAny(a, cityIds) {
+      return a.cityIds.size() == 0 || cityIds.size() == 0 || a.cityIds.hasAny(cityIds);
+    }
+
     // Membre actif de l'équipe interne, quelle que soit sa permission.
     function isAnyAdmin() {
       return isRole('admin') && adminData().active == true;
@@ -68,6 +75,11 @@ service cloud.firestore {
     // Permission `perm` et ville dans le périmètre de l'administrateur (liste vide = toutes).
     function isAdminIn(perm, cityId) {
       return isRole('admin') && adminHas(adminData(), perm) && adminCovers(adminData(), cityId);
+    }
+
+    // Variante pour une ressource scopée à plusieurs villes (voir adminCoversAny).
+    function isAdminInAny(perm, cityIds) {
+      return isRole('admin') && adminHas(adminData(), perm) && adminCoversAny(adminData(), cityIds);
     }
 
     // ----------------------------------------------------------------- Personnel restaurant
@@ -310,7 +322,8 @@ service cloud.firestore {
     match /legalAcceptances/{acceptanceId} {
       allow read: if isSelf(resource.data.userId) || isAdmin('legal.edit') || isAdmin('gdpr.handle');
       // Super admin, fiche restaurant : preuve d'acceptation du contrat partenaire.
-      allow read: if resource.data.userType == 'restaurant' && isAdmin('restaurants.view');
+      allow read: if resource.data.userType == 'restaurant'
+        && isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(resource.data.restaurantId)).data.cityId);
       allow create: if isSelf(incoming().userId)
         && incoming().userType in ['client', 'restaurant', 'driver']
         && get(/databases/$(database)/documents/legalDocuments/$(incoming().documentId)).data.status == 'published'
@@ -403,8 +416,8 @@ service cloud.firestore {
     match /driverLocations/{driverId} {
       allow read: if isSelf(driverId)
         || (signedIn() && request.auth.uid in resource.data.visibleTo)
-        || isAdmin('orders.view')
-        || isAdmin('drivers.view');
+        || isAdminIn('orders.view', resource.data.cityId)
+        || isAdminIn('drivers.view', resource.data.cityId);
       allow update: if isSelf(driverId)
         && onlyChanges(['position', 'geohash', 'heading', 'speedKmh', 'accuracyMeters', 'updatedAt'])
         && incoming().position is latlng
@@ -413,12 +426,12 @@ service cloud.firestore {
     }
 
     match /driverSessions/{sessionId} {
-      allow read: if isSelf(resource.data.driverId) || isAdmin('drivers.view');
+      allow read: if isSelf(resource.data.driverId) || isAdminIn('drivers.view', resource.data.cityId);
       allow write: if false;
     }
 
     match /driverSanctions/{sanctionId} {
-      allow read: if isSelf(resource.data.driverId) || isAdmin('drivers.view');
+      allow read: if isSelf(resource.data.driverId) || isAdminIn('drivers.view', resource.data.cityId);
       // Contestation par le livreur ; la décision est prise par Cloud Function (audit).
       allow update: if isSelf(existing().driverId)
         && existing().status == 'active'
@@ -433,7 +446,7 @@ service cloud.firestore {
     }
 
     match /identityChecks/{checkId} {
-      allow read: if isSelf(resource.data.driverId) || isAdmin('drivers.validate');
+      allow read: if isSelf(resource.data.driverId) || isAdminIn('drivers.validate', resource.data.cityId);
       allow update: if isSelf(existing().driverId)
         && existing().status == 'requested'
         && onlyChanges(['selfie', 'status'])
@@ -443,12 +456,12 @@ service cloud.firestore {
 
     // Acceptation et refus : Cloud Function respondToOffer (transaction, pas de double attribution).
     match /dispatchOffers/{offerId} {
-      allow read: if isSelf(resource.data.driverId) || isAdmin('orders.view');
+      allow read: if isSelf(resource.data.driverId) || isAdminIn('orders.view', resource.data.cityId);
       allow write: if false;
     }
 
     match /driverEarnings/{earningId} {
-      allow read: if isSelf(resource.data.driverId) || isAdmin('finance.view') || isAdmin('drivers.view');
+      allow read: if isSelf(resource.data.driverId) || isAdmin('finance.view') || isAdminIn('drivers.view', resource.data.cityId);
       allow write: if false;
     }
 
@@ -463,7 +476,7 @@ service cloud.firestore {
     // sensible). Écrit uniquement par les triggers onEmployeeDirectorySync et
     // onMemberDirectorySync.
     match /restaurants/{rid}/staffDirectory/{entryId} {
-      allow read: if isRestaurantMember(rid) || isAdmin('restaurants.view');
+      allow read: if isRestaurantMember(rid) || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
       allow write: if false;
     }
 
@@ -654,9 +667,11 @@ service cloud.firestore {
     }
 
     match /promotions/{promotionId} {
+      // `cityIds` vide = offre plateforme valable partout ; sinon bornée aux villes de l'admin
+      // (comme `assertAdminCovers`/`scopeAudience` côté Cloud Function).
       allow read: if (resource.data.showcase == true && resource.data.status == 'active')
         || (resource.data.scope == 'restaurant' && can(resource.data.restaurantId, 'marketing.manage'))
-        || isAdmin('promotions.view');
+        || isAdminInAny('promotions.view', resource.data.cityIds);
       // Création par un restaurant : brouillon ou soumise à validation (activation par Cloud Function).
       // Promotions de la plateforme et décisions de l'équipe : Cloud Functions (createPlatformPromotion, ...).
       allow create: if (isRestaurantPromotion(incoming(), incoming().restaurantId)
@@ -678,7 +693,7 @@ service cloud.firestore {
     match /promotionRedemptions/{redemptionId} {
       allow read: if isSelf(resource.data.userId)
         || can(resource.data.restaurantId, 'marketing.manage')
-        || isAdmin('promotions.view');
+        || isAdminIn('promotions.view', resource.data.cityId);
       allow write: if false;
     }
 
@@ -775,7 +790,7 @@ service cloud.firestore {
     }
 
     match /restaurants/{rid}/marketing/{docId} {
-      allow read: if docId == 'social' || isRestaurantMember(rid) || isAdmin('restaurants.view');
+      allow read: if docId == 'social' || isRestaurantMember(rid) || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
       allow create, update: if can(rid, 'marketing.manage')
         && incoming().updatedAt == request.time
         && incoming().updatedBy == uid()
@@ -1087,7 +1102,10 @@ service cloud.firestore {
     }
 
     match /restaurantGroups/{groupId} {
-      allow read: if isSelf(resource.data.ownerId) || isAdmin('restaurants.view');
+      // `cityIds` dénormalisé depuis les établissements membres (saveRestaurantGroup) : un admin
+      // limité à une ville ne devrait voir que les groupes ayant au moins un établissement dans
+      // son périmètre, pas tous les groupes de la plateforme.
+      allow read: if isSelf(resource.data.ownerId) || isAdminInAny('restaurants.view', resource.data.get('cityIds', []));
       // Modification : saveRestaurantGroup (Cloud Function, audit).
       allow write: if false;
     }
@@ -1124,11 +1142,11 @@ service cloud.firestore {
           || isAdmin('finance.view');
         allow write: if false;
         // Super admin, validation des dossiers : identité légale consultable par les validateurs.
-        allow read: if docId == 'legal' && isAdmin('restaurants.validate');
+        allow read: if docId == 'legal' && isAdminIn('restaurants.validate', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
       }
 
       match /settings/{docId} {
-        allow read: if isRestaurantMember(rid) || isAdmin('restaurants.view');
+        allow read: if isRestaurantMember(rid) || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
         allow write: if updatedNow() && (
           (docId in ['orders', 'hours', 'payments', 'loyalty', 'notifications'] && can(rid, 'settings.manage'))
           || (docId == 'payroll' && can(rid, 'payroll.manage'))
@@ -1219,7 +1237,7 @@ service cloud.firestore {
       }
 
       match /stockMovements/{movementId} {
-        allow read: if can(rid, 'menu.view') || isAdmin('restaurants.view');
+        allow read: if can(rid, 'menu.view') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
         allow create: if can(rid, 'stock.edit')
           && incoming().reason in ['manual_adjust', 'reception', 'waste', 'inventory']
           && incoming().createdBy == uid()
@@ -1235,13 +1253,13 @@ service cloud.firestore {
       // Invitations, rôles et permissions : Cloud Functions inviteMember, updateMemberRole.
 
       match /members/{memberId} {
-        allow read: if isSelf(memberId) || can(rid, 'team.view') || isAdmin('restaurants.view');
+        allow read: if isSelf(memberId) || can(rid, 'team.view') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
         allow update: if can(rid, 'team.manage') && onlyChanges(['onDuty']);
         allow create, delete: if false;
       }
 
       match /staffRoles/{roleId} {
-        allow read: if can(rid, 'team.view') || isAdmin('restaurants.view');
+        allow read: if can(rid, 'team.view') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
         allow create: if can(rid, 'team.manage') && createdNow() && incoming().system == false;
         allow update: if can(rid, 'team.manage') && existing().system == false && updatedNow();
         allow delete: if can(rid, 'team.manage') && existing().system == false;
@@ -1250,7 +1268,7 @@ service cloud.firestore {
       // ------------------------------------------------------------ Clients et livreurs
 
       match /customers/{customerId} {
-        allow read: if can(rid, 'customers.view') || isAdmin('customers.view');
+        allow read: if can(rid, 'customers.view') || isAdminIn('customers.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
         allow update: if can(rid, 'customers.manage')
           && onlyChanges(['blocked', 'blockedReason', 'internalNote', 'tags', 'updatedAt'])
           && incoming().updatedAt == request.time;
@@ -1258,13 +1276,13 @@ service cloud.firestore {
 
         // Notes internes de l'équipe : ajout et suppression par Cloud Function (addCustomerNote, deleteCustomerNote).
         match /notes/{noteId} {
-          allow read: if can(rid, 'customers.view') || isAdmin('customers.view');
+          allow read: if can(rid, 'customers.view') || isAdminIn('customers.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
           allow write: if false;
         }
       }
 
       match /couriers/{driverId} {
-        allow read: if isSelf(driverId) || can(rid, 'orders.view') || isAdmin('drivers.view');
+        allow read: if isSelf(driverId) || can(rid, 'orders.view') || isAdminIn('drivers.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
         allow update: if can(rid, 'couriers.manage')
           && onlyChanges(['status', 'note', 'updatedAt', 'updatedBy'])
           && incoming().status in ['active', 'inactive', 'blocked']
@@ -1273,7 +1291,7 @@ service cloud.firestore {
       }
 
       match /dailyStats/{day} {
-        allow read: if can(rid, 'dashboard.view') || can(rid, 'finance.view') || isAdmin('restaurants.view');
+        allow read: if can(rid, 'dashboard.view') || can(rid, 'finance.view') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
         allow write: if false;
       }
 
@@ -1290,8 +1308,8 @@ service cloud.firestore {
     match /partnerDocuments/{documentId} {
       allow read: if (resource.data.ownerType == 'restaurant' && can(resource.data.ownerId, 'settings.manage'))
         || (resource.data.ownerType == 'driver' && isSelf(resource.data.ownerId))
-        || isAdmin('restaurants.validate')
-        || isAdmin('drivers.validate');
+        || isAdminIn('restaurants.validate', resource.data.get('cityId', null))
+        || isAdminIn('drivers.validate', resource.data.get('cityId', null));
       // Super admin, fiche restaurant : liste des justificatifs (sans accès aux fichiers, réservés aux validateurs).
       allow read: if resource.data.ownerType == 'restaurant' && isAdminIn('restaurants.view', resource.data.get('cityId', ''));
       allow create: if (
@@ -1306,7 +1324,7 @@ service cloud.firestore {
     }
 
     match /menuIssues/{issueId} {
-      allow read: if can(resource.data.restaurantId, 'menu.view') || isAdmin('restaurants.view');
+      allow read: if can(resource.data.restaurantId, 'menu.view') || isAdminIn('restaurants.view', resource.data.cityId);
       // Traitement par l'équipe interne : resolveMenuIssue (Cloud Function, motif, audit).
       allow update: if can(resource.data.restaurantId, 'menu.edit')
         && onlyChanges(['status', 'resolvedAt', 'resolvedBy'])
@@ -1602,7 +1620,7 @@ service cloud.firestore {
     }
 
     match /restaurants/{rid}/employees/{employeeId} {
-      allow read: if can(rid, 'team.view') || ownsEmployeeRecord() || isAdmin('restaurants.view');
+      allow read: if can(rid, 'team.view') || ownsEmployeeRecord() || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
       allow create: if can(rid, 'team.manage') && createdNow()
         && isNonEmptyString(incoming().firstName, 60)
         && isNonEmptyString(incoming().lastName, 60);
@@ -1759,21 +1777,21 @@ service cloud.firestore {
     // ------------------------------------------------------------ HACCP
 
     match /restaurants/{rid}/haccpEquipments/{id} {
-      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
       allow create: if can(rid, 'haccp.manage') && createdNow();
       allow update: if can(rid, 'haccp.manage') && updatedNow();
       allow delete: if false;
     }
 
     match /restaurants/{rid}/haccpCleaningTasks/{id} {
-      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
       allow create: if can(rid, 'haccp.manage') && createdNow();
       allow update: if can(rid, 'haccp.manage') && updatedNow();
       allow delete: if false;
     }
 
     match /restaurants/{rid}/haccpTemperatureLogs/{id} {
-      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
       allow create: if can(rid, 'haccp.record')
         && incoming().value is number
         && incoming().recordedBy == uid()
@@ -1786,7 +1804,7 @@ service cloud.firestore {
     }
 
     match /restaurants/{rid}/haccpReceptions/{id} {
-      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
       allow create: if can(rid, 'haccp.record')
         && incoming().receivedBy == uid()
         && incoming().receivedAt == request.time
@@ -1799,7 +1817,7 @@ service cloud.firestore {
     }
 
     match /restaurants/{rid}/haccpNonConformities/{id} {
-      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
       allow create: if can(rid, 'haccp.record')
         && incoming().declaredBy == uid()
         && incoming().declaredAt == request.time
@@ -1810,20 +1828,20 @@ service cloud.firestore {
     }
 
     match /restaurants/{rid}/haccpCleaningLogs/{id} {
-      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
       allow create: if can(rid, 'haccp.record') && incoming().doneBy == uid() && incoming().doneAt == request.time;
       allow update, delete: if false;
     }
 
     match /restaurants/{rid}/haccpPestVisits/{id} {
-      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
       allow create: if can(rid, 'haccp.manage') && incoming().createdBy == uid() && incoming().createdAt == request.time;
       allow update: if can(rid, 'haccp.manage') && keepsUnchanged(['createdBy', 'createdAt']);
       allow delete: if false;
     }
 
     match /restaurants/{rid}/haccpPestReports/{id} {
-      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
       allow create: if can(rid, 'haccp.record')
         && incoming().reportedBy == uid()
         && incoming().reportedAt == request.time
@@ -1835,20 +1853,20 @@ service cloud.firestore {
     }
 
     match /restaurants/{rid}/haccpPersonnelChecks/{id} {
-      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
       allow create, update: if can(rid, 'haccp.record') && isIsoDay(incoming().date);
       allow delete: if false;
     }
 
     match /restaurants/{rid}/haccpDocuments/{id} {
-      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
       allow create: if can(rid, 'haccp.manage') && incoming().uploadedBy == uid() && incoming().uploadedAt == request.time;
       allow delete: if can(rid, 'haccp.manage');
       allow update: if false;
     }
 
     match /restaurants/{rid}/haccpAudits/{id} {
-      allow read: if can(rid, 'haccp.record') || isAdmin('restaurants.view');
+      allow read: if can(rid, 'haccp.record') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
       allow create: if can(rid, 'haccp.manage') && incoming().performedBy == uid() && incoming().createdAt == request.time;
       allow update: if can(rid, 'haccp.manage') && keepsUnchanged(['performedBy', 'createdAt']);
       allow delete: if false;
@@ -1856,7 +1874,7 @@ service cloud.firestore {
 
     // Exports PDF générés par la Cloud Function exportHaccpRegister.
     match /restaurants/{rid}/haccpExports/{id} {
-      allow read: if can(rid, 'haccp.manage') || isAdmin('restaurants.view');
+      allow read: if can(rid, 'haccp.manage') || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
       allow write: if false;
     }
 

@@ -7,7 +7,7 @@
 // sensible). Écrit uniquement par les triggers onEmployeeDirectorySync et
 // onMemberDirectorySync.
 match /restaurants/{rid}/staffDirectory/{entryId} {
-  allow read: if isRestaurantMember(rid) || isAdmin('restaurants.view');
+  allow read: if isRestaurantMember(rid) || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
   allow write: if false;
 }
 

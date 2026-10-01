@@ -13,9 +13,11 @@ function isRestaurantPromotion(data, rid) {
 }
 
 match /promotions/{promotionId} {
+  // `cityIds` vide = offre plateforme valable partout ; sinon bornée aux villes de l'admin
+  // (comme `assertAdminCovers`/`scopeAudience` côté Cloud Function).
   allow read: if (resource.data.showcase == true && resource.data.status == 'active')
     || (resource.data.scope == 'restaurant' && can(resource.data.restaurantId, 'marketing.manage'))
-    || isAdmin('promotions.view');
+    || isAdminInAny('promotions.view', resource.data.cityIds);
   // Création par un restaurant : brouillon ou soumise à validation (activation par Cloud Function).
   // Promotions de la plateforme et décisions de l'équipe : Cloud Functions (createPlatformPromotion, ...).
   allow create: if (isRestaurantPromotion(incoming(), incoming().restaurantId)
@@ -37,7 +39,7 @@ match /promotions/{promotionId} {
 match /promotionRedemptions/{redemptionId} {
   allow read: if isSelf(resource.data.userId)
     || can(resource.data.restaurantId, 'marketing.manage')
-    || isAdmin('promotions.view');
+    || isAdminIn('promotions.view', resource.data.cityId);
   allow write: if false;
 }
 
@@ -134,7 +136,7 @@ function restaurantAutoMessagesValid() {
 }
 
 match /restaurants/{rid}/marketing/{docId} {
-  allow read: if docId == 'social' || isRestaurantMember(rid) || isAdmin('restaurants.view');
+  allow read: if docId == 'social' || isRestaurantMember(rid) || isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
   allow create, update: if can(rid, 'marketing.manage')
     && incoming().updatedAt == request.time
     && incoming().updatedBy == uid()

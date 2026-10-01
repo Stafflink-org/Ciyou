@@ -136,6 +136,9 @@ export interface DriverSession {
 /** driverSanctions/{id}. */
 export interface DriverSanction extends Tracked {
   driverId: string;
+  /** Dénormalisés depuis le livreur à la création (sanctionDriver) : périmètre ville des règles Firestore. */
+  cityId?: string | null;
+  countryId?: string | null;
   type: SanctionType;
   reason: string;
   details?: string | null;

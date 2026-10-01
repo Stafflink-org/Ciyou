@@ -44,8 +44,8 @@ match /driverPrivate/{driverId} {
 match /driverLocations/{driverId} {
   allow read: if isSelf(driverId)
     || (signedIn() && request.auth.uid in resource.data.visibleTo)
-    || isAdmin('orders.view')
-    || isAdmin('drivers.view');
+    || isAdminIn('orders.view', resource.data.cityId)
+    || isAdminIn('drivers.view', resource.data.cityId);
   allow update: if isSelf(driverId)
     && onlyChanges(['position', 'geohash', 'heading', 'speedKmh', 'accuracyMeters', 'updatedAt'])
     && incoming().position is latlng
@@ -54,12 +54,12 @@ match /driverLocations/{driverId} {
 }
 
 match /driverSessions/{sessionId} {
-  allow read: if isSelf(resource.data.driverId) || isAdmin('drivers.view');
+  allow read: if isSelf(resource.data.driverId) || isAdminIn('drivers.view', resource.data.cityId);
   allow write: if false;
 }
 
 match /driverSanctions/{sanctionId} {
-  allow read: if isSelf(resource.data.driverId) || isAdmin('drivers.view');
+  allow read: if isSelf(resource.data.driverId) || isAdminIn('drivers.view', resource.data.cityId);
   // Contestation par le livreur ; la décision est prise par Cloud Function (audit).
   allow update: if isSelf(existing().driverId)
     && existing().status == 'active'
@@ -74,7 +74,7 @@ match /driverSanctions/{sanctionId} {
 }
 
 match /identityChecks/{checkId} {
-  allow read: if isSelf(resource.data.driverId) || isAdmin('drivers.validate');
+  allow read: if isSelf(resource.data.driverId) || isAdminIn('drivers.validate', resource.data.cityId);
   allow update: if isSelf(existing().driverId)
     && existing().status == 'requested'
     && onlyChanges(['selfie', 'status'])
@@ -84,11 +84,11 @@ match /identityChecks/{checkId} {
 
 // Acceptation et refus : Cloud Function respondToOffer (transaction, pas de double attribution).
 match /dispatchOffers/{offerId} {
-  allow read: if isSelf(resource.data.driverId) || isAdmin('orders.view');
+  allow read: if isSelf(resource.data.driverId) || isAdminIn('orders.view', resource.data.cityId);
   allow write: if false;
 }
 
 match /driverEarnings/{earningId} {
-  allow read: if isSelf(resource.data.driverId) || isAdmin('finance.view') || isAdmin('drivers.view');
+  allow read: if isSelf(resource.data.driverId) || isAdmin('finance.view') || isAdminIn('drivers.view', resource.data.cityId);
   allow write: if false;
 }

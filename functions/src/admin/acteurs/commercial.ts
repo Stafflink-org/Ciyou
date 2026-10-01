@@ -387,6 +387,7 @@ export const saveRestaurantGroup = acteursCallable(groupSchema, async (data, req
     siren: data.siren,
     vatNumber: data.vatNumber,
     restaurantIds: data.restaurantIds,
+    cityIds: [...new Set(restaurants.map((r) => r.data.cityId))],
     commercial: { commissionBps: data.commissionBps, planCode: data.planCode, subscriptionId: existing?.commercial?.subscriptionId ?? null },
     consolidatedBilling: data.consolidatedBilling,
     deletedAt: null,

@@ -28,7 +28,8 @@ match /legalDocuments/{documentId} {
 match /legalAcceptances/{acceptanceId} {
   allow read: if isSelf(resource.data.userId) || isAdmin('legal.edit') || isAdmin('gdpr.handle');
   // Super admin, fiche restaurant : preuve d'acceptation du contrat partenaire.
-  allow read: if resource.data.userType == 'restaurant' && isAdmin('restaurants.view');
+  allow read: if resource.data.userType == 'restaurant'
+    && isAdminIn('restaurants.view', get(/databases/$(database)/documents/restaurants/$(resource.data.restaurantId)).data.cityId);
   allow create: if isSelf(incoming().userId)
     && incoming().userType in ['client', 'restaurant', 'driver']
     && get(/databases/$(database)/documents/legalDocuments/$(incoming().documentId)).data.status == 'published'
