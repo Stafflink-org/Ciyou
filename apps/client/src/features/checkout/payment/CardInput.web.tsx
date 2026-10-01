@@ -31,6 +31,17 @@ export function useCardPayment(): CardPayment {
       },
       [stripe],
     ),
+    confirmCardSetup: useCallback(
+      async (clientSecret: string) => {
+        if (!stripe || !elements) return { error: 'Le module de paiement n’est pas encore prêt.' };
+        const card = elements.getElement(CardElement);
+        if (!card) return { error: 'Renseignez votre carte bancaire.' };
+        const { setupIntent, error } = await stripe.confirmCardSetup(clientSecret, { payment_method: { card } });
+        if (error || !setupIntent) return { error: error?.message ?? 'Carte refusée.' };
+        return { id: setupIntent.id };
+      },
+      [stripe, elements],
+    ),
   };
 }
 
