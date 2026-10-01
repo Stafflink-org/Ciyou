@@ -1,19 +1,22 @@
-// En-tête commun des vues Commandes : titre, onglets (en cours, historique,
-// suivi en direct), alerte sonore, et tiroir de fiche commande.
+// En-tête commun des vues Commandes : bandeau, onglets (en cours, historique),
+// lien vers le suivi des livreurs en direct, alerte sonore, et tiroir de fiche
+// commande.
 import type { ReactNode } from 'react';
-import { NavLink } from 'react-router';
+import { NavLink, useNavigate } from 'react-router';
 import { Archive, Clock3, Radio, Volume2, VolumeX } from 'lucide-react';
-import { Button, IconButton, PageContainer, PageHeader, Sheet, SheetContent, Skeleton, cn } from '@golink/ui';
+import { Button, IconButton, PageBanner, PageContainer, Sheet, SheetContent, Skeleton, cn } from '@golink/ui';
 import { useRestaurantAccess } from '@/auth/RestaurantAccess';
 import { errorMessage } from '@/lib/firestore';
 import { useNewOrderAlert, useOrder } from '../hooks';
 import { AutoPauseBanner } from './AutoPauseBanner';
 import { OrderDetail } from './OrderDetail';
 
+// 2 onglets, alignés sur la maquette de référence : le suivi en direct des
+// livreurs reste accessible (fonctionnalité réelle conservée), mais via le
+// bouton « Suivi des livreurs » du bandeau plutôt qu'un 3e onglet.
 const TABS = [
   { to: '/commandes', label: 'En cours', icon: Clock3, end: true },
   { to: '/commandes/historique', label: 'Historique', icon: Archive, end: false },
-  { to: '/commandes/suivi', label: 'Suivi en direct', icon: Radio, end: false },
 ] as const;
 
 export function OrdersLayout({
@@ -21,28 +24,43 @@ export function OrdersLayout({
   pendingCount,
   children,
   actions,
-  description = 'Du comptoir à la remise, chaque commande à sa place.',
+  description = 'Retrouvez vos commandes et leur délai de préparation.',
+  showLiveTrackingLink = true,
 }: {
   activeCount?: number;
   pendingCount: number;
   children: ReactNode;
   actions?: ReactNode;
   description?: string;
+  /** Masqué sur l'écran de suivi en direct lui-même. */
+  showLiveTrackingLink?: boolean;
 }) {
   const { restaurant } = useRestaurantAccess();
+  const navigate = useNavigate();
   const alert = useNewOrderAlert(pendingCount);
 
   return (
     <PageContainer wide>
-      <PageHeader
+      <PageBanner
         eyebrow={`${restaurant.name} · Service`}
         title="Commandes"
         description={description}
         actions={
           <div className="flex items-center gap-2">
+            {showLiveTrackingLink && (
+              <Button
+                variant="secondary"
+                leftIcon={<Radio />}
+                className="border-sidebar-fg/25 bg-sidebar-fg/10 text-sidebar-fg hover:border-sidebar-fg/40 hover:bg-sidebar-fg/15"
+                onClick={() => navigate('/commandes/suivi')}
+              >
+                Suivi des livreurs
+              </Button>
+            )}
             {actions}
             <IconButton
               variant="secondary"
+              className="border-sidebar-fg/25 bg-sidebar-fg/10 text-sidebar-fg hover:border-sidebar-fg/40 hover:bg-sidebar-fg/15"
               label={alert.enabled ? 'Couper l’alerte sonore des nouvelles commandes' : 'Activer l’alerte sonore des nouvelles commandes'}
               onClick={() => alert.setEnabled(!alert.enabled)}
             >

@@ -110,7 +110,11 @@ export function LivePage() {
 
   return (
     <OrderActionsProvider>
-      <OrdersLayout pendingCount={orders.data.filter((o) => o.status === 'new').length} description="Livreurs en approche et commandes en route, positions actualisées en temps réel.">
+      <OrdersLayout
+        pendingCount={orders.data.filter((o) => o.status === 'new').length}
+        description="Livreurs en approche et commandes en route, positions actualisées en temps réel."
+        showLiveTrackingLink={false}
+      >
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
           <div className="relative min-w-0">
             <LiveMap apiKey={runtimeConfig?.googleMapsWebKey ?? undefined} dark={mode === 'dark'} center={origin ?? { lat: 49.52, lng: 5.76 }} markers={markers} height="max(360px, min(68vh, 640px))" />

@@ -327,6 +327,43 @@ export function PageHeader({ title, description, eyebrow, breadcrumbs, actions, 
   );
 }
 
+export interface PageBannerProps {
+  eyebrow?: ReactNode;
+  title: ReactNode;
+  description?: ReactNode;
+  actions?: ReactNode;
+  className?: string;
+}
+
+/**
+ * Bandeau sombre de mise en avant pour une page principale (ex. « Commandes »,
+ * « Options & listes ») : titre, sous-titre et actions sur fond contrasté.
+ */
+export function PageBanner({ eyebrow, title, description, actions, className }: PageBannerProps) {
+  return (
+    <div className={cn('relative mb-6 overflow-hidden rounded-2xl border border-sidebar-border bg-sidebar px-5 py-6 text-sidebar-fg shadow-lg sm:px-7 sm:py-7', className)}>
+      <div aria-hidden className="pointer-events-none absolute -right-10 -top-16 size-56 rounded-full border border-sidebar-fg/10" />
+      <div aria-hidden className="pointer-events-none absolute -right-28 -top-28 size-72 rounded-full border border-sidebar-fg/10" />
+      <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          {eyebrow && (
+            <p className="mb-2 flex items-center gap-1.5 text-2xs font-medium uppercase tracking-eyebrow text-sidebar-muted">
+              <span className="size-1.5 shrink-0 rounded-full bg-primary" />
+              {eyebrow}
+            </p>
+          )}
+          <h1 className="font-display text-2xl font-semibold tracking-display text-sidebar-fg sm:text-[1.75rem] sm:leading-9">
+            {title}
+            <span className="text-primary">.</span>
+          </h1>
+          {description && <p className="mt-1.5 max-w-xl text-sm text-sidebar-muted">{description}</p>}
+        </div>
+        {actions && <div className="relative flex max-w-full shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+      </div>
+    </div>
+  );
+}
+
 export interface SectionProps extends Omit<ComponentPropsWithoutRef<'section'>, 'title'> {
   title?: ReactNode;
   description?: ReactNode;
