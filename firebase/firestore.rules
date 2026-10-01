@@ -1453,7 +1453,10 @@ service cloud.firestore {
     // Metz ne doit pas pouvoir lire le profil d'un livreur d'une autre ville en appelant Firestore
     // directement (l'écran filtre déjà côté client, mais la règle elle-même ne bornait rien).
     function adminCanViewUsers(cityId) {
-      return isAdmin('customers.view') || isAdminIn('drivers.view', cityId) || isAdmin('restaurants.view');
+      // `drivers.view` et `restaurants.view` bornés par ville, comme `restaurants/{id}` lui-même
+      // (restaurants.rules) : un city_manager ne doit jamais lire la fiche d'un propriétaire hors de
+      // sa ville, qu'il ne peut de toute façon jamais ouvrir côté fiche restaurant.
+      return isAdmin('customers.view') || isAdminIn('drivers.view', cityId) || isAdminIn('restaurants.view', cityId);
     }
 
     match /users/{userId} {
