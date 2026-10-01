@@ -46,6 +46,17 @@ export async function assertWithinLimit(restaurantId: string, key: PlanLimitKey,
   }
 }
 
+/**
+ * Limite numérique actuelle de la formule pour cette clé (`null` = illimité), pour un traitement
+ * ligne à ligne (ex. import CSV) qui doit collecter une erreur par ligne plutôt que lever une
+ * exception qui annulerait tout le lot — contrairement à `assertWithinLimit`, pensée pour une
+ * création isolée (un seul produit, un seul membre d'équipe…).
+ */
+export async function planLimitOf(restaurantId: string, key: PlanLimitKey): Promise<number | null> {
+  const e = await load(restaurantId);
+  return e.plan?.limits?.[key] ?? null;
+}
+
 /** Un commerce dont l'abonnement est suspendu ne reçoit plus de nouvelles commandes. */
 export async function isSubscriptionSuspended(restaurantId: string): Promise<boolean> {
   const e = await load(restaurantId);

@@ -16,6 +16,7 @@ import {
 import type { DocumentReference } from 'firebase-admin/firestore';
 import { db } from '../lib/admin';
 import { callable } from '../lib/callable';
+import { planLimitOf } from '../finance/argent/entitlements';
 import { z, zId } from '../lib/validation';
 import { auditMenu, chunk, menuCollection, nameKey, requireMenuAccess, trackedCreate, trackedUpdate, MENU_RUNTIME } from './common';
 
@@ -103,6 +104,13 @@ export const importMenu = callable(
     const report: MenuImportReport = { dryRun: data.dryRun, created: 0, updated: 0, unchanged: 0, sectionsCreated: [], errors: [], warnings: [] };
     const writes: Array<{ ref: DocumentReference; value: Record<string, unknown>; merge: boolean }> = [];
     const seen = new Set<string>();
+    // Limite de produits de la formule (§17) : la règle Firestore `withinProductLimit` ne protège
+    // que la saisie manuelle (écriture cliente) — cet import écrit en lot avec le SDK Admin, qui la
+    // contourne entièrement. Vérifiée ici ligne à ligne plutôt qu'avec `assertWithinLimit` (qui
+    // lèverait une exception et annulerait tout le lot) pour rester cohérente avec le rapport
+    // ligne par ligne déjà produit par cette fonction.
+    const maxProducts = await planLimitOf(data.restaurantId, 'maxProducts');
+    let existingProducts = productSnap.size;
 
     data.rows.forEach((raw, index) => {
       const line = index + 2; // ligne 1 = en-têtes du fichier
@@ -155,8 +163,14 @@ export const importMenu = callable(
         return;
       }
 
+      if (maxProducts !== null && existingProducts >= maxProducts) {
+        report.errors.push({ row: line, message: `Limite de produits de votre formule atteinte (${maxProducts}) : changez de formule depuis « Abonnement » pour en ajouter.` });
+        return;
+      }
+
       const order = nextOrderBySection.get(section.id) ?? 0;
       nextOrderBySection.set(section.id, order + 1);
+      existingProducts += 1;
       report.created += 1;
       const product: Omit<Product, 'createdAt' | 'updatedAt'> = {
         sectionId: section.id,
