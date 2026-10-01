@@ -7,4 +7,4 @@ export { importRestaurants } from './import';
 export { endImpersonation, startImpersonation } from './impersonation';
 export { computeRestaurantScores, refreshRestaurantScores } from './quality';
 export { fixRestaurantProduct, resolveMenuIssue } from './menu-fixes';
-export { blockCustomer, creditCustomer, deleteCustomerAccount } from './customers';
+export { auditCustomersExport, blockCustomer, creditCustomer, deleteCustomerAccount } from './customers';

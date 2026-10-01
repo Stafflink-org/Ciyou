@@ -376,3 +376,28 @@ export const deleteCustomerAccount = acteursCallable(
   },
 );
 
+/**
+ * Trace au journal d'audit l'export CSV des clients (cahier §7 « Liste et filtres ») : l'export
+ * lui-même reste généré côté navigateur (`ClientsPage.tsx::exportRows`), mais jusqu'ici aucun
+ * droit ni aucune trace n'étaient exigés pour une liste contenant des données personnelles —
+ * même défaut déjà corrigé pour les livreurs (`auditDriversExport`, `cdc-fix-residuals-3`),
+ * jamais appliqué aux clients. Le bouton d'export n'est affiché côté client que si l'appelant a
+ * `exports.run` ; ce contrôle est revérifié ici côté serveur.
+ */
+export const auditCustomersExport = acteursCallable(
+  z.object({ userIds: z.array(zId).min(1).max(2000), reason: zReason }),
+  async (data, request) => {
+    const { caller } = await requireAdmin(request, 'exports.run');
+    await writeAudit({
+      actor: adminActor(caller),
+      action: 'customer.exported',
+      target: { type: 'other', id: `customers-export-${Date.now()}`, label: `Export CSV clients (${data.userIds.length})` },
+      reason: data.reason,
+      after: { count: data.userIds.length, userIds: data.userIds.slice(0, 50) },
+      sensitive: true,
+      request,
+    });
+    return { ok: true as const };
+  },
+);
+
