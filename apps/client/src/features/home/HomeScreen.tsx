@@ -37,7 +37,7 @@ type Props = CompositeScreenProps<BottomTabScreenProps<MainTabsParamList, 'Home'
 
 export function HomeScreen({ navigation }: Props) {
   const { user } = useAuth();
-  const { t } = useTranslation('home');
+  const { t, locale } = useTranslation('home');
   const { city, loading: cityLoading } = useDefaultCity();
   const { data: restaurants, loading: restaurantsLoading } = useCityRestaurants(city?.id ?? null);
   const { data: featuredProducts, loading: productsLoading } = useFeaturedProducts();
@@ -79,7 +79,13 @@ export function HomeScreen({ navigation }: Props) {
         onOpenMenu={() => navigation.navigate('MainTabs', { screen: 'Profile' } as never)}
       />
 
-      {city?.emergencyClosure?.active ? <EmergencyClosureBanner message={city.emergencyClosure.message.fr} /> : null}
+      {city?.emergencyClosure?.active ? (
+        <EmergencyClosureBanner
+          message={
+            (city.emergencyClosure.message as Record<string, string | undefined>)[locale]?.trim() || city.emergencyClosure.message.fr
+          }
+        />
+      ) : null}
 
       <DeliveryContextBar
         addressLabel={t('address.primary')}
