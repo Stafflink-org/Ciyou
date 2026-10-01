@@ -90,18 +90,22 @@ match /announcements/{announcementId} {
 
 
 match /prospects/{prospectId} {
-  allow read: if isAdmin('crm.view');
-  allow create: if isAdmin('crm.edit') && createdNow();
+  // Cloisonnement par ville (comme `assertAdminCovers` côté Cloud Function, `saveProspect`/
+  // `moveProspect`) : un admin `city_manager` limité à une ville avait sinon accès en lecture
+  // ET en écriture directe aux prospects de n'importe quelle autre ville.
+  allow read: if isAdminIn('crm.view', resource.data.cityId);
+  allow create: if isAdminIn('crm.edit', incoming().cityId) && createdNow();
   // `stage`/`lostReason`/`ownerId` doivent passer par `moveProspect`/`saveProspect` (Cloud
   // Functions) : périmètre ville, motif de perte, commission du commercial créée/annulée,
   // garde-fou anti-réouverture d'un prospect déjà commissionné, audit — une écriture directe sur
   // ces champs contournait silencieusement tout ça.
-  allow update: if isAdmin('crm.edit') && keepsUnchanged(['restaurantId', 'signedUpAt', 'stage', 'lostReason', 'ownerId']) && updatedNow();
+  allow update: if isAdminIn('crm.edit', resource.data.cityId) && keepsUnchanged(['restaurantId', 'signedUpAt', 'stage', 'lostReason', 'ownerId']) && updatedNow();
   allow delete: if false;
 
   match /activities/{activityId} {
-    allow read: if isAdmin('crm.view');
-    allow create: if isAdmin('crm.edit') && incoming().by == uid() && incoming().at == request.time;
+    allow read: if isAdminIn('crm.view', get(/databases/$(database)/documents/prospects/$(prospectId)).data.cityId);
+    allow create: if isAdminIn('crm.edit', get(/databases/$(database)/documents/prospects/$(prospectId)).data.cityId)
+      && incoming().by == uid() && incoming().at == request.time;
     allow update, delete: if false;
   }
 }
