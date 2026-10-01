@@ -590,7 +590,9 @@ export const auditDriversExport = opsCallable(
  * l'aperçu dans le super admin : droit de validation et périmètre vérifiés ici.
  */
 export const getDriverFile = opsCallable(
-  z.object({ path: z.string().trim().min(10).max(300).regex(/^drivers\/[A-Za-z0-9_-]+\/private\/[^/]+$/, 'Chemin de fichier invalide') }),
+  // `documents/` : sous-dossier réel des justificatifs (functions/src/drivers/documents.ts,
+  // apps/driver/src/lib/storage.ts) ; le selfie d'identité reste à plat (private/selfie-…).
+  z.object({ path: z.string().trim().min(10).max(300).regex(/^drivers\/[A-Za-z0-9_-]+\/private\/(?:documents\/)?[^/]+$/, 'Chemin de fichier invalide') }),
   async (data, request): Promise<{ contentType: string; dataBase64: string; name: string }> => {
     const { caller, admin } = await requireAdmin(request, 'drivers.validate');
     const driverId = data.path.split('/')[1]!;
