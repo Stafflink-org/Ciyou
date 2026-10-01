@@ -356,7 +356,7 @@ function BrandingForm() {
 
   return (
     <Card>
-      <CardHeader icon={<Palette />} title="Marque" description="Logo et couleurs de la plateforme. La couleur principale et le logo sont appliqués aux back-offices ; les autres couleurs sont transmises aux applications client et livreur." />
+      <CardHeader icon={<Palette />} title="Marque" description="Logo, icône et couleurs de la plateforme. La couleur principale, le logo et l'icône d'onglet sont appliqués aux back-offices (admin et restaurant) ; les autres couleurs ne sont pas encore consommées, et les applications client et livreur n'utilisent pas ces réglages." />
       <CardContent className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-3">
           {slots.map(({ key, label, hint }) => (
