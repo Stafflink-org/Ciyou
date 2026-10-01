@@ -99,7 +99,12 @@ export const trackAdminSession = platformCallable(z.object({}).optional(), async
     // Connexion inhabituelle : adresse jamais vue pour ce compte, ou ouverture dans la plage horaire inhabituelle (heure de Paris).
     const knownIp = previous.docs.some((doc) => doc.get('ipHash') === ipHash);
     const hours = policy.unusualLoginHours ?? { fromHour: 0, toHour: 5 };
-    const parisHour = Number(new Intl.DateTimeFormat('fr-FR', { hour: 'numeric', hourCycle: 'h23', timeZone: TIMEZONE }).format(new Date()));
+    // `Intl.DateTimeFormat('fr-FR', { hour: 'numeric' }).format(...)` rend « 18 h » (avec unité) en
+    // locale française : Number(...) sur ce texte vaut toujours NaN, ce qui désactivait silencieusement
+    // la détection d'heure inhabituelle (NaN n'est jamais ≥/< rien). Corrigé en lisant la seule partie
+    // « hour » du format, comme déjà fait ailleurs dans le code (`admin/operations/orders.ts:184`).
+    const hourPart = new Intl.DateTimeFormat('fr-FR', { hour: 'numeric', hourCycle: 'h23', timeZone: TIMEZONE }).formatToParts(new Date()).find((p) => p.type === 'hour');
+    const parisHour = Number(hourPart?.value ?? NaN);
     const unusualHour = hours.fromHour !== hours.toHour && (hours.fromHour < hours.toHour ? parisHour >= hours.fromHour && parisHour < hours.toHour : parisHour >= hours.fromHour || parisHour < hours.toHour);
     const reasons: string[] = [];
     if (previous.size > 0 && !knownIp && ipHash !== 'inconnu') reasons.push('adresse réseau jamais utilisée par ce compte');
