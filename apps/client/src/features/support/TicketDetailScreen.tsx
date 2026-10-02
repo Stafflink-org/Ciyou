@@ -1,7 +1,8 @@
 // Fil d'une demande (`TicketDetailScreen`) — chat réel avec le support
 // (`supportTickets/{id}/messages`, réponses via `replyToClientTicket`).
 import { useEffect, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { useHeaderHeight } from '@react-navigation/elements';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '../../navigation/types';
 import { colors, radius, spacing } from '../../theme/tokens';
@@ -14,12 +15,20 @@ import { Skeleton } from '../../ui/Skeleton';
 import { useToast } from '../../ui/Toast';
 import { errorMessage } from '../../lib/firestore';
 import { useTranslation } from '../../i18n/I18nProvider';
+import { intlLocale } from '../../i18n/core';
+import type { Locale } from '@golink/shared';
 import { markTicketRead, replyToClientTicket, useTicket, useTicketMessages } from './hooks';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'TicketDetail'>;
 
+function messageTime(createdAt: { toDate?: () => Date } | null | undefined, locale: Locale): string {
+  if (!createdAt?.toDate) return '';
+  return createdAt.toDate().toLocaleString(intlLocale(locale), { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
 export function TicketDetailScreen({ route }: Props) {
-  const { t } = useTranslation('support');
+  const { t, locale } = useTranslation('support');
+  const headerHeight = useHeaderHeight();
   const { ticketId } = route.params;
   const ticket = useTicket(ticketId);
   const messages = useTicketMessages(ticketId);
@@ -67,7 +76,11 @@ export function TicketDetailScreen({ route }: Props) {
   const closed = ticket.data.status === 'closed';
 
   return (
-    <View style={styles.root}>
+    <KeyboardAvoidingView
+      style={styles.root}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}
+    >
       <ScrollView ref={scrollRef} contentContainerStyle={{ padding: spacing.lg, gap: spacing.sm }} onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}>
         <Card style={{ marginBottom: spacing.sm }}>
           <Text variant="bodyStrong">{ticket.data.subject}</Text>
@@ -91,6 +104,9 @@ export function TicketDetailScreen({ route }: Props) {
               <Text variant="body" color={m.authorType === 'requester' ? 'inverted' : 'default'}>
                 {m.body}
               </Text>
+              <Text variant="caption" color={m.authorType === 'requester' ? 'inverted' : 'muted'} style={styles.bubbleTime}>
+                {messageTime(m.createdAt, locale)}
+              </Text>
             </View>
           </View>
         ))}
@@ -107,7 +123,7 @@ export function TicketDetailScreen({ route }: Props) {
           <Button label={t('support:ticket.send')} onPress={send} loading={sending} disabled={!body.trim()} />
         </View>
       )}
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -118,5 +134,6 @@ const styles = StyleSheet.create({
   bubble: { maxWidth: '82%', borderRadius: radius.lg, paddingHorizontal: 14, paddingVertical: 10 },
   bubbleMine: { backgroundColor: colors.ink, borderTopRightRadius: 4 },
   bubbleTheirs: { backgroundColor: colors.surfaceRaised, borderTopLeftRadius: 4 },
+  bubbleTime: { marginTop: 4, opacity: 0.7, fontSize: 11 },
   composer: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm, padding: spacing.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border, backgroundColor: colors.canvas },
 });

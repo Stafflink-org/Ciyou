@@ -233,7 +233,7 @@ export function OfferCard({ title, description, badge }: { title: string; descri
 export function RestaurantCard({ restaurant, onPress, onToggleFavorite, favorite }: { restaurant: WithId<Restaurant>; onPress: () => void; onToggleFavorite: () => void; favorite: boolean }) {
   const { t } = useTranslation('home');
   const initials = restaurant.mark || restaurant.name.slice(0, 2).toUpperCase();
-  const cuisines = restaurant.cuisineIds.slice(0, 2).join(' · ');
+  const cuisines = (restaurant.cuisineIds ?? []).slice(0, 2).join(' · ');
   // §11 « Mise en avant payante » : impressions/clics jamais comptés faute d'appel côté client.
   useEffect(() => {
     if (restaurant.sponsored) trackSponsoredEvent('impression', restaurant.id);
@@ -252,7 +252,7 @@ export function RestaurantCard({ restaurant, onPress, onToggleFavorite, favorite
         )}
         <View style={styles.etaBadge}>
           <Text variant="caption" color="inverted">
-            {restaurant.etaMinutes.min}–{restaurant.etaMinutes.max} min
+            {restaurant.etaMinutes?.min ?? 20}–{restaurant.etaMinutes?.max ?? 35} min
           </Text>
         </View>
         <Pressable onPress={onToggleFavorite} style={styles.favoriteButton} hitSlop={8}>
@@ -278,11 +278,11 @@ export function RestaurantCard({ restaurant, onPress, onToggleFavorite, favorite
           <Text variant="subtitle" style={{ flex: 1 }} numberOfLines={1}>
             {restaurant.name}
           </Text>
-          <Badge label={`★ ${restaurant.rating.average.toFixed(1)}`} tone="primary" />
+          <Badge label={`★ ${(restaurant.rating?.average ?? 0).toFixed(1)}`} tone="primary" />
         </View>
         {cuisines ? (
           <Text variant="caption" color="muted" numberOfLines={1}>
-            {cuisines} · {restaurant.address.city}
+            {cuisines} · {restaurant.address?.city ?? ''}
           </Text>
         ) : null}
         <Text variant="caption" color="primary" style={{ marginTop: 2 }}>

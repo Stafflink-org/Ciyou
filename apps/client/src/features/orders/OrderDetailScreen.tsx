@@ -36,7 +36,7 @@ export function OrderDetailScreen({ route, navigation }: Props) {
     );
   }
 
-  const createdAt = order.timeline.placedAt && 'toDate' in order.timeline.placedAt ? order.timeline.placedAt.toDate() : null;
+  const createdAt = order.timeline?.placedAt && 'toDate' in order.timeline.placedAt ? order.timeline.placedAt.toDate() : null;
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}>
@@ -53,7 +53,7 @@ export function OrderDetailScreen({ route, navigation }: Props) {
         </Text>
       </Card>
 
-      {order.fulfillment === 'delivery' && order.delivery ? (
+      {order.fulfillment === 'delivery' && order.delivery?.address ? (
         <Card style={{ marginTop: spacing.md }}>
           <Text variant="bodyStrong">{t('deliveryAddress')}</Text>
           <Text variant="body" style={{ marginTop: 4 }}>
@@ -67,7 +67,7 @@ export function OrderDetailScreen({ route, navigation }: Props) {
         <Text variant="bodyStrong" style={{ marginBottom: spacing.sm }}>
           {t('articles')}
         </Text>
-        {order.items.map((item) => (
+        {(order.items ?? []).map((item) => (
           <View key={item.lineId} style={styles.itemRow}>
             <Text variant="body" style={{ flex: 1 }}>
               {item.quantity} × {item.name}
@@ -76,19 +76,19 @@ export function OrderDetailScreen({ route, navigation }: Props) {
           </View>
         ))}
         <View style={styles.divider} />
-        <SummaryLine label={t('subtotal')} value={money(order.amounts.subtotalCents)} />
-        {order.amounts.deliveryFeeCents > 0 ? <SummaryLine label={t('deliveryFee')} value={money(order.amounts.deliveryFeeCents)} /> : null}
-        {order.amounts.serviceFeeCents > 0 ? <SummaryLine label={t('serviceFee')} value={money(order.amounts.serviceFeeCents)} /> : null}
-        {order.amounts.discount.totalCents > 0 ? <SummaryLine label={t('discount')} value={`− ${money(order.amounts.discount.totalCents)}`} /> : null}
+        <SummaryLine label={t('subtotal')} value={money(order.amounts?.subtotalCents ?? 0)} />
+        {(order.amounts?.deliveryFeeCents ?? 0) > 0 ? <SummaryLine label={t('deliveryFee')} value={money(order.amounts.deliveryFeeCents)} /> : null}
+        {(order.amounts?.serviceFeeCents ?? 0) > 0 ? <SummaryLine label={t('serviceFee')} value={money(order.amounts.serviceFeeCents)} /> : null}
+        {(order.amounts?.discount?.totalCents ?? 0) > 0 ? <SummaryLine label={t('discount')} value={`− ${money(order.amounts.discount.totalCents)}`} /> : null}
         <View style={styles.totalRow}>
           <Text variant="bodyStrong">{t('total')}</Text>
           <Text variant="bodyStrong" color="primary">
-            {money(order.amounts.totalCents)}
+            {money(order.amounts?.totalCents ?? 0)}
           </Text>
         </View>
         <Text variant="caption" color="muted" style={{ marginTop: spacing.xs }}>
-          {order.payment.method === 'card' ? t('paymentCard') : order.payment.method === 'cash' ? t('paymentCash') : order.payment.method}
-          {order.payment.label ? ` · ${order.payment.label}` : ''}
+          {order.payment?.method === 'card' ? t('paymentCard') : order.payment?.method === 'cash' ? t('paymentCash') : (order.payment?.method ?? '')}
+          {order.payment?.label ? ` · ${order.payment.label}` : ''}
         </Text>
       </Card>
 

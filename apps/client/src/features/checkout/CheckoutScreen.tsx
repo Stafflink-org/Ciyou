@@ -101,11 +101,11 @@ function CheckoutScreenInner({ navigation }: Props) {
   const availableModes = (restaurant?.fulfillmentModes ?? []).filter((m): m is 'delivery' | 'pickup' => m === 'delivery' || m === 'pickup');
   const activeMode = fulfillment && availableModes.includes(fulfillment as 'delivery' | 'pickup') ? fulfillment : (availableModes[0] ?? null);
 
-  const acceptsCard = restaurant?.acceptedPaymentMethods.includes('card') ?? false;
+  const acceptsCard = restaurant?.acceptedPaymentMethods?.includes('card') ?? false;
   // Espèces : uniquement avec un livreur salarié du commerce en livraison (décision client), toujours
   // possible au retrait si le commerce l'accepte. Aperçu seulement — `placeOrder` revalide.
   const acceptsCash =
-    (restaurant?.acceptedPaymentMethods.includes('cash') ?? false) &&
+    (restaurant?.acceptedPaymentMethods?.includes('cash') ?? false) &&
     (activeMode === 'pickup' || restaurant?.deliveredBy === 'restaurant' || (restaurant?.deliveredBy === 'both' && true));
   const availableMethods: PaymentMethod[] = [...(acceptsCard ? (['card'] as const) : []), ...(acceptsCash ? (['cash'] as const) : [])];
   const activeMethod = paymentMethod && availableMethods.includes(paymentMethod) ? paymentMethod : (availableMethods[0] ?? null);
@@ -141,7 +141,7 @@ function CheckoutScreenInner({ navigation }: Props) {
         line1: addrStreet.trim(),
         line2: null,
         postalCode: '00000',
-        city: city?.name ?? restaurant?.address.city ?? '',
+        city: city?.name ?? restaurant?.address?.city ?? '',
         countryCode: restaurant?.countryId ?? 'FR',
         geo: new GeoPoint(center.lat, center.lng),
         geohash: null,
