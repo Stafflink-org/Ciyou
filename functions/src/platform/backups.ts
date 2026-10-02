@@ -9,6 +9,7 @@ import { db, FieldValue, storage, Timestamp } from '../lib/admin';
 import { actorFromCaller, writeAudit } from '../lib/audit';
 import { sendEmail } from '../lib/brevo';
 import { fail } from '../lib/errors';
+import { assertAdminCovers, assertAdminCoversCountry } from '../lib/permissions';
 import { EMAIL_SECRETS } from '../lib/secrets';
 import { z, zId, zReason } from '../lib/validation';
 import { PLATFORM_HEAVY_RUNTIME, PLATFORM_SCHEDULE_RUNTIME, TIMEZONE, platformCallable, requireSecureAdmin } from './runtime';
@@ -108,34 +109,47 @@ export const runManualBackup = platformCallable(
   { ...PLATFORM_HEAVY_RUNTIME, secrets: EMAIL_SECRETS },
 );
 
+/**
+ * Logique partagée entre le rafraîchissement manuel (`checkBackupStatus`) et le balayage
+ * planifié (`sweepRunningBackupOperations`) : le suivi par `.then()/.catch()` posé sur
+ * `operation.promise()` au lancement de l'export (voir `runExport`) suppose que l'instance de la
+ * fonction reste active jusqu'à la fin de l'opération — ce n'est garanti par aucune configuration
+ * ici, et une sauvegarde planifiée (2 h du matin, personne pour cliquer « Actualiser ») dont
+ * l'instance est recyclée reste alors bloquée à `running` indéfiniment, sans jamais déclencher
+ * l'alerte d'échec. Le balayage périodique est le vrai filet de sécurité.
+ */
+async function refreshBackupStatus(backupId: string): Promise<{ status: Backup['status'] }> {
+  const ref = db.collection(COLLECTIONS.backups).doc(backupId);
+  const snap = await ref.get();
+  if (!snap.exists) return { status: 'failed' };
+  const backup = snap.data() as Backup & { operationName?: string | null };
+  if (backup.status !== 'running' || !backup.operationName) return { status: backup.status };
+  try {
+    const operation = await adminClient.checkExportDocumentsProgress(backup.operationName);
+    if (operation.done) {
+      const failed = Boolean(operation.error);
+      const errorMessage = failed ? String(operation.error?.message ?? 'Échec inconnu').slice(0, 500) : null;
+      await ref.update({
+        status: failed ? 'failed' : 'completed',
+        finishedAt: FieldValue.serverTimestamp(),
+        error: errorMessage,
+      });
+      if (failed) await notifyBackupFailure(backupId, errorMessage ?? 'Échec inconnu').catch(() => undefined);
+      return { status: failed ? 'failed' : 'completed' };
+    }
+    return { status: 'running' };
+  } catch (error) {
+    logger.warn('Suivi de l’export impossible', { backupId, error: String(error) });
+    return { status: backup.status };
+  }
+}
+
 /** Rafraîchit le statut d'une sauvegarde en cours (l'opération longue peut dépasser la durée d'une fonction). */
 export const checkBackupStatus = platformCallable(
   z.object({ backupId: zId }),
   async (data, request) => {
     await requireSecureAdmin(request, 'backups.manage');
-    const ref = db.collection(COLLECTIONS.backups).doc(data.backupId);
-    const snap = await ref.get();
-    if (!snap.exists) throw fail.notFound('Sauvegarde');
-    const backup = snap.data() as Backup & { operationName?: string | null };
-    if (backup.status !== 'running' || !backup.operationName) return { status: backup.status };
-    try {
-      const operation = await adminClient.checkExportDocumentsProgress(backup.operationName);
-      if (operation.done) {
-        const failed = Boolean(operation.error);
-        const errorMessage = failed ? String(operation.error?.message ?? 'Échec inconnu').slice(0, 500) : null;
-        await ref.update({
-          status: failed ? 'failed' : 'completed',
-          finishedAt: FieldValue.serverTimestamp(),
-          error: errorMessage,
-        });
-        if (failed) await notifyBackupFailure(data.backupId, errorMessage ?? 'Échec inconnu').catch(() => undefined);
-        return { status: failed ? 'failed' : 'completed' };
-      }
-      return { status: 'running' };
-    } catch (error) {
-      logger.warn('Suivi de l’export impossible', { backupId: data.backupId, error: String(error) });
-      return { status: backup.status };
-    }
+    return refreshBackupStatus(data.backupId);
   },
   { secrets: EMAIL_SECRETS },
 );
@@ -316,27 +330,57 @@ export const startBackupRestore = platformCallable(
   { ...PLATFORM_HEAVY_RUNTIME, secrets: EMAIL_SECRETS },
 );
 
+/** Même raison d'être que `refreshBackupStatus` ci-dessus, pour une restauration. */
+async function refreshBackupRestoreStatus(restoreId: string): Promise<{ status: BackupRestore['status'] }> {
+  const ref = db.collection(COLLECTIONS.backupRestores).doc(restoreId);
+  const snap = await ref.get();
+  if (!snap.exists) return { status: 'failed' };
+  const restore = snap.data() as BackupRestore;
+  if (restore.status !== 'running' || !restore.operationName) return { status: restore.status };
+  try {
+    const operation = await adminClient.checkImportDocumentsProgress(restore.operationName);
+    if (operation.done) {
+      const failed = Boolean(operation.error);
+      const errorMessage = failed ? String(operation.error?.message ?? 'Échec inconnu').slice(0, 500) : null;
+      await ref.update({ status: failed ? 'failed' : 'completed', finishedAt: FieldValue.serverTimestamp(), error: errorMessage });
+      if (failed) await notifyBackupFailure(`restauration ${restoreId}`, errorMessage ?? 'Échec inconnu').catch(() => undefined);
+      return { status: failed ? 'failed' : 'completed' };
+    }
+    return { status: 'running' };
+  } catch (error) {
+    logger.warn('Suivi de la restauration impossible', { restoreId, error: String(error) });
+    return { status: restore.status };
+  }
+}
+
 /** Rafraîchit le statut d'une restauration en cours. */
 export const checkBackupRestoreStatus = platformCallable(
   z.object({ restoreId: zId }),
   async (data, request) => {
     await requireSecureAdmin(request, 'backups.manage');
-    const ref = db.collection(COLLECTIONS.backupRestores).doc(data.restoreId);
-    const snap = await ref.get();
-    if (!snap.exists) throw fail.notFound('Restauration');
-    const restore = snap.data() as BackupRestore;
-    if (restore.status !== 'running' || !restore.operationName) return { status: restore.status };
-    try {
-      const operation = await adminClient.checkImportDocumentsProgress(restore.operationName);
-      if (operation.done) {
-        const failed = Boolean(operation.error);
-        await ref.update({ status: failed ? 'failed' : 'completed', finishedAt: FieldValue.serverTimestamp(), error: failed ? String(operation.error?.message ?? 'Échec inconnu').slice(0, 500) : null });
-        return { status: failed ? 'failed' : 'completed' };
-      }
-      return { status: 'running' };
-    } catch (error) {
-      logger.warn('Suivi de la restauration impossible', { restoreId: data.restoreId, error: String(error) });
-      return { status: restore.status };
+    return refreshBackupRestoreStatus(data.restoreId);
+  },
+);
+
+/**
+ * Filet de sécurité pour les sauvegardes/restaurations qui restent bloquées à `running` faute
+ * d'instance de fonction encore active pour recevoir le `.then()/.catch()` posé au lancement
+ * (voir le commentaire sur `refreshBackupStatus`) : relit périodiquement tout ce qui est encore
+ * `running` et force la mise à jour, sans attendre un clic manuel sur « Actualiser » que personne
+ * ne fait pour la sauvegarde planifiée de 2 h du matin.
+ */
+export const sweepRunningBackupOperations = onSchedule(
+  { schedule: 'every 15 minutes', timeZone: TIMEZONE, ...PLATFORM_SCHEDULE_RUNTIME, timeoutSeconds: 300, memory: '256MiB', secrets: EMAIL_SECRETS },
+  async () => {
+    const [runningBackups, runningRestores] = await Promise.all([
+      db.collection(COLLECTIONS.backups).where('status', '==', 'running').get(),
+      db.collection(COLLECTIONS.backupRestores).where('status', '==', 'running').get(),
+    ]);
+    for (const doc of runningBackups.docs) {
+      await refreshBackupStatus(doc.id).catch((error) => logger.error('Balayage sauvegarde échoué', { backupId: doc.id, error: String(error) }));
+    }
+    for (const doc of runningRestores.docs) {
+      await refreshBackupRestoreStatus(doc.id).catch((error) => logger.error('Balayage restauration échoué', { restoreId: doc.id, error: String(error) }));
     }
   },
 );
@@ -415,20 +459,38 @@ export async function moveToTrash(input: {
 export const restoreFromTrash = platformCallable(
   z.object({ trashId: zId, reason: zReason }),
   async (data, request) => {
-    const { caller } = await requireSecureAdmin(request, 'trash.restore');
+    const { caller, admin } = await requireSecureAdmin(request, 'trash.restore');
     const ref = db.collection(COLLECTIONS.trash).doc(data.trashId);
     const snap = await ref.get();
     if (!snap.exists) throw fail.notFound('Élément de la corbeille');
     const item = snap.data() as TrashItem;
     if (item.restoredAt) throw fail.precondition('Cet élément a déjà été restauré.');
     if (item.purgeAt.toMillis() < Date.now()) throw fail.precondition('Cet élément a dépassé son délai de restauration et a été purgé.');
+    // `trash.restore` seul laissait un admin restreint par ville/pays restaurer un élément de
+    // n'importe quel restaurant hors de son périmètre (fuite + action hors mandat) — même défaut
+    // que posConnections/fraudCases corrigés plus tôt, jamais appliqué ici alors que l'écran
+    // restaurant équivalent (restoreMenuItem) le fait déjà.
+    if (item.restaurantId) {
+      const restaurant = (await db.collection(COLLECTIONS.restaurants).doc(item.restaurantId).get()).data() as { cityId?: string | null; countryId?: string | null } | undefined;
+      assertAdminCovers(admin, restaurant?.cityId ?? null);
+      assertAdminCoversCountry(admin, restaurant?.countryId ?? null);
+    }
 
     const batch = db.batch();
     batch.set(db.doc(item.path), item.snapshot);
     for (const child of item.children) batch.set(db.doc(child.path), child.snapshot);
     if (item.detached) {
       for (const path of item.detached.paths) {
-        batch.update(db.doc(path), { [item.detached.field]: FieldValue.arrayUnion(item.entity.id) });
+        // `arrayUnion` ne convient qu'aux champs tableau (optionIds, optionGroupIds) : `sectionId`
+        // (détaché par `trashMenuItems` quand une section est supprimée sans ses produits) est un
+        // champ SCALAIRE (string|null) — y appliquer `arrayUnion` le transforme en tableau à la
+        // restauration, corrompant silencieusement le type du champ en base (même bug déjà évité
+        // dans `restoreMenuItem`, l'écran dédié du restaurant, qui traite ce cas séparément).
+        if (item.detached.field === 'sectionId') {
+          batch.update(db.doc(path), { [item.detached.field]: item.entity.id });
+        } else {
+          batch.update(db.doc(path), { [item.detached.field]: FieldValue.arrayUnion(item.entity.id) });
+        }
       }
     }
     batch.update(ref, { restoredAt: FieldValue.serverTimestamp(), restoredBy: caller.uid });
@@ -449,12 +511,17 @@ export const restoreFromTrash = platformCallable(
 export const purgeTrashItem = platformCallable(
   z.object({ trashId: zId, reason: zReason }),
   async (data, request) => {
-    const { caller } = await requireSecureAdmin(request, 'trash.restore');
+    const { caller, admin } = await requireSecureAdmin(request, 'trash.restore');
     const ref = db.collection(COLLECTIONS.trash).doc(data.trashId);
     const snap = await ref.get();
     if (!snap.exists) throw fail.notFound('Élément de la corbeille');
     const item = snap.data() as TrashItem;
     if (item.restoredAt) throw fail.precondition('Cet élément a déjà été restauré.');
+    if (item.restaurantId) {
+      const restaurant = (await db.collection(COLLECTIONS.restaurants).doc(item.restaurantId).get()).data() as { cityId?: string | null; countryId?: string | null } | undefined;
+      assertAdminCovers(admin, restaurant?.cityId ?? null);
+      assertAdminCoversCountry(admin, restaurant?.countryId ?? null);
+    }
     await ref.delete();
     await writeAudit({
       actor: actorFromCaller(caller, 'admin'),
