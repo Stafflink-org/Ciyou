@@ -1,32 +1,32 @@
-// Jetons visuels de l'app client Ciyou Eats — même identité que les back-offices
-// (`packages/ui/src/styles/tokens.css`, thème « restaurant » clair, qui est déjà
-// la palette client : corail #E8784B, encre #19343B, fonds crème). React Native
-// n'a pas de variables CSS : ce module est l'équivalent en constantes TypeScript,
-// seule source de couleurs pour tous les composants (`src/ui/*`) et écrans —
+// Jetons visuels de l'app client Ciyou Eats — charte transmise par le client (document
+// « Points à corriger », 30/09/2026) : orange #FF6B00/#FF8A00, noir #0B0F10, blanc, gris
+// #98A2B3, alignée sur `packages/ui/src/styles/tokens.css` (thème « restaurant » clair).
+// React Native n'a pas de variables CSS : ce module est l'équivalent en constantes
+// TypeScript, seule source de couleurs pour tous les composants (`src/ui/*`) et écrans —
 // jamais un code hexadécimal écrit ailleurs.
 export const colors = {
-  canvas: '#F6F2EA',
-  surface: '#FFFDF9',
-  surfaceAlt: '#FAF6EF',
-  surfaceRaised: '#F2ECE1',
+  canvas: '#F7F8FA',
+  surface: '#FFFFFF',
+  surfaceAlt: '#F7F8FA',
+  surfaceRaised: '#EEF0F3',
   elevated: '#FFFFFF',
-  border: '#E8E0D2',
-  borderStrong: '#D8CEBC',
+  border: '#E4E7EB',
+  borderStrong: '#C9CFD6',
 
-  fg: '#19343B',
-  fgMuted: '#587070',
-  fgSubtle: '#879793',
-  onDark: '#F8F4EC',
+  fg: '#0B0F10',
+  fgMuted: '#667085',
+  fgSubtle: '#98A2B3',
+  onDark: '#F7F8FA',
 
-  primary: '#E8784B',
-  primaryHover: '#DF6A3B',
-  primaryFg: '#1C0D06',
-  primarySoft: '#FDEEE6',
-  primarySoftFg: '#B04824',
+  primary: '#FF6B00',
+  primaryHover: '#E86000',
+  primaryFg: '#FFFFFF',
+  primarySoft: '#FFF1E6',
+  primarySoftFg: '#B34D00',
 
-  ink: '#19343B',
-  inkHover: '#243F44',
-  inkFg: '#F8F4EC',
+  ink: '#0B0F10',
+  inkHover: '#272E31',
+  inkFg: '#FFFFFF',
 
   danger: '#BF3F2E',
   dangerSoft: '#FDF2F1',
@@ -38,8 +38,8 @@ export const colors = {
   info: '#3A66A0',
 
   white: '#FFFFFF',
-  overlay: 'rgba(15, 34, 39, 0.5)',
-  skeleton: '#EFE8DA',
+  overlay: 'rgba(11, 15, 16, 0.5)',
+  skeleton: '#EEF0F3',
 } as const;
 
 export const radius = {
@@ -61,14 +61,14 @@ export const spacing = {
 
 export const shadow = {
   card: {
-    shadowColor: '#19343B',
+    shadowColor: '#0B0F10',
     shadowOpacity: 0.1,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 6 },
     elevation: 3,
   },
   sm: {
-    shadowColor: '#19343B',
+    shadowColor: '#0B0F10',
     shadowOpacity: 0.08,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },

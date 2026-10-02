@@ -4,29 +4,30 @@
  * Tailwind bg-surface, text-fg-muted, border-border…), jamais les hex.
  */
 
-/* Thème « restaurant » — clair, chaleureux (défaut) */
+/* Thème « restaurant » — clair, charte Ciyou Eats (orange #FF6B00/#FF8A00, noir #0B0F10,
+   blanc, gris #98A2B3 — voir docs/DECISIONS_CLIENT.md, charte transmise par le client) */
 :root,
 [data-theme="restaurant"] {
-  --gl-canvas: #f6f2ea;
-  --gl-surface: #fffdf9;
-  --gl-surface-2: #faf6ef;
-  --gl-surface-3: #f2ece1;
+  --gl-canvas: #f7f8fa;
+  --gl-surface: #ffffff;
+  --gl-surface-2: #f7f8fa;
+  --gl-surface-3: #eef0f3;
   --gl-elevated: #ffffff;
-  --gl-border: #e8e0d2;
-  --gl-border-strong: #d8cebc;
-  --gl-fg: #19343b;
-  --gl-fg-muted: #587070;
-  --gl-fg-subtle: #879793;
+  --gl-border: #e4e7eb;
+  --gl-border-strong: #c9cfd6;
+  --gl-fg: #0b0f10;
+  --gl-fg-muted: #667085;
+  --gl-fg-subtle: #98a2b3;
 
-  --gl-primary: #e8784b;
-  --gl-primary-hover: #df6a3b;
-  --gl-primary-fg: #1c0d06;
-  --gl-primary-soft: #fdeee6;
-  --gl-primary-soft-fg: #b04824;
+  --gl-primary: #ff6b00;
+  --gl-primary-hover: #e86000;
+  --gl-primary-fg: #ffffff;
+  --gl-primary-soft: #fff1e6;
+  --gl-primary-soft-fg: #b34d00;
 
-  --gl-contrast: #19343b;
-  --gl-contrast-hover: #243f44;
-  --gl-contrast-fg: #f8f4ec;
+  --gl-contrast: #0b0f10;
+  --gl-contrast-hover: #272e31;
+  --gl-contrast-fg: #ffffff;
 
   --gl-danger: #bf3f2e;
   --gl-danger-hover: #9f3226;
@@ -37,32 +38,32 @@
   --gl-warning: #c47a1b;
   --gl-info: #3a66a0;
 
-  --gl-ring: #e8784b;
-  --gl-selection: #fac9b2;
-  --gl-overlay: rgb(15 34 39 / 0.42);
+  --gl-ring: #ff6b00;
+  --gl-selection: #ffc999;
+  --gl-overlay: rgb(11 15 16 / 0.42);
 
-  --gl-sidebar: #17323a;
-  --gl-sidebar-fg: #eef3f1;
-  --gl-sidebar-muted: #9db6b2;
+  --gl-sidebar: #0b0f10;
+  --gl-sidebar-fg: #f7f8fa;
+  --gl-sidebar-muted: #98a2b3;
   --gl-sidebar-hover: rgb(255 255 255 / 0.06);
-  --gl-sidebar-active: rgb(255 255 255 / 0.1);
+  --gl-sidebar-active: rgb(255 107 0 / 0.16);
   --gl-sidebar-border: rgb(255 255 255 / 0.08);
 
-  --gl-chart-1: #e8784b;
-  --gl-chart-2: #2e4b50;
-  --gl-chart-3: #e09b24;
-  --gl-chart-4: #4a846c;
+  --gl-chart-1: #ff6b00;
+  --gl-chart-2: #0b0f10;
+  --gl-chart-3: #ff8a00;
+  --gl-chart-4: #39705f;
   --gl-chart-5: #9467a5;
-  --gl-chart-6: #4a7fbb;
-  --gl-chart-grid: #ece5d8;
-  --gl-chart-axis: #879793;
+  --gl-chart-6: #3a66a0;
+  --gl-chart-grid: #eef0f3;
+  --gl-chart-axis: #98a2b3;
 
-  --gl-shadow-xs: 0 1px 2px rgb(25 52 59 / 0.05);
-  --gl-shadow-sm: 0 1px 2px rgb(25 52 59 / 0.04), 0 2px 6px rgb(25 52 59 / 0.04);
-  --gl-shadow-card: 0 1px 2px rgb(25 52 59 / 0.04), 0 6px 20px -8px rgb(25 52 59 / 0.08);
-  --gl-shadow-md: 0 2px 4px rgb(25 52 59 / 0.04), 0 8px 20px -6px rgb(25 52 59 / 0.1);
-  --gl-shadow-lg: 0 4px 8px -4px rgb(25 52 59 / 0.06), 0 16px 36px -10px rgb(25 52 59 / 0.18);
-  --gl-shadow-xl: 0 32px 80px -20px rgb(15 34 39 / 0.34), 0 8px 20px -8px rgb(15 34 39 / 0.12);
+  --gl-shadow-xs: 0 1px 2px rgb(11 15 16 / 0.05);
+  --gl-shadow-sm: 0 1px 2px rgb(11 15 16 / 0.04), 0 2px 6px rgb(11 15 16 / 0.04);
+  --gl-shadow-card: 0 1px 2px rgb(11 15 16 / 0.04), 0 6px 20px -8px rgb(11 15 16 / 0.08);
+  --gl-shadow-md: 0 2px 4px rgb(11 15 16 / 0.04), 0 8px 20px -6px rgb(11 15 16 / 0.1);
+  --gl-shadow-lg: 0 4px 8px -4px rgb(11 15 16 / 0.06), 0 16px 36px -10px rgb(11 15 16 / 0.18);
+  --gl-shadow-xl: 0 32px 80px -20px rgb(11 15 16 / 0.34), 0 8px 20px -8px rgb(11 15 16 / 0.12);
 }
 
 /* Thème « restaurant » en mode sombre — identique au thème admin (parité visuelle demandée par le client) */
@@ -79,11 +80,11 @@
   --gl-fg-muted: #98a9a9;
   --gl-fg-subtle: #677a7c;
 
-  --gl-primary: #ee8456;
-  --gl-primary-hover: #f39a72;
-  --gl-primary-fg: #1c0d06;
-  --gl-primary-soft: rgb(238 132 86 / 0.13);
-  --gl-primary-soft-fg: #f5a684;
+  --gl-primary: #ff6b00;
+  --gl-primary-hover: #ff8a00;
+  --gl-primary-fg: #ffffff;
+  --gl-primary-soft: rgb(255 107 0 / 0.14);
+  --gl-primary-soft-fg: #ff9c4d;
 
   --gl-contrast: #eef2f1;
   --gl-contrast-hover: #ffffff;
@@ -98,20 +99,20 @@
   --gl-warning: #edb33d;
   --gl-info: #6a9bcd;
 
-  --gl-ring: #ef8b5f;
-  --gl-selection: rgb(238 132 86 / 0.35);
+  --gl-ring: #ff8a00;
+  --gl-selection: rgb(255 107 0 / 0.35);
   --gl-overlay: rgb(2 6 8 / 0.66);
 
   --gl-sidebar: #0c1315;
   --gl-sidebar-fg: #eef2f1;
   --gl-sidebar-muted: #7f9294;
   --gl-sidebar-hover: rgb(255 255 255 / 0.045);
-  --gl-sidebar-active: rgb(255 255 255 / 0.075);
+  --gl-sidebar-active: rgb(255 107 0 / 0.12);
   --gl-sidebar-border: #182226;
 
-  --gl-chart-1: #ee8456;
+  --gl-chart-1: #ff6b00;
   --gl-chart-2: #4bb3a7;
-  --gl-chart-3: #edb33d;
+  --gl-chart-3: #ff8a00;
   --gl-chart-4: #67a087;
   --gl-chart-5: #ae85bd;
   --gl-chart-6: #6a9bcd;
@@ -139,11 +140,11 @@
   --gl-fg-muted: #98a9a9;
   --gl-fg-subtle: #677a7c;
 
-  --gl-primary: #ee8456;
-  --gl-primary-hover: #f39a72;
-  --gl-primary-fg: #1c0d06;
-  --gl-primary-soft: rgb(238 132 86 / 0.13);
-  --gl-primary-soft-fg: #f5a684;
+  --gl-primary: #ff6b00;
+  --gl-primary-hover: #ff8a00;
+  --gl-primary-fg: #ffffff;
+  --gl-primary-soft: rgb(255 107 0 / 0.14);
+  --gl-primary-soft-fg: #ff9c4d;
 
   --gl-contrast: #eef2f1;
   --gl-contrast-hover: #ffffff;
@@ -158,20 +159,20 @@
   --gl-warning: #edb33d;
   --gl-info: #6a9bcd;
 
-  --gl-ring: #ef8b5f;
-  --gl-selection: rgb(238 132 86 / 0.35);
+  --gl-ring: #ff8a00;
+  --gl-selection: rgb(255 107 0 / 0.35);
   --gl-overlay: rgb(2 6 8 / 0.66);
 
   --gl-sidebar: #0c1315;
   --gl-sidebar-fg: #eef2f1;
   --gl-sidebar-muted: #7f9294;
   --gl-sidebar-hover: rgb(255 255 255 / 0.045);
-  --gl-sidebar-active: rgb(255 255 255 / 0.075);
+  --gl-sidebar-active: rgb(255 107 0 / 0.12);
   --gl-sidebar-border: #182226;
 
-  --gl-chart-1: #ee8456;
+  --gl-chart-1: #ff6b00;
   --gl-chart-2: #4bb3a7;
-  --gl-chart-3: #edb33d;
+  --gl-chart-3: #ff8a00;
   --gl-chart-4: #67a087;
   --gl-chart-5: #ae85bd;
   --gl-chart-6: #6a9bcd;

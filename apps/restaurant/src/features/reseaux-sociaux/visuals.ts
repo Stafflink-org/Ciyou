@@ -16,11 +16,11 @@ export interface VisualInput {
   url: string;
 }
 
-const INK = '#19343b';
-const INK_DEEP = '#0f2227';
-const CREAM = '#f8f4ec';
-const ORANGE = '#e8784b';
-const MUTED = '#b8cbc5';
+const INK = '#0b0f10';
+const INK_DEEP = '#05070a';
+const CREAM = '#ffffff';
+const ORANGE = '#ff6b00';
+const MUTED = '#98a2b3';
 
 export const VISUAL_SIZES: Record<VisualFormat, { width: number; height: number; label: string }> = {
   square: { width: 1080, height: 1080, label: 'Publication carrée (1080 × 1080)' },
