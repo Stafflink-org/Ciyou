@@ -77,8 +77,8 @@ export function FinancesPage() {
   const previousRefunds = useRefundsInRange(restaurantId, period.previous.start, period.previous.endExclusive);
   const orders = useOrdersInRange(restaurantId, period.start, period.endExclusive, canOrders);
 
-  const totals = useMemo(() => sumDaily(current.data, restaurant.countryId), [current.data, restaurant.countryId]);
-  const previousTotals = useMemo(() => sumDaily(previous.data, restaurant.countryId), [previous.data, restaurant.countryId]);
+  const totals = useMemo(() => sumDaily(current.data), [current.data]);
+  const previousTotals = useMemo(() => sumDaily(previous.data), [previous.data]);
   const refundsCharged = useMemo(() => refunds.data.reduce((sum, refund) => sum + restaurantShare(refund), 0), [refunds.data]);
   const previousRefundsCharged = useMemo(
     () => previousRefunds.data.reduce((sum, refund) => sum + restaurantShare(refund), 0),
@@ -86,7 +86,11 @@ export function FinancesPage() {
   );
   const net = totals.netPayoutCents - refundsCharged;
   const previousNet = previousTotals.netPayoutCents - previousRefundsCharged;
-  const vatBps = DEFAULT_PRICING_BY_COUNTRY[restaurant.countryId]?.vat.standardBps ?? 2000;
+  // Taux effectif affiché à côté du montant, déduit du montant réellement appliqué par commande
+  // (totals.commissionVatCents, somme de order.restaurantSettlement.commissionVatCents) plutôt
+  // qu'un taux par défaut recalculé après coup — peut différer du taux normal si le réglage TVA
+  // du pays/de la ville a changé pendant la période, ou pour une période sans aucune commande.
+  const vatBps = totals.commissionHtCents > 0 ? Math.round((totals.commissionVatCents / totals.commissionHtCents) * 10_000) : (DEFAULT_PRICING_BY_COUNTRY[restaurant.countryId]?.vat.standardBps ?? 2000);
 
   const trend = useMemo(
     () => buildTrend(period, current.data, previous.data, metric, { current: refunds.data, previous: previousRefunds.data }),

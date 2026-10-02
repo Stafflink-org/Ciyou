@@ -84,7 +84,7 @@ export function ChiffreAffairesPage() {
   const daily = useDailyStats(restaurantId, period.from, period.to);
   const orders = useOrdersInRange(restaurantId, period.start, period.endExclusive, canOrders);
   const ledger = useLedgerInRange(restaurantId, period.start, period.endExclusive, canOrders);
-  const totals = useMemo(() => sumDaily(daily.data, restaurant.countryId), [daily.data, restaurant.countryId]);
+  const totals = useMemo(() => sumDaily(daily.data), [daily.data]);
 
   const rows = useMemo<JournalRow[]>(() => {
     const byOrder = new Map<string, { commission: number; refund: number; revenue: number }>();
