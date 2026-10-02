@@ -1394,6 +1394,14 @@ Non exploré en détail (fichiers non relus pour cette rubrique). Écarts vus da
 - Devise `'EUR'` codée dans des écritures d'avoirs et remboursements : `customers.ts:100,117`, `refunds.ts:354`.
 - Fuseau `Europe/Paris` pour les tâches planifiées : `platform/runtime.ts:32`.
 
+**Mise à jour du 02/10/2026 (balayage §25/§26/§27, 4 bugs de code trouvés par relecture directe, aucune ligne du tableau §3 n'était concernée — défauts non documentés, PR [#117](https://github.com/Stafflink-org/Ciyou/pull/117)) :**
+- **P0 sécurité — `posConnections` (connexion caisse, §25) sans périmètre ville** : la règle Firestore et les 3 Cloud Functions (`savePosConnection`/`testPosConnection`/`disconnectPosConnection`) ne vérifiaient que la permission `integrations.view`/`integrations.edit`, jamais la ville du restaurant — un admin restreint pouvait lire/modifier/tester/couper la connexion caisse (webhook, URL) de n'importe quel restaurant hors de son périmètre. Corrigé.
+- **P0 sécurité — SSRF sur le webhook caisse** : `assertPublicHttpsUrl` ne refusait qu'une IP littérale privée ou un suffixe de nom connu — un nom de domaine **public** dont le DNS pointe vers une IP privée ou le serveur de métadonnées cloud (`169.254.169.254`) le traversait sans contrôle. Corrigé par une résolution DNS réelle avant l'enregistrement et avant chaque envoi.
+- **P0 sécurité — `/auditLogs` (§27) sans périmètre ville** : lisible par tout titulaire de `audit.view` sans aucune borne de ville, alors que les entrées portent un `cityId` réel (même motif déjà appliqué à `platformAlerts` juste à côté dans le même fichier). Même trou dans l'export CSV (`exportAuditLogs`). Corrigé.
+- **P1 — Auto-élévation de privilèges via `updateAdminRole` (§26)** : le garde-fou « vous ne pouvez pas modifier votre propre rôle » ne couvrait que `role`/`active` — un titulaire de `admins.manage` pouvait s'appeler lui-même pour élargir son propre périmètre géographique ou relever son propre plafond de remboursement personnel, lui-même non borné par le seuil plateforme contrairement au plafond par défaut du rôle. Les deux corrigés.
+- Corrigé au passage (défaut d'infrastructure découvert en testant le 1er point, pas du code) : `disconnectPosConnection` n'avait aucune politique IAM, la rendant inappelable par quiconque.
+
+Testé réel sur `golink-9f16d` (`cdc-fix-residuals-50.flow.mjs`, 17/17 OK).
 
 # Annexe H — Matrice §28 à §31 (Conformité, données)
 
