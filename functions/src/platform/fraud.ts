@@ -24,7 +24,7 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { auth, db, FieldValue, Timestamp } from '../lib/admin';
 import { actorFromCaller, writeAudit } from '../lib/audit';
 import { fail } from '../lib/errors';
-import { requireAdmin } from '../lib/permissions';
+import { assertAdminCovers, assertAdminCoversCountry, requireAdmin } from '../lib/permissions';
 import { z, zId, zReason } from '../lib/validation';
 import { PLATFORM_RUNTIME, PLATFORM_SCHEDULE_RUNTIME, TIMEZONE, platformCallable, requireSecureAdmin } from './runtime';
 
@@ -300,6 +300,12 @@ async function detectRestaurantSignals(since: Timestamp, settings: Omit<FraudSet
   }
   for (const doc of refunds.docs) {
     const data = doc.data() as Record<string, unknown>;
+    // Seuls les remboursements réellement aboutis (`processed`) rendent de l'argent au client — un
+    // remboursement `rejected`/`failed` (ou encore `requested`/`pending_approval`/`approved`, pas
+    // encore traité) ne doit pas compter dans le taux : sinon un commerce massivement sollicité
+    // mais qui obtient surtout des refus pouvait être signalé pour un « taux de remboursement
+    // anormal » alors qu'il n'a quasiment rien remboursé.
+    if (data.status !== 'processed') continue;
     const restaurantId = data.restaurantId as string | undefined;
     if (!restaurantId) continue;
     const entry = byRestaurant.get(restaurantId);
@@ -424,11 +430,16 @@ export const decideFraudCase = platformCallable(
     note: zReason,
   }),
   async (data, request) => {
-    const { caller } = await requireSecureAdmin(request, 'fraud.manage');
+    const { caller, admin } = await requireSecureAdmin(request, 'fraud.manage');
     const ref = db.collection(COLLECTIONS.fraudCases).doc(data.caseId);
     const snap = await ref.get();
     if (!snap.exists) throw fail.notFound('Dossier de fraude');
     const fraudCase = snap.data() as FraudCase;
+    // Un admin restreint par ville/pays (n'importe quel rôle, pas seulement city_manager) ne doit
+    // décider que des dossiers de son périmètre — sinon il peut bloquer/suspendre/geler les
+    // reversements d'un sujet hors de son mandat.
+    assertAdminCovers(admin, fraudCase.cityId ?? null);
+    assertAdminCoversCountry(admin, fraudCase.countryId);
     const decision = data.action ? { action: data.action, note: data.note, by: caller.uid, at: Timestamp.now() } : (fraudCase.decision ?? null);
     await ref.update({
       status: data.status,

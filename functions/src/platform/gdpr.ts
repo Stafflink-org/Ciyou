@@ -248,8 +248,10 @@ async function collectPersonalData(subjectType: GdprRequest['subjectType'], subj
     out.consents = await subcollectionDocs(userRef, SUBCOLLECTIONS.users.consents);
   } else if (subjectType === 'driver') {
     const driverRef = db.collection(COLLECTIONS.drivers).doc(subjectId);
-    const driver = await driverRef.get();
+    const [driver, priv] = await Promise.all([driverRef.get(), db.collection(COLLECTIONS.driverPrivate).doc(subjectId).get()]);
     out.profile = driver.data() ?? null;
+    // Identité, adresse, IBAN masqué, SIRET : données personnelles réelles jamais incluses jusqu'ici.
+    out.private = priv.data() ?? null;
     const [reviews, tickets] = await Promise.all([
       db.collection(COLLECTIONS.reviews).where('driverId', '==', subjectId).limit(500).get(),
       db.collection(COLLECTIONS.supportTickets).where('requesterId', '==', subjectId).limit(500).get(),
@@ -403,14 +405,19 @@ export const reportContent = platformCallable(
     details: z.string().trim().max(2000).nullable().default(null),
   }),
   async (data, request) => {
-    const { caller } = await requireSecureAdmin(request);
+    // Canal de signalement destiné à N'IMPORTE QUEL utilisateur authentifié (client, livreur,
+    // restaurant), pas seulement l'équipe interne — `requireSecureAdmin` (rôle admin obligatoire)
+    // rendait la fonction inutilisable pour son propre objet : même avec un bouton « Signaler »
+    // ajouté dans une app, l'appel aurait toujours échoué en « forbidden ».
+    const caller = requireAuth(request);
+    const reporterType = caller.claims.role === 'admin' ? 'system' : (caller.claims.role ?? 'anonymous');
     const ref = db.collection(COLLECTIONS.contentReports).doc();
     const report: ContentReport = {
       targetType: data.targetType,
       targetPath: data.targetPath,
       restaurantId: data.restaurantId ?? null,
       reporterId: caller.uid,
-      reporterType: 'system',
+      reporterType,
       reason: data.reason,
       details: data.details,
       status: 'open',
@@ -418,7 +425,7 @@ export const reportContent = platformCallable(
       createdAt: Timestamp.now(),
     };
     await ref.set(report);
-    await writeAudit({ actor: actorFromCaller(caller, 'admin'), action: 'content.reported', target: { type: 'other', id: data.targetPath, label: data.targetType }, reason: data.reason, request });
+    await writeAudit({ actor: actorFromCaller(caller), action: 'content.reported', target: { type: 'other', id: data.targetPath, label: data.targetType }, reason: data.reason, request });
     return { reportId: ref.id };
   },
 );
@@ -497,9 +504,17 @@ export const anonymizeExpiredData = onSchedule(
 
     const inactiveMonths = Number(settings.inactiveAccountMonths ?? 24);
     const inactiveCutoff = Timestamp.fromMillis(now - inactiveMonths * 30 * DAY_MS);
-    // Champ réel du profil client : stats.lastOrderAt (voir models/users, index.json).
-    const inactiveUsers = await db.collection(COLLECTIONS.users).where('stats.lastOrderAt', '<', inactiveCutoff).limit(200).get();
-    for (const doc of inactiveUsers.docs) {
+    // Champ réel du profil client : stats.lastOrderAt (voir models/users, index.json). Une requête
+    // d'inégalité exclut tout document où ce champ vaut `null` : un client qui ne commande JAMAIS
+    // (stats.lastOrderAt reste null pour toujours) n'était donc jamais sélectionné par cette
+    // requête seule, quel que soit l'âge réel du compte — ses données restaient en clair
+    // indéfiniment malgré le réglage actif. Seconde requête dédiée à ce cas : mêmes comptes jamais
+    // actifs, mais anciens (createdAt, seule date disponible faute de commande).
+    const [inactiveUsers, neverOrderedUsers] = await Promise.all([
+      db.collection(COLLECTIONS.users).where('stats.lastOrderAt', '<', inactiveCutoff).limit(200).get(),
+      db.collection(COLLECTIONS.users).where('stats.lastOrderAt', '==', null).where('createdAt', '<', inactiveCutoff).limit(200).get(),
+    ]);
+    for (const doc of [...inactiveUsers.docs, ...neverOrderedUsers.docs]) {
       if (doc.get('anonymizedAt')) continue;
       await doc.ref.set({ displayName: 'Client inactif', email: null, phone: null, anonymizedAt: Timestamp.now() }, { merge: true });
       summary.inactiveAccounts += 1;
@@ -553,7 +568,10 @@ export const previewRetentionRun = platformCallable(z.object({}).optional(), asy
   const settings = settingsSnap.data() as Record<string, unknown> | undefined;
   const now = Date.now();
   const inactiveCutoff = Timestamp.fromMillis(now - Number(settings?.inactiveAccountMonths ?? 24) * 30 * DAY_MS);
-  const inactiveUsers = await db.collection(COLLECTIONS.users).where('stats.lastOrderAt', '<', inactiveCutoff).count().get();
-  const trashCount = await db.collection(COLLECTIONS.trash).where('purgeAt', '<=', Timestamp.fromMillis(now)).where('restoredAt', '==', null).count().get();
-  return { inactiveAccounts: inactiveUsers.data().count, trashToPurge: trashCount.data().count };
+  const [inactiveUsers, neverOrderedUsers, trashCount] = await Promise.all([
+    db.collection(COLLECTIONS.users).where('stats.lastOrderAt', '<', inactiveCutoff).count().get(),
+    db.collection(COLLECTIONS.users).where('stats.lastOrderAt', '==', null).where('createdAt', '<', inactiveCutoff).count().get(),
+    db.collection(COLLECTIONS.trash).where('purgeAt', '<=', Timestamp.fromMillis(now)).where('restoredAt', '==', null).count().get(),
+  ]);
+  return { inactiveAccounts: inactiveUsers.data().count + neverOrderedUsers.data().count, trashToPurge: trashCount.data().count };
 });

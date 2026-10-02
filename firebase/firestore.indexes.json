@@ -2125,6 +2125,20 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
+          "fieldPath": "stats.lastOrderAt",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
           "fieldPath": "role",
           "order": "ASCENDING"
         },
@@ -3727,11 +3741,11 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "purgeAt",
+          "fieldPath": "restoredAt",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "restoredAt",
+          "fieldPath": "purgeAt",
           "order": "ASCENDING"
         }
       ]
