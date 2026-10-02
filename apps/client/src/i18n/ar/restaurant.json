@@ -10,6 +10,7 @@
   "etaMinutes": "{{min}}–{{max}} دقيقة",
   "deliveryFee": "التوصيل {{price}} يورو",
   "freeDelivery": "توصيل مجاني",
+  "deliveryFeeVariable": "رسوم التوصيل حسب المسافة",
   "menuSoon": "القائمة متوفرة قريبًا.",
   "dishCount_one": "طبق واحد",
   "dishCount_other": "{{count}} طبق",

@@ -60,7 +60,8 @@
     "closed": "مغلق مؤقتًا",
     "sponsored": "مُموَّل",
     "freeDelivery": "توصيل مجاني",
-    "deliveryFee": "التوصيل {{amount}} €"
+    "deliveryFee": "التوصيل {{amount}} €",
+    "deliveryFeeVariable": "رسوم التوصيل حسب المسافة"
   },
   "product": {
     "suggestion": "اقتراح",

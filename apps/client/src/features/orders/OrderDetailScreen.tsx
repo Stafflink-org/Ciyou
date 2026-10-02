@@ -92,6 +92,16 @@ export function OrderDetailScreen({ route, navigation }: Props) {
         </Text>
       </Card>
 
+      {order.status === 'cancelled' && order.cancellation ? (
+        <Card style={{ marginTop: spacing.md }}>
+          <Text variant="bodyStrong">{t('cancelled.title')}</Text>
+          <SummaryLine
+            label={t('cancelled.refund')}
+            value={order.cancellation.refundCents > 0 ? money(order.cancellation.refundCents) : t('cancelled.noRefund')}
+          />
+        </Card>
+      ) : null}
+
       {order.status === 'delivered' ? (
         review ? (
           <Card style={{ marginTop: spacing.md }}>

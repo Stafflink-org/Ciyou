@@ -286,9 +286,11 @@ export function RestaurantCard({ restaurant, onPress, onToggleFavorite, favorite
           </Text>
         ) : null}
         <Text variant="caption" color="primary" style={{ marginTop: 2 }}>
-          {restaurant.ownDeliveryFeeCents != null
-            ? t('restaurantCard.deliveryFee', { amount: (restaurant.ownDeliveryFeeCents / 100).toFixed(2).replace('.', ',') })
-            : t('restaurantCard.freeDelivery')}
+          {restaurant.deliveredBy !== 'restaurant'
+            ? t('restaurantCard.deliveryFeeVariable')
+            : restaurant.ownDeliveryFeeCents
+              ? t('restaurantCard.deliveryFee', { amount: (restaurant.ownDeliveryFeeCents / 100).toFixed(2).replace('.', ',') })
+              : t('restaurantCard.freeDelivery')}
         </Text>
       </View>
     </Pressable>

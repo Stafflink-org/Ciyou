@@ -10,6 +10,7 @@
   "etaMinutes": "{{min}}–{{max}} min",
   "deliveryFee": "Livraison {{price}} €",
   "freeDelivery": "Livraison offerte",
+  "deliveryFeeVariable": "Frais de livraison selon la distance",
   "menuSoon": "Menu bientôt disponible.",
   "dishCount_one": "{{count}} plat",
   "dishCount_other": "{{count}} plats",

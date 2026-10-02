@@ -29,5 +29,10 @@
   "commentPlaceholder": "Votre expérience…",
   "sendReview": "Envoyer mon avis",
   "thankYouToast": "Merci pour votre avis !",
-  "defaultCustomerName": "Client Ciyou Eats"
+  "defaultCustomerName": "Client Ciyou Eats",
+  "cancelled": {
+    "title": "Commande annulée",
+    "refund": "Montant remboursé",
+    "noRefund": "Aucun remboursement"
+  }
 }

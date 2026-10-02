@@ -11,5 +11,6 @@
   "inputPlaceholder": "Your referrer's code",
   "validateButton": "Validate the code",
   "invalidCode": "Enter a valid code.",
-  "codeAccepted": "Code accepted: €{{amount}} off your first order."
+  "codeAccepted": "Code accepted: €{{amount}} off your first order.",
+  "codeAcceptedWithMinimum": "Code accepted: €{{amount}} off your first order, from €{{minimum}} spent."
 }

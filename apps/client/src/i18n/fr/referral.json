@@ -11,5 +11,6 @@
   "inputPlaceholder": "Code de votre parrain",
   "validateButton": "Valider le code",
   "invalidCode": "Saisissez un code valide.",
-  "codeAccepted": "Code accepté : {{amount}} € offerts à votre première commande."
+  "codeAccepted": "Code accepté : {{amount}} € offerts à votre première commande.",
+  "codeAcceptedWithMinimum": "Code accepté : {{amount}} € offerts dès {{minimum}} € d'achat sur votre première commande."
 }

@@ -25,7 +25,7 @@ export function CartScreen({ navigation }: Props) {
   const { t } = useTranslation('cart');
   const cart = useCart();
   const toast = useToast();
-  const [promoCode, setPromoCode] = useState('');
+  const [promoCode, setPromoCode] = useState(cart.promoCode ?? '');
   const { data: restaurant } = useDoc<Restaurant>(cart.restaurantId ? docAt(`restaurants/${cart.restaurantId}`) : null);
 
   if (cart.loaded && cart.lines.length === 0) {
@@ -42,10 +42,12 @@ export function CartScreen({ navigation }: Props) {
   const quote = previewQuote(cart.lines, 'delivery', restaurant?.ownDeliveryFeeCents ?? null, restaurant?.minOrderCents ?? 0, config);
 
   const applyPromo = () => {
-    if (!promoCode.trim()) {
+    const trimmed = promoCode.trim();
+    if (!trimmed) {
       toast.show(t('promoEmptyToast'), 'danger');
       return;
     }
+    cart.setPromoCode(trimmed);
     toast.show(t('promoSavedToast'));
   };
 

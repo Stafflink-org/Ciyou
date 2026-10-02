@@ -60,7 +60,8 @@
     "closed": "Temporarily closed",
     "sponsored": "Sponsored",
     "freeDelivery": "Free delivery",
-    "deliveryFee": "Delivery €{{amount}}"
+    "deliveryFee": "Delivery €{{amount}}",
+    "deliveryFeeVariable": "Delivery fee varies by distance"
   },
   "product": {
     "suggestion": "Suggestion",

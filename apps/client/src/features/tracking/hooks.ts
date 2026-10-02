@@ -51,10 +51,18 @@ export function stepLabel(status: string, t: (key: string) => string): string {
 export function trackingSteps(order: Order, t: (key: string) => string): { key: string; label: string; at: number | null; done: boolean; current: boolean }[] {
   const sequence: (keyof Order['timeline'])[] =
     order.fulfillment === 'delivery' ? ['new', 'accepted', 'preparing', 'ready', 'assigned', 'picked_up', 'delivered'] : ['new', 'accepted', 'preparing', 'ready', 'delivered'];
-  const order_ = order.status === 'cancelled' ? sequence.length : sequence.indexOf(order.status as never);
+  // Annulée : plus aucune étape « en cours », et seules les étapes réellement atteintes avant
+  // l'annulation (horodatage présent) sont marquées atteintes — pas « livré » par défaut, sinon la
+  // frise affichait une progression complète jusqu'à la livraison pour une commande annulée.
+  const cancelled = order.status === 'cancelled';
+  const order_ = cancelled
+    ? sequence.reduce((last, key, index) => (order.timeline[key as keyof Order['timeline']] ? index : last), -1)
+    : sequence.indexOf(order.status as never);
   return sequence.map((key, index) => {
     const ts = order.timeline[key as keyof Order['timeline']];
     const at = ts && typeof ts === 'object' && 'toDate' in ts ? (ts as { toDate(): Date }).toDate().getTime() : null;
-    return { key: key as string, label: stepLabel(key as string, t), at, done: index < order_ || (index === order_ && order.status === 'delivered'), current: index === order_ && order.status !== 'delivered' };
+    const done = cancelled ? index <= order_ : index < order_ || (index === order_ && order.status === 'delivered');
+    const current = !cancelled && index === order_ && order.status !== 'delivered';
+    return { key: key as string, label: stepLabel(key as string, t), at, done, current };
   });
 }
