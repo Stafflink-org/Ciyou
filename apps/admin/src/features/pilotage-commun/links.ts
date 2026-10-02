@@ -4,22 +4,30 @@ import type { EntityRef, PlatformAlert, SearchHitType } from '@golink/shared';
 
 const BY_TYPE: Partial<Record<EntityRef['type'] | SearchHitType, string>> = {
   restaurant: 'restaurants',
-  restaurant_group: 'restaurants/groupes',
   driver: 'livreurs',
   client: 'clients',
   order: 'commandes',
-  invoice: 'factures',
-  payout: 'reversements',
-  refund: 'remboursements',
+  payout: 'finance/reversements',
   ticket: 'support',
   review: 'avis',
   promotion: 'promotions',
-  subscription: 'abonnements',
   city: 'villes',
   zone: 'zones',
 };
 
+// Factures, abonnements et groupes de restaurants n'ont pas de route de détail dédiée
+// (`/factures/:id`, `/abonnements/:id`, `/restaurants/groupes/:id` n'existent pas) : la fiche
+// s'ouvre dans un panneau sur la page liste, sélectionné par paramètre de requête (convention
+// déjà utilisée par SubscriptionsPage.tsx et GroupsPage.tsx).
+const BY_QUERY_PARAM: Partial<Record<EntityRef['type'] | SearchHitType, { path: string; param: string }>> = {
+  invoice: { path: 'facturation', param: 'facture' },
+  subscription: { path: 'abonnements', param: 'abonnement' },
+  restaurant_group: { path: 'restaurants/groupes', param: 'groupe' },
+};
+
 export function entityHref(ref: Pick<EntityRef, 'type' | 'id'>): string | null {
+  const byQuery = BY_QUERY_PARAM[ref.type as keyof typeof BY_QUERY_PARAM];
+  if (byQuery) return `/${byQuery.path}?${byQuery.param}=${encodeURIComponent(ref.id)}`;
   const base = BY_TYPE[ref.type as keyof typeof BY_TYPE];
   return base ? `/${base}/${encodeURIComponent(ref.id)}` : null;
 }

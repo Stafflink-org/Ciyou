@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { collection, orderBy, query, where } from 'firebase/firestore';
 import { AlertOctagon, CalendarRange, CheckCircle2, FileMinus2, FileStack, FileText, Percent, Undo2 } from 'lucide-react';
 import {
@@ -62,7 +63,15 @@ export function InvoicesPage() {
   const can = useCan();
   const geo = useGeoScope();
   const [kind, setKind] = useState<KindFilter>('all');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Déplié à l'URL (?facture=id) : la fiche est aussi atteignable par lien direct (alertes, recherche globale), pas seulement par clic dans la liste.
+  const [params, setParams] = useSearchParams();
+  const selectedId = params.get('facture');
+  const setSelectedId = (id: string | null) => {
+    const next = new URLSearchParams(params);
+    if (id) next.set('facture', id);
+    else next.delete('facture');
+    setParams(next, { replace: true });
+  };
   const [monthly, setMonthly] = useState(false);
 
   const q = useMemo(
