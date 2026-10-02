@@ -1517,6 +1517,15 @@ TROUS :
 - ✅ **CORRIGÉ (30/09, `cdc-fix-residuals-10`)** Durée de rétention de la corbeille (`trashRetentionDays`) sans effet réel sur `purgeAt` : voir ligne « Corbeille » ci-dessus, testé réel (45 jours appliqués, pas 30).
 - P2 : historique des modifications visible depuis la page Données.
 
+**Mise à jour du 02/10/2026 (balayage §31, 3 bugs de code trouvés par relecture directe, aucune ligne du tableau §3 n'était concernée — défauts non documentés, PR [#120](https://github.com/Stafflink-org/Ciyou/pull/120)) :**
+- **P0 sécurité — Corbeille (`trash`) sans périmètre ville/pays** : la règle Firestore et les Cloud Functions (`restoreFromTrash`, `purgeTrashItem`) ne vérifiaient que la permission, jamais la ville/pays du restaurant d'origine de l'élément supprimé — un admin restreint pouvait lire, restaurer ou purger définitivement un élément de n'importe quel établissement hors de son périmètre. Corrigé.
+- **P1 — Corruption de données** : `restoreFromTrash` appliquait `arrayUnion` au champ `sectionId` (scalaire, pas un tableau) lors d'une restauration de carte — le transformait silencieusement en tableau à un élément. L'écran dédié du restaurant (`restoreMenuItem`) traitait déjà ce cas correctement ; seul le chemin de restauration générique de l'écran « Données » était affecté. Corrigé.
+- ✅ **CORRIGÉ en partie — « alerte en cas d'échec de sauvegarde » (1er point P0 de la liste des trous ci-dessus)** : le suivi d'une sauvegarde/restauration planifiée reposait sur une promesse jamais attendue — une instance de fonction recyclée avant la fin (cas de la sauvegarde nocturne, personne pour cliquer « Actualiser ») laissait le statut bloqué à `running` indéfiniment, sans jamais déclencher l'alerte d'échec. Nouvelle tâche planifiée (`sweepRunningBackupOperations`, toutes les 15 min) qui relit tout ce qui est encore `running` et force la mise à jour. Reste ouvert dans ce même point : vérification qu'une sauvegarde réelle a tourné (bucket + IAM), non traitée par ce correctif.
+
+Testé réel sur `golink-9f16d` (`cdc-fix-residuals-52.flow.mjs`, 9/9 OK).
+
+**Balayage de code clos sur l'ensemble du cahier (§1 à §31)** : chaque rubrique est passée en revue pour des bugs de code non documentés (au-delà des 58 lignes déjà marquées PARTIEL dans le tableau §3), en plus des correctifs ciblés sur les lignes PARTIEL elles-mêmes faits au fil des segments précédents.
+
 ## Écarts avec DECISIONS_CLIENT / questionnaire
 
 Non exploités en détail (aucune décision client lue pour ces rubriques dans le temps imparti) : à recouper avec `docs/DECISIONS_CLIENT.md` sur (a) les délais RGPD (30 jours) et la durée de corbeille (30 jours) ; (b) la liste de blocage (empreinte de carte/appareil) ; (c) la maintenance bloquante. Écart de fond constaté avec le cahier lui-même : « Détection automatique » (§28) et « Fonctions obligatoires dès le lancement » (§29) ne sont pas tenues (détection en grande partie non fonctionnelle, réacceptation forcée et consentements absents).
