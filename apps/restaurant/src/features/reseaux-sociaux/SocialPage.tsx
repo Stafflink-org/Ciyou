@@ -178,7 +178,7 @@ function QrCard() {
   const [posterLoading, setPosterLoading] = useState(false);
   useEffect(() => {
     let active = true;
-    void QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#19343b', light: '#ffffff' } }).then((s) => active && setSvg(s));
+    void QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#0b0f10', light: '#ffffff' } }).then((s) => active && setSvg(s));
     return () => {
       active = false;
     };
@@ -200,7 +200,7 @@ function QrCard() {
               leftIcon={<Download />}
               onClick={async () => {
                 const canvas = document.createElement('canvas');
-                await QRCode.toCanvas(canvas, url, { width: 1024, margin: 2, color: { dark: '#19343b', light: '#ffffff' } });
+                await QRCode.toCanvas(canvas, url, { width: 1024, margin: 2, color: { dark: '#0b0f10', light: '#ffffff' } });
                 downloadCanvas(canvas, `qr-${slug}.png`);
               }}
             >

@@ -15,7 +15,7 @@ export interface BrandingState {
   primary: string | null;
 }
 
-const DEFAULT_PRIMARY = '#e8784b';
+const DEFAULT_PRIMARY = '#ff6b00';
 
 interface BrandingDoc {
   logo?: { url?: string } | null;

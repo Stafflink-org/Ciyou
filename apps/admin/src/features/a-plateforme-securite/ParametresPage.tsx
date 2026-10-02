@@ -308,7 +308,7 @@ interface BrandingDoc {
   favicon: { url: string; path?: string | null } | null;
   colors: { primary: string; secondary: string; accent: string; background: string };
 }
-const DEFAULT_COLORS = { primary: '#e8784b', secondary: '#19343b', accent: '#f7f2e8', background: '#f7f2e8' };
+const DEFAULT_COLORS = { primary: '#ff6b00', secondary: '#0b0f10', accent: '#ffffff', background: '#f7f8fa' };
 
 function ColorField({ label, value, onChange, hint }: { label: string; value: string; onChange: (v: string) => void; hint?: string }) {
   const valid = /^#[0-9a-fA-F]{6}$/.test(value);
