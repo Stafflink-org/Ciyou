@@ -53,9 +53,17 @@ match /gdprRequests/{requestId} {
 }
 
 // Corbeille : mise en corbeille, restauration et purge par Cloud Functions.
+// `isAdmin('trash.view')` seul laissait un admin restreint par ville/pays lire la corbeille de
+// n'importe quel restaurant hors de son périmètre — pas de cityId/countryId direct sur le
+// document (restaurantId seul), scope donc résolu via le restaurant d'origine.
 match /trash/{itemId} {
-  allow read: if isAdmin('trash.view')
-    || (resource.data.get('restaurantId', null) != null && can(resource.data.restaurantId, 'menu.edit'));
+  allow read: if (resource.data.get('restaurantId', null) == null && isAdmin('trash.view'))
+    || (resource.data.get('restaurantId', null) != null
+      && (
+        can(resource.data.restaurantId, 'menu.edit')
+        || (isAdminIn('trash.view', get(/databases/$(database)/documents/restaurants/$(resource.data.restaurantId)).data.cityId)
+          && isAdminInCountry('trash.view', get(/databases/$(database)/documents/restaurants/$(resource.data.restaurantId)).data.countryId))
+      ));
   allow write: if false;
 }
 
