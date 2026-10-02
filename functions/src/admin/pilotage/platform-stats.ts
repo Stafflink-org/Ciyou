@@ -216,22 +216,43 @@ export const aggregatePlatformStats = onSchedule(
   },
 );
 
+/** Recalcule un jour pour toutes les villes avec les champs externes (nouveaux commerces et livreurs, support, abonnements). */
+async function refreshExternalFieldsForDay(day: string, markets: Awaited<ReturnType<typeof loadMarkets>>): Promise<void> {
+  for (const city of markets.cities.values()) {
+    try {
+      await recomputeCity(city.id, day, await externalFields(city.id, day));
+    } catch (error) {
+      logger.error('Consolidation de ville en échec', { cityId: city.id, day, error: error instanceof Error ? error.stack : String(error) });
+    }
+  }
+  await recomputeRollups(day);
+}
+
 /** Consolidation de nuit : veille et avant-veille de toutes les villes, champs externes compris. */
 export const refreshPlatformStats = onSchedule(
   { schedule: '30 3 * * *', timeZone: TIMEZONE, retryCount: 1, ...PILOTAGE_RUNTIME, timeoutSeconds: 540, memory: '512MiB' },
   async () => {
     const markets = await loadMarkets();
     const today = parisDay(new Date());
-    for (const day of [addDays(today, -2), addDays(today, -1)]) {
-      for (const city of markets.cities.values()) {
-        try {
-          await recomputeCity(city.id, day, await externalFields(city.id, day));
-        } catch (error) {
-          logger.error('Consolidation de ville en échec', { cityId: city.id, day, error: error instanceof Error ? error.stack : String(error) });
-        }
-      }
-      await recomputeRollups(day);
-    }
+    for (const day of [addDays(today, -2), addDays(today, -1)]) await refreshExternalFieldsForDay(day, markets);
+  },
+);
+
+/**
+ * `aggregatePlatformStats` (chaque minute) recalcule les champs dérivés des commandes mais ne
+ * touche jamais aux champs externes (nouveaux commerces/livreurs, support, abonnements
+ * encaissés) : sans cette tâche, « Abonnements encaissés » et la courbe « Commerces » du
+ * tableau de bord restaient figés sur la valeur de la veille jusqu'à la consolidation de nuit
+ * suivante (J+1 03h30), au lieu d'être réellement « en direct » comme le reste de l'écran.
+ * Fréquence volontairement plus basse que la minute (coût de `externalFields`, qui relit les
+ * commerces/livreurs/tickets/factures de chaque ville) : fraîcheur maximale 30 min au lieu de
+ * jusqu'à 24h+.
+ */
+export const refreshTodayExternalFields = onSchedule(
+  { schedule: 'every 30 minutes', timeZone: TIMEZONE, retryCount: 0, ...PILOTAGE_RUNTIME, timeoutSeconds: 300, memory: '512MiB' },
+  async () => {
+    const markets = await loadMarkets();
+    await refreshExternalFieldsForDay(parisDay(new Date()), markets);
   },
 );
 

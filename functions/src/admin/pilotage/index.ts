@@ -1,6 +1,6 @@
 // Pilotage du super admin (cahier §1 à §4) : agrégats de la plateforme, surveillance
 // par exception, recherche universelle, analytics, exports et rapports programmés.
-export { aggregatePlatformStats, onOrderWrittenPlatformStats, refreshPlatformStats, trackFunnelEvent } from './platform-stats';
+export { aggregatePlatformStats, onOrderWrittenPlatformStats, refreshPlatformStats, refreshTodayExternalFields, trackFunnelEvent } from './platform-stats';
 export { detectAnomalies } from './anomalies';
 export { handlePlatformAlert, runMonitoringNow, updateMonitoringSettings } from './alerts';
 export { globalSearch } from './search';
