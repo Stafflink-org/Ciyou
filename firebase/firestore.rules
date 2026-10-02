@@ -62,6 +62,22 @@ service cloud.firestore {
       return a.cityIds.size() == 0 || cityIds.size() == 0 || a.cityIds.hasAny(cityIds);
     }
 
+    // Variante pour une ressource scopée par PAYS plutôt que par ville (ex. déclarations
+    // fiscales, barèmes de commission) : liste vide (ressource ou admin) = aucune restriction.
+    function adminCoversCountry(a, countryId) {
+      return a.countryIds.size() == 0 || countryId in a.countryIds;
+    }
+
+    // Variante pour une ressource à filtres géographiques optionnels (ex. rapport programmé) :
+    // un admin non restreint (aucune ville ni pays) voit tout ; un admin restreint ne voit que
+    // les ressources dont le filtre villes/pays recoupe son propre périmètre — une ressource
+    // SANS filtre (portée plateforme entière) n'est donc visible que par un admin non restreint.
+    function inGeoFilterScope(a, filters) {
+      return (a.cityIds.size() == 0 && a.countryIds.size() == 0)
+        || (filters.get('cityIds', []) != null && filters.get('cityIds', []).size() > 0 && a.cityIds.hasAny(filters.get('cityIds', [])))
+        || (filters.get('countryId', null) != null && filters.get('countryId', null) in a.countryIds);
+    }
+
     // Membre actif de l'équipe interne, quelle que soit sa permission.
     function isAnyAdmin() {
       return isRole('admin') && adminData().active == true;
@@ -80,6 +96,16 @@ service cloud.firestore {
     // Variante pour une ressource scopée à plusieurs villes (voir adminCoversAny).
     function isAdminInAny(perm, cityIds) {
       return isRole('admin') && adminHas(adminData(), perm) && adminCoversAny(adminData(), cityIds);
+    }
+
+    // Variante pour une ressource scopée par pays plutôt que par ville (voir adminCoversCountry).
+    function isAdminInCountry(perm, countryId) {
+      return isRole('admin') && adminHas(adminData(), perm) && adminCoversCountry(adminData(), countryId);
+    }
+
+    // Variante pour une ressource à filtres géographiques optionnels (voir inGeoFilterScope).
+    function isAdminInGeoFilter(perm, filters) {
+      return isRole('admin') && adminHas(adminData(), perm) && inGeoFilterScope(adminData(), filters);
     }
 
     // ----------------------------------------------------------------- Personnel restaurant
@@ -243,7 +269,10 @@ service cloud.firestore {
     }
 
     match /scheduledReports/{reportId} {
-      allow read: if isAdmin('reports.view');
+      // `reports.view` seul laissait un `city_manager` (qui l'a par défaut) lire les rapports
+      // programmés de n'importe quelle ville/pays — destinataires et filtres inclus — alors que
+      // `saveScheduledReport` borne déjà le périmètre demandé à celui de l'auteur à l'écriture.
+      allow read: if isAdminInGeoFilter('reports.view', resource.data.filters);
       // Création, modification, suppression : Cloud Functions (saveScheduledReport, ...) avec audit.
       allow write: if false;
     }
@@ -282,7 +311,7 @@ service cloud.firestore {
 
     // Moyens de paiement autorisés par commerce : consultables par l'équipe paiements.
     match /restaurants/{rid}/private/{docId} {
-      allow read: if docId == 'commercial' && isAdmin('payments.view');
+      allow read: if docId == 'commercial' && isAdminIn('payments.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
     }
 
     // Séries de numérotation des factures (numérotation continue) : lecture seule.
@@ -560,7 +589,7 @@ service cloud.firestore {
         || (resource.data.get('restaurantId', null) != null
           && resource.data.purpose != 'order'
           && can(resource.data.restaurantId, 'finance.view'))
-        || isAdmin('payments.view');
+        || isAdminIn('payments.view', resource.data.cityId);
       allow write: if false;
     }
 
@@ -572,26 +601,29 @@ service cloud.firestore {
       allow read: if isSelf(resource.data.customerId)
         || can(resource.data.restaurantId, 'finance.view')
         || isAdminIn('refunds.create', resource.data.cityId)
-        || isAdmin('finance.view');
+        || isAdminIn('finance.view', resource.data.cityId);
       allow write: if false;
     }
 
     match /ledgerEntries/{entryId} {
       allow read: if (resource.data.accountType == 'restaurant' && can(resource.data.accountId, 'finance.view'))
         || (resource.data.accountType in ['driver', 'driver_cash', 'customer_wallet'] && isSelf(resource.data.accountId))
-        || isAdmin('finance.view');
+        || isAdminIn('finance.view', resource.data.cityId);
       allow write: if false;
     }
 
     match /payouts/{payoutId} {
       allow read: if (resource.data.beneficiaryType == 'restaurant' && can(resource.data.beneficiaryId, 'finance.view'))
         || (resource.data.beneficiaryType == 'driver' && isSelf(resource.data.beneficiaryId))
-        || isAdmin('finance.view');
+        || isAdminIn('finance.view', resource.data.cityId);
       allow write: if false;
     }
 
     match /payoutHolds/{holdId} {
-      allow read: if isAdmin('finance.view');
+      // `cityId` écrit par `holdPayouts`/`unpaid_subscription` mais absent de certains documents
+      // très anciens : `get(..., null)` renvoie alors « non couvert » pour un admin restreint
+      // (refus par défaut), jamais une fuite.
+      allow read: if isAdminIn('finance.view', resource.data.get('cityId', null));
       allow write: if false;
     }
 
@@ -600,12 +632,13 @@ service cloud.firestore {
       allow read: if (resource.data.recipient.type == 'restaurant' && can(resource.data.recipient.id, 'invoices.view'))
         || (resource.data.recipient.type in ['client', 'driver'] && isSelf(resource.data.recipient.id))
         || (resource.data.issuer.type == 'driver' && isSelf(resource.data.issuer.id))
-        || isAdmin('invoices.view');
+        || isAdminIn('invoices.view', resource.data.cityId);
       allow write: if false;
     }
 
     match /taxReports/{reportId} {
-      allow read: if isAdmin('tax.reports');
+      // Déclaration scopée par PAYS (pas de ville) : isAdminInCountry, pas isAdminIn.
+      allow read: if isAdminInCountry('tax.reports', resource.data.countryId);
       allow write: if false;
     }
 
@@ -618,14 +651,17 @@ service cloud.firestore {
     // Changement de formule, essai, résiliation, impayés : Cloud Functions (Stripe Billing).
     match /subscriptions/{subscriptionId} {
       allow read: if (resource.data.subscriberType == 'restaurant' && can(resource.data.subscriberId, 'finance.view'))
-        || isAdmin('subscriptions.manage')
-        || isAdmin('finance.view');
+        || isAdminIn('subscriptions.manage', resource.data.cityId)
+        || isAdminIn('finance.view', resource.data.cityId);
       allow write: if false;
     }
 
     // Barèmes versionnés : une modification crée une nouvelle règle, l'ancienne est close par trigger.
+    // Scopés par PAYS (pas de ville) : isAdminInCountry, pas isAdminIn.
     match /commissionRules/{ruleId} {
-      allow read: if isAdmin('commissions.edit') || isAdmin('finance.view') || isAdmin('restaurants.commercial');
+      allow read: if isAdminInCountry('commissions.edit', resource.data.countryId)
+        || isAdminInCountry('finance.view', resource.data.countryId)
+        || isAdminInCountry('restaurants.commercial', resource.data.countryId);
       // Création d'un barème : updateCommissionRule (Cloud Function : clôture de l'ancien, motif, audit).
       allow write: if false;
     }
@@ -641,7 +677,7 @@ service cloud.firestore {
     match /cashMovements/{movementId} {
       allow read: if can(resource.data.restaurantId, 'couriers.manage')
         || can(resource.data.restaurantId, 'finance.view')
-        || isAdmin('finance.view');
+        || isAdminIn('finance.view', resource.data.get('cityId', null));
       allow write: if false;
     }
 
@@ -903,7 +939,7 @@ service cloud.firestore {
 
     // Répartition financière complète (commission, part livreur, marge) : équipe finance.
     match /orderFinancials/{orderId} {
-      allow read: if isAdmin('finance.view');
+      allow read: if isAdminIn('finance.view', resource.data.cityId);
       allow write: if false;
     }
 
@@ -1136,10 +1172,13 @@ service cloud.firestore {
 
       // Conditions commerciales et identité légale.
       match /private/{docId} {
+        // `isAdmin('restaurants.commercial'/'finance.view')` seul laissait un admin restreint par
+        // ville (`city_manager`, qui détient `restaurants.commercial` par défaut) lire les
+        // conditions commerciales de n'importe quel restaurant hors de son périmètre.
         allow read: if (docId == 'commercial' && can(rid, 'finance.view'))
           || (docId == 'legal' && can(rid, 'settings.manage'))
-          || isAdmin('restaurants.commercial')
-          || isAdmin('finance.view');
+          || isAdminIn('restaurants.commercial', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId)
+          || isAdminIn('finance.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
         allow write: if false;
         // Super admin, validation des dossiers : identité légale consultable par les validateurs.
         allow read: if docId == 'legal' && isAdminIn('restaurants.validate', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);

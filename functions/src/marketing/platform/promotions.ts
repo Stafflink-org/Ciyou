@@ -208,6 +208,13 @@ export const createPlatformPromotion = callable(schema, async (data, request) =>
     const before = snap.data() as Promotion | undefined;
     if (!before) throw fail.notFound('Offre');
     if (before.status === 'ended' || before.status === 'rejected') throw fail.precondition('Cette offre est close : dupliquez-la pour la relancer.');
+    // Le coût affiché (`promotionCost`, apps/admin) répartit `stats.discountCents` CUMULÉ
+    // selon le financement ACTUEL de l'offre : changer `funding`/`restaurantShareBps` après
+    // coup réécrirait rétroactivement la répartition de tout l'historique déjà utilisé,
+    // en contradiction avec le grand livre (qui lui fige le partage réel à chaque commande).
+    if (before.stats.redemptions > 0 && (f.funding !== before.funding || (f.restaurantShareBps ?? null) !== (before.restaurantShareBps ?? null))) {
+      throw fail.precondition('Cette offre a déjà été utilisée : pour changer son financement, terminez-la et créez-en une nouvelle.');
+    }
     assertScopeCovered(admin, before.scope, before.cityIds ?? []);
     const status: PromotionStatus = data.publish && before.status === 'draft' ? 'active' : before.status;
     await ref.update({ ...fields, status, ...(status === 'active' && before.status !== 'active' ? { approvedAt: now } : {}) });
