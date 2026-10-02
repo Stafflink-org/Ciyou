@@ -7,6 +7,7 @@ import {
   PARTNER_DOCUMENT_TYPES,
   SANCTION_TYPE_LABELS,
   driverDocumentRequirements,
+  encodeGeohash,
   type BulkResult,
   type DriverSanction,
   type IdentityCheck,
@@ -15,6 +16,7 @@ import {
   type ReviewDriverDocumentResult,
   type StoredFile,
 } from '@golink/shared';
+import { GeoPoint } from 'firebase-admin/firestore';
 import { callable } from '../../lib/callable';
 import { db, FieldValue, storage, Timestamp } from '../../lib/admin';
 import { actorFromCaller, writeAudit } from '../../lib/audit';
@@ -52,7 +54,8 @@ export const reviewDriverApplication = opsCallable(
     const state = await evaluateDriverDocuments(driver.id, d, today);
     const before = { status: d.status, onboardingStatus: d.onboardingStatus };
     let after: ReviewDriverApplicationResult;
-    const cityName = ((await db.collection(COLLECTIONS.cities).doc(d.cityId).get()).get('name') as string | undefined) ?? d.cityId;
+    const citySnap = await db.collection(COLLECTIONS.cities).doc(d.cityId).get();
+    const cityName = (citySnap.get('name') as string | undefined) ?? d.cityId;
 
     if (data.decision === 'approve') {
       const blocking = [...state.missing, ...state.expired];
@@ -71,6 +74,28 @@ export const reviewDriverApplication = opsCallable(
         updatedAt: FieldValue.serverTimestamp(),
         updatedBy: caller.uid,
       });
+      // `driverLocations/{uid}` ne peut être créé que par une Cloud Function (règle Storage :
+      // `allow create: if false` côté app) ; l'app livreur n'écrit que la position d'un document
+      // déjà existant (`updateDoc`, jamais `setDoc`). Sans cette création, un livreur validé qui
+      // passe « En ligne » n'apparaît jamais dans les requêtes de dispatch (`driverLocations` où
+      // `cityId`/`availability`) : aucune course ne lui est jamais proposée, silencieusement.
+      const locationRef = db.collection(COLLECTIONS.driverLocations).doc(driver.id);
+      if (!(await locationRef.get()).exists) {
+        const center = citySnap.get('center') as { lat: number; lng: number } | undefined;
+        await locationRef.set({
+          position: new GeoPoint(center?.lat ?? 0, center?.lng ?? 0),
+          geohash: encodeGeohash({ lat: center?.lat ?? 0, lng: center?.lng ?? 0 }, 9),
+          heading: null,
+          speedKmh: null,
+          accuracyMeters: null,
+          availability: 'offline',
+          cityId: d.cityId,
+          zoneId: null,
+          activeOrderIds: [],
+          visibleTo: [],
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      }
       await notifyDriver(driver, {
         title: 'Votre compte est validé',
         body: 'Passez « En ligne » dans l’application pour recevoir vos premières courses.',

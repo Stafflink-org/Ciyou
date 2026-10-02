@@ -38,7 +38,7 @@ import { logger } from 'firebase-functions/v2';
 import { db, FieldValue, Timestamp } from '../lib/admin';
 import { fail } from '../lib/errors';
 import { isFeatureOn } from '../lib/features';
-import { addEvent, loadMarket, orderRef, orderViewerUids, pricingFor, SYSTEM_EVENT_ACTOR, type EventActor } from './context';
+import { addEvent, loadDispatchRules, loadMarket, orderRef, orderViewerUids, pricingFor, SYSTEM_EVENT_ACTOR, type EventActor } from './context';
 
 /** Statuts depuis lesquels un livreur peut être attribué. */
 export const DISPATCHABLE: readonly Order['status'][] = ['accepted', 'preparing', 'ready'];
@@ -177,6 +177,13 @@ export async function assignDriverInTransaction(
   if (!DISPATCHABLE.includes(order.status)) throw fail.precondition('Cette commande ne peut plus recevoir de livreur.');
   if (driver.status !== 'active') throw fail.precondition('Ce livreur n’est pas actif.');
   if (!input.allowBusy && driver.availability !== 'online') return { assigned: false, driverName: '' };
+  // Plafond de courses simultanées (`maxConcurrentOrdersPerDriver`) : vérifié à l'évaluation des
+  // candidats (evaluateCandidates), jamais revérifié ici au moment du COMMIT — deux offres
+  // proposées à quelques secondes d'intervalle au même livreur pouvaient donc toutes les deux
+  // être acceptées (`respondToOffer`, toujours `allowBusy: true`), dépassant silencieusement le
+  // plafond réglé par la plateforme. Relu ici, dans la transaction, sur l'état réellement frais.
+  const dispatchRules = await loadDispatchRules(await loadMarket(order.countryId, order.cityId));
+  if (driver.activeOrderIds.length >= dispatchRules.maxConcurrentOrdersPerDriver) return { assigned: false, driverName: '' };
   const at = Timestamp.now();
   const driverName = publicDisplayName(driver.firstName, driver.lastName);
   const toAssigned = order.status === 'ready';
@@ -227,13 +234,17 @@ function offerFor(ctx: DispatchContext, candidate: DispatchCandidate, round: num
   const delivery = ctx.order.delivery?.distanceMeters ?? 0;
   const totalDistanceMeters = candidate.distanceMeters + delivery;
   const estimatedMinutes = Math.max(5, Math.round(totalDistanceMeters / METERS_PER_MINUTE));
-  // Estimation de gain affichée au livreur : mêmes paramètres (par ville) que le règlement
-  // final, plus le bonus heure de pointe déjà promis à la commande (zone en surcharge).
+  // Estimation de gain affichée au livreur : mêmes paramètres (par ville) que le règlement final
+  // (functions/src/finance/argent/settlement.ts), y compris le bonus heure de pointe (`isPeak`,
+  // distinct de `courierSurgeBonusCents` qui ne couvre que la surcharge de zone) — oublié ici
+  // faisait sous-estimer le gain affiché au livreur au moment d'accepter une course en heure de
+  // pointe, sans rapport avec le montant réellement réglé à la livraison.
   const pay = computeCourierPay(
     {
       distanceMeters: totalDistanceMeters,
       durationMinutes: estimatedMinutes,
       surgeBonusCents: ctx.order.delivery?.courierSurgeBonusCents ?? 0,
+      isPeak: ctx.order.delivery?.courierIsPeak === true,
       tipCents: ctx.order.amounts.tipCents,
     },
     ctx.pricing,

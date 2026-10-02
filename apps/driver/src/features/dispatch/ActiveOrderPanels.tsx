@@ -183,6 +183,12 @@ export function MessagingPanel({
 export function CashBalanceCard({ driverPrivate }: { driverPrivate: WithId<DriverPrivate> | null }) {
   const { t } = useTranslation('dispatch');
   if (!driverPrivate) return null;
+  // Aucune écriture serveur n'initialise cashBalanceCents/cashLimitCents à la création de
+  // driverPrivate/{uid} (posés seulement à la première transaction d'espèces, functions/src/
+  // finance/argent/cash.ts) — un livreur salarié qui n'a pas encore encaissé a ces deux champs
+  // absents malgré un modèle TypeScript qui les déclare requis.
+  const balanceCents = driverPrivate.cashBalanceCents ?? 0;
+  const limitCents = driverPrivate.cashLimitCents ?? 0;
   return (
     <Card style={{ marginTop: spacing.md }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -190,15 +196,15 @@ export function CashBalanceCard({ driverPrivate }: { driverPrivate: WithId<Drive
           {t('cash.eyebrow')}
         </Text>
         <Badge
-          label={driverPrivate.cashBalanceCents > driverPrivate.cashLimitCents ? t('cash.overLimit') : t('cash.toRemit')}
-          tone={driverPrivate.cashBalanceCents > driverPrivate.cashLimitCents ? 'danger' : 'neutral'}
+          label={balanceCents > limitCents ? t('cash.overLimit') : t('cash.toRemit')}
+          tone={balanceCents > limitCents ? 'danger' : 'neutral'}
         />
       </View>
       <Text variant="title" style={{ marginTop: 6 }}>
-        {money(driverPrivate.cashBalanceCents)}
+        {money(balanceCents)}
       </Text>
       <Text variant="caption" color="muted" style={{ marginTop: 2 }}>
-        {t('cash.limitLine', { amount: money(driverPrivate.cashLimitCents) })}
+        {t('cash.limitLine', { amount: money(limitCents) })}
       </Text>
     </Card>
   );
