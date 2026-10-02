@@ -19,7 +19,7 @@ match /settingsHistory/{entryId} {
 
 // Moyens de paiement autorisés par commerce : consultables par l'équipe paiements.
 match /restaurants/{rid}/private/{docId} {
-  allow read: if docId == 'commercial' && isAdmin('payments.view');
+  allow read: if docId == 'commercial' && isAdminIn('payments.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
 }
 
 // Séries de numérotation des factures (numérotation continue) : lecture seule.

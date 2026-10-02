@@ -9,7 +9,7 @@ match /payments/{paymentId} {
     || (resource.data.get('restaurantId', null) != null
       && resource.data.purpose != 'order'
       && can(resource.data.restaurantId, 'finance.view'))
-    || isAdmin('payments.view');
+    || isAdminIn('payments.view', resource.data.cityId);
   allow write: if false;
 }
 
@@ -21,26 +21,29 @@ match /refunds/{refundId} {
   allow read: if isSelf(resource.data.customerId)
     || can(resource.data.restaurantId, 'finance.view')
     || isAdminIn('refunds.create', resource.data.cityId)
-    || isAdmin('finance.view');
+    || isAdminIn('finance.view', resource.data.cityId);
   allow write: if false;
 }
 
 match /ledgerEntries/{entryId} {
   allow read: if (resource.data.accountType == 'restaurant' && can(resource.data.accountId, 'finance.view'))
     || (resource.data.accountType in ['driver', 'driver_cash', 'customer_wallet'] && isSelf(resource.data.accountId))
-    || isAdmin('finance.view');
+    || isAdminIn('finance.view', resource.data.cityId);
   allow write: if false;
 }
 
 match /payouts/{payoutId} {
   allow read: if (resource.data.beneficiaryType == 'restaurant' && can(resource.data.beneficiaryId, 'finance.view'))
     || (resource.data.beneficiaryType == 'driver' && isSelf(resource.data.beneficiaryId))
-    || isAdmin('finance.view');
+    || isAdminIn('finance.view', resource.data.cityId);
   allow write: if false;
 }
 
 match /payoutHolds/{holdId} {
-  allow read: if isAdmin('finance.view');
+  // `cityId` écrit par `holdPayouts`/`unpaid_subscription` mais absent de certains documents
+  // très anciens : `get(..., null)` renvoie alors « non couvert » pour un admin restreint
+  // (refus par défaut), jamais une fuite.
+  allow read: if isAdminIn('finance.view', resource.data.get('cityId', null));
   allow write: if false;
 }
 
@@ -49,12 +52,13 @@ match /invoices/{invoiceId} {
   allow read: if (resource.data.recipient.type == 'restaurant' && can(resource.data.recipient.id, 'invoices.view'))
     || (resource.data.recipient.type in ['client', 'driver'] && isSelf(resource.data.recipient.id))
     || (resource.data.issuer.type == 'driver' && isSelf(resource.data.issuer.id))
-    || isAdmin('invoices.view');
+    || isAdminIn('invoices.view', resource.data.cityId);
   allow write: if false;
 }
 
 match /taxReports/{reportId} {
-  allow read: if isAdmin('tax.reports');
+  // Déclaration scopée par PAYS (pas de ville) : isAdminInCountry, pas isAdminIn.
+  allow read: if isAdminInCountry('tax.reports', resource.data.countryId);
   allow write: if false;
 }
 
@@ -67,14 +71,17 @@ match /plans/{planCode} {
 // Changement de formule, essai, résiliation, impayés : Cloud Functions (Stripe Billing).
 match /subscriptions/{subscriptionId} {
   allow read: if (resource.data.subscriberType == 'restaurant' && can(resource.data.subscriberId, 'finance.view'))
-    || isAdmin('subscriptions.manage')
-    || isAdmin('finance.view');
+    || isAdminIn('subscriptions.manage', resource.data.cityId)
+    || isAdminIn('finance.view', resource.data.cityId);
   allow write: if false;
 }
 
 // Barèmes versionnés : une modification crée une nouvelle règle, l'ancienne est close par trigger.
+// Scopés par PAYS (pas de ville) : isAdminInCountry, pas isAdminIn.
 match /commissionRules/{ruleId} {
-  allow read: if isAdmin('commissions.edit') || isAdmin('finance.view') || isAdmin('restaurants.commercial');
+  allow read: if isAdminInCountry('commissions.edit', resource.data.countryId)
+    || isAdminInCountry('finance.view', resource.data.countryId)
+    || isAdminInCountry('restaurants.commercial', resource.data.countryId);
   // Création d'un barème : updateCommissionRule (Cloud Function : clôture de l'ancien, motif, audit).
   allow write: if false;
 }
@@ -90,7 +97,7 @@ match /paymentProviders/{providerId} {
 match /cashMovements/{movementId} {
   allow read: if can(resource.data.restaurantId, 'couriers.manage')
     || can(resource.data.restaurantId, 'finance.view')
-    || isAdmin('finance.view');
+    || isAdminIn('finance.view', resource.data.get('cityId', null));
   allow write: if false;
 }
 

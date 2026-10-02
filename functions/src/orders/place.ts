@@ -886,7 +886,7 @@ export const placeOrder = callable(
           number,
           status,
           totalCents: quote.totalCents,
-          chargedCents: quote.totalCents,
+          chargedCents,
           payment: { status: paymentStatus, clientSecret: authorization?.clientSecret ?? null },
         };
       });

@@ -51,6 +51,22 @@ function adminCoversAny(a, cityIds) {
   return a.cityIds.size() == 0 || cityIds.size() == 0 || a.cityIds.hasAny(cityIds);
 }
 
+// Variante pour une ressource scopée par PAYS plutôt que par ville (ex. déclarations
+// fiscales, barèmes de commission) : liste vide (ressource ou admin) = aucune restriction.
+function adminCoversCountry(a, countryId) {
+  return a.countryIds.size() == 0 || countryId in a.countryIds;
+}
+
+// Variante pour une ressource à filtres géographiques optionnels (ex. rapport programmé) :
+// un admin non restreint (aucune ville ni pays) voit tout ; un admin restreint ne voit que
+// les ressources dont le filtre villes/pays recoupe son propre périmètre — une ressource
+// SANS filtre (portée plateforme entière) n'est donc visible que par un admin non restreint.
+function inGeoFilterScope(a, filters) {
+  return (a.cityIds.size() == 0 && a.countryIds.size() == 0)
+    || (filters.get('cityIds', []) != null && filters.get('cityIds', []).size() > 0 && a.cityIds.hasAny(filters.get('cityIds', [])))
+    || (filters.get('countryId', null) != null && filters.get('countryId', null) in a.countryIds);
+}
+
 // Membre actif de l'équipe interne, quelle que soit sa permission.
 function isAnyAdmin() {
   return isRole('admin') && adminData().active == true;
@@ -69,6 +85,16 @@ function isAdminIn(perm, cityId) {
 // Variante pour une ressource scopée à plusieurs villes (voir adminCoversAny).
 function isAdminInAny(perm, cityIds) {
   return isRole('admin') && adminHas(adminData(), perm) && adminCoversAny(adminData(), cityIds);
+}
+
+// Variante pour une ressource scopée par pays plutôt que par ville (voir adminCoversCountry).
+function isAdminInCountry(perm, countryId) {
+  return isRole('admin') && adminHas(adminData(), perm) && adminCoversCountry(adminData(), countryId);
+}
+
+// Variante pour une ressource à filtres géographiques optionnels (voir inGeoFilterScope).
+function isAdminInGeoFilter(perm, filters) {
+  return isRole('admin') && adminHas(adminData(), perm) && inGeoFilterScope(adminData(), filters);
 }
 
 // ----------------------------------------------------------------- Personnel restaurant

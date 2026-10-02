@@ -36,6 +36,6 @@ match /orderClaims/{claimId} {
 
 // Répartition financière complète (commission, part livreur, marge) : équipe finance.
 match /orderFinancials/{orderId} {
-  allow read: if isAdmin('finance.view');
+  allow read: if isAdminIn('finance.view', resource.data.cityId);
   allow write: if false;
 }

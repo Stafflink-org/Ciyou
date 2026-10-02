@@ -80,7 +80,10 @@ match /bulkJobs/{jobId} {
 }
 
 match /scheduledReports/{reportId} {
-  allow read: if isAdmin('reports.view');
+  // `reports.view` seul laissait un `city_manager` (qui l'a par défaut) lire les rapports
+  // programmés de n'importe quelle ville/pays — destinataires et filtres inclus — alors que
+  // `saveScheduledReport` borne déjà le périmètre demandé à celui de l'auteur à l'écriture.
+  allow read: if isAdminInGeoFilter('reports.view', resource.data.filters);
   // Création, modification, suppression : Cloud Functions (saveScheduledReport, ...) avec audit.
   allow write: if false;
 }

@@ -65,10 +65,13 @@ match /restaurants/{rid} {
 
   // Conditions commerciales et identité légale.
   match /private/{docId} {
+    // `isAdmin('restaurants.commercial'/'finance.view')` seul laissait un admin restreint par
+    // ville (`city_manager`, qui détient `restaurants.commercial` par défaut) lire les
+    // conditions commerciales de n'importe quel restaurant hors de son périmètre.
     allow read: if (docId == 'commercial' && can(rid, 'finance.view'))
       || (docId == 'legal' && can(rid, 'settings.manage'))
-      || isAdmin('restaurants.commercial')
-      || isAdmin('finance.view');
+      || isAdminIn('restaurants.commercial', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId)
+      || isAdminIn('finance.view', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
     allow write: if false;
     // Super admin, validation des dossiers : identité légale consultable par les validateurs.
     allow read: if docId == 'legal' && isAdminIn('restaurants.validate', get(/databases/$(database)/documents/restaurants/$(rid)).data.cityId);
