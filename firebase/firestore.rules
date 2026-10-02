@@ -460,8 +460,12 @@ service cloud.firestore {
 
     // Identité légale, adresse, coordonnées bancaires : réservées aux rôles disposant de la
     // permission « Données personnelles non masquées » (masquage appliqué côté serveur).
+    // `isAdmin('personal_data.view')` seul laissait un admin restreint par ville lire en direct les
+    // données privées (date de naissance, IBAN masqué, solde espèces...) de n'importe quel livreur
+    // hors de son périmètre — pas de cityId direct sur ce document, résolu via la fiche du livreur.
     match /driverPrivate/{driverId} {
-      allow read: if isSelf(driverId) || isAdmin('personal_data.view');
+      allow read: if isSelf(driverId)
+        || isAdminIn('personal_data.view', get(/databases/$(database)/documents/drivers/$(driverId)).data.cityId);
       allow write: if false;
     }
 
@@ -515,8 +519,10 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // `isAdmin('finance.view')` seul laissait un admin restreint par ville lire les gains détaillés
+    // de n'importe quel livreur hors de son périmètre — même motif que ci-dessus.
     match /driverEarnings/{earningId} {
-      allow read: if isSelf(resource.data.driverId) || isAdmin('finance.view') || isAdminIn('drivers.view', resource.data.cityId);
+      allow read: if isSelf(resource.data.driverId) || isAdminIn('finance.view', resource.data.cityId) || isAdminIn('drivers.view', resource.data.cityId);
       allow write: if false;
     }
 

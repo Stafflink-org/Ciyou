@@ -10,6 +10,7 @@ import { AuthProvider } from './src/auth/AuthContext';
 import { I18nProvider } from './src/i18n/I18nProvider';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { colors } from './src/theme/tokens';
+import { ErrorBoundary } from './src/ui/ErrorBoundary';
 import { ToastProvider } from './src/ui/Toast';
 
 const navigationTheme = {
@@ -32,7 +33,9 @@ export default function App() {
           <AuthProvider>
             <ToastProvider>
               <NavigationContainer theme={navigationTheme}>
-                <RootNavigator />
+                <ErrorBoundary>
+                  <RootNavigator />
+                </ErrorBoundary>
               </NavigationContainer>
             </ToastProvider>
           </AuthProvider>

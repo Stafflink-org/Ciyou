@@ -160,7 +160,16 @@ async function expireSanctions(now: Timestamp): Promise<number> {
       tx.update(doc.ref, { status: sanction.status === 'contested' ? 'contested' : 'expired', updatedAt: now, updatedBy: 'system', expiredAt: now });
       if (driver && driver.activeSanctionId === doc.id && sanction.type === 'temporary_suspension') {
         const otherBlock = driver.blocked && driver.blocked.reason !== 'sanction';
-        tx.update(driverRef, { activeSanctionId: null, ...(otherBlock ? {} : { status: 'active', blocked: null }), updatedAt: now, updatedBy: 'system' });
+        // Le livreur peut avoir été désactivé/rejeté par un autre canal pendant la suspension
+        // (reviewDriverApplication, bulkUpdateDrivers) : ne réactiver que s'il est encore dans
+        // l'état « suspended » posé par cette sanction, jamais écraser un statut plus sévère.
+        const stillSuspended = driver.status === 'suspended';
+        tx.update(driverRef, {
+          activeSanctionId: null,
+          ...(stillSuspended && !otherBlock ? { status: 'active', blocked: null } : {}),
+          updatedAt: now,
+          updatedBy: 'system',
+        });
         lifted += 1;
       }
     });

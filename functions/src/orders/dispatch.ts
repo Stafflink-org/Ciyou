@@ -191,18 +191,25 @@ export async function dispatchOrder(orderId: string, actor: EventActor = SYSTEM_
     if (!driver || driver.status !== 'active' || driver.type !== 'platform') continue;
     if (driver.activeOrderIds.length >= rules.maxConcurrentOrdersPerDriver) continue;
     if (order.payment.method === 'cash' && !driver.acceptsCash) continue;
+    // Distance maximale choisie par le livreur (docs/DECISIONS_CLIENT.md) : déjà vérifiée par le
+    // moteur avancé (dispatch-advanced.ts), oubliée ici — ce moteur simple reste sélectionnable
+    // (settings/dispatch.engine).
+    if (driver.maxDistanceMeters && candidate.distance + (order.delivery?.distanceMeters ?? 0) > driver.maxDistanceMeters) continue;
     const result = await db.runTransaction(async (tx) => {
       const fresh = await tx.get(driverRef(candidate.id));
       const d = fresh.data() as Driver | undefined;
       if (!d || d.availability !== 'online' || d.activeOrderIds.length > 0) return null;
       const deliveryDistanceMeters = order.delivery?.distanceMeters ?? 0;
       const estimatedMinutes = Math.round((candidate.distance + deliveryDistanceMeters) / 250);
-      // Estimation de gain (par ville) + bonus heure de pointe déjà promis à la commande.
+      // Estimation de gain (par ville) : mêmes paramètres que le règlement final, y compris le
+      // bonus heure de pointe (`isPeak`, distinct de `courierSurgeBonusCents` — voir même
+      // correctif dans dispatch-advanced.ts::offerFor).
       const pay = computeCourierPay(
         {
           distanceMeters: candidate.distance + deliveryDistanceMeters,
           durationMinutes: estimatedMinutes,
           surgeBonusCents: order.delivery?.courierSurgeBonusCents ?? 0,
+          isPeak: order.delivery?.courierIsPeak === true,
           tipCents: order.amounts.tipCents,
         },
         pricing,

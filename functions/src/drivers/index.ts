@@ -3,3 +3,4 @@
 // sans Cloud Function dédiée — seul le dépôt de justificatifs (Storage + vérification)
 // exige un traitement serveur.
 export { uploadDriverDocument } from './documents';
+export { onDriverAvailabilityChanged } from './triggers';

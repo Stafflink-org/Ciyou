@@ -136,7 +136,7 @@ export function DispatchScreen() {
   // client. La position du livreur sert d'origine quand elle est disponible (course en
   // cours) ; sinon on relie simplement commerce → client pour donner le trajet à venir.
   const restaurantGeo = activeRestaurant?.address.geo ? { lat: activeRestaurant.address.geo.latitude, lng: activeRestaurant.address.geo.longitude } : null;
-  const clientGeo = activeOrder?.delivery ? { lat: activeOrder.delivery.geo.latitude, lng: activeOrder.delivery.geo.longitude } : null;
+  const clientGeo = activeOrder?.delivery?.geo ? { lat: activeOrder.delivery.geo.latitude, lng: activeOrder.delivery.geo.longitude } : null;
   const routeOrigin = geo ?? restaurantGeo;
   const routeDestination = activeOrder?.status === 'picked_up' ? clientGeo : restaurantGeo;
 
@@ -199,7 +199,7 @@ export function DispatchScreen() {
             {t('header.locationDenied')}
           </Text>
         ) : null}
-        {Platform.OS === 'web' && geoStatus === 'unsupported' ? (
+        {geoStatus === 'unsupported' ? (
           <Text variant="caption" color="inverted" style={{ marginTop: spacing.sm, opacity: 0.6 }}>
             {t('header.locationUnsupported')}
           </Text>

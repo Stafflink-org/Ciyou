@@ -69,7 +69,7 @@ export function EarningsScreen() {
                 <View style={{ flex: 1 }}>
                   <Text variant="bodyStrong">{t(KIND_KEYS[entry.kind] ?? entry.kind)}</Text>
                   <Text variant="caption" color="muted">
-                    {entry.earnedAt.toDate().toLocaleDateString(intlLocale(locale), { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    {entry.earnedAt?.toDate().toLocaleDateString(intlLocale(locale), { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) ?? '—'}
                   </Text>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
