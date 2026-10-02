@@ -1558,6 +1558,13 @@ même périmètre super admin que ci-dessus (trouvés en creusant le second) :
 
 Testé réel sur `golink-9f16d` (`scripts/tests/cdc-fix-residuals-53.flow.mjs`, 16/16 OK).
 
+**Passe étendue (02/10/2026, PR [#122](https://github.com/Stafflink-org/Ciyou/pull/122))** : au-delà du cloisonnement multi-commerce, deux autres défauts de code non documentés trouvés par relecture directe du back-office restaurant (produits mis en avant, finances) :
+
+- **P1 — Plafond de la vitrine (produits mis en avant) contournable** : la page Populaires ne vérifiait le nombre maximal de produits en vitrine (`MENU_LIMITS.featured`, 12) que côté interface ; le bouton « Mettre en avant » écrivait directement en Firestore (chemin autorisé par la règle, qui ne compte jamais les produits déjà en vitrine), sans passer par la Cloud Function `reorderMenu` qui fait pourtant déjà respecter ce plafond pour le glisser-déposer de la même page. Corrigé : le bouton appelle désormais `reorderMenu` comme le glisser-déposer.
+- **P1 — TVA sur commission agrégée désynchronisée du taux réel** : la page Finances recalculait la TVA sur commission (période entière) avec un taux par défaut codé en dur, jamais le taux réellement configuré en base pour le pays ou la ville du restaurant — ce montant par commande (`order.restaurantSettlement.commissionVatCents`, bien réel et visible sur la fiche de chaque commande) n'était jamais agrégé dans les statistiques quotidiennes du restaurant. Un changement de taux TVA par un administrateur désynchronisait donc silencieusement ce chiffre, présenté à l'écran comme « récupérable dans votre déclaration de TVA », du vrai montant facturé. Corrigé : nouveau champ `RestaurantDailyStats.commissionVatCents`, alimenté par la somme réelle par commande livrée ; les statistiques déjà écrites avant ce correctif restent à 0 sur ce champ tant qu'une commande ne les fait pas recalculer (aucun effet rétroactif automatique).
+
+Testé réel sur `golink-9f16d` (`scripts/tests/cdc-fix-residuals-54.flow.mjs`, 6/6 OK).
+
 ## Écarts avec DECISIONS_CLIENT / questionnaire
 
 Non exploités en détail (aucune décision client lue pour ces rubriques dans le temps imparti) : à recouper avec `docs/DECISIONS_CLIENT.md` sur (a) les délais RGPD (30 jours) et la durée de corbeille (30 jours) ; (b) la liste de blocage (empreinte de carte/appareil) ; (c) la maintenance bloquante. Écart de fond constaté avec le cahier lui-même : « Détection automatique » (§28) et « Fonctions obligatoires dès le lancement » (§29) ne sont pas tenues (détection en grande partie non fonctionnelle, réacceptation forcée et consentements absents).
