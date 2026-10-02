@@ -14,8 +14,16 @@ function isTicketRequester(ticket) {
       && can(ticket.restaurantId, 'support.use'));
 }
 
+// `isAdmin('support.view'/'support.handle'/'support.escalate')` seul laissait un admin restreint
+// par ville/pays lire ou traiter les tickets de n'importe quel sujet hors de son périmètre —
+// countryId est toujours renseigné sur le ticket, cityId seulement quand le sujet en a une
+// (même dualité que fraudCases).
+function ticketInScope(ticket, perm) {
+  return isAdminIn(perm, ticket.get('cityId', null)) && isAdminInCountry(perm, ticket.countryId);
+}
+
 match /supportTickets/{ticketId} {
-  allow read: if isTicketRequester(resource.data) || isAdmin('support.view');
+  allow read: if isTicketRequester(resource.data) || ticketInScope(resource.data, 'support.view');
   allow update: if isTicketRequester(existing())
       && existing().status in ['resolved', 'closed']
       && existing().get('satisfaction', null) == null
@@ -23,15 +31,15 @@ match /supportTickets/{ticketId} {
       && incoming().satisfaction.score in [1, 2, 3, 4, 5]
       && incoming().satisfaction.at == request.time
     || isTicketRequester(existing()) && onlyChanges(['unreadByRequester']) && incoming().unreadByRequester == 0
-    || isAdmin('support.handle')
+    || ticketInScope(existing(), 'support.handle')
       && onlyChanges(['status', 'priority', 'assigneeId', 'tags', 'escalated', 'escalatedTo', 'escalatedAt',
         'resolvedAt', 'closedAt', 'unreadBySupport', 'reasonId', 'updatedAt', 'updatedBy'])
-      && (keepsUnchanged(['escalated', 'escalatedTo', 'escalatedAt']) || isAdmin('support.escalate'))
+      && (keepsUnchanged(['escalated', 'escalatedTo', 'escalatedAt']) || ticketInScope(existing(), 'support.escalate'))
       && updatedNow();
   allow create, delete: if false;
 
   match /messages/{messageId} {
-    allow read: if isAdmin('support.view')
+    allow read: if ticketInScope(ticketData(ticketId), 'support.view')
       || (resource.data.internal == false && isTicketRequester(ticketData(ticketId)));
     allow create: if incoming().createdAt == request.time
       && incoming().authorId == uid()
@@ -41,7 +49,7 @@ match /supportTickets/{ticketId} {
           && incoming().internal == false
           && isTicketRequester(ticketData(ticketId))
           && ticketData(ticketId).status != 'closed'
-        || incoming().authorType == 'agent' && isAdmin('support.handle')
+        || incoming().authorType == 'agent' && ticketInScope(ticketData(ticketId), 'support.handle')
       );
     allow update, delete: if false;
   }

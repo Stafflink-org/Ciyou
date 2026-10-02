@@ -131,6 +131,25 @@ export const inviteOwnCourier = callable(
     if (driverSnap.exists && (driverSnap.data() as Driver).type === 'platform') {
       throw fail.precondition('Ce livreur travaille déjà avec la flotte Ciyou Eats : il ne peut pas devenir livreur propre de l’établissement.');
     }
+    // `driverPrivate.cashBalanceCents` est un solde global par livreur (pas par établissement) :
+    // un même livreur « propre » actif chez deux établissements à la fois mélangerait les
+    // espèces encaissées pour l'un avec celles remises à l'autre. `restaurantIds` ne retire
+    // jamais d'entrée (historique), donc on vérifie le statut réel de chaque rattachement passé.
+    if (driverSnap.exists) {
+      const driver = driverSnap.data() as Driver;
+      const otherRestaurantIds = driver.restaurantIds.filter((rid) => rid !== data.restaurantId);
+      if (otherRestaurantIds.length > 0) {
+        const otherSnaps = await db.getAll(...otherRestaurantIds.map((rid) => courierRef(rid, user.uid)));
+        const stillActiveElsewhere = otherSnaps.some((snap) => {
+          if (!snap.exists) return false;
+          const other = snap.data() as RestaurantCourier;
+          return other.relation === 'own' && other.status === 'active';
+        });
+        if (stillActiveElsewhere) {
+          throw fail.precondition('Ce livreur est déjà livreur salarié d’un autre établissement : un livreur propre ne peut être rattaché qu’à un seul établissement à la fois.');
+        }
+      }
+    }
     if (courierSnap.exists) {
       const current = courierSnap.data() as RestaurantCourier;
       if (current.relation === 'own' && current.invitation?.status !== 'pending') {
