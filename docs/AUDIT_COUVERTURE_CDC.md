@@ -1565,6 +1565,32 @@ Testé réel sur `golink-9f16d` (`scripts/tests/cdc-fix-residuals-53.flow.mjs`, 
 
 Testé réel sur `golink-9f16d` (`scripts/tests/cdc-fix-residuals-54.flow.mjs`, 6/6 OK).
 
+## Audit livreurs + applications mobiles client/livreur (hors cahier super admin, 02/10/2026)
+
+À la demande du client, même méthode appliquée au module livreurs (back-office + règles) et aux deux applications mobiles (client, livreur). Deux PR :
+
+**PR [#123](https://github.com/Stafflink-org/Ciyou/pull/123) — app client, checkout :**
+- **P0 — Checkout bloqué sur toute remise réelle** : `placeOrder` comparait le total après remise au total envoyé par le client, qui ne peut jamais prévoir une remise (code promo non lisible par règle Firestore, promotion automatique non plus) — toute commande avec une remise réelle (code ou promotion automatique sans code) échouait systématiquement avec « le total de votre commande a changé ». Corrigé : comparaison contre le devis sans promotion/offre.
+- **P0 — Espèces au retrait toujours refusées** : proposées par l'app (commerce acceptant les espèces) mais `allowOnPickup` jamais renseigné dans `isCashAllowed` côté serveur. Corrigé.
+- Code promo du panier (`CartScreen`) : confirmation affichée mais jamais appliqué (`cart.setPromoCode` jamais appelé), perdu avant le checkout.
+- « Livraison offerte » affiché à tort pour les commerces livrés par la flotte Ciyou Eats (frais dynamiques par distance, jamais réellement offerts).
+- Frise de suivi d'une commande annulée affichait une progression complète jusqu'à la livraison ; montant remboursé jamais visible sur le détail de commande.
+- Parrainage : minimum de première commande pour toucher la récompense jamais affiché. `countryId` d'un avis rempli avec le `cityId` par erreur.
+
+Testé réel sur `golink-9f16d` (`scripts/tests/cdc-fix-residuals-56.flow.mjs`, 7/7 OK).
+
+**PR [#124](https://github.com/Stafflink-org/Ciyou/pull/124) — module livreurs (back-office, règles, dispatch) + app livreur :**
+- **P0 — Dispatch mort pour tout nouveau livreur réel** : `driverLocations/{uid}` n'était créé par AUCUNE Cloud Function (création interdite côté client par la règle Firestore) — un livreur validé qui passait « En ligne » restait invisible du dispatch, sans erreur ni message, indéfiniment. Corrigé : créé à l'approbation (`reviewDriverApplication`).
+- **P0 — Disponibilité jamais synchronisée après la première mise en ligne** : même une fois `driverLocations` créé, son champ `availability` n'était ensuite plus jamais mis à jour quand `drivers.availability` changeait (l'app écrit uniquement sur `drivers/{uid}`, la règle `driverLocations` interdit au livreur d'écrire ce champ) — un livreur qui repasse « En ligne » après une déconnexion restait quand même invisible du dispatch. Corrigé par un nouveau déclencheur (`onDriverAvailabilityChanged`).
+- **P0 sécurité — `driverPrivate`/`driverEarnings` hors périmètre ville** : même motif `isAdmin` vs `isAdminIn` déjà corrigé ~33 fois cette session, pas encore appliqué à ces deux règles.
+- **P1 — Livreur banni réactivé silencieusement** : `expireSanctions` réactivait un livreur à l'expiration d'une suspension temporaire sans vérifier s'il avait été désactivé entre-temps par un autre canal (rejet, désactivation groupée).
+- **P1 — Plafond de courses simultanées contournable** : jamais revérifié au moment du commit de l'acceptation d'une offre (`respondToOffer`), seulement à l'évaluation des candidats — deux offres acceptées à quelques secondes d'intervalle pouvaient dépasser le plafond.
+- **P1 — Bonus heure de pointe omis de l'estimation de gain montrée au livreur** avant qu'il accepte une course, dans les deux moteurs de dispatch (simple et avancé) — gain affiché sous-estimé, sans rapport avec le montant réellement réglé à la livraison.
+- **P1 — Distance maximale du livreur jamais appliquée par le moteur de dispatch simple** (déjà correcte côté moteur avancé).
+- App livreur : solde espèces affiché « NaN € » si jamais encaissé, risque de plantage sur une commande sans géolocalisation de livraison, aucun filet `ErrorBoundary` (ajouté, même mécanisme que l'app client), aucun message si le GPS est indisponible sur natif, garde défensive incohérente sur `earnedAt`.
+
+Testé réel sur `golink-9f16d` (`scripts/tests/cdc-fix-residuals-55.flow.mjs`, 16/16 OK).
+
 ## Écarts avec DECISIONS_CLIENT / questionnaire
 
 Non exploités en détail (aucune décision client lue pour ces rubriques dans le temps imparti) : à recouper avec `docs/DECISIONS_CLIENT.md` sur (a) les délais RGPD (30 jours) et la durée de corbeille (30 jours) ; (b) la liste de blocage (empreinte de carte/appareil) ; (c) la maintenance bloquante. Écart de fond constaté avec le cahier lui-même : « Détection automatique » (§28) et « Fonctions obligatoires dès le lancement » (§29) ne sont pas tenues (détection en grande partie non fonctionnelle, réacceptation forcée et consentements absents).
