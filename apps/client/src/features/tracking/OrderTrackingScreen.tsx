@@ -48,6 +48,11 @@ export function OrderTrackingScreen({ route, navigation }: Props) {
   const steps = trackingSteps(order, t);
   const restaurantGeo = restaurant?.address?.geo;
   const destGeo = order.delivery?.geo;
+  // Suivi en direct dès que la course est lancée par le livreur (assigné, avant même la
+  // récupération au commerce), pas seulement après — deux trajets successifs : vers le
+  // commerce (statut « assigned »), puis vers le client (statut « picked_up »).
+  const liveTracking = order.fulfillment === 'delivery' && order.driverId != null && (order.status === 'assigned' || order.status === 'picked_up');
+  const mapDestination = order.status === 'picked_up' ? destGeo : restaurantGeo;
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}>
@@ -61,12 +66,12 @@ export function OrderTrackingScreen({ route, navigation }: Props) {
         </Text>
       </Card>
 
-      {order.fulfillment === 'delivery' && order.status === 'picked_up' && order.driverId && restaurantGeo && destGeo ? (
+      {liveTracking && restaurantGeo && mapDestination ? (
         <View style={{ marginTop: spacing.lg }}>
           <RouteMap
             apiKey={mapsKey}
             origin={driverPoint ? { lat: driverPoint.lat, lng: driverPoint.lng } : { lat: restaurantGeo.latitude, lng: restaurantGeo.longitude }}
-            destination={{ lat: destGeo.latitude, lng: destGeo.longitude }}
+            destination={{ lat: mapDestination.latitude, lng: mapDestination.longitude }}
           />
         </View>
       ) : null}
