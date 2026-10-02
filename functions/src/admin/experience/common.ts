@@ -20,7 +20,7 @@ import type { z } from 'zod';
 import { db, FieldValue, Timestamp } from '../../lib/admin';
 import { callable } from '../../lib/callable';
 import { fail } from '../../lib/errors';
-import { assertAdminCovers } from '../../lib/permissions';
+import { assertAdminCovers, assertAdminCoversCountry } from '../../lib/permissions';
 
 /** Instances bornées (quota de processeurs de la région). */
 export const EXPERIENCE_RUNTIME = { maxInstances: 3, cpu: 'gcf_gen1' } as const;
@@ -76,6 +76,7 @@ export async function loadTicketFor(admin: AdminUser, ticketId: string): Promise
   if (!snap.exists) throw fail.notFound('Ticket');
   const ticket = snap.data() as SupportTicket;
   if (ticket.cityId) assertAdminCovers(admin, ticket.cityId);
+  assertAdminCoversCountry(admin, ticket.countryId);
   return ticket;
 }
 

@@ -24,6 +24,19 @@ function isAdmin(perm) {
     && adminHas(firestore.get(/databases/(default)/documents/admins/$(request.auth.uid)).data, perm);
 }
 
+// Équivalent de isAdminIn côté règles Firestore (firebase/rules/_helpers.rules) : un admin
+// restreint par ville (cityIds non vide sur sa fiche, posable sur n'importe quel rôle, pas
+// seulement city_manager) ne doit accéder qu'aux fichiers des villes couvertes par son mandat.
+function adminCovers(a, cityId) {
+  return a.cityIds.size() == 0 || cityId in a.cityIds;
+}
+
+function isAdminIn(perm, cityId) {
+  return role() == 'admin'
+    && adminCovers(firestore.get(/databases/(default)/documents/admins/$(request.auth.uid)).data, cityId)
+    && adminHas(firestore.get(/databases/(default)/documents/admins/$(request.auth.uid)).data, perm);
+}
+
 function memberHas(m, perm) {
   return m.active == true && (m.role == 'owner' || perm in m.permissions);
 }

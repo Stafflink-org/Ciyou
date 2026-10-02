@@ -14,8 +14,14 @@ match /restaurants/{rid}/public/{allPaths=**} {
 }
 
 // Justificatifs du restaurant (Kbis, pièce du gérant, RIB, licence).
+// `isAdmin('restaurants.validate')` seul laissait un admin restreint par ville télécharger les
+// justificatifs de n'importe quel restaurant hors de son périmètre (contrairement à la règle
+// Firestore équivalente, déjà cloisonnée) — scope donc résolu via la fiche du restaurant.
+// isAdminIn (qui lit la fiche restaurant) DOIT être évalué avant can() : dans cet ordre inverse,
+// testé en réel, la lecture était refusée à tort même pour un admin dans son périmètre.
 match /restaurants/{rid}/private/{allPaths=**} {
-  allow read: if can(rid, 'settings.manage') || isAdmin('restaurants.validate');
+  allow read: if isAdminIn('restaurants.validate', firestore.get(/databases/(default)/documents/restaurants/$(rid)).data.cityId)
+    || can(rid, 'settings.manage');
   allow create: if can(rid, 'settings.manage') && isDocument(10);
   allow update, delete: if false;
 }
@@ -36,8 +42,11 @@ match /drivers/{driverId}/public/{allPaths=**} {
 }
 
 // Justificatifs et selfies de vérification du livreur.
+// Même cloisonnement que restaurants/{rid}/private ci-dessus : isAdmin seul ignorait le
+// périmètre ville de l'admin, contrairement à la règle Firestore drivers.validate équivalente.
 match /drivers/{driverId}/private/{allPaths=**} {
-  allow read: if isSelf(driverId) || isAdmin('drivers.validate');
+  allow read: if isSelf(driverId)
+    || isAdminIn('drivers.validate', firestore.get(/databases/(default)/documents/drivers/$(driverId)).data.cityId);
   allow create: if isSelf(driverId) && isDocument(10);
   allow update, delete: if false;
 }

@@ -25,7 +25,7 @@ import {
 import { db, FieldValue, Timestamp } from '../../lib/admin';
 import { actorFromCaller, writeAudit } from '../../lib/audit';
 import { fail } from '../../lib/errors';
-import { assertAdminCovers, requireAdmin } from '../../lib/permissions';
+import { assertAdminCovers, assertAdminCoversCountry, requireAdmin } from '../../lib/permissions';
 import { z, zId, zReason } from '../../lib/validation';
 import {
   OPEN_TICKET_STATUSES,
@@ -433,6 +433,7 @@ export const createTicketAsAgent = experienceCallable(
       cityId = driver.cityId;
     }
     if (cityId) assertAdminCovers(admin, cityId);
+    assertAdminCoversCountry(admin, countryId);
 
     const settings = await loadSupportSettings();
     const priority = data.priority ?? reason.defaultPriority;
