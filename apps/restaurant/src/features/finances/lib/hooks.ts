@@ -15,9 +15,7 @@ import {
 } from 'firebase/firestore';
 import {
   COLLECTIONS,
-  DEFAULT_PRICING_BY_COUNTRY,
   paths,
-  vatOnHt,
   type LedgerEntry,
   type Order,
   type Refund,
@@ -170,8 +168,8 @@ export function emptyTotals(): FinanceTotals {
   };
 }
 
-/** Somme des agrégats quotidiens ; TVA sur commission au taux normal du pays. */
-export function sumDaily(days: readonly RestaurantDailyStats[], countryId: string): FinanceTotals {
+/** Somme des agrégats quotidiens ; TVA sur commission = somme des montants réellement appliqués par commande. */
+export function sumDaily(days: readonly RestaurantDailyStats[]): FinanceTotals {
   const totals = emptyTotals();
   for (const day of days) {
     totals.orders += day.ordersCount ?? 0;
@@ -182,6 +180,7 @@ export function sumDaily(days: readonly RestaurantDailyStats[], countryId: strin
     totals.salesCents += day.salesCents ?? 0;
     totals.discountCents += day.discountFundedCents ?? 0;
     totals.commissionHtCents += day.commissionCents ?? 0;
+    totals.commissionVatCents += day.commissionVatCents ?? 0;
     totals.netPayoutCents += day.netPayoutCents ?? 0;
     totals.newCustomers += day.newCustomers ?? 0;
     for (const [mode, count] of Object.entries(day.byMode ?? {})) totals.byMode[mode] = (totals.byMode[mode] ?? 0) + (count ?? 0);
@@ -189,8 +188,6 @@ export function sumDaily(days: readonly RestaurantDailyStats[], countryId: strin
       totals.byPayment[method] = (totals.byPayment[method] ?? 0) + (cents ?? 0);
     }
   }
-  const standardBps = DEFAULT_PRICING_BY_COUNTRY[countryId]?.vat.standardBps ?? 2000;
-  totals.commissionVatCents = vatOnHt(totals.commissionHtCents, standardBps);
   totals.averageBasketCents = totals.delivered > 0 ? Math.round(totals.salesCents / totals.delivered) : 0;
   return totals;
 }

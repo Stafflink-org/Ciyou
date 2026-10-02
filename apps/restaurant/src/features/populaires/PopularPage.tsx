@@ -5,10 +5,10 @@ import { Link } from 'react-router';
 import { Flame, ImageOff, Search, Sparkles, Star, StarOff, Trophy, X } from 'lucide-react';
 import { MENU_LIMITS, PRODUCT_BADGE_LABELS } from '@golink/shared';
 import { Badge, Button, cn, EmptyState, formatEUR, formatNumber, IconButton, Input, PageContainer, PageHeader, Select, Skeleton, toast, Tooltip } from '@golink/ui';
-import { useAuth, useDocumentTitle } from '@golink/web';
+import { useDocumentTitle } from '@golink/web';
 import { useCan, useRestaurantAccess } from '@/auth/RestaurantAccess';
 import { errorMessage } from '@/lib/firestore';
-import { menuFunctions, updateProducts, useProducts, useSections, type MenuProduct } from '../produits/menu/data';
+import { menuFunctions, useProducts, useSections, type MenuProduct } from '../produits/menu/data';
 import { matches, plural, saleState } from '../produits/menu/helpers';
 import { DragHandle, SortableHint, useSortable } from '../produits/menu/sortable';
 import { Price, saleUnitSuffix, Thumb } from '../produits/menu/ui';
@@ -18,8 +18,6 @@ const PAGE = 24;
 export function PopularPage() {
   useDocumentTitle('Produits mis en avant · Ciyou Eats Restaurant');
   const { restaurantId, restaurant } = useRestaurantAccess();
-  const { user } = useAuth();
-  const uid = user?.uid ?? '';
   const canEdit = useCan()('menu.edit');
   const productsState = useProducts(restaurantId);
   const sectionsState = useSections(restaurantId);
@@ -56,18 +54,22 @@ export function PopularPage() {
   const byId = new Map(products.map((p) => [p.id, p]));
   const showcase = sortable.order.map((id) => byId.get(id)).filter((p): p is MenuProduct => Boolean(p));
 
+  // Passe par reorderMenu (kind 'featured') plutôt qu'une écriture Firestore directe : seule la
+  // Cloud Function fait respecter le plafond MENU_LIMITS.featured côté serveur (la règle Firestore
+  // ne compte pas les produits déjà en vitrine — un plafond vérifié seulement ici serait contournable).
   async function toggle(product: MenuProduct) {
-    if (!product.featured && featured.length >= MENU_LIMITS.featured) {
+    const current = sortable.order;
+    if (!product.featured && current.length >= MENU_LIMITS.featured) {
       toast.error(`La vitrine est limitée à ${MENU_LIMITS.featured} produits : retirez-en un d’abord.`);
       return;
     }
+    const next = product.featured ? current.filter((id) => id !== product.id) : [...current, product.id];
     setBusy(product.id);
     try {
-      const next = featured.reduce((max, p) => Math.max(max, p.featuredOrder ?? 0), -1) + 1;
-      await updateProducts(restaurantId, uid, [product.id], product.featured ? { featured: false, featuredOrder: null } : { featured: true, featuredOrder: next });
+      await commitOrder(next);
       toast.success(product.featured ? 'Produit retiré de la vitrine' : 'Produit mis en avant');
-    } catch (caught) {
-      toast.error(errorMessage(caught));
+    } catch {
+      // déjà notifié par commitOrder
     } finally {
       setBusy(null);
     }

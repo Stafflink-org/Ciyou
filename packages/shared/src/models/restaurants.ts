@@ -425,6 +425,8 @@ export interface RestaurantDailyStats {
   salesCents: Cents;
   netPayoutCents: Cents;
   commissionCents: Cents;
+  /** TVA réelle sur la commission (somme de `order.restaurantSettlement.commissionVatCents` des commandes livrées), au(x) taux réellement appliqué(s) à chaque commande — pas un taux par défaut recalculé après coup. */
+  commissionVatCents: Cents;
   discountFundedCents: Cents;
   averageBasketCents: Cents;
   averagePrepMinutes: number;

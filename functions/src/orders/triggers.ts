@@ -75,6 +75,7 @@ async function recomputeDailyStats(restaurantId: string, day: string): Promise<v
     salesCents,
     netPayoutCents: sum(delivered, (o) => o.restaurantSettlement?.payoutCents ?? 0) - sum(cancelled, (o) => o.cancellation?.restaurantChargeCents ?? 0),
     commissionCents: sum(delivered, (o) => o.restaurantSettlement?.commissionHtCents ?? 0),
+    commissionVatCents: sum(delivered, (o) => o.restaurantSettlement?.commissionVatCents ?? 0),
     discountFundedCents: sum(delivered, (o) => o.restaurantSettlement?.discountFundedCents ?? 0),
     averageBasketCents: delivered.length ? Math.round(salesCents / delivered.length) : 0,
     averagePrepMinutes: prepCount ? Math.round(prepTotal / prepCount) : 0,
