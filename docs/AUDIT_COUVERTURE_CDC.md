@@ -1526,6 +1526,38 @@ Testé réel sur `golink-9f16d` (`cdc-fix-residuals-52.flow.mjs`, 9/9 OK).
 
 **Balayage de code clos sur l'ensemble du cahier (§1 à §31)** : chaque rubrique est passée en revue pour des bugs de code non documentés (au-delà des 58 lignes déjà marquées PARTIEL dans le tableau §3), en plus des correctifs ciblés sur les lignes PARTIEL elles-mêmes faits au fil des segments précédents.
 
+## Audit du back-office restaurant (hors cahier super admin, 02/10/2026)
+
+Le cahier ci-dessus ne couvre que le back-office super admin (31 rubriques). À la demande du client,
+le même type de relecture (bugs de code non documentés, pas de nouvelle ligne de cahier) a été fait
+sur le back-office restaurant (`apps/restaurant`), avec un focus sur le cloisonnement multi-commerce
+(un restaurant ne doit jamais voir ni affecter les données d'un autre). Trois défauts trouvés et
+corrigés (PR [#121](https://github.com/Stafflink-org/Ciyou/pull/121)), dont deux relèvent en fait du
+même périmètre super admin que ci-dessus (trouvés en creusant le second) :
+
+- **P0 sécurité — Justificatifs KYC (Storage) sans périmètre ville** : `restaurants/{rid}/private/`
+  (Kbis, pièce du gérant, RIB) et `drivers/{uid}/private/` (pièce d'identité, selfie) n'étaient
+  cloisonnés par AUCUNE ville côté règles Storage (`isAdmin(perm)` seul), contrairement aux règles
+  Firestore équivalentes déjà cloisonnées — un admin restreint par ville pouvait télécharger
+  directement (SDK Storage, sans Cloud Function) les justificatifs de n'importe quel établissement ou
+  livreur hors de son périmètre, confirmé exploitable depuis l'onglet « Dossier » de la fiche
+  restaurant. Corrigé : nouvel helper `isAdminIn` ajouté aux règles Storage.
+- **P0 sécurité — Tickets de support sans périmètre ville/pays** : `supportTickets` (et ses messages)
+  ainsi que les fonctions associées (attribution, escalade, réponse, création par un agent) n'étaient
+  bornés que par la permission, jamais la ville/pays du sujet — `orders.rules` utilisait déjà la
+  variante cloisonnée pour le même usage, pas `support.rules`. Corrigé (règle et fonctions, dualité
+  ville/pays comme pour les dossiers de fraude).
+- **P1 — Caisse espèces partagée entre deux établissements** : `driverPrivate.cashBalanceCents` est un
+  solde global par livreur (pas par établissement), mais `inviteOwnCourier` ne vérifiait l'exclusivité
+  qu'envers la flotte Ciyou Eats (livreurs plateforme), jamais envers un AUTRE établissement — un
+  établissement B pouvait inviter un livreur déjà livreur salarié actif de l'établissement A, mélangeant
+  silencieusement les espèces encaissées pour A avec celles remises à B (chaque établissement voyant
+  en plus le solde total, pas sa seule part). Corrigé : l'invitation est refusée tant qu'un rattachement
+  actif ailleurs n'est pas levé (statut `inactive`/`blocked`) ; redevient possible une fois l'ancien
+  employeur clos la relation.
+
+Testé réel sur `golink-9f16d` (`scripts/tests/cdc-fix-residuals-53.flow.mjs`, 16/16 OK).
+
 ## Écarts avec DECISIONS_CLIENT / questionnaire
 
 Non exploités en détail (aucune décision client lue pour ces rubriques dans le temps imparti) : à recouper avec `docs/DECISIONS_CLIENT.md` sur (a) les délais RGPD (30 jours) et la durée de corbeille (30 jours) ; (b) la liste de blocage (empreinte de carte/appareil) ; (c) la maintenance bloquante. Écart de fond constaté avec le cahier lui-même : « Détection automatique » (§28) et « Fonctions obligatoires dès le lancement » (§29) ne sont pas tenues (détection en grande partie non fonctionnelle, réacceptation forcée et consentements absents).
