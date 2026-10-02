@@ -863,8 +863,10 @@ service cloud.firestore {
 
     // Parrainages : suivi par l'équipe fidélité ; parrainages restaurants par les commerciaux.
     match /referrals/{referralId} {
-      allow read: if isAdmin('loyalty.edit')
-        || (isAdmin('crm.view') && resource.data.program == 'restaurant')
+      // `cityId` (filleul) absent sur les documents créés avant ce correctif : `isAdminIn` refuse
+      // alors par défaut à un admin restreint (repli sûr), jamais une fuite.
+      allow read: if isAdminIn('loyalty.edit', resource.data.get('cityId', null))
+        || (isAdminIn('crm.view', resource.data.get('cityId', null)) && resource.data.program == 'restaurant')
         || (resource.data.program == 'restaurant' && resource.data.referrerType == 'restaurant' && can(resource.data.referrerId, 'settings.manage'));
     }
 

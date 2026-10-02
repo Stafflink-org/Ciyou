@@ -202,6 +202,9 @@ export interface Referral {
   qualifyingOrderId?: string | null;
   referrerRewardCents: Cents;
   refereeRewardCents: Cents;
+  /** Ville/pays du filleul (pour le cloisonnement par périmètre de `decideReferral`). */
+  cityId?: string | null;
+  countryId?: string | null;
   createdAt: Timestamp;
   qualifiedAt?: Timestamp | null;
   rewardedAt?: Timestamp | null;
