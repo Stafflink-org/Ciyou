@@ -236,15 +236,34 @@ async function driverPerformance(scope: ResolvedScope, f: Filters): Promise<NonN
     scopedDispatchOffers(scope, start, end),
   ]);
   const zoneNames = new Map(zonesSnap.docs.map((doc) => [doc.id, (doc.data() as Zone).name]));
-  const perDriver = new Map<string, { delivered: number; late: number }>();
+  // Mêmes compteurs que `perZone` ci-dessous, mais par livreur : jusqu'ici seuls
+  // `delivered`/`late` étaient suivis par livreur (colonnes « Livraisons »/« Retards »), les
+  // autres colonnes du tableau (acceptation, temps moyen, ponctualité, annulations) lisaient
+  // `driver.stats.*` (cumul depuis l'inscription, jamais filtré par période) — le filtre de
+  // période de l'écran ne s'appliquait donc qu'à 2 colonnes sur 6.
+  const perDriver = new Map<
+    string,
+    { delivered: number; late: number; minutes: number; timed: number; assigned: number; cancellations: number; offered: number; accepted: number }
+  >();
   const perZone = new Map<string, { deliveries: number; late: number; minutes: number; timed: number; assigned: number; cancellations: number; offered: number; accepted: number }>();
   const zoneAcc = (zoneId: string) => perZone.get(zoneId) ?? { deliveries: 0, late: 0, minutes: 0, timed: 0, assigned: 0, cancellations: 0, offered: 0, accepted: 0 };
+  const driverAcc = (driverId: string) => perDriver.get(driverId) ?? { delivered: 0, late: 0, minutes: 0, timed: 0, assigned: 0, cancellations: 0, offered: 0, accepted: 0 };
   for (const o of orders) {
     if (o.driverId) {
-      const d = perDriver.get(o.driverId) ?? { delivered: 0, late: 0 };
+      const d = driverAcc(o.driverId);
       if (o.status === 'delivered' && o.fulfillment === 'delivery') {
         d.delivered += 1;
         if (o.flags?.late) d.late += 1;
+        const total = minutes(o.timeline?.placedAt ?? o.createdAt, o.timeline?.delivered);
+        if (total !== null && total > 0 && total < 300) {
+          d.minutes += total;
+          d.timed += 1;
+        }
+      }
+      // Base « annulations » alignée sur `runDriverStatsCompute`, même règle que `perZone` ci-dessous.
+      if (o.delivery?.deliveredBy === 'platform') {
+        d.assigned += 1;
+        if (o.status === 'cancelled' && (o.cancellation?.by === 'driver' || o.cancellation?.reason === 'address_unreachable')) d.cancellations += 1;
       }
       perDriver.set(o.driverId, d);
     }
@@ -271,10 +290,15 @@ async function driverPerformance(scope: ResolvedScope, f: Filters): Promise<NonN
       perZone.set(zoneId, z);
     }
   }
-  // Acceptation par zone : mêmes règles que `runDriverStatsCompute` (une offre encore
-  // `offered` est en attente, ni acceptée ni refusée, exclue du calcul).
+  // Acceptation par zone et par livreur : mêmes règles que `runDriverStatsCompute` (une offre
+  // encore `offered` est en attente, ni acceptée ni refusée, exclue du calcul).
   for (const offer of offers) {
-    if (offer.status === 'offered' || !offer.zoneId) continue;
+    if (offer.status === 'offered') continue;
+    const d = driverAcc(offer.driverId);
+    d.offered += 1;
+    if (offer.status === 'accepted') d.accepted += 1;
+    perDriver.set(offer.driverId, d);
+    if (!offer.zoneId) continue;
     const z = zoneAcc(offer.zoneId);
     z.offered += 1;
     if (offer.status === 'accepted') z.accepted += 1;
@@ -293,11 +317,11 @@ async function driverPerformance(scope: ResolvedScope, f: Filters): Promise<NonN
       availability: d.availability,
       deliveries: d.stats?.deliveries ?? 0,
       deliveriesInPeriod: perDriver.get(id)?.delivered ?? 0,
-      acceptanceRate: d.stats?.acceptanceRate ?? 0,
-      cancellationRate: d.stats?.cancellationRate ?? 0,
-      onTimeRate: d.stats?.onTimeRate ?? 0,
+      acceptanceRate: ((p) => (p.offered ? Math.round((p.accepted / p.offered) * 1000) / 1000 : 0))(driverAcc(id)),
+      cancellationRate: ((p) => (p.assigned ? Math.round((p.cancellations / p.assigned) * 1000) / 1000 : 0))(driverAcc(id)),
+      onTimeRate: ((p) => (p.delivered ? Math.round(((p.delivered - p.late) / p.delivered) * 1000) / 1000 : 0))(driverAcc(id)),
       lateInPeriod: perDriver.get(id)?.late ?? 0,
-      averageDeliveryMinutes: d.stats?.averageDeliveryMinutes ?? 0,
+      averageDeliveryMinutes: ((p) => (p.timed ? Math.round(p.minutes / p.timed) : 0))(driverAcc(id)),
       rating: d.rating?.average ?? 0,
     }));
   const byZone = [...perZone.entries()]
