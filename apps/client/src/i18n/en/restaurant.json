@@ -10,6 +10,7 @@
   "etaMinutes": "{{min}}–{{max}} min",
   "deliveryFee": "Delivery €{{price}}",
   "freeDelivery": "Free delivery",
+  "deliveryFeeVariable": "Delivery fee varies by distance",
   "menuSoon": "Menu coming soon.",
   "dishCount_one": "{{count}} dish",
   "dishCount_other": "{{count}} dishes",

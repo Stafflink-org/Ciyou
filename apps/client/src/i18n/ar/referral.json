@@ -11,5 +11,6 @@
   "inputPlaceholder": "رمز من أحالك",
   "validateButton": "تأكيد الرمز",
   "invalidCode": "أدخل رمزًا صحيحًا.",
-  "codeAccepted": "تم قبول الرمز: {{amount}} € مقدَّمة لطلبك الأول."
+  "codeAccepted": "تم قبول الرمز: {{amount}} € مقدَّمة لطلبك الأول.",
+  "codeAcceptedWithMinimum": "تم قبول الرمز: {{amount}} € مقدَّمة لطلبك الأول عند إنفاق {{minimum}} € على الأقل."
 }

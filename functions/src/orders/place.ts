@@ -507,7 +507,11 @@ export const placeOrder = callable(
     // Revalidation avant paiement (§A3) : le total recalculé doit correspondre au devis affiché au
     // client, à ±2 centimes (arrondis) ; sinon la commande n'est pas créée mais le panier reste intact
     // côté client (aucune donnée n'est modifiée ici, l'app doit simplement rafraîchir son devis).
-    if (data.expectedTotalCents != null && Math.abs(quote.totalCents - data.expectedTotalCents) > TOTAL_TOLERANCE_CENTS) {
+    // Comparaison contre le devis SANS promotion/offre : le client ne peut jamais prévisualiser une
+    // remise (code promo non lisible par règle, offre automatique non plus) — comparer contre le total
+    // déjà remisé aurait fait échouer cette vérification à chaque commande avec remise réelle.
+    const baseQuote = runQuote(undefined);
+    if (data.expectedTotalCents != null && Math.abs(baseQuote.totalCents - data.expectedTotalCents) > TOTAL_TOLERANCE_CENTS) {
       throw fail.precondition('Le total de votre commande a changé. Vérifiez votre panier avant de valider.', {
         code: 'total_changed',
         expectedTotalCents: data.expectedTotalCents,
@@ -532,8 +536,12 @@ export const placeOrder = callable(
       if (!allowedByPlatform || !allowedByRestaurant) throw fail.precondition('Ce moyen de paiement n’est pas accepté pour cette commande.');
       if ((method === 'card' || method === 'apple_pay' || method === 'google_pay') && !on('card_payment')) throw fail.precondition('Le paiement par carte n’est pas disponible pour le moment.');
       if (method === 'cash' && !on('cash_payment')) throw fail.precondition('Le paiement en espèces n’est pas disponible pour le moment.');
-      // Espèces : uniquement avec un livreur salarié du commerce (décision client).
-      if (method === 'cash' && !isCashAllowed({ fulfillment: data.fulfillment, deliveredBy, cashEnabled: paymentSettings?.cash?.enabled !== false })) {
+      // Espèces en livraison : uniquement avec un livreur salarié du commerce (décision client).
+      // Au retrait/sur place : déjà filtré par `allowedByRestaurant` ci-dessus (le commerce doit
+      // explicitement accepter les espèces) — `allowOnPickup` n'a donc plus de condition à vérifier
+      // ici (`allowOnPickup` n'était jamais renseigné : les espèces au retrait étaient proposées par
+      // l'app mais toujours refusées à la validation).
+      if (method === 'cash' && !isCashAllowed({ fulfillment: data.fulfillment, deliveredBy, cashEnabled: paymentSettings?.cash?.enabled !== false, allowOnPickup: true })) {
         throw fail.precondition(
           data.fulfillment === 'delivery'
             ? 'Le paiement en espèces n’est possible qu’avec les livreurs du commerce. Payez en ligne pour cette commande.'

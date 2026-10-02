@@ -29,5 +29,10 @@
   "commentPlaceholder": "تجربتك…",
   "sendReview": "إرسال تقييمي",
   "thankYouToast": "شكرًا على تقييمك!",
-  "defaultCustomerName": "عميل Ciyou Eats"
+  "defaultCustomerName": "عميل Ciyou Eats",
+  "cancelled": {
+    "title": "طلب ملغى",
+    "refund": "المبلغ المسترد",
+    "noRefund": "لا يوجد استرداد"
+  }
 }

@@ -42,7 +42,12 @@ export function ReferralScreen() {
     setSending(true);
     try {
       const result = await applyReferralCode({ code: code.trim() });
-      toast.show(t('referral:codeAccepted', { amount: (result.rewardCents / 100).toFixed(2).replace('.', ',') }));
+      const amount = (result.rewardCents / 100).toFixed(2).replace('.', ',');
+      if (result.minFirstOrderCents > 0) {
+        toast.show(t('referral:codeAcceptedWithMinimum', { amount, minimum: (result.minFirstOrderCents / 100).toFixed(2).replace('.', ',') }));
+      } else {
+        toast.show(t('referral:codeAccepted', { amount }));
+      }
       setCode('');
     } catch (error) {
       toast.show(errorMessage(error, t), 'danger');

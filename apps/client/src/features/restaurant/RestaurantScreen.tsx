@@ -111,7 +111,16 @@ export function RestaurantScreen({ route, navigation }: Props) {
           <View style={styles.metaRow}>
             <Badge label={`★ ${(restaurant?.rating?.average ?? 0).toFixed(1)}`} tone="primary" />
             <Badge label={t('etaMinutes', { min: restaurant?.etaMinutes?.min ?? 20, max: restaurant?.etaMinutes?.max ?? 35 })} tone="neutral" />
-            <Badge label={restaurant?.ownDeliveryFeeCents != null ? t('deliveryFee', { price: (restaurant.ownDeliveryFeeCents / 100).toFixed(2).replace('.', ',') }) : t('freeDelivery')} tone="neutral" />
+            <Badge
+              label={
+                restaurant?.deliveredBy && restaurant.deliveredBy !== 'restaurant'
+                  ? t('deliveryFeeVariable')
+                  : restaurant?.ownDeliveryFeeCents
+                    ? t('deliveryFee', { price: (restaurant.ownDeliveryFeeCents / 100).toFixed(2).replace('.', ',') })
+                    : t('freeDelivery')
+              }
+              tone="neutral"
+            />
           </View>
         </View>
 

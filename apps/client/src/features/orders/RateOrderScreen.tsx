@@ -52,7 +52,7 @@ export function RateOrderScreen({ route, navigation }: Props) {
         restaurantId: order.restaurantId,
         customerId: user.uid,
         customerDisplayName: user.displayName || t('defaultCustomerName'),
-        countryId: order.cityId,
+        countryId: order.countryId,
         cityId: order.cityId,
         restaurantRating: rating as 1 | 2 | 3 | 4 | 5,
         comment: comment.trim() || null,
