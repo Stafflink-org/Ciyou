@@ -1111,6 +1111,14 @@ TROUS §19 :
 - P1 — Vérifier que la récompense se fait sur la vraie première commande, pas une commande ultérieure.
 - P2 — Écriture au grand livre pour le crédit publicitaire ; détection automatique d'auto-parrainage (même appareil, même adresse).
 
+**Mise à jour du 02/10/2026 (balayage §19/§23/§24, 4 bugs de code trouvés par relecture directe, aucune ligne du tableau §3 n'était concernée — défauts non documentés, PR [#116](https://github.com/Stafflink-org/Ciyou/pull/116)) :**
+- **P0 sécurité** — `decideReferral` ne vérifiait que la permission `loyalty.edit`, jamais la ville/pays du parrainage (`Referral` n'avait d'ailleurs aucun champ `cityId`/`countryId`) — un admin restreint pouvait décider de n'importe quel parrainage hors de son périmètre ; même trou sur la règle Firestore `/referrals/{id}`. Corrigé : `cityId`/`countryId` ajoutés au modèle et renseignés à la création (restaurant et client), `assertAdminCovers` dans la fonction, `isAdminIn` dans la règle.
+- **P1** — Le flag « Fidélité » (§24) ne bloquait jamais l'**échange** de points déjà acquis dans la branche « programme restaurant » (seul `program.enabled` était vérifié), et le vérifiait avec une portée vide dans la branche « programme plateforme » (ignorant tout override ville/pays/commerce) — alors qu'`earnLoyaltyPoints` le fait déjà correctement pour le **gain**. Un coupe-circuit ciblé n'arrêtait donc que les nouveaux points, pas l'encaissement du solde existant. Corrigé.
+- **P1** — Les écritures du grand livre de `redeemLoyaltyPoints` imputaient `countryId:'FR'` en dur, quel que soit le pays réel (Luxembourg, marché actif). Corrigé.
+- **P1** — Le flag « Parrainage » (§24) n'était vérifié ni à l'inscription d'un commerce (`restaurantSignup` → `linkRestaurantReferral` appelée directement) ni à la branche « activation » de `onRestaurantActivatedReferral` — seules la saisie après coup et la branche « commande » le vérifiaient. Corrigé en déplaçant le contrôle dans `linkRestaurantReferral` elle-même (commun à tous les appelants) et en l'ajoutant dans `onRestaurantActivatedReferral`.
+
+Testé réel sur `golink-9f16d` (`cdc-fix-residuals-49.flow.mjs`, 14/14 OK, y compris le déclencheur réel d'activation du commerce en conditions de production, pas un mock).
+
 ---
 
 ## §20 — Notifications et communication
