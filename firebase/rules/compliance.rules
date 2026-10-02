@@ -3,7 +3,10 @@
 // ---------------------------------------------------------------------------
 
 match /fraudCases/{caseId} {
-  allow read: if isAdmin('fraud.view');
+  // `isAdmin('fraud.view')` seul laissait un admin restreint par ville/pays (n'importe quel rôle,
+  // pas seulement city_manager) lire les dossiers de fraude de n'importe quel sujet hors de son
+  // périmètre — `countryId` est toujours renseigné, `cityId` l'est quand le sujet en a une.
+  allow read: if isAdminIn('fraud.view', resource.data.get('cityId', null)) && isAdminInCountry('fraud.view', resource.data.countryId);
   // Décisions à effet (blocage, suspension, gel des reversements) : Cloud Function decideFraudCase.
   allow write: if false;
 }

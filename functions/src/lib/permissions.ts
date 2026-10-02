@@ -103,6 +103,14 @@ export function assertAdminCovers(admin: AdminUser, cityId: string | null | unde
   }
 }
 
+/** Variante par pays (ressources scopées par pays, pas de ville) : voir assertAdminCovers. */
+export function assertAdminCoversCountry(admin: AdminUser, countryId: string | null | undefined): void {
+  if (admin.role === 'super_admin' || admin.countryIds.length === 0) return;
+  if (!countryId || !admin.countryIds.includes(countryId)) {
+    throw fail.forbidden('Ce pays est hors de votre périmètre.');
+  }
+}
+
 export async function loadMember(restaurantId: string, uid: string): Promise<RestaurantMember | null> {
   const snap = await db
     .collection(COLLECTIONS.restaurants)

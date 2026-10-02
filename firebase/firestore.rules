@@ -330,7 +330,10 @@ service cloud.firestore {
     // ---------------------------------------------------------------------------
 
     match /fraudCases/{caseId} {
-      allow read: if isAdmin('fraud.view');
+      // `isAdmin('fraud.view')` seul laissait un admin restreint par ville/pays (n'importe quel rôle,
+      // pas seulement city_manager) lire les dossiers de fraude de n'importe quel sujet hors de son
+      // périmètre — `countryId` est toujours renseigné, `cityId` l'est quand le sujet en a une.
+      allow read: if isAdminIn('fraud.view', resource.data.get('cityId', null)) && isAdminInCountry('fraud.view', resource.data.countryId);
       // Décisions à effet (blocage, suspension, gel des reversements) : Cloud Function decideFraudCase.
       allow write: if false;
     }
@@ -409,6 +412,16 @@ service cloud.firestore {
     // Validation, statut, sanctions, attribution et rémunération : Cloud Functions.
     // ---------------------------------------------------------------------------
 
+    // L'app livreur écrit `availability` directement en Firestore (pas de Cloud Function pour ce
+    // geste courant) : c'est donc ICI, pas côté app, que le mode maintenance « livreur » (§30,
+    // settings/maintenance.apps.driver) doit réellement empêcher de passer en ligne — sinon le
+    // bouton maintenance de l'écran super admin n'a aucun effet pour cette app, contrairement à ce
+    // qu'il annonce.
+    function driverMaintenanceActive() {
+      let path = /databases/$(database)/documents/settings/maintenance;
+      return exists(path) && get(path).data.get('apps', {}).get('driver', {}).get('enabled', false) == true;
+    }
+
     match /drivers/{driverId} {
       allow read: if isSelf(driverId) || isAdminIn('drivers.view', resource.data.cityId);
       // Le livreur ne pilote que sa disponibilité ; passer en ligne exige un compte actif.
@@ -416,6 +429,7 @@ service cloud.firestore {
           && onlyChanges(['availability', 'lastSeenAt', 'updatedAt', 'updatedBy'])
           && incoming().availability in ['online', 'offline', 'paused']
           && (incoming().availability == 'offline' || existing().status == 'active')
+          && (incoming().availability != 'online' || !driverMaintenanceActive())
           && existing().activeOrderIds.size() == 0
           && updatedNow()
         // Véhicule et distance maximale : réglages choisis par le livreur (docs/DECISIONS_CLIENT.md
