@@ -981,6 +981,20 @@
       ]
     },
     {
+      "collectionGroup": "dispatchOffers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "cityId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "offeredAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "driverEarnings",
       "queryScope": "COLLECTION",
       "fields": [
