@@ -1487,6 +1487,17 @@ TROUS :
 - P1 : saisie de `message`, `storeUrls`, `until` dans l'UI ; maintenance « plateforme entière » en un geste ; fin automatique de maintenance à `until`.
 - P2 : `publicMessage`/`postMortem` et page de statut publique.
 
+**Mise à jour du 02/10/2026 (balayage §28/§29/§30, 6 bugs de code trouvés par relecture directe + 1 trouvé en testant, aucune ligne du tableau §3 n'était concernée — défauts non documentés, PR [#119](https://github.com/Stafflink-org/Ciyou/pull/119)) :**
+- **P0 sécurité — `fraudCases` sans périmètre ville/pays (§28)** : la règle Firestore et `decideFraudCase` ne vérifiaient que la permission `fraud.view`/`fraud.manage`, jamais la ville/pays du dossier — un admin restreint pouvait lire/décider (blocage, suspension, gel des reversements) de n'importe quel dossier hors de son périmètre. Corrigé.
+- **P1 — Signal « taux de remboursement anormal » (§28) comptait des remboursements jamais accordés** : `rejected`/`failed` comptaient comme `processed`. Corrigé.
+- **P1 — Export RGPD d'un livreur incomplet (§29)** : `driverPrivate/{uid}` (naissance, nationalité, adresse, SIRET, IBAN masqué) jamais inclus dans l'export d'accès/portabilité. Corrigé.
+- **P1 — Anonymisation (§29) n'atteignait jamais les comptes jamais actifs** : `stats.lastOrderAt` restant `null` indéfiniment, exclu de toute requête d'inégalité Firestore — jamais anonymisé quel que soit l'âge du compte. Corrigé par une seconde requête dédiée.
+- **P1 — Mode maintenance « livreur » (§30) sans aucun effet réel** : l'app livreur écrit `availability` directement en Firestore (pas de Cloud Function), donc le bouton maintenance ne bloquait rien pour cette app. Corrigé au niveau de la règle Firestore (seul point d'application possible ici) — complète le P0 « faire respecter la maintenance » listé ci-dessus pour le volet livreur spécifiquement (client/restaurant déjà réels depuis `cdc-fix-e`).
+- **P2 — `reportContent` (§29) inutilisable par son public cible** : exigeait un compte admin alors qu'il doit être ouvert à tout client/livreur/restaurant. Corrigé.
+- Trouvé au passage : l'index composite de purge de la corbeille avait les champs dans le mauvais ordre (jamais utilisable) — la purge nocturne échouait silencieusement depuis sa création. Corrigé.
+
+Testé réel sur `golink-9f16d` (`cdc-fix-residuals-51.flow.mjs`, 20/20 OK).
+
 ## §31 — Données et sauvegardes
 
 | Ligne du cahier | Élément | Statut | Où (fichiers / fonctions) | Preuve et remarques |
