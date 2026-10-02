@@ -123,10 +123,13 @@ export const DEFAULT_MAX_CREDIT_CENTS = 50_000;
  */
 export async function refundLimitOf(admin: AdminUser): Promise<number> {
   if (admin.role === 'super_admin') return Number.MAX_SAFE_INTEGER;
-  if (typeof admin.refundLimitCents === 'number') return admin.refundLimitCents;
+  const threshold = ((await db.collection(COLLECTIONS.settings).doc(SETTINGS_DOCS.refunds).get()).get('approvalThresholdCents') as number | undefined) ?? 0;
+  // Un plafond personnel (`refundLimitCents`) doit rester borné par le seuil plateforme comme le
+  // plafond par défaut du rôle — sinon il le contourne entièrement (un admin pourrait se voir, ou
+  // s'attribuer via `updateAdminRole`, une limite personnelle illimitée).
+  if (typeof admin.refundLimitCents === 'number') return threshold > 0 ? Math.min(admin.refundLimitCents, threshold) : admin.refundLimitCents;
   const role = (await db.collection(COLLECTIONS.adminRoles).doc(admin.role).get()).data() as AdminRoleDefinition | undefined;
   const roleLimit = role?.defaultRefundLimitCents ?? DEFAULT_REFUND_LIMITS[admin.role];
-  const threshold = ((await db.collection(COLLECTIONS.settings).doc(SETTINGS_DOCS.refunds).get()).get('approvalThresholdCents') as number | undefined) ?? 0;
   return threshold > 0 ? Math.min(roleLimit, threshold) : roleLimit;
 }
 

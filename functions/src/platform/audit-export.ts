@@ -39,9 +39,14 @@ export const exportAuditLogs = platformCallable(
     if (data.actorUid) q = db.collection(COLLECTIONS.auditLogs).where('actor.uid', '==', data.actorUid).where('at', '>=', Timestamp.fromMillis(data.from)).where('at', '<=', Timestamp.fromMillis(data.to)).orderBy('at', 'desc');
     const snap = await q.limit(maxRows + 1).get();
     const needle = data.search?.toLowerCase() ?? '';
+    // Même périmètre que la règle Firestore `/auditLogs` : une entrée sans ville (réglage
+    // plateforme/pays) reste exportable, une entrée de ville est bornée à celles de l'admin —
+    // sinon un admin restreint par ville pouvait exporter le journal complet de toutes les villes.
+    const restricted = admin.role !== 'super_admin' && admin.cityIds.length > 0;
     const rows = snap.docs
       .slice(0, maxRows)
       .map((doc) => ({ id: doc.id, ...(doc.data() as AuditLog) }))
+      .filter((log) => !restricted || !log.cityId || admin.cityIds.includes(log.cityId))
       .filter((log) => !data.actionPrefix || log.action.startsWith(data.actionPrefix))
       .filter((log) => !data.targetType || log.target?.type === data.targetType)
       .filter((log) => !data.sensitiveOnly || log.sensitive)

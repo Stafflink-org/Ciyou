@@ -211,8 +211,12 @@ service cloud.firestore {
     }
 
     // Journal d'audit : écrit uniquement par Cloud Functions, jamais modifié ni supprimé.
+    // Même motif que `platformAlerts` juste en dessous : une entrée sans ville (réglage plateforme/
+    // pays) reste lisible par tout titulaire de `audit.view`, une entrée de ville est bornée au
+    // périmètre de l'admin (un admin restreint par ville ne doit pas lire le journal d'autres villes).
     match /auditLogs/{logId} {
-      allow read: if isAdmin('audit.view');
+      allow read: if isAdmin('audit.view')
+        && (resource.data.get('cityId', null) == null || isAdminIn('audit.view', resource.data.cityId));
       allow write: if false;
     }
 
@@ -1375,7 +1379,10 @@ service cloud.firestore {
     }
 
     match /posConnections/{connectionId} {
-      allow read: if can(resource.data.restaurantId, 'settings.manage') || isAdmin('integrations.view');
+      // `isAdmin('integrations.view')` seul laissait un admin restreint par ville lire la connexion
+      // caisse (webhook, URL) de n'importe quel restaurant hors de son périmètre.
+      allow read: if can(resource.data.restaurantId, 'settings.manage')
+        || isAdminIn('integrations.view', get(/databases/$(database)/documents/restaurants/$(resource.data.restaurantId)).data.cityId);
       allow write: if false;
     }
 
