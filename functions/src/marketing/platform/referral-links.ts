@@ -19,7 +19,7 @@ import { actorFromCaller, SYSTEM_ACTOR, writeAudit } from '../../lib/audit';
 import { callable } from '../../lib/callable';
 import { APP_URLS } from '../../lib/config';
 import { fail } from '../../lib/errors';
-import { assertFeatureOn } from '../../lib/features';
+import { assertFeatureOn, isFeatureOn } from '../../lib/features';
 import { requireAuth, requireRestaurantAccess } from '../../lib/permissions';
 import { z, zId } from '../../lib/validation';
 import { loadReferralSettings } from './common';
@@ -79,6 +79,12 @@ export async function linkRestaurantReferral(refereeId: string, rawCode: string)
   const referee = refereeSnap.data() as Restaurant | undefined;
   if (!referrer || !referee) return { applied: false, reason: 'restaurant_missing' };
   if (referrer.status !== 'active') return { applied: false, reason: 'referrer_inactive' };
+  // Interrupteur « Parrainage » (§24) : vérifié ICI (dans la fonction partagée), pas seulement chez
+  // l'appelant — `restaurantSignup` appelait cette fonction directement sans jamais le vérifier,
+  // contrairement à `applyRestaurantReferralCode` (après coup) qui le vérifiait déjà avant d'appeler.
+  if (!(await isFeatureOn('referral', { restaurantId: refereeId, cityId: referee.cityId, countryId: referee.countryId }))) {
+    return { applied: false, reason: 'feature_off' };
+  }
 
   const signals: string[] = [];
   const a = referrerLegal.data() as Partial<RestaurantLegal> | undefined;
@@ -102,6 +108,8 @@ export async function linkRestaurantReferral(refereeId: string, rawCode: string)
     qualifyingOrderId: null,
     referrerRewardCents: 0,
     refereeRewardCents: 0,
+    cityId: referee.cityId,
+    countryId: referee.countryId,
     createdAt: now,
     qualifiedAt: null,
     rewardedAt: null,
@@ -133,6 +141,7 @@ const REASON_MESSAGES: Record<string, string> = {
   restaurant_missing: 'Commerce introuvable.',
   referrer_inactive: 'Le commerce qui vous parraine n’est plus actif sur Ciyou Eats.',
   already_linked: 'Un code de parrainage est déjà enregistré pour ce commerce.',
+  feature_off: 'Le parrainage n’est pas ouvert pour le moment.',
 };
 
 /** Lien et code de parrainage du commerce, avec la récompense annoncée (montant réglable). */
@@ -156,7 +165,8 @@ export const getRestaurantReferralLink = callable(z.object({ restaurantId: zId }
 /** Un commerce déjà inscrit renseigne le code de son parrain (une seule fois). */
 export const applyRestaurantReferralCode = callable(z.object({ restaurantId: zId, code: z.string().trim().min(4).max(20) }), async (data, request) => {
   const actor = await requireRestaurantAccess(request, data.restaurantId, 'settings.manage', 'restaurants.commercial');
-  await assertFeatureOn('referral', { restaurantId: data.restaurantId }, 'Le parrainage n’est pas ouvert pour le moment.');
+  // Interrupteur « Parrainage » : vérifié dans `linkRestaurantReferral` elle-même (reason
+  // `feature_off`), commun à tous les appelants.
   const outcome = await linkRestaurantReferral(data.restaurantId, data.code);
   if (!outcome.applied) throw fail.precondition(REASON_MESSAGES[outcome.reason] ?? 'Ce code ne peut pas être utilisé.');
   void actor;
@@ -199,6 +209,8 @@ export const applyReferralCode = callable(z.object({ code: z.string().trim().min
       qualifyingOrderId: null,
       referrerRewardCents: 0,
       refereeRewardCents: 0,
+      cityId: profile.cityId ?? null,
+      countryId: profile.countryId ?? null,
       createdAt: now,
       qualifiedAt: null,
       rewardedAt: null,

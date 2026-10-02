@@ -22,7 +22,7 @@ import { actorFromCaller, SYSTEM_ACTOR, writeAudit } from '../../lib/audit';
 import { callable } from '../../lib/callable';
 import { fail } from '../../lib/errors';
 import { isFeatureOn } from '../../lib/features';
-import { requireAdmin } from '../../lib/permissions';
+import { assertAdminCovers, requireAdmin } from '../../lib/permissions';
 import { z, zId, zReason } from '../../lib/validation';
 import { fillVariables, loadReferralSettings, pushInApp } from './common';
 
@@ -246,6 +246,10 @@ export const onRestaurantActivatedReferral = onDocumentWritten({ document: `${CO
   const before = event.data?.before.data() as Restaurant | undefined;
   const after = event.data?.after.data() as Restaurant | undefined;
   if (!after || after.status !== 'active' || before?.status === 'active') return;
+  // Interrupteur « Parrainage » (§24) : la branche « commande » (onFirstOrderReferral) le
+  // vérifiait déjà avant d'appeler rewardRestaurant ; cette branche « activation » ne le
+  // vérifiait jamais — une prime pouvait être versée à l'activation même le flag éteint.
+  if (!(await isFeatureOn('referral', { restaurantId: event.params.restaurantId, cityId: after.cityId, countryId: after.countryId }))) return;
   try {
     await rewardRestaurant({ restaurantId: event.params.restaurantId, countryId: after.countryId, cityId: after.cityId }, 'activation');
   } catch (error) {
@@ -280,12 +284,13 @@ export const onFirstOrderReferral = onDocumentWritten(`${COLLECTIONS.orders}/{or
 export const decideReferral = callable(
   z.object({ referralId: zId, decision: z.enum(['reject', 'mark_paid']), reason: zReason }),
   async (data, request) => {
-    const { caller } = await requireAdmin(request, 'loyalty.edit');
+    const { caller, admin } = await requireAdmin(request, 'loyalty.edit');
     const ref = db.collection(COLLECTIONS.referrals).doc(data.referralId);
     const before = await db.runTransaction(async (tx) => {
       const snap = await tx.get(ref);
       const r = snap.data() as Referral | undefined;
       if (!r) throw fail.notFound('Parrainage');
+      assertAdminCovers(admin, r.cityId ?? null);
       const now = Timestamp.now();
       if (data.decision === 'reject') {
         if (!['pending', 'qualified'].includes(r.status)) throw fail.precondition('Ce parrainage est déjà récompensé ou clos.');

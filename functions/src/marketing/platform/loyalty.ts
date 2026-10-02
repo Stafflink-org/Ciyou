@@ -157,28 +157,41 @@ export const redeemLoyaltyPoints = callable(z.object({ points: z.number().int().
   const caller = requireAuth(request);
   const uid = caller.uid;
   const accountId = data.restaurantId ? `${uid}_${data.restaurantId}` : uid;
+  const userRef = db.collection(COLLECTIONS.users).doc(uid);
 
   let tier: { points: number; valueCents: number };
   let costAccount: { accountType: 'platform' | 'restaurant'; accountId: string };
+  let geo: { cityId: string | null; countryId: string | null };
   if (data.restaurantId) {
-    const programSnap = await db.collection(COLLECTIONS.restaurants).doc(data.restaurantId).collection(SUBCOLLECTIONS.restaurants.settings).doc(RESTAURANT_SETTINGS_DOCS.loyalty).get();
+    const [programSnap, restaurantSnap] = await Promise.all([
+      db.collection(COLLECTIONS.restaurants).doc(data.restaurantId).collection(SUBCOLLECTIONS.restaurants.settings).doc(RESTAURANT_SETTINGS_DOCS.loyalty).get(),
+      db.collection(COLLECTIONS.restaurants).doc(data.restaurantId).get(),
+    ]);
     const program = programSnap.data() as RestaurantLoyaltySettings | undefined;
+    const restaurant = restaurantSnap.data() as { cityId?: string | null; countryId?: string | null } | undefined;
+    // Interrupteur « Fidélité » (§24) : un commerce/ville/pays éteint ne doit pas non plus laisser
+    // échanger un solde déjà acquis (sinon le coupe-circuit n'arrête que les nouveaux gains).
+    if (!(await isFeatureOn('loyalty', { restaurantId: data.restaurantId, cityId: restaurant?.cityId ?? null, countryId: restaurant?.countryId ?? null }))) {
+      throw fail.precondition('Le programme de fidélité de ce commerce n’est pas ouvert pour le moment.');
+    }
     if (!program?.enabled) throw fail.precondition('Le programme de fidélité de ce commerce n’est pas ouvert pour le moment.');
     const reward = (program.rewards ?? []).find((r) => r.points === data.points);
     if (!reward) throw fail.invalid('Ce palier n’existe pas : choisissez un palier proposé par ce commerce.');
     tier = { points: reward.points, valueCents: reward.rewardCents };
     costAccount = { accountType: 'restaurant', accountId: data.restaurantId };
+    geo = { cityId: restaurant?.cityId ?? null, countryId: restaurant?.countryId ?? null };
   } else {
-    const settings = await loadLoyaltySettings();
+    const [settings, userSnap] = await Promise.all([loadLoyaltySettings(), userRef.get()]);
+    const profile = userSnap.data() as UserProfile | undefined;
     if (!settings.enabled) throw fail.precondition('Le programme de fidélité n’est pas ouvert pour le moment.');
-    await assertFeatureOn('loyalty', {}, 'Le programme de fidélité n’est pas ouvert pour le moment.');
+    await assertFeatureOn('loyalty', { cityId: profile?.cityId ?? null, countryId: profile?.countryId ?? null }, 'Le programme de fidélité n’est pas ouvert pour le moment.');
     const found = settings.rewards.find((r) => r.points === data.points);
     if (!found) throw fail.invalid('Ce palier n’existe pas : choisissez un palier proposé par le programme.');
     tier = { points: found.points, valueCents: found.valueCents };
     costAccount = { accountType: 'platform', accountId: 'golink' };
+    geo = { cityId: profile?.cityId ?? null, countryId: profile?.countryId ?? null };
   }
 
-  const userRef = db.collection(COLLECTIONS.users).doc(uid);
   // Filtré par `accountId` (pas `userId`) : un même client peut avoir un compte plateforme et un ou
   // plusieurs comptes restaurant qui partagent le même `userId` (cf. `expireLoyaltyPoints` ci-dessus,
   // même précaution) — filtrer par `userId` consommerait les lots d'un autre compte que celui débité.
@@ -212,7 +225,9 @@ export const redeemLoyaltyPoints = callable(z.object({ points: z.number().int().
     tx.set(walletTxRef, wallet);
     tx.update(userRef, { walletBalanceCents: balanceAfter, updatedAt: now });
     const day = parisDay();
-    const base = { currency: 'EUR' as const, bookingDate: day, countryId: 'FR', cityId: null, description: `Fidélité : ${data.points} points échangés`, createdAt: now, createdBy: 'system' };
+    // Pays/ville du commerce (programme restaurant) ou du client (programme plateforme), jamais
+    // "FR" codé en dur : nécessaire dès qu'un marché hors France a ce programme actif (Luxembourg).
+    const base = { currency: 'EUR' as const, bookingDate: day, countryId: geo.countryId ?? 'FR', cityId: geo.cityId, description: `Fidélité : ${data.points} points échangés`, createdAt: now, createdBy: 'system' };
     const credit: LedgerEntry = { ...base, accountType: 'customer_wallet', accountId: uid, type: 'wallet_credit', amountCents: tier.valueCents };
     tx.set(db.collection(COLLECTIONS.ledgerEntries).doc(`wc-${walletTxRef.id}`), credit);
     // Coût du programme supporté par la plateforme, ou par le commerce pour son propre programme.
