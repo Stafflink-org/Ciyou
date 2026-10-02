@@ -89,7 +89,7 @@ export function RestaurantScreen({ route, navigation }: Props) {
         {restaurant?.cover?.url ? <Image source={{ uri: restaurant.cover.url }} style={styles.cover} /> : <View style={[styles.cover, styles.coverFallback]} />}
         <View style={styles.body}>
           <Text variant="eyebrow" color="muted">
-            {[restaurant?.cuisineIds[0], restaurant?.address.city].filter(Boolean).join(' · ').toUpperCase()}
+            {[restaurant?.cuisineIds?.[0], restaurant?.address?.city].filter(Boolean).join(' · ').toUpperCase()}
           </Text>
           <View style={styles.titleRow}>
             <Text variant="title" style={{ flex: 1 }}>
@@ -109,8 +109,8 @@ export function RestaurantScreen({ route, navigation }: Props) {
             {restaurant?.description ?? ''}
           </Text>
           <View style={styles.metaRow}>
-            <Badge label={`★ ${(restaurant?.rating.average ?? 0).toFixed(1)}`} tone="primary" />
-            <Badge label={t('etaMinutes', { min: restaurant?.etaMinutes.min ?? 20, max: restaurant?.etaMinutes.max ?? 35 })} tone="neutral" />
+            <Badge label={`★ ${(restaurant?.rating?.average ?? 0).toFixed(1)}`} tone="primary" />
+            <Badge label={t('etaMinutes', { min: restaurant?.etaMinutes?.min ?? 20, max: restaurant?.etaMinutes?.max ?? 35 })} tone="neutral" />
             <Badge label={restaurant?.ownDeliveryFeeCents != null ? t('deliveryFee', { price: (restaurant.ownDeliveryFeeCents / 100).toFixed(2).replace('.', ',') }) : t('freeDelivery')} tone="neutral" />
           </View>
         </View>

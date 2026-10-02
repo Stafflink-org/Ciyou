@@ -46,7 +46,7 @@ export function OrderTrackingScreen({ route, navigation }: Props) {
   }
 
   const steps = trackingSteps(order, t);
-  const restaurantGeo = restaurant?.address.geo;
+  const restaurantGeo = restaurant?.address?.geo;
   const destGeo = order.delivery?.geo;
 
   return (

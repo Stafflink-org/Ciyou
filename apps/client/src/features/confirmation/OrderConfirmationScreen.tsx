@@ -68,7 +68,7 @@ export function OrderConfirmationScreen({ route, navigation }: Props) {
           {t('toPayDemo')}
         </Text>
         <Text variant="title" color="primary">
-          {money(order?.amounts.chargedCents ?? 0)}
+          {money(order?.amounts?.chargedCents ?? 0)}
         </Text>
         {scheduledLabel ? (
           <Text variant="body" style={{ marginTop: spacing.sm }}>

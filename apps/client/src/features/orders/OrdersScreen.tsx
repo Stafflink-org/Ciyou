@@ -64,7 +64,7 @@ export function OrdersScreen({ navigation }: Props) {
                 <Badge label={stepLabel(order.status, tTracking)} tone="primary" />
               </View>
               <Text variant="caption" color="muted" style={{ marginTop: 4 }}>
-                {t('itemsLine', { number: order.number, count: order.itemsCount, amount: money(order.amounts.totalCents) })}
+                {t('itemsLine', { number: order.number, count: order.itemsCount, amount: money(order.amounts?.totalCents ?? 0) })}
               </Text>
             </Card>
           ))}
@@ -81,7 +81,7 @@ export function OrdersScreen({ navigation }: Props) {
                 <Badge label={stepLabel(order.status, tTracking)} tone={STATUS_TONE[order.status] ?? 'neutral'} />
               </View>
               <Text variant="caption" color="muted" style={{ marginTop: 4 }}>
-                {t('itemsLine', { number: order.number, count: order.itemsCount, amount: money(order.amounts.totalCents) })}
+                {t('itemsLine', { number: order.number, count: order.itemsCount, amount: money(order.amounts?.totalCents ?? 0) })}
               </Text>
             </Card>
           ))}
