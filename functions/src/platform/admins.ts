@@ -40,8 +40,14 @@ export const updateAdminRole = platformCallable(
     const before = snap.data() as AdminUser;
     const touchesSuper = before.role === 'super_admin' || data.role === 'super_admin';
     if (touchesSuper && admin.role !== 'super_admin') throw fail.forbidden('Seul un super administrateur peut modifier un super administrateur.');
-    if (data.adminId === caller.uid && (data.role !== before.role || !data.active)) {
-      throw fail.forbidden('Vous ne pouvez pas modifier votre propre rôle ni désactiver votre compte.');
+    // Ne couvrait à l'origine que role/active : un titulaire de `admins.manage` pouvait s'appeler
+    // lui-même avec le même rôle pour élargir son propre périmètre (cityIds/countryIds) ou relever
+    // son propre plafond de remboursement personnel — auto-élévation de privilèges.
+    const sameCityIds = [...before.cityIds].sort().join(',') === [...data.cityIds].sort().join(',');
+    const sameCountryIds = [...before.countryIds].sort().join(',') === [...data.countryIds].sort().join(',');
+    const sameRefundLimit = (before.refundLimitCents ?? null) === data.refundLimitCents;
+    if (data.adminId === caller.uid && (data.role !== before.role || !data.active || !sameCityIds || !sameCountryIds || !sameRefundLimit)) {
+      throw fail.forbidden('Vous ne pouvez pas modifier votre propre rôle, périmètre, plafond de remboursement, ni désactiver votre compte.');
     }
     const scopedCityIds = await resolveCityScope(data.role, data.cityIds, data.countryIds);
     if ((CITY_SCOPED_ROLES as readonly string[]).includes(data.role) && scopedCityIds.length === 0) {

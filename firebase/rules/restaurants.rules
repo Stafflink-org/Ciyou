@@ -266,6 +266,9 @@ match /menuIssues/{issueId} {
 }
 
 match /posConnections/{connectionId} {
-  allow read: if can(resource.data.restaurantId, 'settings.manage') || isAdmin('integrations.view');
+  // `isAdmin('integrations.view')` seul laissait un admin restreint par ville lire la connexion
+  // caisse (webhook, URL) de n'importe quel restaurant hors de son périmètre.
+  allow read: if can(resource.data.restaurantId, 'settings.manage')
+    || isAdminIn('integrations.view', get(/databases/$(database)/documents/restaurants/$(resource.data.restaurantId)).data.cityId);
   allow write: if false;
 }

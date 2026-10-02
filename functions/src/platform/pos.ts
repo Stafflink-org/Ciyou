@@ -7,6 +7,7 @@
 // signature HMAC-SHA256 du corps avec un secret propre à la connexion (montré une seule fois,
 // jamais relisible : stocké dans posConnections/{id}/private/signing, inaccessible aux clients).
 import { createHash, createHmac, randomBytes } from 'node:crypto';
+import dns from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { COLLECTIONS, type Order, type PosConnection, type Restaurant } from '@golink/shared';
 import { logger } from 'firebase-functions/v2';
@@ -15,6 +16,7 @@ import { db, FieldValue, Timestamp } from '../lib/admin';
 import { SYSTEM_ACTOR, actorFromCaller, writeAudit } from '../lib/audit';
 import { assertFeatureOn, isFeatureOn, scopeOfRestaurant } from '../lib/features';
 import { fail } from '../lib/errors';
+import { assertAdminCovers } from '../lib/permissions';
 import { z, zId, zReason } from '../lib/validation';
 import { platformCallable, requireSecureAdmin } from './runtime';
 
@@ -40,6 +42,32 @@ export function assertPublicHttpsUrl(raw: string): URL {
   if (isIP(host) === 4 && privateV4.test(host)) throw fail.invalid('Cette adresse n’est pas publique : le webhook doit être joignable sur Internet.');
   if (isIP(host) === 6 || host.startsWith('[')) throw fail.invalid('Utilisez un nom de domaine plutôt qu’une adresse IPv6.');
   return url;
+}
+
+const PRIVATE_V4 = /^(10\.|127\.|0\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/;
+const PRIVATE_V6 = /^(::1|::|fe80:|fc[0-9a-f]{2}:|fd[0-9a-f]{2}:)/i;
+
+/**
+ * `assertPublicHttpsUrl` ne refuse qu'une adresse IP littérale ou un suffixe de nom connu — un
+ * nom de domaine public (`webhooks.exemple.com`) dont l'enregistrement DNS pointe vers une IP
+ * privée ou le serveur de métadonnées du cloud (169.254.169.254) le traversait sans contrôle
+ * (SSRF). Résolution DNS réelle avant tout appel sortant, à l'enregistrement ET à chaque envoi
+ * (pas seulement à l'enregistrement, pour réduire la fenêtre d'un changement de DNS après coup).
+ * Limite assumée : fenêtre de temps résiduelle entre cette résolution et la connexion effective
+ * de `fetch` (re-résolution possible par l'OS) — hors de portée sans un dispatcher HTTP qui épingle
+ * l'IP résolue, non disponible avec le `fetch` global de ce runtime.
+ */
+async function assertResolvesToPublicIp(hostname: string): Promise<void> {
+  let addresses: Array<{ address: string; family: number }>;
+  try {
+    addresses = await dns.lookup(hostname, { all: true });
+  } catch {
+    throw fail.invalid('Impossible de résoudre ce nom de domaine : vérifiez l’adresse du webhook.');
+  }
+  for (const { address, family } of addresses) {
+    if (family === 4 && PRIVATE_V4.test(address)) throw fail.invalid('Cette adresse n’est pas publique : le webhook doit être joignable sur Internet.');
+    if (family === 6 && PRIVATE_V6.test(address)) throw fail.invalid('Cette adresse n’est pas publique : le webhook doit être joignable sur Internet.');
+  }
 }
 
 function sign(secret: string, body: string): string {
@@ -79,6 +107,11 @@ async function deliver(connectionId: string, connection: Connection, event: stri
   const secret = (await signingRef(connectionId).get()).get('secret') as string | undefined;
   if (!secret) return { ok: false, status: null, error: 'Secret de signature absent.' };
   const url = assertPublicHttpsUrl(connection.webhookUrl);
+  try {
+    await assertResolvesToPublicIp(url.hostname);
+  } catch (error) {
+    return { ok: false, status: null, error: (error instanceof Error ? error.message : String(error)).slice(0, 200) };
+  }
   const body = JSON.stringify({ event, deliveryId, sentAt: new Date().toISOString(), data });
   try {
     const response = await fetch(url, {
@@ -128,12 +161,14 @@ const connectionSchema = z.object({
 
 /** Crée ou modifie la connexion caisse d'un commerce. À la création, le secret de signature est renvoyé une seule fois. */
 export const savePosConnection = platformCallable(connectionSchema, async (data, request) => {
-  const { caller } = await requireSecureAdmin(request, 'integrations.edit');
+  const { caller, admin } = await requireSecureAdmin(request, 'integrations.edit');
   const restaurantSnap = await db.collection(COLLECTIONS.restaurants).doc(data.restaurantId).get();
   if (!restaurantSnap.exists) throw fail.notFound('Restaurant');
   const restaurant = restaurantSnap.data() as Restaurant;
+  assertAdminCovers(admin, restaurant.cityId);
   await assertFeatureOn('pos_integration', scopeOfRestaurant(restaurant, data.restaurantId), 'L’intégration caisse est désactivée pour ce commerce : activez d’abord la fonctionnalité « Intégration caisse ».');
-  assertPublicHttpsUrl(data.webhookUrl);
+  const webhookUrl = assertPublicHttpsUrl(data.webhookUrl);
+  await assertResolvesToPublicIp(webhookUrl.hostname);
   const col = db.collection(COLLECTIONS.posConnections);
   const ref = data.connectionId ? col.doc(data.connectionId) : col.doc();
   const existing = await ref.get();
@@ -166,11 +201,13 @@ export const savePosConnection = platformCallable(connectionSchema, async (data,
 
 /** Envoie un événement de test signé et met à jour l'état de la connexion. */
 export const testPosConnection = platformCallable(z.object({ connectionId: zId, reason: zReason }), async (data, request) => {
-  const { caller } = await requireSecureAdmin(request, 'integrations.edit');
+  const { caller, admin } = await requireSecureAdmin(request, 'integrations.edit');
   const ref = db.collection(COLLECTIONS.posConnections).doc(data.connectionId);
   const snap = await ref.get();
   if (!snap.exists) throw fail.notFound('Connexion caisse');
   const connection = snap.data() as Connection;
+  const restaurantSnap = await db.collection(COLLECTIONS.restaurants).doc(connection.restaurantId).get();
+  assertAdminCovers(admin, (restaurantSnap.data() as Restaurant | undefined)?.cityId);
   const deliveryId = `test-${Date.now().toString(36)}`;
   const result = await deliver(ref.id, connection, 'ping', { message: 'Test de connexion Ciyou Eats', restaurantId: connection.restaurantId }, deliveryId);
   await recordDelivery(ref.id, connection, 'ping', null, deliveryId, result);
@@ -187,11 +224,13 @@ export const testPosConnection = platformCallable(z.object({ connectionId: zId, 
 
 /** Coupe la connexion : plus aucune commande n'est transmise. */
 export const disconnectPosConnection = platformCallable(z.object({ connectionId: zId, reason: zReason }), async (data, request) => {
-  const { caller } = await requireSecureAdmin(request, 'integrations.edit');
+  const { caller, admin } = await requireSecureAdmin(request, 'integrations.edit');
   const ref = db.collection(COLLECTIONS.posConnections).doc(data.connectionId);
   const snap = await ref.get();
   if (!snap.exists) throw fail.notFound('Connexion caisse');
   const connection = snap.data() as Connection;
+  const restaurantSnap = await db.collection(COLLECTIONS.restaurants).doc(connection.restaurantId).get();
+  assertAdminCovers(admin, (restaurantSnap.data() as Restaurant | undefined)?.cityId);
   await ref.update({ status: 'disconnected', pushOrders: false, updatedAt: Timestamp.now(), updatedBy: caller.uid });
   await writeAudit({
     actor: actorFromCaller(caller, 'admin'),
