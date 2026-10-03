@@ -8,6 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { AuthProvider } from './src/auth/AuthContext';
 import { I18nProvider } from './src/i18n/I18nProvider';
+import { GoogleMapsLoaderProvider } from './src/lib/googleMapsLoader';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { colors } from './src/theme/tokens';
 import { ErrorBoundary } from './src/ui/ErrorBoundary';
@@ -32,11 +33,13 @@ export default function App() {
         <I18nProvider>
           <AuthProvider>
             <ToastProvider>
-              <NavigationContainer theme={navigationTheme}>
-                <ErrorBoundary>
-                  <RootNavigator />
-                </ErrorBoundary>
-              </NavigationContainer>
+              <GoogleMapsLoaderProvider>
+                <NavigationContainer theme={navigationTheme}>
+                  <ErrorBoundary>
+                    <RootNavigator />
+                  </ErrorBoundary>
+                </NavigationContainer>
+              </GoogleMapsLoaderProvider>
             </ToastProvider>
           </AuthProvider>
         </I18nProvider>

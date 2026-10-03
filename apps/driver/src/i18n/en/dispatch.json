@@ -110,6 +110,12 @@
     "toRemit": "To remit",
     "limitLine": "Limit {{amount}} · to hand over to your merchant"
   },
+  "ordersMap": {
+    "empty": "No order to place on the map.",
+    "title": "Your deliveries",
+    "subtitle": "Tap a pin to see an order's details.",
+    "backToList": "Back to the map"
+  },
   "routeMap": {
     "notConfigured": "Mapping not configured, contact your administrator.",
     "embedDisabled": "Route temporarily unavailable (mapping not enabled server-side), contact your administrator."
