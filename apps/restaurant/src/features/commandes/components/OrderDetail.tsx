@@ -72,9 +72,9 @@ const EVENT_TONES: Partial<Record<OrderEvent['type'], Tone>> = {
 
 const STATUS_EVENT_TONES: Partial<Record<OrderStatus, Tone>> = {
   preparing: 'amber',
-  ready: 'teal',
+  ready: 'info',
   assigned: 'info',
-  picked_up: 'info',
+  picked_up: 'success',
   delivered: 'success',
   cancelled: 'danger',
 };

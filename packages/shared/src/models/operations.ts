@@ -473,9 +473,9 @@ export const ADMIN_ORDER_STATUS_TONES: Record<OrderStatus, 'neutral' | 'brand' |
   new: 'brand',
   accepted: 'neutral',
   preparing: 'amber',
-  ready: 'teal',
-  assigned: 'plum',
-  picked_up: 'info',
+  ready: 'info',
+  assigned: 'info',
+  picked_up: 'success',
   delivered: 'success',
   cancelled: 'danger',
 };
