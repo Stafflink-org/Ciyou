@@ -52,7 +52,21 @@
     "pickupError": "Impossible de marquer la commande récupérée.",
     "completeMissingCode": "Demandez au client le code affiché dans son application.",
     "completeSuccess": "Commande livrée. Bonne route !",
-    "completeError": "Impossible de terminer la livraison."
+    "completeError": "Impossible de terminer la livraison.",
+    "startRoute": "Démarrer la course",
+    "navAppTitle": "Choisir l’application de navigation",
+    "navAppGoogleMaps": "Google Maps",
+    "navAppWaze": "Waze",
+    "navAppPlans": "Plans",
+    "navAppCancel": "Annuler",
+    "navAppUnavailable": "Aucune application de navigation disponible sur cet appareil.",
+    "cancelAssignment": "Annuler l’acceptation",
+    "cancelAssignmentConfirmTitle": "Annuler cette course ?",
+    "cancelAssignmentConfirmMessage": "La commande sera proposée à un autre livreur. Cette action est immédiate.",
+    "cancelAssignmentDismiss": "Garder la course",
+    "cancelAssignmentConfirmButton": "Oui, annuler",
+    "cancelAssignmentSuccess": "Acceptation annulée.",
+    "cancelAssignmentError": "Impossible d’annuler votre acceptation."
   },
   "empty": {
     "noOrderTitle": "Aucune course pour le moment",

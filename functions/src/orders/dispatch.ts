@@ -2,6 +2,7 @@
 // proche du restaurant est attribué directement (proposition acceptée tracée dans
 // dispatchOffers). Le dispatch avancé (propositions, élargissement du rayon) peut
 // remplacer `dispatchOrder` en conservant la même signature.
+import { logger } from 'firebase-functions/v2';
 import { assertDriverCanTakeOrder } from '../finance/argent/cash';
 import {
   buildSearchKeywords,
@@ -25,6 +26,7 @@ import { db, FieldValue, Timestamp } from '../lib/admin';
 import { ordersCallable as callable } from './runtime';
 import { advancedDispatchEnabled, advancedDispatchOrder } from './dispatch-advanced';
 import { fail } from '../lib/errors';
+import { requireAuth } from '../lib/permissions';
 import { z, zId } from '../lib/validation';
 import {
   addEvent,
@@ -273,4 +275,86 @@ export const assignOwnCourier = callable(z.object({ orderId: zId, driverId: zId 
   );
   if (!result.assigned) throw fail.precondition('Un livreur est déjà attribué à cette commande.');
   return { driverName: result.driverName };
+});
+
+/**
+ * Le livreur annule lui-même son acceptation avant de récupérer la commande (app
+ * livreur, écran de détail après acceptation — document client « Points à corriger »,
+ * App livreur §1). Possible uniquement tant qu'il n'a pas encore récupéré la commande
+ * ; la recherche d'un autre livreur Ciyou Eats repart ensuite automatiquement, comme
+ * après un refus d'offre (`respondToOffer`). Les livreurs propres du restaurant
+ * (`deliveredBy: 'restaurant'`) ne passent pas par ce flux.
+ */
+export const cancelDriverAssignment = callable(z.object({ orderId: zId }), async (data, request) => {
+  const caller = requireAuth(request);
+  const order = await loadOrder(data.orderId);
+  if (order.driverId !== caller.uid) throw fail.forbidden();
+  if (order.fulfillment !== 'delivery' || order.delivery?.deliveredBy !== 'platform') {
+    throw fail.precondition('Cette commande n’est pas livrée par la flotte Ciyou Eats.');
+  }
+  if (order.status !== 'assigned') throw fail.precondition('Vous ne pouvez plus annuler : la commande a déjà été récupérée.');
+  const actor: EventActor = { type: 'driver', uid: caller.uid, name: order.delivery?.driverName ?? caller.name };
+
+  await db.runTransaction(async (tx) => {
+    const state = await readDriver(tx, caller.uid);
+    const fresh = (await tx.get(orderRef(data.orderId))).data() as Order;
+    if (fresh.driverId !== caller.uid) throw fail.precondition('Cette commande ne vous est plus attribuée.');
+    if (fresh.status !== 'assigned') throw fail.precondition('Vous ne pouvez plus annuler : la commande a déjà été récupérée.');
+    // Offre marquée « cancelled » (et non laissée « accepted ») pour que le moteur de dispatch
+    // avancé l'exclue de la relance immédiate (`previousOffers`, dispatch-advanced.ts) — sans
+    // quoi, livreur unique disponible sur la ville, il se retrouverait réattribué à lui-même.
+    // Si aucune offre n'existe pour ce livreur sur cette commande (attribution directe, sans
+    // passer par le cycle offre/acceptation), une offre « cancelled » est créée pour porter
+    // cette exclusion malgré tout.
+    const acceptedOffers = await tx.get(
+      db.collection(COLLECTIONS.dispatchOffers).where('orderId', '==', data.orderId).where('driverId', '==', caller.uid).where('status', '==', 'accepted'),
+    );
+    const at = Timestamp.now();
+    if (acceptedOffers.empty) {
+      tx.set(db.collection(COLLECTIONS.dispatchOffers).doc(), {
+        orderId: data.orderId,
+        driverId: caller.uid,
+        restaurantId: fresh.restaurantId,
+        cityId: fresh.cityId,
+        zoneId: fresh.delivery?.zoneId ?? null,
+        round: fresh.delivery?.dispatchRound ?? 1,
+        status: 'cancelled',
+        distanceToRestaurantMeters: 0,
+        deliveryDistanceMeters: fresh.delivery?.distanceMeters ?? 0,
+        estimatedPayCents: 0,
+        estimatedMinutes: 0,
+        offeredAt: at,
+        expiresAt: at,
+        respondedAt: at,
+      });
+    } else {
+      for (const doc of acceptedOffers.docs) tx.update(doc.ref, { status: 'cancelled', respondedAt: at });
+    }
+    releaseDriverInTransaction(tx, caller.uid, data.orderId, state.driver, state.location);
+    tx.update(orderRef(data.orderId), {
+      driverId: null,
+      'delivery.driverId': null,
+      'delivery.driverName': null,
+      'delivery.driverPhoneMasked': null,
+      'delivery.driverVehicle': null,
+      'delivery.dispatchStatus': null,
+      'delivery.dispatchRound': 0,
+      'delivery.dispatchOfferId': null,
+      status: 'ready',
+      updatedAt: at,
+    });
+    addEvent(tx, data.orderId, actor, {
+      type: 'driver_unassigned',
+      from: 'assigned',
+      to: 'ready',
+      visibleToCustomer: false,
+      message: 'Le livreur a annulé son acceptation.',
+      data: { driverId: caller.uid },
+    }, at);
+  });
+
+  await advancedDispatchOrder(data.orderId, SYSTEM_EVENT_ACTOR).catch((error: unknown) =>
+    logger.warn('Relance après annulation du livreur impossible', { orderId: data.orderId, error: String(error) }),
+  );
+  return { status: 'ready' as const };
 });

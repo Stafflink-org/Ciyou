@@ -52,7 +52,21 @@
     "pickupError": "Unable to mark the order as picked up.",
     "completeMissingCode": "Ask the customer for the code shown in their app.",
     "completeSuccess": "Order delivered. Safe travels!",
-    "completeError": "Unable to complete the delivery."
+    "completeError": "Unable to complete the delivery.",
+    "startRoute": "Start the trip",
+    "navAppTitle": "Choose a navigation app",
+    "navAppGoogleMaps": "Google Maps",
+    "navAppWaze": "Waze",
+    "navAppPlans": "Maps",
+    "navAppCancel": "Cancel",
+    "navAppUnavailable": "No navigation app available on this device.",
+    "cancelAssignment": "Cancel acceptance",
+    "cancelAssignmentConfirmTitle": "Cancel this delivery?",
+    "cancelAssignmentConfirmMessage": "The order will be offered to another driver. This is immediate.",
+    "cancelAssignmentDismiss": "Keep the delivery",
+    "cancelAssignmentConfirmButton": "Yes, cancel",
+    "cancelAssignmentSuccess": "Acceptance cancelled.",
+    "cancelAssignmentError": "Unable to cancel your acceptance."
   },
   "empty": {
     "noOrderTitle": "No delivery right now",

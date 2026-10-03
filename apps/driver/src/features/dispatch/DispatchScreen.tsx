@@ -7,7 +7,7 @@
 // n'est simulé : pas d'adresse ni de montant codés en dur (contrairement à la
 // maquette Replit, volontairement pauvre pour cet espace — voir §1.6).
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useAuth } from '../../auth/AuthContext';
 import { colors, radius, spacing } from '../../theme/tokens';
 import { useGoogleMapsRuntime } from '../../lib/mapsKey';
@@ -23,6 +23,7 @@ import { CashBalanceCard, CustomerAbsentPanel, MessagingPanel } from './ActiveOr
 import { Countdown, InfoRow } from './components';
 import { RouteMap } from './RouteMap';
 import {
+  cancelDriverAssignment,
   completeOrder,
   markOrderPickedUp,
   respondToOffer,
@@ -41,6 +42,21 @@ import {
 
 const money = (cents: number) => `${(cents / 100).toFixed(2).replace('.', ',')} €`;
 const km = (meters: number) => `${(meters / 1000).toFixed(1).replace('.', ',')} km`;
+
+type NavApp = 'google' | 'waze' | 'native';
+
+/** Lien externe vers l'app de navigation choisie, destination au format lat/lng. */
+function navigationUrl(app: NavApp, dest: { lat: number; lng: number }): string {
+  const { lat, lng } = dest;
+  switch (app) {
+    case 'google':
+      return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+    case 'waze':
+      return `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
+    case 'native':
+      return Platform.OS === 'ios' ? `maps://?daddr=${lat},${lng}&dirflg=d` : `geo:${lat},${lng}?q=${lat},${lng}`;
+  }
+}
 
 export function DispatchScreen() {
   const { user } = useAuth();
@@ -72,6 +88,7 @@ export function DispatchScreen() {
 
   const [offerBusy, setOfferBusy] = useState(false);
   const [orderBusy, setOrderBusy] = useState(false);
+  const [cancelBusy, setCancelBusy] = useState(false);
   const [handoverCode, setHandoverCode] = useState('');
   const [collectionCode, setCollectionCode] = useState('');
 
@@ -127,6 +144,26 @@ export function DispatchScreen() {
     }
   };
 
+  const doCancelAssignment = async () => {
+    if (!activeOrderId) return;
+    setCancelBusy(true);
+    try {
+      await cancelDriverAssignment({ orderId: activeOrderId });
+      toast.show(t('activeOrder.cancelAssignmentSuccess'));
+    } catch (err) {
+      toast.show(errorMessage(err, t, t('activeOrder.cancelAssignmentError')), 'danger');
+    } finally {
+      setCancelBusy(false);
+    }
+  };
+
+  const cancelAssignment = () => {
+    Alert.alert(t('activeOrder.cancelAssignmentConfirmTitle'), t('activeOrder.cancelAssignmentConfirmMessage'), [
+      { text: t('activeOrder.cancelAssignmentDismiss'), style: 'cancel' },
+      { text: t('activeOrder.cancelAssignmentConfirmButton'), style: 'destructive', onPress: () => void doCancelAssignment() },
+    ]);
+  };
+
   const geo = useMemo(() => {
     const p = location?.position;
     return p ? { lat: p.latitude, lng: p.longitude } : null;
@@ -139,6 +176,29 @@ export function DispatchScreen() {
   const clientGeo = activeOrder?.delivery?.geo ? { lat: activeOrder.delivery.geo.latitude, lng: activeOrder.delivery.geo.longitude } : null;
   const routeOrigin = geo ?? restaurantGeo;
   const routeDestination = activeOrder?.status === 'picked_up' ? clientGeo : restaurantGeo;
+
+  const openNavigation = async (app: NavApp, dest: { lat: number; lng: number }) => {
+    try {
+      await Linking.openURL(navigationUrl(app, dest));
+    } catch {
+      toast.show(t('activeOrder.navAppUnavailable'), 'danger');
+    }
+  };
+
+  const startRoute = () => {
+    if (!routeDestination) return;
+    const dest = routeDestination;
+    if (Platform.OS === 'web') {
+      void openNavigation('google', dest);
+      return;
+    }
+    Alert.alert(t('activeOrder.navAppTitle'), undefined, [
+      { text: t('activeOrder.navAppGoogleMaps'), onPress: () => void openNavigation('google', dest) },
+      { text: t('activeOrder.navAppWaze'), onPress: () => void openNavigation('waze', dest) },
+      { text: t('activeOrder.navAppPlans'), onPress: () => void openNavigation('native', dest) },
+      { text: t('activeOrder.navAppCancel'), style: 'cancel' },
+    ]);
+  };
 
   const complete = async () => {
     if (!activeOrderId) return;
@@ -226,8 +286,9 @@ export function DispatchScreen() {
             />
 
             {routeOrigin && routeDestination ? (
-              <View style={{ marginTop: spacing.md }}>
+              <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
                 <RouteMap apiKey={mapsKey} embedActivated={embedActivated} origin={routeOrigin} destination={routeDestination} />
+                <Button label={t('activeOrder.startRoute')} variant="outline" onPress={startRoute} />
               </View>
             ) : null}
 
@@ -237,6 +298,7 @@ export function DispatchScreen() {
                   <Input label={t('activeOrder.collectionCodeLabel')} value={collectionCode} onChangeText={setCollectionCode} keyboardType="number-pad" placeholder="1234" maxLength={12} />
                 ) : null}
                 <Button label={t('activeOrder.markPickedUp')} onPress={markPickedUp} loading={orderBusy} />
+                <Button label={t('activeOrder.cancelAssignment')} variant="outline" onPress={cancelAssignment} loading={cancelBusy} />
               </View>
             ) : null}
             {activeOrder.status === 'picked_up' ? (

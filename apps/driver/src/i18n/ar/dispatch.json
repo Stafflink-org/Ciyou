@@ -52,7 +52,21 @@
     "pickupError": "تعذّر تسجيل استلام الطلب.",
     "completeMissingCode": "اطلب من العميل الرمز المعروض في تطبيقه.",
     "completeSuccess": "تم تسليم الطلب. رحلة موفقة!",
-    "completeError": "تعذّر إنهاء التوصيل."
+    "completeError": "تعذّر إنهاء التوصيل.",
+    "startRoute": "بدء الرحلة",
+    "navAppTitle": "اختر تطبيق التنقل",
+    "navAppGoogleMaps": "خرائط Google",
+    "navAppWaze": "Waze",
+    "navAppPlans": "الخرائط",
+    "navAppCancel": "إلغاء",
+    "navAppUnavailable": "لا يوجد تطبيق تنقل متاح على هذا الجهاز.",
+    "cancelAssignment": "إلغاء القبول",
+    "cancelAssignmentConfirmTitle": "إلغاء هذه التوصيلة؟",
+    "cancelAssignmentConfirmMessage": "سيتم عرض الطلب على سائق آخر. هذا الإجراء فوري.",
+    "cancelAssignmentDismiss": "الاحتفاظ بالتوصيلة",
+    "cancelAssignmentConfirmButton": "نعم، إلغاء",
+    "cancelAssignmentSuccess": "تم إلغاء القبول.",
+    "cancelAssignmentError": "تعذّر إلغاء قبولك."
   },
   "empty": {
     "noOrderTitle": "لا يوجد طلب توصيل حاليًا",
