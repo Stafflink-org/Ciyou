@@ -34,7 +34,7 @@ import { SanctionDialog } from './dialogs';
 import { DriversShell } from './shell';
 
 type View = 'contested' | 'active' | 'all';
-type Sanction = WithId<DriverSanction & { createdByName?: string; cityId?: string }>;
+type Sanction = WithId<DriverSanction & { createdByName?: string; cityId?: string | null }>;
 
 export const SANCTION_STATUS_META: Record<SanctionStatus, { label: string; tone: Tone }> = {
   active: { label: 'En cours', tone: 'amber' },
@@ -48,7 +48,7 @@ const TYPE_TONES: Record<DriverSanction['type'], Tone> = { warning: 'amber', tem
 
 export function useDriverSanctions() {
   const q = useMemo(() => query(collection(db, COLLECTIONS.driverSanctions), orderBy('createdAt', 'desc'), limit(300)), []);
-  return useCollection<DriverSanction & { createdByName?: string; cityId?: string }>(q);
+  return useCollection<DriverSanction & { createdByName?: string; cityId?: string | null }>(q);
 }
 
 export function SanctionsPage() {
