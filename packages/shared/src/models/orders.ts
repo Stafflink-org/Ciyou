@@ -99,6 +99,10 @@ export interface OrderDelivery {
   promisedFrom?: Timestamp | null;
   promisedTo?: Timestamp | null;
   estimatedArrivalAt?: Timestamp | null;
+  /** Posé une fois la notification « arrivée imminente » (≈1 min avant `estimatedArrivalAt`)
+   * envoyée au client, pour ne l'envoyer qu'une fois (document client « Points à corriger »,
+   * App livreur #2). */
+  arrivalReminderSentAt?: Timestamp | null;
   proof?: { type: 'photo' | 'code' | 'signature' | 'handover'; value?: string | null; at: Timestamp; geo?: GeoPoint | null } | null;
   /** Code à 4 chiffres pour la remise en main propre (alcool, montants élevés). */
   handoverCodeRequired: boolean;
