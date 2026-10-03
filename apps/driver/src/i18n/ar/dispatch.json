@@ -47,6 +47,12 @@
     "stepPickedUp": "في الطريق إلى العميل",
     "handoverCodeLabel": "رمز التسليم للعميل",
     "completeDelivery": "إنهاء التوصيل",
+    "collectedAsLabel": "تم التحصيل عبر",
+    "collectedAs": {
+      "cash": "نقدًا",
+      "meal_voucher": "قسيمة مطعم",
+      "card": "بطاقة (جهاز الدفع)"
+    },
     "pickupMissingCode": "اطلب من المتجر رمز الاستلام المعروض على شاشته.",
     "pickupSuccess": "تم استلام الطلب: في الطريق إلى العميل.",
     "pickupError": "تعذّر تسجيل استلام الطلب.",
@@ -108,7 +114,9 @@
     "eyebrow": "النقد بحوزتك",
     "overLimit": "الحد الأقصى متجاوَز",
     "toRemit": "بانتظار التسليم",
-    "limitLine": "الحد الأقصى {{amount}} · للتسليم إلى المتجر"
+    "limitLine": "الحد الأقصى {{amount}} · للتسليم إلى المتجر",
+    "mealVoucherLine": "قسائم المطعم المحتفظ بها: {{amount}}",
+    "cardTerminalLine": "البطاقة (جهاز الدفع) المحتفظ بها: {{amount}}"
   },
   "ordersMap": {
     "empty": "لا توجد طلبات لوضعها على الخريطة.",

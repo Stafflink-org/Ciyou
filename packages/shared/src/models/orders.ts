@@ -76,6 +76,13 @@ export interface OrderAmounts {
   currency: CurrencyCode;
 }
 
+/** Moyen réellement encaissé en personne par un livreur salarié à la remise (document client
+ * « Points à corriger », Backoffice resto #6) — distinct de `OrderPayment.method` (choisi par
+ * le client au panier, toujours « cash » pour un paiement à la livraison quel que soit le
+ * moyen réel utilisé sur place). */
+export const COLLECTED_PAYMENT_METHODS = ['cash', 'meal_voucher', 'card'] as const;
+export type CollectedPaymentMethod = (typeof COLLECTED_PAYMENT_METHODS)[number];
+
 export interface OrderPayment {
   method: PaymentMethod;
   status: PaymentStatus;
@@ -83,6 +90,10 @@ export interface OrderPayment {
   /** Libellé masqué affiché (« Visa ···· 4242 »). */
   label?: string | null;
   paidAt?: Timestamp | null;
+  /** Paiement à la livraison (`method: 'cash'`) uniquement : moyen réellement encaissé par le
+   * livreur (espèces, ticket restaurant papier ou carte via son terminal), saisi à la remise.
+   * Absent = espèces (comportement historique, rétrocompatible). */
+  collectedAs?: CollectedPaymentMethod | null;
 }
 
 export interface OrderDelivery {

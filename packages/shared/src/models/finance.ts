@@ -13,6 +13,7 @@ import type {
   RefundStatus,
   SubscriptionStatus,
 } from '../constants/enums';
+import type { CollectedPaymentMethod } from './orders';
 import type { Bps, Cents } from '../pricing/money';
 import type { PlanCode } from '../pricing/plans';
 import type { RefundAllocation, RefundCause } from '../pricing/policies';
@@ -369,6 +370,9 @@ export interface CashMovement {
   driverId: string;
   driverName?: string | null;
   type: 'collected' | 'remitted' | 'adjustment';
+  /** Moyen concerné (espèces, ticket restaurant, carte) ; absent = espèces, mouvements
+   * antérieurs à l'extension aux 3 moyens (Backoffice resto #6). */
+  method?: CollectedPaymentMethod;
   /** Positif = espèces détenues en plus ; négatif = remise ou correction. */
   amountCents: Cents;
   balanceAfterCents: Cents;
