@@ -28,7 +28,7 @@ import {
 import { useAdminAccess } from '@/auth/AdminAccess';
 import { useMutation } from '@/lib/firestore';
 import { bulkSummary, fn } from '../_operations/functions';
-import { useNames, useScopedDrivers } from '../_operations/hooks';
+import { useNames, useRestaurantsByIds, useScopedDrivers } from '../_operations/hooks';
 import { AvailabilityPill, DriverStatusPill, LoadError, pct } from '../_operations/ui';
 import { MessageDialog, SanctionDialog } from './dialogs';
 import { exportDriversCsv, todayIso, useContactMask } from './lib';
@@ -53,6 +53,14 @@ export function DriversPage() {
   const today = todayIso();
 
   const list = useMemo(() => drivers.data.filter((d) => !d.deletedAt), [drivers.data]);
+  // PDV (point de vente) des livreurs salariés d'un commerce (document client « Points à
+  // corriger », Super admin #3) : résolu par lots plutôt que de charger tous les commerces.
+  const restaurantIds = useMemo(() => list.flatMap((d) => (d.type === 'restaurant' ? d.restaurantIds : [])), [list]);
+  const restaurants = useRestaurantsByIds(restaurantIds);
+  const restaurantName = useMemo(() => {
+    const byId = new Map(restaurants.data.map((r) => [r.id, r.name]));
+    return (d: Row) => (d.type === 'restaurant' ? d.restaurantIds.map((id) => byId.get(id) ?? id).join(', ') || '—' : '—');
+  }, [restaurants.data]);
   const kpis = useMemo(() => {
     const active = list.filter((d) => d.status === 'active');
     return {
@@ -91,6 +99,11 @@ export function DriversPage() {
         id: 'type',
         header: 'Type',
         cell: ({ row }) => (row.original.type === 'platform' ? <Badge tone="brand" size="sm">Ciyou Eats</Badge> : <Badge tone="plum" size="sm">Salarié commerce</Badge>),
+      }),
+      col.accessor((d) => restaurantName(d), {
+        id: 'pdv',
+        header: 'PDV',
+        cell: ({ row }) => <span className="truncate text-sm text-fg-muted">{restaurantName(row.original)}</span>,
       }),
       col.accessor((d) => names.city(d.cityId), {
         id: 'city',
@@ -152,7 +165,7 @@ export function DriversPage() {
         },
       }),
     ],
-    [names, contact, today],
+    [names, contact, today, restaurantName],
   );
 
   const bulkActions: DataTableBulkAction<Row>[] = [
