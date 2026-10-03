@@ -15,18 +15,19 @@ function readMode(): ColorMode {
     const stored = window.localStorage.getItem(MODE_KEY);
     if (stored === 'light' || stored === 'dark') return stored;
   } catch {
-    // Stockage indisponible : on utilise le défaut sombre.
+    // Stockage indisponible : on utilise le défaut clair.
   }
-  // Défaut restaurant : sombre, aligné sur l'identité visuelle du super admin
-  // (retour client 2026-09-30 : le restaurant doit reposer sur le même visuel
-  // de base que l'admin). Le clair reste disponible via le sélecteur et
-  // mémorisé une fois choisi.
-  return 'dark';
+  // Défaut clair sur tout le backoffice (resto ET super admin) — charte Ciyou Eats transmise
+  // par le client (document "Points à corriger", 30/09/2026). Le sombre reste disponible via
+  // le sélecteur de chaque application et mémorisé une fois choisi (remplace l'ancien défaut
+  // sombre du resto, lui-même un retour client plus ancien du même jour — redemandé explicitement
+  // depuis : clair par défaut partout, bascule sombre généralisée au super admin aussi).
+  return 'light';
 }
 
 /**
- * Mode clair / sombre du thème restaurant, mémorisé par navigateur.
- * Le thème admin est sombre en permanence et n'utilise pas ce mode.
+ * Mode clair / sombre du thème, mémorisé par navigateur — commun au backoffice resto et au
+ * super admin (chacun bascule indépendamment, même clé de stockage partagée).
  */
 export function useColorMode(): { mode: ColorMode; setMode: (mode: ColorMode) => void; toggle: () => void } {
   const [mode, setModeState] = useState<ColorMode>(readMode);

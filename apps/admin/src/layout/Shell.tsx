@@ -1,9 +1,11 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router';
-import { LogOut } from 'lucide-react';
+import { LogOut, Moon, Sun } from 'lucide-react';
 import {
   AppShell,
   CommandPalette,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
   Logo,
   LogoMark,
   UserMenu,
@@ -29,6 +31,7 @@ import { NAV_GROUPS } from '@/app/navigation';
 import { useAdminAccess } from '@/auth/AdminAccess';
 import { PaletteSearchResults } from '@/features/recherche/PaletteResults';
 import { db } from '@/lib/firebase';
+import { useAppColorMode } from '@/app/color-mode';
 import { GeoScopeProvider, GeoScopeSelector } from './GeoScope';
 import { ImpersonationBanner } from './Impersonation';
 
@@ -81,6 +84,7 @@ function ShellLayout() {
   const { admin, can } = useAdminAccess();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const { t, locale, dir, labels, moduleLabel, groupLabel } = useShellI18n();
+  const { mode, toggle } = useAppColorMode();
   // Saisie de la palette : relayée à la recherche universelle (globalSearch).
   const [paletteSearch, setPaletteSearch] = useState('');
 
@@ -97,11 +101,23 @@ function ShellLayout() {
     () => [
       ...moduleCommands(MODULES, NAV_GROUPS, check, go, locale),
       {
+        heading: t('shell.preferences'),
+        items: [
+          {
+            id: 'mode',
+            label: mode === 'dark' ? t('shell.switchToLight') : t('shell.switchToDark'),
+            icon: mode === 'dark' ? <Sun /> : <Moon />,
+            keywords: ['thème', 'sombre', 'clair', 'nuit'],
+            onSelect: toggle,
+          },
+        ],
+      },
+      {
         heading: t('shell.account'),
         items: [{ id: 'signout', label: t('shell.signOut'), icon: <LogOut />, onSelect: () => void signOut() }],
       },
     ],
-    [check, go, signOut, locale, t],
+    [check, go, signOut, locale, t, mode, toggle],
   );
 
   return (
@@ -138,6 +154,10 @@ function ShellLayout() {
             onSignOut={() => void signOut()}
           >
             <LanguageMenu />
+            <DropdownMenuSeparator />
+            <DropdownMenuItem icon={mode === 'dark' ? <Sun /> : <Moon />} onSelect={toggle}>
+              {mode === 'dark' ? t('shell.lightMode') : t('shell.darkMode')}
+            </DropdownMenuItem>
           </UserMenu>
         }
         banner={<ImpersonationBanner />}
