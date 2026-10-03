@@ -18,8 +18,8 @@ export type Lane = 'new' | 'kitchen' | 'ready' | 'delivery';
 export const LANES: Array<{ id: Lane; label: string; hint: string; tone: Tone }> = [
   { id: 'new', label: 'Nouvelles', hint: 'À accepter', tone: 'brand' },
   { id: 'kitchen', label: 'En cuisine', hint: 'Acceptées et en préparation', tone: 'amber' },
-  { id: 'ready', label: 'Prêtes', hint: 'Au comptoir ou en attente du livreur', tone: 'teal' },
-  { id: 'delivery', label: 'En livraison', hint: 'Récupérées par le livreur', tone: 'info' },
+  { id: 'ready', label: 'Prêtes', hint: 'Au comptoir ou en attente du livreur', tone: 'info' },
+  { id: 'delivery', label: 'En livraison', hint: 'Récupérées par le livreur', tone: 'success' },
 ];
 
 export function laneOf(order: Order): Lane | null {
@@ -54,7 +54,7 @@ export const SUMMARY_TILES: Array<{ id: SummaryTile; label: string; hint: string
   { id: 'active', label: 'En cours', hint: 'Total des commandes actives', tone: 'brand', statuses: ['new', 'accepted', 'preparing', 'ready', 'assigned', 'picked_up'] },
   { id: 'toHandle', label: 'À traiter', hint: 'Nouvelles et acceptées', tone: 'amber', statuses: ['new', 'accepted'] },
   { id: 'preparing', label: 'En préparation', hint: 'En cuisine', tone: 'plum', statuses: ['preparing'] },
-  { id: 'ready', label: 'Prêtes', hint: 'Prêtes ou assignées à un livreur', tone: 'teal', statuses: ['ready', 'assigned'] },
+  { id: 'ready', label: 'Prêtes', hint: 'Prêtes ou assignées à un livreur', tone: 'info', statuses: ['ready', 'assigned'] },
 ];
 
 /** Filtres par statut (file « En cours »), alignés sur la maquette de référence. */
@@ -70,14 +70,16 @@ export const STATUS_FILTERS: Array<{ id: StatusFilter; label: string; statuses: 
   { id: 'picked_up', label: 'En livraison', statuses: ['picked_up'] },
 ];
 
+// Code couleur des statuts aligné sur l'app livreur (document client « Points à corriger »,
+// Backoffice resto #9) : bleu (« info ») pour « Prête », vert (« success ») pour « En livraison ».
 const STATUS_TONES: Record<OrderStatus, Tone> = {
   scheduled: 'plum',
   new: 'brand',
   accepted: 'neutral',
   preparing: 'amber',
-  ready: 'teal',
-  assigned: 'teal',
-  picked_up: 'info',
+  ready: 'info',
+  assigned: 'info',
+  picked_up: 'success',
   delivered: 'success',
   cancelled: 'danger',
 };

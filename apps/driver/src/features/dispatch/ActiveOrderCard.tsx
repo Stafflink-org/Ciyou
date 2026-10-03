@@ -5,8 +5,10 @@
 // désactivé par défaut, voir `dispatch.strategy` dans les réglages d'exploitation).
 import { useMemo, useState } from 'react';
 import { Alert, Linking, Platform, View } from 'react-native';
+import { ORDER_STATUS_TONES, type StatusTone } from '@golink/shared';
 import { spacing } from '../../theme/tokens';
 import { useGoogleMapsRuntime } from '../../lib/mapsKey';
+import { Badge, type BadgeTone } from '../../ui/Badge';
 import { Button } from '../../ui/Button';
 import { Card } from '../../ui/Card';
 import { Input } from '../../ui/Input';
@@ -18,6 +20,17 @@ import { CashBalanceCard, CustomerAbsentPanel, MessagingPanel } from './ActiveOr
 import { InfoRow } from './components';
 import { RouteMap } from './RouteMap';
 import { cancelDriverAssignment, completeOrder, markOrderPickedUp, useConversationMessages, useDriverPrivate, useOrder, useOrderConversation, useRestaurant } from './hooks';
+
+// Code couleur des statuts aligné sur le backoffice resto (document client « Points à
+// corriger », Backoffice resto #9) : bleu pour « Prête »/« assignée », vert pour « en livraison ».
+const STATUS_BADGE_TONES: Record<StatusTone, BadgeTone> = {
+  neutral: 'neutral',
+  info: 'info',
+  accent: 'primary',
+  warning: 'warning',
+  success: 'success',
+  danger: 'danger',
+};
 
 type NavApp = 'google' | 'waze' | 'native';
 
@@ -163,7 +176,12 @@ export function ActiveOrderCard({ orderId, uid, geo, driverType, driverDisplayNa
           <InfoRow label={t('activeOrder.address')} value={`${activeOrder.delivery.address.line1}, ${activeOrder.delivery.address.city}`} />
         ) : null}
         <InfoRow label={t('activeOrder.items')} value={String(activeOrder.itemsCount)} />
-        <InfoRow label={t('activeOrder.step')} value={stepLabel} />
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 }}>
+          <Text variant="caption" color="muted">
+            {t('activeOrder.step')}
+          </Text>
+          <Badge label={stepLabel} tone={STATUS_BADGE_TONES[ORDER_STATUS_TONES[activeOrder.status]]} />
+        </View>
 
         {routeOrigin && routeDestination ? (
           <View style={{ marginTop: spacing.md, gap: spacing.sm }}>

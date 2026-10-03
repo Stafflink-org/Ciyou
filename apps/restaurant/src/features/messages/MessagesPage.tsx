@@ -44,9 +44,9 @@ const ORDER_STATUS_META: Record<string, { label: string; tone: 'neutral' | 'ambe
   new: { label: 'Nouvelle', tone: 'brand' },
   accepted: { label: 'Acceptée', tone: 'neutral' },
   preparing: { label: 'En préparation', tone: 'amber' },
-  ready: { label: 'Prête', tone: 'teal' },
+  ready: { label: 'Prête', tone: 'info' },
   assigned: { label: 'Livreur assigné', tone: 'info' },
-  picked_up: { label: 'Récupérée', tone: 'plum' },
+  picked_up: { label: 'Récupérée', tone: 'success' },
   delivered: { label: 'Livrée', tone: 'success' },
   cancelled: { label: 'Annulée', tone: 'danger' },
 };

@@ -4,7 +4,7 @@ import { View, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { colors, radius } from '../theme/tokens';
 import { Text } from './Text';
 
-export type BadgeTone = 'neutral' | 'primary' | 'success' | 'danger' | 'warning' | 'dark';
+export type BadgeTone = 'neutral' | 'primary' | 'success' | 'danger' | 'warning' | 'info' | 'dark';
 
 const TONE: Record<BadgeTone, { bg: string; fg: string }> = {
   neutral: { bg: colors.surfaceRaised, fg: colors.fgMuted },
@@ -12,6 +12,7 @@ const TONE: Record<BadgeTone, { bg: string; fg: string }> = {
   success: { bg: colors.successSoft, fg: colors.success },
   danger: { bg: colors.dangerSoft, fg: colors.dangerSoftFg },
   warning: { bg: colors.warningSoft, fg: colors.warning },
+  info: { bg: colors.infoSoft, fg: colors.infoSoftFg },
   dark: { bg: colors.ink, fg: colors.inkFg },
 };
 

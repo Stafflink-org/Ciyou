@@ -135,7 +135,7 @@ export const ORDER_STATUS_TONES: Record<OrderStatus, StatusTone> = {
   preparing: 'warning',
   ready: 'info',
   assigned: 'info',
-  picked_up: 'info',
+  picked_up: 'success',
   delivered: 'success',
   cancelled: 'danger',
 };

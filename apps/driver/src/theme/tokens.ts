@@ -35,6 +35,8 @@ export const colors = {
   warning: '#C47A1B',
   warningSoft: '#FBF1E1',
   info: '#3A66A0',
+  infoSoft: '#E6EEF6',
+  infoSoftFg: '#2B4E7A',
 
   white: '#FFFFFF',
   overlay: 'rgba(11, 15, 16, 0.5)',
