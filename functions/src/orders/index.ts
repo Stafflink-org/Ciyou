@@ -13,7 +13,7 @@ export {
   startPreparation,
 } from './transitions';
 export { cancelOrder, rejectOrder } from './cancel';
-export { assignOwnCourier, requestCourier } from './dispatch';
+export { assignOwnCourier, cancelDriverAssignment, requestCourier } from './dispatch';
 export { reportOrderIssue } from './report';
 export { onOrderWritten } from './triggers';
 export { enforceAcceptanceTimeout } from './scheduled';

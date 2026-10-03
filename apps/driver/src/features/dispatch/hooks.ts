@@ -160,6 +160,9 @@ export const markOrderPickedUp = callFunction<{ orderId: string; code?: string |
 /** Remise au client : code de remise exigé si `delivery.handoverCodeRequired`. */
 export const completeOrder = callFunction<{ orderId: string; code?: string | null; geo?: { lat: number; lng: number } | null }, { status: Order['status'] }>('completeOrder');
 
+/** Le livreur annule sa propre acceptation avant d'avoir récupéré la commande (functions/src/orders/dispatch.ts). */
+export const cancelDriverAssignment = callFunction<{ orderId: string }, { status: Order['status'] }>('cancelDriverAssignment');
+
 /* --------------------------- Client absent (functions/src/orders/customer-absent.ts) --------------------------- */
 
 export const markDriverArrived = callFunction<{ orderId: string }, { arrivedAt: number; waitUntil: number }>('markDriverArrived');

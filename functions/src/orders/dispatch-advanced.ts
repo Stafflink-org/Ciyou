@@ -151,7 +151,7 @@ async function previousOffers(orderId: string): Promise<{ excluded: Set<string>;
   const now = Date.now();
   for (const doc of snap.docs) {
     const offer = doc.data() as DispatchOffer;
-    if (offer.status === 'declined' || offer.status === 'expired') excluded.add(offer.driverId);
+    if (offer.status === 'declined' || offer.status === 'expired' || offer.status === 'cancelled') excluded.add(offer.driverId);
     if (offer.status === 'offered' && offer.expiresAt.toMillis() > now) open = { id: doc.id, ...offer };
   }
   return { excluded, open, count: snap.size };
