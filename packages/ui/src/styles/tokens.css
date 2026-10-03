@@ -4,10 +4,13 @@
  * Tailwind bg-surface, text-fg-muted, border-border…), jamais les hex.
  */
 
-/* Thème « restaurant » — clair, charte Ciyou Eats (orange #FF6B00/#FF8A00, noir #0B0F10,
-   blanc, gris #98A2B3 — voir docs/DECISIONS_CLIENT.md, charte transmise par le client) */
+/* Thème clair — charte Ciyou Eats (orange #FF6B00/#FF8A00, noir #0B0F10, blanc, gris
+   #98A2B3 — voir docs/DECISIONS_CLIENT.md, charte transmise par le client), défaut commun
+   au backoffice resto ET au super admin ; chacun peut basculer en sombre indépendamment
+   (voir le bloc [data-mode="dark"] plus bas) via le sélecteur clair/sombre de l'interface. */
 :root,
-[data-theme="restaurant"] {
+[data-theme="restaurant"],
+[data-theme="admin"] {
   --gl-canvas: #f7f8fa;
   --gl-surface: #ffffff;
   --gl-surface-2: #f7f8fa;
@@ -66,69 +69,11 @@
   --gl-shadow-xl: 0 32px 80px -20px rgb(11 15 16 / 0.34), 0 8px 20px -8px rgb(11 15 16 / 0.12);
 }
 
-/* Thème « restaurant » en mode sombre — identique au thème admin (parité visuelle demandée par le client) */
+/* Mode sombre — commun au backoffice resto et au super admin (bascule indépendante par
+   application, mémorisée par navigateur ; voir packages/ui/src/lib/theme.ts). */
 [data-theme="restaurant"][data-mode="dark"],
-:root[data-mode="dark"]:not([data-theme="admin"]) {
-  --gl-canvas: #0a1012;
-  --gl-surface: #10181b;
-  --gl-surface-2: #131d20;
-  --gl-surface-3: #19252a;
-  --gl-elevated: #152024;
-  --gl-border: #1d2a2e;
-  --gl-border-strong: #2a393e;
-  --gl-fg: #eef2f1;
-  --gl-fg-muted: #98a9a9;
-  --gl-fg-subtle: #677a7c;
-
-  --gl-primary: #ff6b00;
-  --gl-primary-hover: #ff8a00;
-  --gl-primary-fg: #ffffff;
-  --gl-primary-soft: rgb(255 107 0 / 0.14);
-  --gl-primary-soft-fg: #ff9c4d;
-
-  --gl-contrast: #eef2f1;
-  --gl-contrast-hover: #ffffff;
-  --gl-contrast-fg: #0a1012;
-
-  --gl-danger: #d6533f;
-  --gl-danger-hover: #e57465;
-  --gl-danger-fg: #ffffff;
-  --gl-danger-soft: rgb(214 83 63 / 0.14);
-  --gl-danger-soft-fg: #f0a096;
-  --gl-success: #67a087;
-  --gl-warning: #edb33d;
-  --gl-info: #6a9bcd;
-
-  --gl-ring: #ff8a00;
-  --gl-selection: rgb(255 107 0 / 0.35);
-  --gl-overlay: rgb(2 6 8 / 0.66);
-
-  --gl-sidebar: #0c1315;
-  --gl-sidebar-fg: #eef2f1;
-  --gl-sidebar-muted: #7f9294;
-  --gl-sidebar-hover: rgb(255 255 255 / 0.045);
-  --gl-sidebar-active: rgb(255 107 0 / 0.12);
-  --gl-sidebar-border: #182226;
-
-  --gl-chart-1: #ff6b00;
-  --gl-chart-2: #4bb3a7;
-  --gl-chart-3: #ff8a00;
-  --gl-chart-4: #67a087;
-  --gl-chart-5: #ae85bd;
-  --gl-chart-6: #6a9bcd;
-  --gl-chart-grid: #1a262a;
-  --gl-chart-axis: #677a7c;
-
-  --gl-shadow-xs: 0 1px 2px rgb(0 0 0 / 0.35);
-  --gl-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.35), 0 2px 6px rgb(0 0 0 / 0.25);
-  --gl-shadow-card: inset 0 1px 0 rgb(255 255 255 / 0.03), 0 10px 30px -14px rgb(0 0 0 / 0.6);
-  --gl-shadow-md: 0 8px 20px -6px rgb(0 0 0 / 0.55);
-  --gl-shadow-lg: 0 18px 44px -12px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.05);
-  --gl-shadow-xl: 0 36px 100px -20px rgb(0 0 0 / 0.8), 0 0 0 1px rgb(255 255 255 / 0.06);
-}
-
-/* Thème « admin » — sombre premium, accent orange Ciyou Eats */
-[data-theme="admin"] {
+[data-theme="admin"][data-mode="dark"],
+:root[data-mode="dark"] {
   --gl-canvas: #0a1012;
   --gl-surface: #10181b;
   --gl-surface-2: #131d20;
