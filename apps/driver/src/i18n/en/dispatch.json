@@ -47,6 +47,12 @@
     "stepPickedUp": "On the way to the customer",
     "handoverCodeLabel": "Customer handover code",
     "completeDelivery": "Complete the delivery",
+    "collectedAsLabel": "Collected as",
+    "collectedAs": {
+      "cash": "Cash",
+      "meal_voucher": "Meal voucher",
+      "card": "Card (terminal)"
+    },
     "pickupMissingCode": "Ask the merchant for the pickup code shown on their screen.",
     "pickupSuccess": "Order picked up: on your way to the customer.",
     "pickupError": "Unable to mark the order as picked up.",
@@ -108,7 +114,9 @@
     "eyebrow": "Cash held",
     "overLimit": "Limit exceeded",
     "toRemit": "To remit",
-    "limitLine": "Limit {{amount}} · to hand over to your merchant"
+    "limitLine": "Limit {{amount}} · to hand over to your merchant",
+    "mealVoucherLine": "Meal vouchers held: {{amount}}",
+    "cardTerminalLine": "Card (terminal) held: {{amount}}"
   },
   "ordersMap": {
     "empty": "No order to place on the map.",

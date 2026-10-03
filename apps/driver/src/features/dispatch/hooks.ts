@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { GeoPoint, addDoc, documentId, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
 import {
   encodeGeohash,
+  type CollectedPaymentMethod,
   type Conversation,
   type ConversationMessage,
   type Driver,
@@ -175,7 +176,10 @@ export const respondToOffer = callFunction<{ offerId: string; accept: boolean; r
 export const markOrderPickedUp = callFunction<{ orderId: string; code?: string | null }, { status: Order['status'] }>('markOrderPickedUp');
 
 /** Remise au client : code de remise exigé si `delivery.handoverCodeRequired`. */
-export const completeOrder = callFunction<{ orderId: string; code?: string | null; geo?: { lat: number; lng: number } | null }, { status: Order['status'] }>('completeOrder');
+export const completeOrder = callFunction<
+  { orderId: string; code?: string | null; geo?: { lat: number; lng: number } | null; collectedAs?: CollectedPaymentMethod | null },
+  { status: Order['status'] }
+>('completeOrder');
 
 /** Le livreur annule sa propre acceptation avant d'avoir récupéré la commande (functions/src/orders/dispatch.ts). */
 export const cancelDriverAssignment = callFunction<{ orderId: string }, { status: Order['status'] }>('cancelDriverAssignment');

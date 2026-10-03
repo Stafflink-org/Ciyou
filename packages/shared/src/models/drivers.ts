@@ -90,6 +90,12 @@ export interface DriverPrivate {
   cashSinceAt?: Timestamp | null;
   /** Date de la dernière remise de caisse (H2). */
   lastCashRemittanceAt?: Timestamp | null;
+  /** Tickets Restaurant et montants carte encaissés en personne à la livraison (document
+   * client « Points à corriger », Backoffice resto #6), non remis au commerce — même logique
+   * que `cashBalanceCents` mais sans plafond associé (le livreur indique à la remise lequel
+   * des trois moyens il a réellement encaissé, voir `Order.payment.collectedAs`). */
+  mealVoucherBalanceCents?: Cents;
+  cardTerminalBalanceCents?: Cents;
   payoutsBlocked: boolean;
   payoutsBlockedReason?: string | null;
   taxIdentificationNumber?: string | null;

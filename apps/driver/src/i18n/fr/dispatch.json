@@ -47,6 +47,12 @@
     "stepPickedUp": "En route vers le client",
     "handoverCodeLabel": "Code de remise du client",
     "completeDelivery": "Terminer la livraison",
+    "collectedAsLabel": "Encaissé en",
+    "collectedAs": {
+      "cash": "Espèces",
+      "meal_voucher": "Ticket Restaurant",
+      "card": "Carte (TPE)"
+    },
     "pickupMissingCode": "Demandez au commerce le code de collecte affiché sur son écran.",
     "pickupSuccess": "Commande récupérée : direction le client.",
     "pickupError": "Impossible de marquer la commande récupérée.",
@@ -108,7 +114,9 @@
     "eyebrow": "Espèces détenues",
     "overLimit": "Plafond dépassé",
     "toRemit": "À reverser",
-    "limitLine": "Plafond {{amount}} · à remettre à votre commerce"
+    "limitLine": "Plafond {{amount}} · à remettre à votre commerce",
+    "mealVoucherLine": "Tickets Restaurant détenus : {{amount}}",
+    "cardTerminalLine": "Carte (TPE) détenue : {{amount}}"
   },
   "routeMap": {
     "notConfigured": "Cartographie non configurée, contactez votre administrateur.",

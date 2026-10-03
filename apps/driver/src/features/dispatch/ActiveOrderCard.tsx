@@ -5,7 +5,7 @@
 // désactivé par défaut, voir `dispatch.strategy` dans les réglages d'exploitation).
 import { useMemo, useState } from 'react';
 import { Alert, Linking, Platform, View } from 'react-native';
-import { ORDER_STATUS_TONES, type StatusTone } from '@golink/shared';
+import { COLLECTED_PAYMENT_METHODS, ORDER_STATUS_TONES, type CollectedPaymentMethod, type StatusTone } from '@golink/shared';
 import { spacing } from '../../theme/tokens';
 import { useGoogleMapsRuntime } from '../../lib/mapsKey';
 import { Badge, type BadgeTone } from '../../ui/Badge';
@@ -70,6 +70,7 @@ export function ActiveOrderCard({ orderId, uid, geo, driverType, driverDisplayNa
   const [cancelBusy, setCancelBusy] = useState(false);
   const [handoverCode, setHandoverCode] = useState('');
   const [collectionCode, setCollectionCode] = useState('');
+  const [collectedAs, setCollectedAs] = useState<CollectedPaymentMethod>('cash');
 
   const markPickedUp = async () => {
     if (activeOrder?.delivery?.collectionCode && !collectionCode.trim()) {
@@ -145,7 +146,7 @@ export function ActiveOrderCard({ orderId, uid, geo, driverType, driverDisplayNa
     }
     setOrderBusy(true);
     try {
-      await completeOrder({ orderId, code: handoverCode.trim() || null, geo });
+      await completeOrder({ orderId, code: handoverCode.trim() || null, geo, collectedAs: activeOrder?.payment.method === 'cash' ? collectedAs : null });
       setHandoverCode('');
       toast.show(t('activeOrder.completeSuccess'));
     } catch (err) {
@@ -203,6 +204,25 @@ export function ActiveOrderCard({ orderId, uid, geo, driverType, driverDisplayNa
           <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
             {activeOrder.delivery?.handoverCodeRequired ? (
               <Input label={t('activeOrder.handoverCodeLabel')} value={handoverCode} onChangeText={setHandoverCode} keyboardType="number-pad" placeholder="1234" maxLength={12} />
+            ) : null}
+            {driverType === 'restaurant' && activeOrder.payment.method === 'cash' ? (
+              <View>
+                <Text variant="caption" color="muted" style={{ marginBottom: 6 }}>
+                  {t('activeOrder.collectedAsLabel')}
+                </Text>
+                <View style={{ flexDirection: 'row', gap: spacing.xs }}>
+                  {COLLECTED_PAYMENT_METHODS.map((method) => (
+                    <Button
+                      key={method}
+                      label={t(`activeOrder.collectedAs.${method}`)}
+                      variant={collectedAs === method ? 'primary' : 'outline'}
+                      size="md"
+                      style={{ flex: 1 }}
+                      onPress={() => setCollectedAs(method)}
+                    />
+                  ))}
+                </View>
+              </View>
             ) : null}
             <Button label={t('activeOrder.completeDelivery')} onPress={complete} loading={orderBusy} />
             <CustomerAbsentPanel orderId={activeOrder.id} order={activeOrder} />

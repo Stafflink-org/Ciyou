@@ -189,6 +189,8 @@ export function CashBalanceCard({ driverPrivate }: { driverPrivate: WithId<Drive
   // absents malgré un modèle TypeScript qui les déclare requis.
   const balanceCents = driverPrivate.cashBalanceCents ?? 0;
   const limitCents = driverPrivate.cashLimitCents ?? 0;
+  const mealVoucherCents = driverPrivate.mealVoucherBalanceCents ?? 0;
+  const cardTerminalCents = driverPrivate.cardTerminalBalanceCents ?? 0;
   return (
     <Card style={{ marginTop: spacing.md }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -206,6 +208,20 @@ export function CashBalanceCard({ driverPrivate }: { driverPrivate: WithId<Drive
       <Text variant="caption" color="muted" style={{ marginTop: 2 }}>
         {t('cash.limitLine', { amount: money(limitCents) })}
       </Text>
+      {mealVoucherCents > 0 || cardTerminalCents > 0 ? (
+        <View style={{ marginTop: spacing.sm, gap: 2 }}>
+          {mealVoucherCents > 0 ? (
+            <Text variant="caption" color="muted">
+              {t('cash.mealVoucherLine', { amount: money(mealVoucherCents) })}
+            </Text>
+          ) : null}
+          {cardTerminalCents > 0 ? (
+            <Text variant="caption" color="muted">
+              {t('cash.cardTerminalLine', { amount: money(cardTerminalCents) })}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
     </Card>
   );
 }

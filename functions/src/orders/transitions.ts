@@ -1,7 +1,7 @@
 // Avancement des commandes : acceptation (avec temps de préparation), début de
 // préparation, commande prête, prolongation, remise au client par code,
 // récupération et livraison par le livreur, confirmation du paiement.
-import { COLLECTIONS, PREP_MINUTES_MAX, PREP_MINUTES_MIN, type Order, type OrderStatus, type Restaurant } from '@golink/shared';
+import { COLLECTED_PAYMENT_METHODS, COLLECTIONS, PREP_MINUTES_MAX, PREP_MINUTES_MIN, type Order, type OrderStatus, type Restaurant } from '@golink/shared';
 import type { CallableRequest } from 'firebase-functions/v2/https';
 import { GeoPoint } from 'firebase-admin/firestore';
 import { db, Timestamp } from '../lib/admin';
@@ -265,6 +265,10 @@ export const completeOrder = callable(
     code: z.string().trim().max(12).nullish(),
     /** Position du livreur au moment de la remise (§28, détection « hors adresse »). */
     geo: z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) }).nullish(),
+    /** Paiement à la livraison (espèces) : moyen réellement encaissé par le livreur salarié
+     * (espèces, ticket restaurant, carte via son terminal) — Backoffice resto #6. Ignoré pour
+     * tout autre mode de paiement ; absent = espèces (rétrocompatible). */
+    collectedAs: z.enum(COLLECTED_PAYMENT_METHODS).nullish(),
   }),
   async (data, request) => {
     const order = await loadOrder(data.orderId);
@@ -297,7 +301,7 @@ export const completeOrder = callable(
         updatedAt: at,
         'flags.late': lateMinutes > lateTolerance,
         'flags.lateMinutes': lateMinutes,
-        ...(current.payment.method === 'cash' ? { 'payment.status': 'paid', 'payment.paidAt': at } : {}),
+        ...(current.payment.method === 'cash' ? { 'payment.status': 'paid', 'payment.paidAt': at, 'payment.collectedAs': data.collectedAs ?? 'cash' } : {}),
         ...(current.delivery
           ? {
               'delivery.proof': {

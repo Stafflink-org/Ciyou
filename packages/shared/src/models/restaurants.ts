@@ -410,6 +410,10 @@ export interface RestaurantCourier {
   /** Livreur salarié : espèces détenues (reflet de driverPrivate.cashBalanceCents, tenu par Cloud Function) et plafond. */
   cashHeldCents?: Cents;
   cashLimitCents?: Cents;
+  /** Tickets Restaurant et montants carte encaissés en personne, non remis (reflet de
+   * driverPrivate, voir Backoffice resto #6). */
+  mealVoucherHeldCents?: Cents;
+  cardTerminalHeldCents?: Cents;
   updatedAt: Timestamp;
   updatedBy: string;
 }

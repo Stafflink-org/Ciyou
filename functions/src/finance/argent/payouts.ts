@@ -37,7 +37,7 @@ import { z, zId, zReason } from '../../lib/validation';
 import { raiseAlert, resolveAlert } from './alerts';
 import { addDays, chunk, euros, loadCountry, parisDay, parisTime, weekdayOf, zDay } from './common';
 import { settleSubscriptionDebts } from './billing';
-import { cashLimitOf, mirrorCourierCash } from './cash';
+import { cashLimitOf, mirrorCourierBalance } from './cash';
 import { messageRestaurantFinance } from './notify';
 import { ARGENT_RUNTIME, argentCallable } from './runtime';
 
@@ -668,11 +668,11 @@ export const recordCashRemittance = argentCallable(
         createdBy: caller.uid,
       };
       tx.set(db.collection(COLLECTIONS.ledgerEntries).doc(), entry);
-      tx.set(db.collection(COLLECTIONS.cashMovements).doc(), { countryId: info.countryId, cityId: info.cityId, restaurantId: (snap.get('restaurantId') as string | undefined) ?? 'golink', driverId: data.driverId, driverName: info.name, type: 'remitted', amountCents: -data.amountCents, balanceAfterCents: current - data.amountCents, note: data.reason, createdAt: now, createdBy: caller.uid });
+      tx.set(db.collection(COLLECTIONS.cashMovements).doc(), { countryId: info.countryId, cityId: info.cityId, restaurantId: (snap.get('restaurantId') as string | undefined) ?? 'golink', driverId: data.driverId, driverName: info.name, type: 'remitted', method: 'cash', amountCents: -data.amountCents, balanceAfterCents: current - data.amountCents, note: data.reason, createdAt: now, createdBy: caller.uid });
       return current - data.amountCents;
     });
     const restaurantOfDriver = ((await db.collection(COLLECTIONS.drivers).doc(data.driverId).get()).get('restaurantIds') as string[] | undefined)?.[0];
-    if (restaurantOfDriver) await mirrorCourierCash(restaurantOfDriver, data.driverId, balance, await cashLimitOf((await privRef.get()).data() as DriverPrivate | undefined)).catch(() => undefined);
+    if (restaurantOfDriver) await mirrorCourierBalance(restaurantOfDriver, data.driverId, 'cash', balance, await cashLimitOf((await privRef.get()).data() as DriverPrivate | undefined)).catch(() => undefined);
     await writeAudit({ actor: actorFromCaller(caller, 'admin'), action: 'driver.cash_remitted', target: { type: 'driver', id: data.driverId, label: info.name }, reason: data.reason, after: { amountCents: data.amountCents, cashBalanceCents: balance }, countryId: info.countryId, cityId: info.cityId, request, sensitive: true });
     return { cashBalanceCents: balance };
   },

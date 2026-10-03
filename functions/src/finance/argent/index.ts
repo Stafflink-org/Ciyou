@@ -2,7 +2,7 @@
 // facturation et TVA, abonnements et commissions.
 export { onOrderSettled, onRefundProcessed, issueCustomerReceipt } from './settlement';
 export { renewSubscriptions } from './billing';
-export { recordMerchantCashRemittance } from './cash';
+export { recordMerchantCashRemittance, resetDriverCashBalance } from './cash';
 export { markPayoutPaidManually, savePaymentProvider, setCountryProviders, setDriverPayoutAccount, setRestaurantPayoutAccount, verifyPayoutAccount } from './providers';
 export {
   buildPayouts,
