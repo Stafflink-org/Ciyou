@@ -2,13 +2,30 @@
 // route, livrée, annulée, client absent, remboursement, nouvelle commande du commerce.
 // Appelé par le trigger `onOrderWritten` à chaque écriture de commande ; idempotent
 // (une clé par commande et par message).
-import { CANCEL_REASON_LABELS, COLLECTIONS, SUBCOLLECTIONS, formatPrice, memberHasPermission, type Order, type RestaurantMember } from '@golink/shared';
+import { CANCEL_REASON_LABELS, COLLECTIONS, FULFILLMENT_LABELS, SUBCOLLECTIONS, formatPrice, memberHasPermission, type Order, type RestaurantMember } from '@golink/shared';
 import { db } from '../lib/admin';
 import { sendPlatformMessage, type MessageTarget } from './messages';
 
 function timeLabel(ms: number | null | undefined): string {
   if (!ms) return 'bientôt';
   return new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit' }).format(new Date(ms)).replace(':', ' h ');
+}
+
+/** Liste des articles, une ligne par article (document client « Points à corriger », Backoffice resto #8). */
+function itemsList(order: Order): string {
+  return order.items.map((i) => `${i.quantity}× ${i.name} — ${formatPrice(i.finalTotalCents ?? i.totalCents)}`).join('\n');
+}
+
+/** Détail des totaux (sous-total, frais, remise, pourboire, total). */
+function totalsList(order: Order): string {
+  const a = order.amounts;
+  const lines = [`Sous-total : ${formatPrice(a.subtotalCents)}`];
+  if (a.deliveryFeeCents > 0) lines.push(`Frais de livraison : ${formatPrice(a.deliveryFeeCents)}`);
+  if (a.serviceFeeCents > 0) lines.push(`Frais de service : ${formatPrice(a.serviceFeeCents)}`);
+  if (a.discount.totalCents > 0) lines.push(`Remise : −${formatPrice(a.discount.totalCents)}`);
+  if (a.tipCents > 0) lines.push(`Pourboire : ${formatPrice(a.tipCents)}`);
+  lines.push(`Total : ${formatPrice(a.totalCents)}`);
+  return lines.join('\n');
 }
 
 /** Équipe du commerce autorisée à suivre les commandes (destinataires des messages de service). */
@@ -35,6 +52,22 @@ export async function notifyOrderChange(orderId: string, before: Order | undefin
     await Promise.all(
       targets.map((t) => sendPlatformMessage('restaurant_new_order', t, { orderNumber: after.number, itemsCount: after.itemsCount, total }, { dedupeKey: orderId, link })),
     );
+    // E-mail récapitulatif à chaque nouvelle commande, resto et client (document client
+    // « Points à corriger », Backoffice resto #8) : numéro, infos client, détail des articles, totaux.
+    const items = itemsList(after);
+    const totals = totalsList(after);
+    const deliveryInfo = after.delivery ? `Livraison : ${after.delivery.address.line1}, ${after.delivery.address.city}` : `Mode : ${FULFILLMENT_LABELS[after.fulfillment]}`;
+    await Promise.all(
+      targets.map((t) =>
+        sendPlatformMessage(
+          'order_summary_restaurant',
+          t,
+          { orderNumber: after.number, customerName: after.customerName, customerPhone: after.customerPhoneMasked ? ` (${after.customerPhoneMasked})` : '', deliveryInfo, itemsList: items, totalsList: totals, total },
+          { dedupeKey: orderId, link },
+        ),
+      ),
+    );
+    await sendPlatformMessage('order_summary_client', customer, { orderNumber: after.number, restaurantName: after.restaurantName, itemsList: items, totalsList: totals }, { dedupeKey: orderId, link });
   }
   if (!before) return;
 

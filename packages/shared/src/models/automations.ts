@@ -101,6 +101,8 @@ export const PLATFORM_MESSAGE_KEYS = [
   'order_driver_assigned',
   'order_arrival_soon',
   'order_handover_code_reminder',
+  'order_summary_restaurant',
+  'order_summary_client',
   'refund_issued',
   'late_credit_issued',
   'item_replacement_proposed',

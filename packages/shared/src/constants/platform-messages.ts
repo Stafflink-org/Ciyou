@@ -53,6 +53,18 @@ export const PLATFORM_MESSAGE_DEFAULTS: Record<PlatformMessageKey, PlatformMessa
     key: 'order_handover_code_reminder', event: 'Rappel du code à l’arrivée du livreur', audience: 'client', channels: ['push'], subject: null, category: 'order',
     title: 'Votre livreur est arrivé', body: 'Communiquez votre code {{code}} à {{driverName}} pour récupérer votre commande {{orderNumber}}.', variables: ['driverName', 'code', 'orderNumber'],
   },
+  order_summary_restaurant: {
+    key: 'order_summary_restaurant', event: 'Récapitulatif de commande (commerce)', audience: 'restaurant', channels: ['email'], subject: 'Nouvelle commande {{orderNumber}} — {{total}}', category: 'order',
+    title: 'Récapitulatif de la commande {{orderNumber}}',
+    body: 'Client : {{customerName}}{{customerPhone}}\n{{deliveryInfo}}\n{{itemsList}}\n\n{{totalsList}}',
+    variables: ['orderNumber', 'customerName', 'customerPhone', 'deliveryInfo', 'itemsList', 'totalsList', 'total'],
+  },
+  order_summary_client: {
+    key: 'order_summary_client', event: 'Récapitulatif de commande (client)', audience: 'client', channels: ['email'], subject: 'Votre commande {{orderNumber}} chez {{restaurantName}}', category: 'order',
+    title: 'Merci pour votre commande {{orderNumber}}',
+    body: '{{restaurantName}}\n\n{{itemsList}}\n\n{{totalsList}}',
+    variables: ['orderNumber', 'restaurantName', 'itemsList', 'totalsList'],
+  },
   refund_issued: {
     key: 'refund_issued', event: 'Remboursement', audience: 'client', channels: ['email', 'in_app'], subject: 'Remboursement de votre commande Ciyou Eats', category: 'order',
     title: 'Remboursement effectué', body: 'Nous vous avons remboursé {{amount}} pour la commande {{orderNumber}}.', variables: ['amount', 'orderNumber'],
