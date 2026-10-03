@@ -3,7 +3,7 @@
 // est lu/écrit sur golink-9f16d (docs/CONTRATS_APPS_MOBILES.md §24,
 // docs/SCHEMA_FIRESTORE.md §6, firebase/rules/drivers.rules).
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { GeoPoint, addDoc, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
+import { GeoPoint, addDoc, documentId, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
 import {
   encodeGeohash,
   type Conversation,
@@ -51,6 +51,23 @@ export function useIncomingOffers(uid: string | null): { offer: WithId<DispatchO
 
 export function useOrder(orderId: string | null) {
   return useDoc<Order>(orderId ? docAt(`orders/${orderId}`) : null);
+}
+
+/**
+ * Plusieurs commandes actives à la fois (dispatch groupé, `activeOrderIds.length > 1`) —
+ * carte multi-commandes (document client « Points à corriger », App livreur #3). Une seule
+ * requête (`documentId() in ids`) plutôt qu'un hook par commande (nombre de commandes variable
+ * d'un rendu à l'autre, incompatible avec les règles des hooks).
+ */
+export function useOrders(ids: string[]) {
+  const target = ids.length > 0 ? query(collectionAt('orders'), where(documentId(), 'in', ids)) : null;
+  return useCollection<Order>(target);
+}
+
+/** Position du commerce pour chacune des commandes passées (pins avant récupération). */
+export function useRestaurants(ids: string[]) {
+  const target = ids.length > 0 ? query(collectionAt('restaurants'), where(documentId(), 'in', ids)) : null;
+  return useCollection<Restaurant>(target);
 }
 
 export type Availability = Driver['availability'];

@@ -113,5 +113,11 @@
   "routeMap": {
     "notConfigured": "Cartographie non configurée, contactez votre administrateur.",
     "embedDisabled": "Itinéraire momentanément indisponible (cartographie non activée côté serveur), contactez votre administrateur."
+  },
+  "ordersMap": {
+    "empty": "Aucune commande à positionner sur la carte.",
+    "title": "Vos courses",
+    "subtitle": "Touchez un repère pour voir le détail d’une commande.",
+    "backToList": "Retour à la carte"
   }
 }
