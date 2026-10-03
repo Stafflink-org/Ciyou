@@ -191,7 +191,17 @@ export function OrdersPage() {
           ) : filtered.length === 0 ? (
             emptyAll
           ) : (
-            <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border">{filtered.map((o) => row(o))}</ul>
+            <div className="overflow-hidden rounded-xl border border-border">
+              <div className="hidden items-center gap-x-4 border-b border-border bg-surface-2 px-4 py-2 text-2xs font-semibold uppercase tracking-wide text-fg-subtle sm:flex">
+                <span className="flex-1 basis-56">N° & client</span>
+                <span className="w-24 shrink-0">Type</span>
+                <span className="w-28 shrink-0">Délai</span>
+                <span className="w-32 shrink-0">Statut</span>
+                <span className="w-24 shrink-0 text-right">Total</span>
+                <span className="ml-auto w-20 shrink-0 text-right">Actions</span>
+              </div>
+              <ul className="divide-y divide-border">{filtered.map((o) => row(o))}</ul>
+            </div>
           )}
         </div>
 
