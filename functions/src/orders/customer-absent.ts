@@ -18,6 +18,7 @@ import { readDriver, releaseDriverInTransaction } from './dispatch';
 import { ordersCallable as callable } from './runtime';
 import { courierActor } from './transitions';
 import { STRIPE_SECRET_KEY } from '../lib/secrets';
+import { sendPlatformMessage } from '../notifications/messages';
 
 const orderIdSchema = z.object({ orderId: zId });
 
@@ -60,6 +61,16 @@ export const markDriverArrived = callable(orderIdSchema, async (data, request) =
     }, at);
     return absence;
   });
+  // Rappel du code de remise (document client « Points à corriger », App livreur #2) : seulement
+  // si un code est effectivement exigé à la remise (alcool, montants élevés — voir OrderDelivery).
+  if (order.delivery?.handoverCodeRequired && order.pickupCode) {
+    await sendPlatformMessage(
+      'order_handover_code_reminder',
+      { uid: order.customerId, type: 'client', name: order.customerName, demo: order.test === true },
+      { driverName: order.delivery.driverName ?? 'Votre livreur', code: order.pickupCode, orderNumber: order.number },
+      { dedupeKey: data.orderId, link: { type: 'order', target: data.orderId } },
+    ).catch((error: unknown) => logger.warn('Rappel du code de remise en échec', { orderId: data.orderId, error: error instanceof Error ? error.message : String(error) }));
+  }
   return { arrivedAt: result.arrivedAt.toMillis(), waitUntil: result.waitUntil.toMillis() };
 });
 

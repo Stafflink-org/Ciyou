@@ -44,6 +44,14 @@ export async function notifyOrderChange(orderId: string, before: Order | undefin
   if (changed && after.status === 'ready' && after.fulfillment !== 'delivery') {
     await sendPlatformMessage('order_ready_pickup', customer, { restaurantName: after.restaurantName, orderNumber: after.number, code: after.pickupCode ?? '' }, { dedupeKey: orderId, link });
   }
+  if (changed && after.status === 'assigned' && after.delivery?.driverName) {
+    await sendPlatformMessage(
+      'order_driver_assigned',
+      customer,
+      { driverName: after.delivery.driverName, orderNumber: after.number },
+      { dedupeKey: `${orderId}-${after.delivery.driverId ?? ''}`, link },
+    );
+  }
   if (changed && after.status === 'picked_up') {
     await sendPlatformMessage(
       'order_picked_up',

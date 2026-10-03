@@ -41,6 +41,18 @@ export const PLATFORM_MESSAGE_DEFAULTS: Record<PlatformMessageKey, PlatformMessa
     key: 'order_customer_absent', event: 'Client absent : commande clôturée', audience: 'client', channels: ['push', 'email'], subject: 'Votre commande {{orderNumber}} n’a pas pu être remise', category: 'order',
     title: 'Commande non remise', body: 'Le livreur a patienté {{waitMinutes}} minutes sans réponse : votre commande {{orderNumber}} est clôturée. Conformément aux conditions d’utilisation, elle n’est pas remboursée.', variables: ['orderNumber', 'waitMinutes'],
   },
+  order_driver_assigned: {
+    key: 'order_driver_assigned', event: 'Livreur accepte la commande', audience: 'client', channels: ['push'], subject: null, category: 'order',
+    title: 'Un livreur a accepté votre commande', body: '{{driverName}} a accepté votre commande {{orderNumber}}.', variables: ['driverName', 'orderNumber'],
+  },
+  order_arrival_soon: {
+    key: 'order_arrival_soon', event: 'Livreur à environ 1 minute', audience: 'client', channels: ['push'], subject: null, category: 'order',
+    title: 'Votre livreur arrive', body: '{{driverName}} arrive dans environ 1 minute.', variables: ['driverName'],
+  },
+  order_handover_code_reminder: {
+    key: 'order_handover_code_reminder', event: 'Rappel du code à l’arrivée du livreur', audience: 'client', channels: ['push'], subject: null, category: 'order',
+    title: 'Votre livreur est arrivé', body: 'Communiquez votre code {{code}} à {{driverName}} pour récupérer votre commande {{orderNumber}}.', variables: ['driverName', 'code', 'orderNumber'],
+  },
   refund_issued: {
     key: 'refund_issued', event: 'Remboursement', audience: 'client', channels: ['email', 'in_app'], subject: 'Remboursement de votre commande Ciyou Eats', category: 'order',
     title: 'Remboursement effectué', body: 'Nous vous avons remboursé {{amount}} pour la commande {{orderNumber}}.', variables: ['amount', 'orderNumber'],

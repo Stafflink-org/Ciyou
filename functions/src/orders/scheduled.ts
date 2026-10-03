@@ -5,6 +5,7 @@ import { COLLECTIONS, type Order } from '@golink/shared';
 import { logger } from 'firebase-functions/v2';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { db, Timestamp } from '../lib/admin';
+import { sendPlatformMessage } from '../notifications/messages';
 import { STRIPE_SECRET_KEY } from '../lib/secrets';
 import { cancelBySystem } from './cancel';
 import { addEvent, loadDispatchRules, loadMarket, loadOrderRules, SYSTEM_EVENT_ACTOR } from './context';
@@ -16,6 +17,10 @@ import { expireItemProposals } from './item-unavailable';
 const PAYMENT_ACTION_TIMEOUT_MINUTES = 20;
 /** Nouvelle tentative de recherche de livreur quand personne n'était disponible. */
 const DISPATCH_RETRY_MINUTES = 2;
+/** Fenêtre d'envoi du rappel « arrivée imminente » (document client « Points à corriger »,
+ * App livreur #2) : la tâche tourne chaque minute, donc une fenêtre d'une minute suffit à
+ * couvrir exactement un passage sans doublon ni oubli. */
+const ARRIVAL_SOON_WINDOW_MINUTES = 1;
 
 async function expireUnaccepted(now: Timestamp): Promise<number> {
   const snap = await db.collection(COLLECTIONS.orders).where('status', '==', 'new').where('acceptDeadline', '<=', now).limit(50).get();
@@ -97,11 +102,41 @@ async function autoDispatch(now: Timestamp): Promise<number> {
   return count;
 }
 
+/**
+ * Prévient le client quand son livreur arrive dans environ une minute (document client
+ * « Points à corriger », App livreur #2). Envoyé une seule fois par commande (`arrivalReminderSentAt`).
+ */
+async function notifyArrivalSoon(now: Timestamp): Promise<number> {
+  const snap = await db
+    .collection(COLLECTIONS.orders)
+    .where('fulfillment', '==', 'delivery')
+    .where('status', '==', 'picked_up')
+    .limit(50)
+    .get();
+  let count = 0;
+  for (const doc of snap.docs) {
+    const order = doc.data() as Order;
+    const eta = order.delivery?.estimatedArrivalAt?.toMillis();
+    if (!eta || order.delivery?.arrivalReminderSentAt) continue;
+    const minutesLeft = (eta - now.toMillis()) / 60_000;
+    if (minutesLeft > ARRIVAL_SOON_WINDOW_MINUTES || minutesLeft <= 0) continue;
+    await doc.ref.update({ 'delivery.arrivalReminderSentAt': now, updatedAt: now });
+    await sendPlatformMessage(
+      'order_arrival_soon',
+      { uid: order.customerId, type: 'client', name: order.customerName, demo: order.test === true },
+      { driverName: order.delivery?.driverName ?? 'Votre livreur' },
+      { dedupeKey: doc.id, link: { type: 'order', target: doc.id } },
+    ).catch((error: unknown) => logger.warn('Rappel « arrivée imminente » en échec', { orderId: doc.id, error: error instanceof Error ? error.message : String(error) }));
+    count += 1;
+  }
+  return count;
+}
+
 export const enforceAcceptanceTimeout = onSchedule(
   { schedule: 'every 1 minutes', timeZone: 'Europe/Paris', secrets: [STRIPE_SECRET_KEY], timeoutSeconds: 120, retryCount: 0, maxInstances: 1, cpu: 'gcf_gen1' },
   async () => {
     const now = Timestamp.now();
-    const [expired, unpaid, released, dispatched, absent, proposals] = [
+    const [expired, unpaid, released, dispatched, absent, proposals, arrivalReminders] = [
       await expireUnaccepted(now),
       await expireUnpaid(now),
       await releaseScheduled(now),
@@ -114,9 +149,13 @@ export const enforceAcceptanceTimeout = onSchedule(
         logger.error('Retraits d’articles sans réponse en échec', { error: error instanceof Error ? error.message : String(error) });
         return 0;
       }),
+      await notifyArrivalSoon(now).catch((error: unknown) => {
+        logger.error('Rappels « arrivée imminente » en échec', { error: error instanceof Error ? error.message : String(error) });
+        return 0;
+      }),
     ];
-    if (expired + unpaid + released + dispatched + absent + proposals > 0) {
-      logger.info('Commandes : tâche planifiée', { expired, unpaid, released, dispatched, absent, proposals });
+    if (expired + unpaid + released + dispatched + absent + proposals + arrivalReminders > 0) {
+      logger.info('Commandes : tâche planifiée', { expired, unpaid, released, dispatched, absent, proposals, arrivalReminders });
     }
   },
 );
