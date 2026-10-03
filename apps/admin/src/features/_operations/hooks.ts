@@ -7,6 +7,7 @@ import {
   type City,
   type Driver,
   type DriverLocation,
+  type Restaurant,
   type SettingsHistoryEntry,
   type WithId,
   type Zone,
@@ -97,6 +98,13 @@ export function useDriversByIds(ids: string[]) {
   const unique = useMemo(() => [...new Set(ids.filter(Boolean))].sort().slice(0, 30), [ids.join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
   const q = useMemo(() => (unique.length ? query(collection(db, COLLECTIONS.drivers), where(documentId(), 'in', unique)) : null), [unique.join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
   return useCollection<Driver>(q);
+}
+
+/** Plusieurs commerces par identifiant (lots de 30) — PDV des livreurs salariés, Super admin #3. */
+export function useRestaurantsByIds(ids: string[]) {
+  const unique = useMemo(() => [...new Set(ids.filter(Boolean))].sort().slice(0, 30), [ids.join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
+  const q = useMemo(() => (unique.length ? query(collection(db, COLLECTIONS.restaurants), where(documentId(), 'in', unique)) : null), [unique.join(',')]); // eslint-disable-line react-hooks/exhaustive-deps
+  return useCollection<Restaurant>(q);
 }
 
 export interface CallState<T> {
